@@ -1,0 +1,81 @@
+enum ProviderDeploymentConfigPairSpecificationDiscoveryStatus {
+  discovering
+  discovered
+  failed
+}
+
+model ProviderDeploymentConfigPair {
+  oid BigInt @id
+  id  String @unique
+
+  providerConfigOid BigInt
+  providerConfig    ProviderConfig @relation(fields: [providerConfigOid], references: [oid])
+
+  providerDeploymentOid BigInt
+  providerDeployment    ProviderDeployment @relation(fields: [providerDeploymentOid], references: [oid])
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  lastUsedPairVersionOid BigInt?
+  lastUsedPairVersion    ProviderDeploymentConfigPairProviderVersion? @relation(fields: [lastUsedPairVersionOid], references: [oid], name: "lastUsedVersion")
+
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
+  versions                                 ProviderDeploymentConfigPairProviderVersion[]
+  providerSpecificationChangeNotifications ProviderSpecificationChangeNotification[]
+
+  @@unique([providerConfigOid, providerDeploymentOid])
+}
+
+model ProviderDeploymentConfigPairProviderVersion {
+  oid BigInt @id
+  id  String @unique
+
+  pairOid BigInt
+  pair    ProviderDeploymentConfigPair @relation(fields: [pairOid], references: [oid])
+
+  versionOid BigInt
+  version    ProviderVersion @relation(fields: [versionOid], references: [oid])
+
+  previousPairVersionOid BigInt?
+  previousPairVersion    ProviderDeploymentConfigPairProviderVersion?  @relation("lastUsedVersion", fields: [previousPairVersionOid], references: [oid])
+  nextVersions           ProviderDeploymentConfigPairProviderVersion[] @relation("lastUsedVersion")
+
+  specificationDiscoveryStatus ProviderDeploymentConfigPairSpecificationDiscoveryStatus
+  specificationOid             BigInt?
+  specification                ProviderSpecification?                                   @relation(fields: [specificationOid], references: [oid])
+
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
+  lastUsedInPair  ProviderDeploymentConfigPair[]                    @relation("lastUsedVersion")
+  fromSpecChanges ProviderDeploymentConfigPairSpecificationChange[] @relation("SpecChangeFromPairVersion")
+  toSpecChanges   ProviderDeploymentConfigPairSpecificationChange[] @relation("SpecChangeToPairVersion")
+
+  @@unique([pairOid, versionOid])
+}
+
+model ProviderDeploymentConfigPairSpecificationChange {
+  oid BigInt @id
+  id  String @unique
+
+  fromSpecificationOid BigInt
+  fromSpecification    ProviderSpecification @relation("SpecChangeFrom", fields: [fromSpecificationOid], references: [oid])
+
+  toSpecificationOid BigInt
+  toSpecification    ProviderSpecification @relation("SpecChangeTo", fields: [toSpecificationOid], references: [oid])
+
+  fromPairVersionOid BigInt
+  fromPairVersion    ProviderDeploymentConfigPairProviderVersion @relation("SpecChangeFromPairVersion", fields: [fromPairVersionOid], references: [oid])
+
+  toPairVersionOid BigInt
+  toPairVersion    ProviderDeploymentConfigPairProviderVersion @relation("SpecChangeToPairVersion", fields: [toPairVersionOid], references: [oid])
+
+  createdAt DateTime @default(now())
+
+  providerSpecificationChangeNotifications ProviderSpecificationChangeNotification[]
+
+  @@unique([fromPairVersionOid, toPairVersionOid, fromSpecificationOid, toSpecificationOid])
+}

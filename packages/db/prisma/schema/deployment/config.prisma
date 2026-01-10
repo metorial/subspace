@@ -1,0 +1,39 @@
+model ProviderConfig {
+  oid BigInt @id
+  id  String @unique
+
+  isDefault   Boolean
+  isEphemeral Boolean
+  isForVault  Boolean
+
+  name        String?
+  description String?
+  metadata    Json?
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  providerOid BigInt
+  provider    Provider @relation(fields: [providerOid], references: [oid])
+
+  deploymentOid BigInt?
+  deployment    ProviderDeployment? @relation(fields: [deploymentOid], references: [oid])
+
+  slateInstanceOid BigInt?
+  slateInstance    SlateInstance? @relation(fields: [slateInstanceOid], references: [oid])
+
+  fromVaultOid BigInt?
+  fromVault    ProviderConfigVault? @relation(fields: [fromVaultOid], references: [oid], name: "vaultSource")
+
+  parentConfigOid BigInt?
+  parentConfig    ProviderConfig?  @relation("ConfigParentChild", fields: [parentConfigOid], references: [oid])
+  childConfigs    ProviderConfig[] @relation("ConfigParentChild")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  defaultForDeployment             ProviderDeployment?               @relation("defaultConfig")
+  vault                            ProviderConfigVault?
+  deploymentPairs                  ProviderDeploymentConfigPair[]
+  providerAuthConfigUsedForConfigs ProviderAuthConfigUsedForConfig[]
+}

@@ -1,0 +1,47 @@
+enum ProviderDeploymentSpecificationDiscoveryStatus {
+  discovering
+  discovered
+  failed
+}
+
+model ProviderDeployment {
+  oid BigInt @id
+  id  String @unique
+
+  isEphemeral Boolean
+  isDefault   Boolean
+
+  name        String?
+  description String?
+  metadata    Json?
+
+  specificationDiscoveryStatus ProviderDeploymentSpecificationDiscoveryStatus
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  providerOid BigInt
+  provider    Provider @relation(fields: [providerOid], references: [oid])
+
+  providerVariantOid BigInt
+  providerVariant    ProviderVariant @relation(fields: [providerVariantOid], references: [oid])
+
+  lockedVersionOid BigInt?
+  lockedVersion    ProviderVersion? @relation(fields: [lockedVersionOid], references: [oid])
+
+  defaultConfigOid BigInt?         @unique
+  defaultConfig    ProviderConfig? @relation(fields: [defaultConfigOid], references: [oid], name: "defaultConfig")
+
+  specificationOid BigInt?
+  specification    ProviderSpecification? @relation(fields: [specificationOid], references: [oid])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  configPairs                          ProviderDeploymentConfigPair[]
+  providerOAuthSetups                  ProviderOAuthSetup[]
+  providerAuthConfigUsedForDeployments ProviderAuthConfigUsedForDeployment[]
+  providerConfigVaults                 ProviderConfigVault[]
+  providerConfigs                      ProviderConfig[]
+  providerAuthConfigs                  ProviderAuthConfig[]
+}
