@@ -1,0 +1,76 @@
+model ProviderEntry {
+  oid BigInt @id
+  id  String @unique
+
+  identifier  String  @unique
+  name        String
+  description String?
+
+  metadata Json?
+
+  publisherOid BigInt
+  publisher    Publisher @relation(fields: [publisherOid], references: [oid])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  providers Provider[]
+}
+
+enum ProviderAccess {
+  public
+  tenant
+}
+
+enum ProviderStatus {
+  active
+  inactive
+}
+
+model Provider {
+  oid BigInt @id
+  id  String @unique
+
+  access ProviderAccess
+  status ProviderStatus
+
+  tag    String      @unique
+  tagRef ProviderTag @relation(fields: [tag], references: [tag])
+
+  identifier  String  @unique
+  slug        String  @unique
+  name        String
+  description String?
+
+  metadata Json?
+
+  entryOid BigInt        @unique
+  entry    ProviderEntry @relation(fields: [entryOid], references: [oid])
+
+  publisherOid BigInt
+  publisher    Publisher @relation(fields: [publisherOid], references: [oid])
+
+  ownerTenantOid BigInt?
+  ownerTenant    Tenant? @relation(fields: [ownerTenantOid], references: [oid])
+
+  defaultVariantOid BigInt?
+  defaultVariant    ProviderVariant? @relation(fields: [defaultVariantOid], references: [oid], name: "defaultVariant")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  variants                ProviderVariant[]
+  providerVersions        ProviderVersion[]
+  tenantProviders         TenantProvider[]
+  deployment              ProviderDeployment[]
+  listing                 ProviderListing?
+  sessionProviders        ProviderSession[]
+  providerConfigs         ProviderConfig[]
+  providerTools           ProviderTool[]
+  providerAuthMethods     ProviderAuthMethod[]
+  providerSpecifications  ProviderSpecification[]
+  providerConfigVaults    ProviderConfigVault[]
+  providerAuthCredentials ProviderAuthCredentials[]
+  providerOAuthSetups     ProviderOAuthSetup[]
+  providerAuthConfigs     ProviderAuthConfig[]
+}

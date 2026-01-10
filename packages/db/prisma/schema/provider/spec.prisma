@@ -1,0 +1,106 @@
+model ProviderTool {
+  oid BigInt @id
+  id  String @unique
+
+  specId               String
+  specUniqueIdentifier String
+  callableId           String
+  key                  String
+
+  name        String
+  description String?
+
+  /// [ProviderToolValue]
+  value Json
+
+  hash String
+
+  providerOid BigInt
+  provider    Provider @relation(fields: [providerOid], references: [oid])
+
+  specificationOid BigInt
+  specification    ProviderSpecification @relation(fields: [specificationOid], references: [oid])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([providerOid, specificationOid, hash])
+}
+
+enum ProviderAuthMethodType {
+  oauth
+  token
+  service_account
+  custom
+}
+
+model ProviderAuthMethod {
+  oid BigInt @id
+  id  String @unique
+
+  specId               String
+  specUniqueIdentifier String
+  callableId           String
+  key                  String
+
+  type ProviderAuthMethodType
+
+  name        String
+  description String?
+
+  /// [ProviderAuthMethodValue]
+  value Json
+
+  hash String
+
+  providerOid BigInt
+  provider    Provider @relation(fields: [providerOid], references: [oid])
+
+  specificationOid BigInt
+  specification    ProviderSpecification @relation(fields: [specificationOid], references: [oid])
+
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @default(now()) @updatedAt
+  providerOAuthSetups ProviderOAuthSetup[]
+  providerAuthConfigs ProviderAuthConfig[]
+
+  @@unique([providerOid, specificationOid, hash])
+}
+
+model ProviderSpecification {
+  oid BigInt @id
+  id  String @unique
+
+  specId               String
+  specUniqueIdentifier String
+  key                  String
+
+  name        String
+  description String?
+
+  /// [ProviderSpecificationValue]
+  value Json
+
+  hash String
+
+  supportsAuthMethod Boolean
+  configContainsAuth Boolean
+
+  providerOid BigInt
+  provider    Provider @relation(fields: [providerOid], references: [oid])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  providerVersions                                     ProviderVersion[]
+  providerTools                                        ProviderTool[]
+  providerAuthMethods                                  ProviderAuthMethod[]
+  providerDeployments                                  ProviderDeployment[]
+  providerDeploymentConfigPairProviderVersions         ProviderDeploymentConfigPairProviderVersion[]
+  providerDeploymentConfigPairSpecificationChangesFrom ProviderDeploymentConfigPairSpecificationChange[] @relation("SpecChangeFrom")
+  providerDeploymentConfigPairSpecificationChangesTo   ProviderDeploymentConfigPairSpecificationChange[] @relation("SpecChangeTo")
+  providerVersionSpecificationChangesFrom              ProviderVersionSpecificationChange[]              @relation("SpecChangeFrom")
+  providerVersionSpecificationChangesTo                ProviderVersionSpecificationChange[]              @relation("SpecChangeTo")
+
+  @@unique([providerOid, hash])
+}

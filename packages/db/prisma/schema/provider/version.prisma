@@ -1,0 +1,55 @@
+enum ProviderVersionSpecificationDiscoveryStatus {
+  discovering
+  discovered
+  not_discoverable
+}
+
+model ProviderVersion {
+  oid BigInt @id
+  id  String @unique
+
+  tag    String      @unique
+  tagRef ProviderTag @relation(fields: [tag], references: [tag])
+
+  identifier  String  @unique
+  name        String
+  description String?
+
+  isCurrent Boolean @default(false)
+
+  metadata Json?
+
+  specificationDiscoveryStatus ProviderVersionSpecificationDiscoveryStatus
+
+  backendOid BigInt
+  backend    Backend @relation(fields: [backendOid], references: [oid])
+
+  providerOid BigInt
+  provider    Provider @relation(fields: [providerOid], references: [oid])
+
+  providerVariantOid BigInt
+  providerVariant    ProviderVariant @relation(fields: [providerVariantOid], references: [oid])
+
+  previousVersionOid BigInt?
+  previousVersion    ProviderVersion?  @relation("ProviderVersionPreviousNext", fields: [previousVersionOid], references: [oid])
+  nextVersions       ProviderVersion[] @relation("ProviderVersionPreviousNext")
+
+  slateOid BigInt?
+  slate    Slate?  @relation(fields: [slateOid], references: [oid])
+
+  slateVersionOid BigInt?
+  slateVersion    SlateVersion? @relation(fields: [slateVersionOid], references: [oid])
+
+  specificationOid BigInt?
+  specification    ProviderSpecification? @relation(fields: [specificationOid], references: [oid])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  providerDeployments                          ProviderDeployment[]
+  defaultFor                                   ProviderVariant[]                             @relation("defaultVersion")
+  providerDeploymentConfigPairProviderVersions ProviderDeploymentConfigPairProviderVersion[]
+  providerVersionSpecificationChangesFrom      ProviderVersionSpecificationChange[]          @relation("SpecChangeFromVersion")
+  providerVersionSpecificationChangesTo        ProviderVersionSpecificationChange[]          @relation("SpecChangeToVersion")
+  providerSpecificationChangeNotifications     ProviderSpecificationChangeNotification[]
+}

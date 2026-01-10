@@ -1,0 +1,12 @@
+model ProviderTag {
+  oid BigInt @id @default(autoincrement())
+  id  String @unique
+
+  tag String @unique
+
+  createdAt DateTime @default(now())
+
+  providerVariants ProviderVariant[]
+  providerVersions ProviderVersion[]
+  providers        Provider[]
+}
