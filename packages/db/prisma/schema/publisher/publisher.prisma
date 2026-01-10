@@ -1,0 +1,30 @@
+enum PublisherType {
+  tenant
+  metorial
+  external
+}
+
+model Publisher {
+  oid BigInt @id
+  id  String @unique
+
+  type PublisherType
+
+  identifier  String  @unique
+  name        String
+  description String?
+
+  /// [PublisherSource]
+  source Json?
+
+  tenantOid BigInt?
+  tenant    Tenant? @relation(fields: [tenantOid], references: [oid])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  providerEntries  ProviderEntry[]
+  providers        Provider[]
+  providerListings ProviderListing[]
+  providerVariants ProviderVariant[]
+}
