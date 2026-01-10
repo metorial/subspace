@@ -1,0 +1,46 @@
+model ProviderListingCollection {
+  oid BigInt @id @default(autoincrement())
+  id  String @unique
+
+  name        String
+  slug        String @unique
+  description String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  listings ProviderListing[]
+}
+
+model ProviderListingCategory {
+  oid BigInt @id @default(autoincrement())
+  id  String @unique
+
+  name        String
+  slug        String @unique
+  description String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  listings ProviderListing[]
+}
+
+model ProviderListingGroup {
+  oid BigInt @id @default(autoincrement())
+  id  String @unique
+
+  name        String
+  slug        String
+  description String?
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  listings ProviderListing[]
+
+  @@unique([tenantOid, slug])
+}
