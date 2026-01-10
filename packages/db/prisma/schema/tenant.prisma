@@ -1,0 +1,30 @@
+model Tenant {
+  oid BigInt @id
+  id  String @unique
+
+  identifier String @unique
+  name       String
+
+  slateTenantId         String
+  slateTenantIdentifier String
+
+  createdAt DateTime @default(now())
+
+  providers                     Provider[]
+  tenantProviders               TenantProvider[]
+  providerListingGroups         ProviderListingGroup[]
+  providerListings              ProviderListing[]
+  publishers                    Publisher[]
+  providerDeployments           ProviderDeployment[]
+  sessions                      Session[]
+  providerConfigs               ProviderConfig[]
+  providerConfigVaults          ProviderConfigVault[]
+  slateInstances                SlateInstance[]
+  providerDeploymentConfigPairs ProviderDeploymentConfigPair[]
+  providerAuthCredentials       ProviderAuthCredentials[]
+  slateOAuthCredentials         SlateOAuthCredentials[]
+  providerOAuthSetups           ProviderOAuthSetup[]
+  slateOAuthSetups              SlateOAuthSetup[]
+  slateAuthConfigs              SlateAuthConfig[]
+  providerAuthConfigs           ProviderAuthConfig[]
+}
