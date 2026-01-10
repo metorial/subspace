@@ -1,0 +1,72 @@
+enum ProviderAuthConfigType {
+  manual
+  oauth_automated
+  oauth_manual
+}
+
+model ProviderAuthConfig {
+  oid BigInt @id
+  id  String @unique
+
+  type ProviderAuthConfigType
+
+  isEphemeral Boolean
+  isDefault   Boolean
+
+  name        String?
+  description String?
+  metadata    Json?
+
+  providerOid BigInt
+  provider    Provider @relation(fields: [providerOid], references: [oid], onDelete: Cascade)
+
+  authMethodOid BigInt
+  authMethod    ProviderAuthMethod @relation(fields: [authMethodOid], references: [oid])
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid], onDelete: Cascade)
+
+  deploymentOid BigInt?
+  deployment    ProviderDeployment? @relation(fields: [deploymentOid], references: [oid])
+
+  authCredentialsOid BigInt?
+  authCredentials    ProviderAuthCredentials? @relation(fields: [authCredentialsOid], references: [oid])
+
+  slateAuthConfigOid BigInt?          @unique
+  slateAuthConfig    SlateAuthConfig? @relation(fields: [slateAuthConfigOid], references: [oid])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  usingDeployments                 ProviderAuthConfigUsedForDeployment[]
+  providerAuthConfigUsedForConfigs ProviderAuthConfigUsedForConfig[]
+  providerOAuthSetups              ProviderOAuthSetup[]
+}
+
+model ProviderAuthConfigUsedForDeployment {
+  oid BigInt @id
+
+  authConfigOid BigInt
+  authConfig    ProviderAuthConfig @relation(fields: [authConfigOid], references: [oid])
+
+  deploymentOid BigInt
+  deployment    ProviderDeployment @relation(fields: [deploymentOid], references: [oid], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([authConfigOid, deploymentOid])
+}
+
+model ProviderAuthConfigUsedForConfig {
+  oid BigInt @id
+
+  authConfigOid BigInt
+  authConfig    ProviderAuthConfig @relation(fields: [authConfigOid], references: [oid])
+
+  configOid BigInt
+  config    ProviderConfig @relation(fields: [configOid], references: [oid], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([authConfigOid, configOid])
+}
