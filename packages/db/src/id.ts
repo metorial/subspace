@@ -39,7 +39,10 @@ export let ID = createIdGenerator({
   providerAuthCredentials: idType.sorted('pac'),
   providerAuthConfig: idType.sorted('pacf'),
   providerOAuthSetup: idType.sorted('poas'),
-  providerOAuthSetup_clientSecret: idType.key('poas_secret')
+  providerOAuthSetup_clientSecret: idType.key('poas_secret'),
+
+  providerAuthConfigUsedForConfig: idType.sorted('pacufc'),
+  providerAuthConfigUsedForDeployment: idType.sorted('pacufd')
 });
 
 let workerIdBits = 12;

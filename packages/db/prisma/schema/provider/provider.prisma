@@ -66,8 +66,8 @@ model Provider {
   listing                 ProviderListing?
   sessionProviders        ProviderSession[]
   providerConfigs         ProviderConfig[]
-  providerTools           ProviderTool[]
-  providerAuthMethods     ProviderAuthMethod[]
+  tools                   ProviderTool[]
+  authMethods             ProviderAuthMethod[]
   providerSpecifications  ProviderSpecification[]
   providerConfigVaults    ProviderConfigVault[]
   providerAuthCredentials ProviderAuthCredentials[]

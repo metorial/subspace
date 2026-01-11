@@ -14,6 +14,9 @@ model Publisher {
   name        String
   description String?
 
+  tag    String      @unique
+  tagRef ProviderTag @relation(fields: [tag], references: [tag])
+
   /// [PublisherSource]
   source Json?
 

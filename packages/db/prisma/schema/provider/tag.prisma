@@ -9,4 +9,5 @@ model ProviderTag {
   providerVariants ProviderVariant[]
   providerVersions ProviderVersion[]
   providers        Provider[]
+  publisher        Publisher[]
 }
