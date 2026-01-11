@@ -1,5 +1,5 @@
 {
-  "name": "@metorial-subspace/search",
+  "name": "@metorial-subspace/module-search",
   "module": "index.ts",
   "type": "module",
   "private": true,
