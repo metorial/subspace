@@ -1,5 +1,5 @@
 {
-  "name": "@metorial-subspace/provider-utils-slates",
+  "name": "@metorial-subspace/provider-slates",
   "module": "index.ts",
   "type": "module",
   "private": true,
