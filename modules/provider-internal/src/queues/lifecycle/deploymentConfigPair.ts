@@ -1,0 +1,35 @@
+import { createQueue, QueueRetryError } from '@lowerdeck/queue';
+import { db } from '@metorial-subspace/db';
+import { env } from '../../env';
+import { providerDeploymentConfigPairSyncSpecificationQueue } from '../deploymentConfigPair/syncSpec';
+
+export let providerDeploymentConfigPairCreatedQueue = createQueue<{
+  providerDeploymentConfigPairId: string;
+}>({
+  name: 'pint/lc/providerDeploymentConfigPair/created',
+  redisUrl: env.service.REDIS_URL
+});
+
+export let providerDeploymentConfigPairCreatedQueueProcessor =
+  providerDeploymentConfigPairCreatedQueue.process(async data => {});
+
+export let providerDeploymentConfigPairVersionCreatedQueue = createQueue<{
+  providerDeploymentConfigPairVersionId: string;
+}>({
+  name: 'pint/lc/providerDeploymentConfigPair/ver/created',
+  redisUrl: env.service.REDIS_URL
+});
+
+export let providerDeploymentConfigPairVersionCreatedQueueProcessor =
+  providerDeploymentConfigPairVersionCreatedQueue.process(async data => {
+    let version = await db.providerDeploymentConfigPairProviderVersion.findFirst({
+      where: { id: data.providerDeploymentConfigPairVersionId },
+      include: { version: true, pair: true }
+    });
+    if (!version) throw new QueueRetryError();
+
+    await providerDeploymentConfigPairSyncSpecificationQueue.add({
+      providerDeploymentConfigPairId: version.pair.id,
+      versionId: version.version.id
+    });
+  });
