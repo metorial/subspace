@@ -1,0 +1,35 @@
+import { shadowId } from '@lowerdeck/shadow-id';
+import type { Provider, ProviderAuthMethod } from '../../prisma/generated/client';
+
+export let providerAuthMethodPresenter = (
+  providerAuthMethod: ProviderAuthMethod & {
+    provider: Provider;
+  }
+) => ({
+  object: 'provider.capabilities.auth_method',
+
+  id: providerAuthMethod.id,
+  key: providerAuthMethod.key,
+  type: providerAuthMethod.type,
+
+  name: providerAuthMethod.name,
+  description: providerAuthMethod.description,
+
+  capabilities: providerAuthMethod.value.capabilities,
+
+  inputJsonSchema: providerAuthMethod.value.inputJsonSchema,
+  outputJsonSchema: providerAuthMethod.value.outputJsonSchema,
+
+  scopes:
+    providerAuthMethod.type == 'oauth'
+      ? (providerAuthMethod.value.scopes ?? []).map(s => ({
+          object: 'provider.capabilities.auth_method.scope',
+          ...s,
+          scope: s.id,
+          id: shadowId('pamsco', [providerAuthMethod.id], [s.id])
+        }))
+      : null,
+
+  createdAt: providerAuthMethod.createdAt,
+  updatedAt: providerAuthMethod.updatedAt
+});
