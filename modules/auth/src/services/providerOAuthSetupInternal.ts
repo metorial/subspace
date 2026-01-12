@@ -26,7 +26,7 @@ class providerOAuthSetupInternalServiceImpl {
       },
       include
     });
-    if (!providerOAuthSetup) throw new ServiceError(notFoundError('provider_config'));
+    if (!providerOAuthSetup) throw new ServiceError(notFoundError('provider.oauth_setup'));
 
     return providerOAuthSetup;
   }

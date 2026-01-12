@@ -32,7 +32,7 @@ let include = {
   provider: true,
   deployment: true,
   authCredentials: true,
-  authMethod: true
+  authMethod: { include: { specification: { omit: { value: true } } } }
 };
 
 export let providerAuthConfigInclude = include;
@@ -69,7 +69,7 @@ class providerAuthConfigServiceImpl {
       include
     });
     if (!providerAuthConfig)
-      throw new ServiceError(notFoundError('provider_config', d.providerAuthConfigId));
+      throw new ServiceError(notFoundError('provider.auth_config', d.providerAuthConfigId));
 
     return providerAuthConfig;
   }

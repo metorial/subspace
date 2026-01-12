@@ -43,7 +43,7 @@ class providerAuthExportServiceImpl {
       include
     });
     if (!providerAuthExport)
-      throw new ServiceError(notFoundError('provider_config', d.providerAuthExportId));
+      throw new ServiceError(notFoundError('provider.auth_export', d.providerAuthExportId));
 
     return providerAuthExport;
   }
