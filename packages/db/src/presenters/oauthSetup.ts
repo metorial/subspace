@@ -24,7 +24,11 @@ export let providerOAuthSetupPresenter = (
   object: 'provider.oauth_setup',
 
   id: providerOAuthSetup.id,
-  status: providerOAuthSetup.status,
+  status:
+    (providerOAuthSetup.status == 'opened' || providerOAuthSetup.status == 'unused') &&
+    providerOAuthSetup.expiresAt <= new Date()
+      ? ('expired' as const)
+      : providerOAuthSetup.status,
 
   isEphemeral: providerOAuthSetup.isEphemeral,
 

@@ -3,6 +3,7 @@ enum ProviderOAuthSetupStatus {
   opened
   completed
   failed
+  expired
 }
 
 model ProviderOAuthSetup {
@@ -52,6 +53,9 @@ model ProviderOAuthSetup {
   expiresAt DateTime
 
   events ProviderOAuthSetupEvent[]
+
+  @@index([status])
+  @@index([expiresAt])
 }
 
 enum ProviderOAuthSetupEventType {

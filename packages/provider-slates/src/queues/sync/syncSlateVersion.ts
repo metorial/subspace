@@ -40,6 +40,7 @@ let metorialDomains = [
   '.metorial.net',
   '.metorial.app',
   '.metorial.io',
+  '.metorial.ai',
   '.metorial-enterprise.com'
 ];
 
@@ -48,6 +49,7 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
     slateId: data.slateId,
     slateVersionId: data.slateVersionId
   });
+  if (version.status != 'active') return;
 
   let slate = await slates.slate.get({
     slateId: data.slateId
