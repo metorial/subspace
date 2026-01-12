@@ -57,7 +57,7 @@ class providerConfigVaultServiceImpl {
       include
     });
     if (!providerConfigVault)
-      throw new ServiceError(notFoundError('provider_config_vault', d.providerConfigVaultId));
+      throw new ServiceError(notFoundError('provider.config_vault', d.providerConfigVaultId));
 
     return providerConfigVault;
   }

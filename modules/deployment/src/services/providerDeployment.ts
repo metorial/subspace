@@ -63,7 +63,7 @@ class providerDeploymentServiceImpl {
       include
     });
     if (!providerDeployment)
-      throw new ServiceError(notFoundError('provider_deployment', d.providerDeploymentId));
+      throw new ServiceError(notFoundError('provider.deployment', d.providerDeploymentId));
 
     return providerDeployment;
   }

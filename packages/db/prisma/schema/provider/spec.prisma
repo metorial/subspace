@@ -1,3 +1,23 @@
+model ProviderToolGlobal {
+  oid BigInt @id
+  id  String @unique
+
+  key String
+
+  providerOid BigInt
+  provider    Provider @relation(fields: [providerOid], references: [oid])
+
+  currentInstanceOid BigInt?
+  currentInstance    ProviderTool? @relation(fields: [currentInstanceOid], references: [oid], name: "currentToolInstance")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  providerTools ProviderTool[]
+
+  @@unique([providerOid, key])
+}
+
 model ProviderTool {
   oid BigInt @id
   id  String @unique
@@ -21,10 +41,36 @@ model ProviderTool {
   specificationOid BigInt
   specification    ProviderSpecification @relation(fields: [specificationOid], references: [oid])
 
+  globalOid BigInt
+  global    ProviderToolGlobal @relation(fields: [globalOid], references: [oid])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
+  currentInGlobal ProviderToolGlobal[] @relation("currentToolInstance")
+
   @@unique([providerOid, specificationOid, hash])
+  @@unique([specificationOid, key])
+}
+
+model ProviderAuthMethodGlobal {
+  oid BigInt @id
+  id  String @unique
+
+  key String
+
+  providerOid BigInt
+  provider    Provider @relation(fields: [providerOid], references: [oid])
+
+  currentInstanceOid BigInt?
+  currentInstance    ProviderAuthMethod? @relation(fields: [currentInstanceOid], references: [oid], name: "currentAuthMethodInstance")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  providerAuthMethods ProviderAuthMethod[]
+
+  @@unique([providerOid, key])
 }
 
 enum ProviderAuthMethodType {
@@ -61,12 +107,18 @@ model ProviderAuthMethod {
   specificationOid BigInt
   specification    ProviderSpecification @relation(fields: [specificationOid], references: [oid])
 
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @default(now()) @updatedAt
+  globalOid BigInt
+  global    ProviderAuthMethodGlobal @relation(fields: [globalOid], references: [oid])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
   providerOAuthSetups ProviderOAuthSetup[]
   providerAuthConfigs ProviderAuthConfig[]
+  currentInGlobal     ProviderAuthMethodGlobal[] @relation("currentAuthMethodInstance")
 
   @@unique([providerOid, specificationOid, hash])
+  @@unique([specificationOid, key])
 }
 
 model ProviderSpecification {
@@ -103,6 +155,7 @@ model ProviderSpecification {
   providerDeploymentConfigPairSpecificationChangesTo   ProviderDeploymentConfigPairSpecificationChange[] @relation("SpecChangeTo")
   providerVersionSpecificationChangesFrom              ProviderVersionSpecificationChange[]              @relation("SpecChangeFrom")
   providerVersionSpecificationChangesTo                ProviderVersionSpecificationChange[]              @relation("SpecChangeTo")
+  providerConfigs                                      ProviderConfig[]
 
   @@unique([providerOid, hash])
 }

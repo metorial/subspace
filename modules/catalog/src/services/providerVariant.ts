@@ -46,7 +46,7 @@ class providerVariantServiceImpl {
       include
     });
     if (!providerVariant) {
-      throw new ServiceError(notFoundError('provider_variant', d.providerVariantId));
+      throw new ServiceError(notFoundError('provider.variant', d.providerVariantId));
     }
 
     return providerVariant;

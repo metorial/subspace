@@ -8,7 +8,8 @@ let include = {
   provider: true,
   providerVariant: { include: providerVariantInclude },
   slate: true,
-  slateVersion: true
+  slateVersion: true,
+  specification: true
 };
 
 class providerVersionServiceImpl {
@@ -41,7 +42,7 @@ class providerVersionServiceImpl {
       include
     });
     if (!providerVersion) {
-      throw new ServiceError(notFoundError('provider_version', d.providerVersionId));
+      throw new ServiceError(notFoundError('provider.version', d.providerVersionId));
     }
 
     return providerVersion;

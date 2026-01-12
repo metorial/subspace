@@ -17,7 +17,7 @@ class providerListingCollectionServiceImpl {
     });
     if (!providerListingCollection) {
       throw new ServiceError(
-        notFoundError('provider_collection', d.providerListingCollectionId)
+        notFoundError('provider.collection', d.providerListingCollectionId)
       );
     }
 

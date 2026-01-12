@@ -35,7 +35,9 @@ export let ID = createIdGenerator({
 
   providerSpecification: idType.sorted('psp'),
   providerTool: idType.sorted('pto'),
+  providerToolGlobal: idType.sorted('ptog'),
   providerAuthMethod: idType.sorted('pam'),
+  providerAuthMethodGlobal: idType.sorted('pamg'),
 
   providerAuthCredentials: idType.sorted('pac'),
   providerAuthConfig: idType.sorted('pacf'),

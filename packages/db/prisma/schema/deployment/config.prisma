@@ -19,6 +19,9 @@ model ProviderConfig {
   providerOid BigInt
   provider    Provider @relation(fields: [providerOid], references: [oid])
 
+  specificationOid BigInt
+  specification    ProviderSpecification @relation(fields: [specificationOid], references: [oid])
+
   deploymentOid BigInt?
   deployment    ProviderDeployment? @relation(fields: [deploymentOid], references: [oid])
 

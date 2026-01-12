@@ -20,7 +20,10 @@ import {
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
-import { providerDeploymentConfigPairInternalService } from '@metorial-subspace/module-provider-internal';
+import {
+  providerDeploymentConfigPairInternalService,
+  providerDeploymentInternalService
+} from '@metorial-subspace/module-provider-internal';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
 import {
@@ -31,6 +34,7 @@ import {
 let include = {
   provider: true,
   deployment: true,
+  specification: true,
   fromVault: {
     include: {
       deployment: true
@@ -71,7 +75,7 @@ class providerConfigServiceImpl {
       include
     });
     if (!providerConfig)
-      throw new ServiceError(notFoundError('provider_config', d.providerConfigId));
+      throw new ServiceError(notFoundError('provider.config', d.providerConfigId));
 
     return providerConfig;
   }
@@ -175,11 +179,24 @@ class providerConfigServiceImpl {
               fromVaultOid: d.input.config.vault.oid,
 
               deploymentOid: d.providerDeployment?.oid ?? d.input.config.vault.deploymentOid,
+              specificationOid: parentConfig.specificationOid,
 
               slateInstanceOid: parentConfig.slateInstanceOid
             },
             include
           });
+        }
+
+        let version = await providerDeploymentInternalService.getCurrentVersionOptional({
+          provider: d.provider,
+          deployment: d.providerDeployment
+        });
+        if (!version.specificationOid) {
+          throw new ServiceError(
+            badRequestError({
+              message: 'Cannot create config without a discovered specification'
+            })
+          );
         }
 
         let inner = await backend.deployment.createProviderConfig({
@@ -197,7 +214,8 @@ class providerConfigServiceImpl {
             ...data,
 
             deploymentOid: d.providerDeployment?.oid,
-            slateInstanceOid: inner.slateInstance?.oid
+            slateInstanceOid: inner.slateInstance?.oid,
+            specificationOid: version.specificationOid
           },
           include
         });

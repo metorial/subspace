@@ -16,7 +16,7 @@ class providerListingCategoryServiceImpl {
       }
     });
     if (!providerListingCategory) {
-      throw new ServiceError(notFoundError('provider_category', d.providerListingCategoryId));
+      throw new ServiceError(notFoundError('provider.category', d.providerListingCategoryId));
     }
 
     return providerListingCategory;
