@@ -1,0 +1,87 @@
+import { Paginator } from '@lowerdeck/pagination';
+import { v } from '@lowerdeck/validation';
+import { providerListingGroupPresenter } from '@metorial-subspace/db';
+import { providerListingGroupService } from '@metorial-subspace/module-catalog';
+import { app } from './_app';
+import { tenantApp } from './tenant';
+
+export let providerListingGroupApp = tenantApp.use(async ctx => {
+  let providerListingGroupId = ctx.body.providerListingGroupId;
+  if (!providerListingGroupId) throw new Error('ProviderListingGroup ID is required');
+
+  let providerListingGroup = await providerListingGroupService.getProviderListingGroupById({
+    providerListingGroupId,
+    tenant: ctx.tenant,
+    solution: ctx.solution
+  });
+
+  return { providerListingGroup };
+});
+
+export let providerListingGroupController = app.controller({
+  list: tenantApp
+    .handler()
+    .input(Paginator.validate(v.object({})))
+    .do(async ctx => {
+      let paginator = await providerListingGroupService.listProviderListingGroups({
+        tenant: ctx.tenant,
+        solution: ctx.solution
+      });
+
+      let list = await paginator.run(ctx.input);
+
+      return Paginator.presentLight(list, providerListingGroupPresenter);
+    }),
+
+  get: providerListingGroupApp
+    .handler()
+    .input(
+      v.object({
+        providerListingGroupId: v.string()
+      })
+    )
+    .do(async ctx => providerListingGroupPresenter(ctx.providerListingGroup)),
+
+  create: providerListingGroupApp
+    .handler()
+    .input(
+      v.object({
+        name: v.string(),
+        description: v.optional(v.string())
+      })
+    )
+    .do(async ctx => {
+      let providerListingGroup = await providerListingGroupService.createProviderListingGroup({
+        tenant: ctx.tenant,
+        solution: ctx.solution,
+        input: {
+          name: ctx.input.name,
+          description: ctx.input.description
+        }
+      });
+
+      return providerListingGroupPresenter(providerListingGroup);
+    }),
+
+  update: providerListingGroupApp
+    .handler()
+    .input(
+      v.object({
+        providerListingGroupId: v.string(),
+
+        name: v.optional(v.string()),
+        description: v.optional(v.string())
+      })
+    )
+    .do(async ctx => {
+      let providerListingGroup = await providerListingGroupService.updateProviderListingGroup({
+        providerListingGroup: ctx.providerListingGroup,
+        input: {
+          name: ctx.input.name,
+          description: ctx.input.description
+        }
+      });
+
+      return providerListingGroupPresenter(providerListingGroup);
+    })
+});

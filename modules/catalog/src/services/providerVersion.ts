@@ -1,7 +1,7 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, Provider, ProviderVariant } from '@metorial-subspace/db';
+import { db, Solution, Tenant } from '@metorial-subspace/db';
 import { providerVariantInclude } from './providerVariant';
 
 let include = {
@@ -12,11 +12,31 @@ let include = {
 };
 
 class providerVersionServiceImpl {
-  async getProviderVersionById(d: { providerVersionId: string; provider: Provider }) {
+  async getProviderVersionById(d: {
+    providerVersionId: string;
+    tenant: Tenant;
+    solution: Solution;
+  }) {
     let providerVersion = await db.providerVersion.findFirst({
       where: {
-        providerOid: d.provider.oid,
-        OR: [{ id: d.providerVersionId }, { identifier: d.providerVersionId }]
+        AND: [
+          {
+            OR: [{ id: d.providerVersionId }, { identifier: d.providerVersionId }]
+          },
+
+          {
+            provider: {
+              OR: [
+                { access: 'public' as const },
+                {
+                  access: 'tenant' as const,
+                  ownerTenantOid: d.tenant.oid,
+                  ownerSolutionOid: d.solution.oid
+                }
+              ]
+            }
+          }
+        ]
       },
       include
     });
@@ -27,15 +47,23 @@ class providerVersionServiceImpl {
     return providerVersion;
   }
 
-  async listProviderVersions(d: { provider: Provider; variant?: ProviderVariant }) {
+  async listProviderVersions(d: { tenant: Tenant; solution: Solution }) {
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
           await db.providerVersion.findMany({
             ...opts,
             where: {
-              providerOid: d.provider.oid,
-              providerVariantOid: d.variant?.oid
+              provider: {
+                OR: [
+                  { access: 'public' as const },
+                  {
+                    access: 'tenant' as const,
+                    ownerTenantOid: d.tenant.oid,
+                    ownerSolutionOid: d.solution.oid
+                  }
+                ]
+              }
             },
             include
           })

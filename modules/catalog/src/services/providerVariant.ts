@@ -7,7 +7,8 @@ let include = {
   backend: true,
   publisher: true,
   slate: true,
-  currentVersion: true
+  currentVersion: true,
+  provider: true
 };
 
 export let providerVariantInclude = include;
@@ -51,14 +52,23 @@ class providerVariantServiceImpl {
     return providerVariant;
   }
 
-  async listProviderVariants(d: { provider: Provider }) {
+  async listProviderVariants(d: { tenant: Tenant; solution: Solution }) {
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
           await db.providerVariant.findMany({
             ...opts,
             where: {
-              providerOid: d.provider.oid
+              provider: {
+                OR: [
+                  { access: 'public' as const },
+                  {
+                    access: 'tenant' as const,
+                    ownerTenantOid: d.tenant.oid,
+                    ownerSolutionOid: d.solution.oid
+                  }
+                ]
+              }
             },
             include
           })

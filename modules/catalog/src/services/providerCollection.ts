@@ -1,6 +1,7 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
+import { slugify } from '@lowerdeck/slugify';
 import { db, getId, Solution, Tenant } from '@metorial-subspace/db';
 
 class providerListingCollectionServiceImpl {
@@ -39,12 +40,12 @@ class providerListingCollectionServiceImpl {
   }) {
     let inner = {
       name: d.input.name,
-      slug: d.input.slug,
+      slug: slugify(d.input.slug),
       description: d.input.description
     };
 
     return await db.providerListingCollection.upsert({
-      where: { slug: d.input.slug },
+      where: { slug: inner.slug },
       create: {
         ...getId('providerCollection'),
         ...inner

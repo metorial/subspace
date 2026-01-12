@@ -6,10 +6,13 @@ import { providerInclude } from './provider';
 
 let getInclude = (tenant: Tenant, solution: Solution) => ({
   categories: true,
+  collections: true,
   groups: {
     where: { tenantOid: tenant.oid, solutionOid: solution.oid }
   },
+
   publisher: true,
+
   provider: {
     include: providerInclude
   }
@@ -62,8 +65,6 @@ class ProviderListingService {
     isVerified?: boolean;
     isOfficial?: boolean;
     isMetorial?: boolean;
-
-    isHostable?: boolean;
 
     tenant: Tenant;
     solution: Solution;

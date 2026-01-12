@@ -6,7 +6,7 @@ import { db, Tenant } from '@metorial-subspace/db';
 let include = {};
 
 class publisherServiceImpl {
-  async getProviderById(d: { publisherId: string; tenant: Tenant }) {
+  async getPublisherById(d: { publisherId: string; tenant: Tenant }) {
     let publisher = await db.publisher.findFirst({
       where: {
         AND: [
