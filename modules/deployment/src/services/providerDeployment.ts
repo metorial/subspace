@@ -12,6 +12,7 @@ import {
   ProviderVariant,
   ProviderVersion,
   snowflake,
+  Solution,
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
@@ -25,7 +26,7 @@ import { providerConfigService } from './providerConfig';
 let include = {};
 
 class providerDeploymentServiceImpl {
-  async listProviderDeployments(d: { tenant: Tenant }) {
+  async listProviderDeployments(d: { tenant: Tenant; solution: Solution }) {
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -33,6 +34,7 @@ class providerDeploymentServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
+              solutionOid: d.solution.oid,
               isEphemeral: false
             },
             include
@@ -41,11 +43,16 @@ class providerDeploymentServiceImpl {
     );
   }
 
-  async getProviderDeploymentById(d: { tenant: Tenant; providerDeploymentId: string }) {
+  async getProviderDeploymentById(d: {
+    tenant: Tenant;
+    solution: Solution;
+    providerDeploymentId: string;
+  }) {
     let providerDeployment = await db.providerDeployment.findFirst({
       where: {
         id: d.providerDeploymentId,
-        tenantOid: d.tenant.oid
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid
       },
       include
     });
@@ -57,6 +64,7 @@ class providerDeploymentServiceImpl {
 
   async createProviderDeployment(d: {
     tenant: Tenant;
+    solution: Solution;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     lockedVersion?: ProviderVersion;
     input: {
@@ -100,6 +108,7 @@ class providerDeploymentServiceImpl {
             oid: snowflake.nextId(),
             id: `${ID.idPrefixes.tenantProvider}_1${d.tenant.oid.toString(36).padStart(16, '0')}${d.provider.oid.toString(36).padStart(16, '0')}`,
             tenantOid: d.tenant.oid,
+            solutionOid: d.solution.oid,
             providerOid: d.provider.oid
           },
           update: {}
@@ -130,6 +139,7 @@ class providerDeploymentServiceImpl {
           metadata: d.input.metadata,
 
           tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid,
           providerOid: d.provider.oid,
           providerVariantOid: d.provider.defaultVariant.oid,
           lockedVersionOid: d.lockedVersion?.oid,
@@ -148,6 +158,7 @@ class providerDeploymentServiceImpl {
           tenant: d.tenant,
           providerDeployment,
           provider: d.provider,
+          solution: d.solution,
           input: {
             name: `Default Config for ${d.input.name}`,
             isEphemeral: d.input.isEphemeral,
@@ -180,6 +191,7 @@ class providerDeploymentServiceImpl {
 
   async updateProviderDeployment(d: {
     tenant: Tenant;
+    solution: Solution;
     providerDeployment: ProviderDeployment;
     input: {
       name?: string;
@@ -191,7 +203,8 @@ class providerDeploymentServiceImpl {
       let providerDeployment = await db.providerDeployment.update({
         where: {
           oid: d.providerDeployment.oid,
-          tenantOid: d.tenant.oid
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid
         },
         data: {
           name: d.input.name ?? d.providerDeployment.name,

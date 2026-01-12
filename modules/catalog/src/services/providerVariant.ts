@@ -1,7 +1,7 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, Provider, Tenant } from '@metorial-subspace/db';
+import { db, Provider, Solution, Tenant } from '@metorial-subspace/db';
 
 let include = {
   backend: true,
@@ -16,6 +16,7 @@ class providerVariantServiceImpl {
   async getProviderVariantById(d: {
     providerVariantId: string;
     tenant: Tenant;
+    solution: Solution;
     provider?: Provider;
   }) {
     let providerVariant = await db.providerVariant.findFirst({
@@ -31,7 +32,11 @@ class providerVariantServiceImpl {
             provider: {
               OR: [
                 { access: 'public' as const },
-                { access: 'tenant' as const, ownerTenantOid: d.tenant.oid }
+                {
+                  access: 'tenant' as const,
+                  ownerTenantOid: d.tenant.oid,
+                  ownerSolutionOid: d.solution.oid
+                }
               ]
             }
           }

@@ -8,13 +8,21 @@ import {
   getId,
   ProviderListing,
   ProviderListingGroup,
+  Solution,
   Tenant
 } from '@metorial-subspace/db';
 
 class ProviderListingGroupService {
-  async getProviderListingGroupById(d: { tenant: Tenant; providerListingGroupId: string }) {
+  async getProviderListingGroupById(d: {
+    tenant: Tenant;
+    solution: Solution;
+    providerListingGroupId: string;
+  }) {
     let providerListingGroup = await db.providerListingGroup.findFirst({
       where: {
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid,
+
         OR: [{ id: d.providerListingGroupId }, { slug: d.providerListingGroupId }]
       }
     });
@@ -25,14 +33,15 @@ class ProviderListingGroupService {
     return providerListingGroup;
   }
 
-  async listProviderListingGroups(d: { tenant: Tenant }) {
+  async listProviderListingGroups(d: { tenant: Tenant; solution: Solution }) {
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
           await db.providerListingGroup.findMany({
             ...opts,
             where: {
-              tenantOid: d.tenant.oid
+              tenantOid: d.tenant.oid,
+              solutionOid: d.solution.oid
             }
           })
       )
@@ -41,12 +50,14 @@ class ProviderListingGroupService {
 
   async createProviderListingGroup(d: {
     tenant: Tenant;
+    solution: Solution;
     input: { name: string; description?: string };
   }) {
     return await db.providerListingGroup.create({
       data: {
         ...getId('providerGroup'),
         tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid,
         name: d.input.name,
         description: d.input.description,
         slug: slugify(`${d.input.name}-${generateCode(6)}`)

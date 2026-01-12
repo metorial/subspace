@@ -10,6 +10,7 @@ import {
   ProviderDeployment,
   ProviderVariant,
   ProviderVersion,
+  Solution,
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
@@ -22,14 +23,15 @@ import { providerConfigService } from './providerConfig';
 let include = {};
 
 class providerConfigVaultServiceImpl {
-  async listProviderConfigVaults(d: { tenant: Tenant }) {
+  async listProviderConfigVaults(d: { tenant: Tenant; solution: Solution }) {
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
           await db.providerConfigVault.findMany({
             ...opts,
             where: {
-              tenantOid: d.tenant.oid
+              tenantOid: d.tenant.oid,
+              solutionOid: d.solution.oid
             },
             include
           })
@@ -37,11 +39,16 @@ class providerConfigVaultServiceImpl {
     );
   }
 
-  async getProviderConfigVaultById(d: { tenant: Tenant; providerConfigVaultId: string }) {
+  async getProviderConfigVaultById(d: {
+    tenant: Tenant;
+    solution: Solution;
+    providerConfigVaultId: string;
+  }) {
     let providerConfigVault = await db.providerConfigVault.findFirst({
       where: {
         id: d.providerConfigVaultId,
-        tenantOid: d.tenant.oid
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid
       },
       include
     });
@@ -53,6 +60,7 @@ class providerConfigVaultServiceImpl {
 
   async createProviderConfigVault(d: {
     tenant: Tenant;
+    solution: Solution;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
@@ -72,6 +80,7 @@ class providerConfigVaultServiceImpl {
     return await withTransaction(async db => {
       let config = await providerConfigService.createProviderConfig({
         tenant: d.tenant,
+        solution: d.solution,
         provider: d.provider,
         providerDeployment: d.providerDeployment,
         input: {
@@ -92,6 +101,7 @@ class providerConfigVaultServiceImpl {
           tenantOid: d.tenant.oid,
           configOid: config.oid,
           providerOid: d.provider.oid,
+          solutionOid: d.solution.oid,
           deploymentOid: d.providerDeployment?.oid
         }
       });
@@ -106,6 +116,7 @@ class providerConfigVaultServiceImpl {
 
   async updateProviderConfigVault(d: {
     tenant: Tenant;
+    solution: Solution;
     providerConfigVault: ProviderConfigVault;
     input: {
       name?: string;
@@ -117,7 +128,8 @@ class providerConfigVaultServiceImpl {
       let vault = await db.providerConfigVault.update({
         where: {
           oid: d.providerConfigVault.oid,
-          tenantOid: d.tenant.oid
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid
         },
         data: {
           name: d.input.name ?? d.providerConfigVault.name,

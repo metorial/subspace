@@ -1,11 +1,12 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, getId, Tenant } from '@metorial-subspace/db';
+import { db, getId, Solution, Tenant } from '@metorial-subspace/db';
 
 class providerListingCollectionServiceImpl {
   async getProviderListingCollectionById(d: {
     tenant: Tenant;
+    solution: Solution;
     providerListingCollectionId: string;
   }) {
     let providerListingCollection = await db.providerListingCollection.findFirst({
@@ -22,7 +23,7 @@ class providerListingCollectionServiceImpl {
     return providerListingCollection;
   }
 
-  async listProviderListingCollections(d: { tenant: Tenant }) {
+  async listProviderListingCollections(d: { tenant: Tenant; solution: Solution }) {
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>

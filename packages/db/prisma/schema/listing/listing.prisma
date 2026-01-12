@@ -36,6 +36,9 @@ model ProviderListing {
   ownerTenantOid BigInt?
   ownerTenant    Tenant? @relation(fields: [ownerTenantOid], references: [oid])
 
+  ownerSolutionOid BigInt?
+  ownerSolution    Solution? @relation(fields: [ownerSolutionOid], references: [oid], onDelete: Cascade)
+
   publisherOid BigInt
   publisher    Publisher @relation(fields: [publisherOid], references: [oid])
 

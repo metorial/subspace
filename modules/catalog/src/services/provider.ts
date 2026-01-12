@@ -1,7 +1,7 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, Provider, Tenant } from '@metorial-subspace/db';
+import { db, Provider, Solution, Tenant } from '@metorial-subspace/db';
 import { providerInternalService } from '@metorial-subspace/module-provider-internal';
 import { providerVariantInclude } from './providerVariant';
 
@@ -17,7 +17,7 @@ let include = {
 export let providerInclude = include;
 
 class providerServiceImpl {
-  async getProviderById(d: { providerId: string; tenant: Tenant }) {
+  async getProviderById(d: { providerId: string; tenant: Tenant; solution: Solution }) {
     let provider = await db.provider.findFirst({
       where: {
         AND: [
@@ -30,7 +30,14 @@ class providerServiceImpl {
           },
 
           {
-            OR: [{ access: 'public' }, { access: 'tenant', ownerTenantOid: d.tenant.oid }]
+            OR: [
+              { access: 'public' },
+              {
+                access: 'tenant',
+                ownerTenantOid: d.tenant.oid,
+                ownerSolutionOid: d.solution.oid
+              }
+            ]
           }
         ]
       },
@@ -43,13 +50,22 @@ class providerServiceImpl {
     return provider;
   }
 
-  async listProviders(d: { tenant: Tenant }) {
+  async listProviders(d: { tenant: Tenant; solution: Solution }) {
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
           await db.provider.findMany({
             ...opts,
-            where: {},
+            where: {
+              OR: [
+                { access: 'public' },
+                {
+                  access: 'tenant',
+                  ownerTenantOid: d.tenant.oid,
+                  ownerSolutionOid: d.solution.oid
+                }
+              ]
+            },
             include
           })
       )

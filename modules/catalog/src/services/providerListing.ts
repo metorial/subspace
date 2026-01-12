@@ -1,13 +1,13 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, Tenant } from '@metorial-subspace/db';
+import { db, Solution, Tenant } from '@metorial-subspace/db';
 import { providerInclude } from './provider';
 
-let getInclude = (tenant: Tenant) => ({
+let getInclude = (tenant: Tenant, solution: Solution) => ({
   categories: true,
   groups: {
-    where: { tenantOid: tenant.oid }
+    where: { tenantOid: tenant.oid, solutionOid: solution.oid }
   },
   publisher: true,
   provider: {
@@ -16,7 +16,11 @@ let getInclude = (tenant: Tenant) => ({
 });
 
 class ProviderListingService {
-  async getProviderListingById(d: { providerListingId: string; tenant: Tenant }) {
+  async getProviderListingById(d: {
+    providerListingId: string;
+    tenant: Tenant;
+    solution: Solution;
+  }) {
     let providerListing = await db.providerListing.findFirst({
       where: {
         AND: [
@@ -29,11 +33,14 @@ class ProviderListingService {
           },
 
           {
-            OR: [{ isPublic: true }, { ownerTenantOid: d.tenant.oid }]
+            OR: [
+              { isPublic: true },
+              { ownerTenantOid: d.tenant.oid, ownerSolutionOid: d.solution.oid }
+            ]
           }
         ]
       },
-      include: getInclude(d.tenant)
+      include: getInclude(d.tenant, d.solution)
     });
     if (!providerListing) {
       throw new ServiceError(notFoundError('provider_listing', d.providerListingId));
@@ -59,6 +66,7 @@ class ProviderListingService {
     isHostable?: boolean;
 
     tenant: Tenant;
+    solution: Solution;
 
     orderByRank?: boolean;
   }) {
@@ -138,10 +146,18 @@ class ProviderListingService {
                 : {},
 
               {
-                OR: [{ isPublic: true }, { ownerTenantOid: d.tenant.oid }]
+                OR: [
+                  { isPublic: true },
+                  { ownerTenantOid: d.tenant.oid, ownerSolutionOid: d.solution.oid }
+                ]
               },
 
-              d.onlyFromTenant ? { ownerTenantOid: d.tenant?.oid ?? -1 } : {},
+              d.onlyFromTenant
+                ? {
+                    ownerTenantOid: d.tenant?.oid ?? -1,
+                    ownerSolutionOid: d.solution?.oid ?? -1
+                  }
+                : {},
 
               d.isPublic ? { isPublic: true } : {},
 
@@ -150,7 +166,7 @@ class ProviderListingService {
               d.isMetorial !== undefined ? { isMetorial: d.isMetorial } : {}
             ]
           },
-          include: getInclude(d.tenant),
+          include: getInclude(d.tenant, d.solution),
           omit: {
             readme: true
           }

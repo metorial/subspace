@@ -12,6 +12,7 @@ import {
   ProviderDeployment,
   ProviderVariant,
   ProviderVersion,
+  Solution,
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
@@ -26,7 +27,7 @@ import {
 let include = {};
 
 class providerAuthConfigServiceImpl {
-  async listProviderAuthConfigs(d: { tenant: Tenant }) {
+  async listProviderAuthConfigs(d: { tenant: Tenant; solution: Solution }) {
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -34,6 +35,7 @@ class providerAuthConfigServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
+              solutionOid: d.solution.oid,
               isEphemeral: false
             },
             include
@@ -42,11 +44,16 @@ class providerAuthConfigServiceImpl {
     );
   }
 
-  async getProviderAuthConfigById(d: { tenant: Tenant; providerAuthConfigId: string }) {
+  async getProviderAuthConfigById(d: {
+    tenant: Tenant;
+    solution: Solution;
+    providerAuthConfigId: string;
+  }) {
     let providerAuthConfig = await db.providerAuthConfig.findFirst({
       where: {
         id: d.providerAuthConfigId,
-        tenantOid: d.tenant.oid
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid
       },
       include
     });
@@ -58,6 +65,7 @@ class providerAuthConfigServiceImpl {
 
   async updateProviderAuthConfig(d: {
     tenant: Tenant;
+    solution: Solution;
     providerAuthConfig: ProviderAuthConfig;
     input: {
       name?: string;
@@ -69,7 +77,8 @@ class providerAuthConfigServiceImpl {
       let config = await db.providerAuthConfig.update({
         where: {
           oid: d.providerAuthConfig.oid,
-          tenantOid: d.tenant.oid
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid
         },
         data: {
           name: d.input.name ?? d.providerAuthConfig.name,
@@ -89,6 +98,7 @@ class providerAuthConfigServiceImpl {
 
   async createProviderAuthConfig(d: {
     tenant: Tenant;
+    solution: Solution;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
@@ -163,6 +173,7 @@ class providerAuthConfigServiceImpl {
 
       return await this.createProviderAuthConfigInternal({
         tenant: d.tenant,
+        solution: d.solution,
         provider: d.provider,
         providerDeployment: d.providerDeployment,
         input: d.input,
@@ -174,6 +185,7 @@ class providerAuthConfigServiceImpl {
 
   async createProviderAuthConfigInternal(d: {
     tenant: Tenant;
+    solution: Solution;
     provider: Provider;
     providerDeployment?: ProviderDeployment;
     input: {
@@ -202,6 +214,7 @@ class providerAuthConfigServiceImpl {
           isDefault: d.input.isDefault,
 
           tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid,
           providerOid: d.provider.oid,
           authMethodOid: d.authMethod.oid,
           deploymentOid: d.providerDeployment?.oid,

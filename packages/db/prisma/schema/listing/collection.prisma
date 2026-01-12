@@ -37,6 +37,9 @@ model ProviderListingGroup {
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
 
+  solutionOid BigInt
+  solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 

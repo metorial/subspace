@@ -1,0 +1,23 @@
+model Solution {
+  oid BigInt @id
+  id  String @unique
+
+  identifier String @unique
+  name       String
+
+  createdAt DateTime @default(now())
+
+  providerAuthConfigs                      ProviderAuthConfig[]
+  providerAuthCredentials                  ProviderAuthCredentials[]
+  providerOAuthSetups                      ProviderOAuthSetup[]
+  providerConfigs                          ProviderConfig[]
+  providerDeployments                      ProviderDeployment[]
+  tenantProviders                          TenantProvider[]
+  providerConfigVaults                     ProviderConfigVault[]
+  providerListings                         ProviderListing[]
+  providerListingGroups                    ProviderListingGroup[]
+  providers                                Provider[]
+  providerSpecificationChangeNotifications ProviderSpecificationChangeNotification[]
+  sessions                                 Session[]
+  providerSessions                         ProviderSession[]
+}

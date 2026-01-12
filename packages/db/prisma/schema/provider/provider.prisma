@@ -53,6 +53,9 @@ model Provider {
   ownerTenantOid BigInt?
   ownerTenant    Tenant? @relation(fields: [ownerTenantOid], references: [oid])
 
+  ownerSolutionOid BigInt?
+  ownerSolution    Solution? @relation(fields: [ownerSolutionOid], references: [oid], onDelete: Cascade)
+
   defaultVariantOid BigInt?
   defaultVariant    ProviderVariant? @relation(fields: [defaultVariantOid], references: [oid], name: "defaultVariant")
 

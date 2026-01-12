@@ -13,6 +13,7 @@ import {
   ProviderOAuthSetup,
   ProviderVariant,
   ProviderVersion,
+  Solution,
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
@@ -27,7 +28,7 @@ import {
 let include = {};
 
 class providerOAuthSetupServiceImpl {
-  async listProviderOAuthSetups(d: { tenant: Tenant }) {
+  async listProviderOAuthSetups(d: { tenant: Tenant; solution: Solution }) {
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -35,6 +36,7 @@ class providerOAuthSetupServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
+              solutionOid: d.solution.oid,
               isEphemeral: false
             },
             include
@@ -43,11 +45,16 @@ class providerOAuthSetupServiceImpl {
     );
   }
 
-  async getProviderOAuthSetupById(d: { tenant: Tenant; providerOAuthSetupId: string }) {
+  async getProviderOAuthSetupById(d: {
+    tenant: Tenant;
+    solution: Solution;
+    providerOAuthSetupId: string;
+  }) {
     let providerOAuthSetup = await db.providerOAuthSetup.findFirst({
       where: {
         id: d.providerOAuthSetupId,
-        tenantOid: d.tenant.oid
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid
       },
       include
     });
@@ -59,6 +66,7 @@ class providerOAuthSetupServiceImpl {
 
   async createProviderOAuthSetup(d: {
     tenant: Tenant;
+    solution: Solution;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
@@ -154,6 +162,7 @@ class providerOAuthSetupServiceImpl {
           redirectUrl: d.input.redirectUrl,
 
           tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid,
           providerOid: d.provider.oid,
           authCredentialsOid: d.credentials.oid,
           authMethodOid: authMethod.oid,
@@ -172,6 +181,7 @@ class providerOAuthSetupServiceImpl {
 
   async updateProviderOAuthSetup(d: {
     tenant: Tenant;
+    solution: Solution;
     providerOAuthSetup: ProviderOAuthSetup;
     input: {
       name?: string;
@@ -183,7 +193,8 @@ class providerOAuthSetupServiceImpl {
       let config = await db.providerOAuthSetup.update({
         where: {
           oid: d.providerOAuthSetup.oid,
-          tenantOid: d.tenant.oid
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid
         },
         data: {
           name: d.input.name ?? d.providerOAuthSetup.name,

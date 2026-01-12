@@ -11,6 +11,7 @@ import {
   ProviderDeployment,
   ProviderVariant,
   ProviderVersion,
+  Solution,
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
@@ -24,7 +25,7 @@ import {
 let include = {};
 
 class providerConfigServiceImpl {
-  async listProviderConfigs(d: { tenant: Tenant }) {
+  async listProviderConfigs(d: { tenant: Tenant; solution: Solution }) {
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -32,6 +33,7 @@ class providerConfigServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
+              solutionOid: d.solution.oid,
               isForVault: false,
               isEphemeral: false
             },
@@ -41,11 +43,16 @@ class providerConfigServiceImpl {
     );
   }
 
-  async getProviderConfigById(d: { tenant: Tenant; providerConfigId: string }) {
+  async getProviderConfigById(d: {
+    tenant: Tenant;
+    solution: Solution;
+    providerConfigId: string;
+  }) {
     let providerConfig = await db.providerConfig.findFirst({
       where: {
         id: d.providerConfigId,
-        tenantOid: d.tenant.oid
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid
       },
       include
     });
@@ -57,6 +64,7 @@ class providerConfigServiceImpl {
 
   async createProviderConfig(d: {
     tenant: Tenant;
+    solution: Solution;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
@@ -104,6 +112,7 @@ class providerConfigServiceImpl {
 
         tenantOid: d.tenant.oid,
         providerOid: d.provider.oid,
+        solutionOid: d.solution.oid,
 
         specificationDiscoveryStatus: 'discovering' as const,
         providerDeploymentOid: d.providerDeployment?.oid
@@ -184,6 +193,7 @@ class providerConfigServiceImpl {
 
   async updateProviderConfig(d: {
     tenant: Tenant;
+    solution: Solution;
     providerConfig: ProviderConfig;
     input: {
       name?: string;
@@ -195,7 +205,8 @@ class providerConfigServiceImpl {
       let config = await db.providerConfig.update({
         where: {
           oid: d.providerConfig.oid,
-          tenantOid: d.tenant.oid
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid
         },
         data: {
           name: d.input.name ?? d.providerConfig.name,

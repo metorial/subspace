@@ -41,7 +41,8 @@ class providerOAuthSetupInternalServiceImpl {
             tenant: true,
             authMethod: true,
             provider: true,
-            deployment: true
+            deployment: true,
+            solution: true
           }
         });
 
@@ -64,6 +65,7 @@ class providerOAuthSetupInternalServiceImpl {
             authConfig = await providerAuthConfigService.createProviderAuthConfigInternal({
               tenant: providerOAuthSetup.tenant,
               provider: providerOAuthSetup.provider,
+              solution: providerOAuthSetup.solution,
               providerDeployment: providerOAuthSetup.deployment ?? undefined,
               input: {
                 name: providerOAuthSetup.name ?? undefined,

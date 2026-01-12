@@ -32,6 +32,9 @@ model ProviderOAuthSetup {
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid], onDelete: Cascade)
 
+  solutionOid BigInt
+  solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
+
   providerOid BigInt
   provider    Provider @relation(fields: [providerOid], references: [oid], onDelete: Cascade)
 

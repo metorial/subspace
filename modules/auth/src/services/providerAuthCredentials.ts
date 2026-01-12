@@ -8,6 +8,7 @@ import {
   Provider,
   ProviderAuthCredentials,
   ProviderVariant,
+  Solution,
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
@@ -20,7 +21,7 @@ import {
 let include = {};
 
 class providerAuthCredentialsServiceImpl {
-  async listProviderAuthCredentials(d: { tenant: Tenant }) {
+  async listProviderAuthCredentials(d: { tenant: Tenant; solution: Solution }) {
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -28,6 +29,7 @@ class providerAuthCredentialsServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
+              solutionOid: d.solution.oid,
               isEphemeral: false
             },
             include
@@ -38,12 +40,14 @@ class providerAuthCredentialsServiceImpl {
 
   async getProviderAuthCredentialsById(d: {
     tenant: Tenant;
+    solution: Solution;
     providerAuthCredentialsId: string;
   }) {
     let providerAuthCredentials = await db.providerAuthCredentials.findFirst({
       where: {
         id: d.providerAuthCredentialsId,
-        tenantOid: d.tenant.oid
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid
       },
       include
     });
@@ -55,6 +59,7 @@ class providerAuthCredentialsServiceImpl {
 
   async createProviderAuthCredentials(d: {
     tenant: Tenant;
+    solution: Solution;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     input: {
       name: string;
@@ -102,6 +107,7 @@ class providerAuthCredentialsServiceImpl {
           isDefault: d.input.isDefault,
 
           tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid,
           providerOid: d.provider.oid
         }
       });
@@ -118,6 +124,7 @@ class providerAuthCredentialsServiceImpl {
 
   async updateProviderAuthCredentials(d: {
     tenant: Tenant;
+    solution: Solution;
     providerAuthCredentials: ProviderAuthCredentials;
     input: {
       name?: string;
@@ -129,7 +136,8 @@ class providerAuthCredentialsServiceImpl {
       let config = await db.providerAuthCredentials.update({
         where: {
           oid: d.providerAuthCredentials.oid,
-          tenantOid: d.tenant.oid
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid
         },
         data: {
           name: d.input.name ?? d.providerAuthCredentials.name,

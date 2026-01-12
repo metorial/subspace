@@ -8,6 +8,9 @@ model TenantProvider {
   providerOid BigInt
   provider    Provider @relation(fields: [providerOid], references: [oid])
 
+  solutionOid BigInt
+  solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
+
   createdAt DateTime @default(now())
 
   @@unique([tenantOid, providerOid])
