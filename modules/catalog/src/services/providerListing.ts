@@ -46,7 +46,7 @@ class ProviderListingService {
       include: getInclude(d.tenant, d.solution)
     });
     if (!providerListing) {
-      throw new ServiceError(notFoundError('provider_listing', d.providerListingId));
+      throw new ServiceError(notFoundError('provider.listing', d.providerListingId));
     }
 
     return providerListing;

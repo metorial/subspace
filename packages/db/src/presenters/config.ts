@@ -2,7 +2,8 @@ import type {
   Provider,
   ProviderConfig,
   ProviderConfigVault,
-  ProviderDeployment
+  ProviderDeployment,
+  ProviderSpecification
 } from '../../prisma/generated/client';
 import { providerDeploymentPreviewPresenter } from './deployment';
 import { providerConfigVaultPresenter } from './vault';
@@ -16,6 +17,7 @@ export let providerConfigPresenter = (
           deployment: ProviderDeployment | null;
         })
       | null;
+    specification: Omit<ProviderSpecification, 'value'>;
   }
 ) => ({
   object: 'provider.config',
@@ -44,6 +46,8 @@ export let providerConfigPresenter = (
         provider: providerConfig.provider
       })
     : null,
+
+  specificationId: providerConfig.specification.id,
 
   createdAt: providerConfig.createdAt,
   updatedAt: providerConfig.updatedAt

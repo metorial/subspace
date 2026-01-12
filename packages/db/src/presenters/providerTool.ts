@@ -1,8 +1,13 @@
-import type { Provider, ProviderTool } from '../../prisma/generated/client';
+import type {
+  Provider,
+  ProviderSpecification,
+  ProviderTool
+} from '../../prisma/generated/client';
 
 export let providerToolPresenter = (
   providerTool: ProviderTool & {
     provider: Provider;
+    specification: Omit<ProviderSpecification, 'value'>;
   }
 ) => ({
   object: 'provider.capabilities.tool',
@@ -19,6 +24,8 @@ export let providerToolPresenter = (
   instructions: providerTool.value.instructions,
   outputJsonSchema: providerTool.value.outputJsonSchema,
   tags: providerTool.value.tags,
+
+  specificationId: providerTool.specification.id,
 
   createdAt: providerTool.createdAt,
   updatedAt: providerTool.updatedAt

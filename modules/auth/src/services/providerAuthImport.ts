@@ -51,7 +51,7 @@ class providerAuthImportServiceImpl {
       include
     });
     if (!providerAuthImport)
-      throw new ServiceError(notFoundError('provider_config', d.providerAuthImportId));
+      throw new ServiceError(notFoundError('provider.auth_import', d.providerAuthImportId));
 
     return providerAuthImport;
   }

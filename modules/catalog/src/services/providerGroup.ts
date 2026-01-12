@@ -27,7 +27,7 @@ class ProviderListingGroupService {
       }
     });
     if (!providerListingGroup) {
-      throw new ServiceError(notFoundError('provider_collection', d.providerListingGroupId));
+      throw new ServiceError(notFoundError('provider.group', d.providerListingGroupId));
     }
 
     return providerListingGroup;

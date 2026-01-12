@@ -54,7 +54,7 @@ class providerAuthCredentialsServiceImpl {
       include
     });
     if (!providerAuthCredentials)
-      throw new ServiceError(notFoundError('provider_config', d.providerAuthCredentialsId));
+      throw new ServiceError(notFoundError('provider.config', d.providerAuthCredentialsId));
 
     return providerAuthCredentials;
   }

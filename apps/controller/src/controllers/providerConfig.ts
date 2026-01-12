@@ -1,7 +1,11 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { providerConfigPresenter } from '@metorial-subspace/db';
-import { providerService } from '@metorial-subspace/module-catalog';
+import { providerConfigPresenter, providerConfigSchemaPresenter } from '@metorial-subspace/db';
+import {
+  providerConfigSchemaService,
+  providerService,
+  providerVersionService
+} from '@metorial-subspace/module-catalog';
 import {
   providerConfigService,
   providerConfigVaultService,
@@ -36,6 +40,56 @@ export let providerConfigController = app.controller({
       let list = await paginator.run(ctx.input);
 
       return Paginator.presentLight(list, providerConfigPresenter);
+    }),
+
+  getConfigSchema: tenantApp
+    .handler()
+    .input(
+      v.object({
+        providerId: v.optional(v.string()),
+        providerConfigId: v.optional(v.string()),
+        providerVersionId: v.optional(v.string()),
+        providerDeploymentId: v.optional(v.string())
+      })
+    )
+    .do(async ctx => {
+      let ts = { tenant: ctx.tenant, solution: ctx.solution };
+      let provider = ctx.input.providerId
+        ? await providerService.getProviderById({
+            ...ts,
+            providerId: ctx.input.providerId
+          })
+        : undefined;
+      let providerDeployment = ctx.input.providerDeploymentId
+        ? await providerDeploymentService.getProviderDeploymentById({
+            ...ts,
+            providerDeploymentId: ctx.input.providerDeploymentId
+          })
+        : undefined;
+      let providerConfig = ctx.input.providerConfigId
+        ? await providerConfigService.getProviderConfigById({
+            ...ts,
+            providerConfigId: ctx.input.providerConfigId
+          })
+        : undefined;
+      let providerVersion = ctx.input.providerVersionId
+        ? await providerVersionService.getProviderVersionById({
+            ...ts,
+            providerVersionId: ctx.input.providerVersionId
+          })
+        : undefined;
+
+      let config = await providerConfigSchemaService.getProviderConfigSchema({
+        tenant: ctx.tenant,
+        solution: ctx.solution,
+
+        provider,
+        providerDeployment,
+        providerConfig,
+        providerVersion
+      });
+
+      return providerConfigSchemaPresenter(config);
     }),
 
   get: providerConfigApp

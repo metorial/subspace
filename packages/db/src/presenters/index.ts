@@ -7,6 +7,7 @@ export * from './deployment';
 export * from './oauthSetup';
 export * from './provider';
 export * from './providerAuthMethod';
+export * from './providerConfig';
 export * from './providerEntry';
 export * from './providerListing';
 export * from './providerListingCategory';

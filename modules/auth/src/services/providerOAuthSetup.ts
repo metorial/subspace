@@ -28,14 +28,10 @@ import {
 
 let include = {
   provider: true,
-  authCredentials: true,
-  authMethod: true,
   deployment: true,
-  authConfig: {
-    include: {
-      deployment: true
-    }
-  }
+  authCredentials: true,
+  authConfig: { include: { deployment: true } },
+  authMethod: { include: { specification: { omit: { value: true } } } }
 };
 
 class providerOAuthSetupServiceImpl {
@@ -70,7 +66,7 @@ class providerOAuthSetupServiceImpl {
       include
     });
     if (!providerOAuthSetup)
-      throw new ServiceError(notFoundError('provider_config', d.providerOAuthSetupId));
+      throw new ServiceError(notFoundError('provider.oauth_setup', d.providerOAuthSetupId));
 
     return providerOAuthSetup;
   }

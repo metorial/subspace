@@ -62,18 +62,20 @@ model Provider {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  variants                ProviderVariant[]
-  providerVersions        ProviderVersion[]
-  tenantProviders         TenantProvider[]
-  deployment              ProviderDeployment[]
-  listing                 ProviderListing?
-  sessionProviders        ProviderSession[]
-  providerConfigs         ProviderConfig[]
-  tools                   ProviderTool[]
-  authMethods             ProviderAuthMethod[]
-  providerSpecifications  ProviderSpecification[]
-  providerConfigVaults    ProviderConfigVault[]
-  providerAuthCredentials ProviderAuthCredentials[]
-  providerOAuthSetups     ProviderOAuthSetup[]
-  providerAuthConfigs     ProviderAuthConfig[]
+  variants                  ProviderVariant[]
+  providerVersions          ProviderVersion[]
+  tenantProviders           TenantProvider[]
+  deployment                ProviderDeployment[]
+  listing                   ProviderListing?
+  sessionProviders          ProviderSession[]
+  providerConfigs           ProviderConfig[]
+  tools                     ProviderTool[]
+  authMethods               ProviderAuthMethod[]
+  providerSpecifications    ProviderSpecification[]
+  providerConfigVaults      ProviderConfigVault[]
+  providerAuthCredentials   ProviderAuthCredentials[]
+  providerOAuthSetups       ProviderOAuthSetup[]
+  providerAuthConfigs       ProviderAuthConfig[]
+  providerToolGlobals       ProviderToolGlobal[]
+  providerAuthMethodGlobals ProviderAuthMethodGlobal[]
 }

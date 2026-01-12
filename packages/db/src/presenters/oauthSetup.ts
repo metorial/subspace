@@ -4,7 +4,8 @@ import type {
   ProviderAuthCredentials,
   ProviderAuthMethod,
   ProviderDeployment,
-  ProviderOAuthSetup
+  ProviderOAuthSetup,
+  ProviderSpecification
 } from '../../prisma/generated/client';
 import { providerAuthConfigPresenter } from './authConfig';
 import { providerAuthCredentialsPresenter } from './authCredentials';
@@ -15,7 +16,7 @@ export let providerOAuthSetupPresenter = (
     provider: Provider;
     deployment: ProviderDeployment | null;
     authCredentials: ProviderAuthCredentials | null;
-    authMethod: ProviderAuthMethod;
+    authMethod: ProviderAuthMethod & { specification: ProviderSpecification };
     authConfig: (ProviderAuthConfig & { deployment: ProviderDeployment | null }) | null;
   }
 ) => ({

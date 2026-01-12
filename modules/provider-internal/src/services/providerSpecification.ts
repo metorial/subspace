@@ -44,6 +44,35 @@ class providerSpecificationInternalServiceImpl {
       d.authMethods.find(am => am.type == 'oauth') ??
       d.authMethods[0];
 
+    await db.providerToolGlobal.createMany({
+      skipDuplicates: true,
+      data: d.tools.map(t => ({
+        ...getId('providerToolGlobal'),
+        key: t.key,
+        providerOid: d.provider.oid
+      }))
+    });
+    await db.providerAuthMethodGlobal.createMany({
+      skipDuplicates: true,
+      data: d.authMethods.map(am => ({
+        ...getId('providerAuthMethodGlobal'),
+        key: am.key,
+        providerOid: d.provider.oid
+      }))
+    });
+
+    let globalTools = await db.providerToolGlobal.findMany({
+      where: { providerOid: d.provider.oid },
+      select: { oid: true, key: true }
+    });
+    let globalAuthMethods = await db.providerAuthMethodGlobal.findMany({
+      where: { providerOid: d.provider.oid },
+      select: { oid: true, key: true }
+    });
+
+    let globalToolsMap = new Map(globalTools.map(t => [t.key, t]));
+    let globalAuthMethodsMap = new Map(globalAuthMethods.map(am => [am.key, am]));
+
     return await db.providerSpecification.create({
       data: {
         ...getId('providerSpecification'),
@@ -75,18 +104,18 @@ class providerSpecificationInternalServiceImpl {
               specId: am.specId,
               specUniqueIdentifier: am.specUniqueIdentifier,
               callableId: am.callableId,
-              key: am.key,
 
+              type: am.type,
+              key: am.key,
               isDefault: am.specId == defaultAuthConfig?.specId,
 
               name: am.name,
               description: am.description,
 
-              type: am.type,
-
               value: am,
 
               providerOid: d.provider.oid,
+              globalOid: globalAuthMethodsMap.get(am.key)!.oid,
               hash: await Hash.sha256(canonicalize([d.provider.id, am]))
             }))
           )
@@ -107,6 +136,7 @@ class providerSpecificationInternalServiceImpl {
               value: t,
 
               providerOid: d.provider.oid,
+              globalOid: globalToolsMap.get(t.key)!.oid,
               hash: await Hash.sha256(canonicalize([d.provider.id, t]))
             }))
           )
