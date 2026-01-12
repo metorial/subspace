@@ -196,10 +196,10 @@ class providerInternalServiceImpl {
   async updateProvider(d: {
     provider: Provider;
     input: {
-      name: string;
+      name?: string;
       description?: string;
-      slug: string;
-      image: PrismaJson.EntityImage | null;
+      slug?: string;
+      image?: PrismaJson.EntityImage | null;
       skills?: string[];
     };
   }) {
