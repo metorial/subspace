@@ -22,7 +22,8 @@ class providerOAuthSetupInternalServiceImpl {
   async getProviderOAuthSetupByClientSecret(d: { clientSecret: string }) {
     let providerOAuthSetup = await db.providerOAuthSetup.findFirst({
       where: {
-        clientSecret: d.clientSecret
+        clientSecret: d.clientSecret,
+        expiresAt: { gt: new Date() }
       },
       include
     });

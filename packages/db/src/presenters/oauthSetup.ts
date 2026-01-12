@@ -9,6 +9,7 @@ import type {
 } from '../../prisma/generated/client';
 import { providerAuthConfigPresenter } from './authConfig';
 import { providerAuthCredentialsPresenter } from './authCredentials';
+import { providerDeploymentPreviewPresenter } from './deployment';
 import { providerAuthMethodPresenter } from './providerAuthMethod';
 
 export let providerOAuthSetupPresenter = (
@@ -54,5 +55,16 @@ export let providerOAuthSetupPresenter = (
   authMethod: providerAuthMethodPresenter({
     ...providerOAuthSetup.authMethod,
     provider: providerOAuthSetup.provider
-  })
+  }),
+
+  deployment: providerOAuthSetup.deployment
+    ? providerDeploymentPreviewPresenter({
+        ...providerOAuthSetup.deployment,
+        provider: providerOAuthSetup.provider
+      })
+    : null,
+
+  createdAt: providerOAuthSetup.createdAt,
+  updatedAt: providerOAuthSetup.updatedAt,
+  expiresAt: providerOAuthSetup.expiresAt
 });
