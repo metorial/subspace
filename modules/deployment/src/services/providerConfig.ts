@@ -16,13 +16,22 @@ import {
   withTransaction
 } from '@metorial-subspace/db';
 import { providerDeploymentConfigPairInternalService } from '@metorial-subspace/module-provider-internal';
+import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
 import {
   providerConfigCreatedQueue,
   providerConfigUpdatedQueue
 } from '../queues/lifecycle/providerConfig';
 
-let include = {};
+let include = {
+  provider: true,
+  deployment: true,
+  fromVault: {
+    include: {
+      deployment: true
+    }
+  }
+};
 
 class providerConfigServiceImpl {
   async listProviderConfigs(d: { tenant: Tenant; solution: Solution }) {
@@ -75,8 +84,8 @@ class providerConfigServiceImpl {
       name: string;
       description?: string;
       metadata?: Record<string, any>;
-      isEphemeral: boolean;
-      isDefault: boolean;
+      isEphemeral?: boolean;
+      isDefault?: boolean;
       isForVault?: boolean;
 
       config:
@@ -90,6 +99,18 @@ class providerConfigServiceImpl {
           };
     };
   }) {
+    checkTenant(d, d.providerDeployment);
+    if (d.input.config.type == 'vault') checkTenant(d, d.input.config.vault);
+
+    if (d.input.isDefault && !d.providerDeployment) {
+      throw new ServiceError(
+        preconditionFailedError({
+          message: 'Default provider configs must be associated with a deployment',
+          code: 'default_config_requires_deployment'
+        })
+      );
+    }
+
     return withTransaction(async db => {
       if (!d.provider.defaultVariant) {
         throw new Error('Provider has no default variant');
@@ -106,8 +127,8 @@ class providerConfigServiceImpl {
         description: d.input.description,
         metadata: d.input.metadata,
 
-        isEphemeral: d.input.isEphemeral,
-        isDefault: d.input.isDefault,
+        isEphemeral: !!d.input.isEphemeral,
+        isDefault: !!d.input.isDefault,
         isForVault: !!d.input.isForVault,
 
         tenantOid: d.tenant.oid,
@@ -165,15 +186,37 @@ class providerConfigServiceImpl {
           config: d.input.config
         });
 
-        return await db.providerConfig.create({
+        let config = await db.providerConfig.create({
           data: {
             ...ids,
             ...data,
 
+            deploymentOid: d.providerDeployment?.oid,
             slateInstanceOid: inner.slateInstance?.oid
           },
           include
         });
+
+        if (d.input.isDefault && d.providerDeployment) {
+          if (d.providerDeployment.defaultConfigOid) {
+            await db.providerConfig.updateMany({
+              where: {
+                OR: [
+                  { oid: d.providerDeployment.defaultConfigOid },
+                  { deploymentOid: d.providerDeployment.oid }
+                ]
+              },
+              data: { isDefault: false }
+            });
+          }
+
+          await db.providerDeployment.updateMany({
+            where: { oid: d.providerDeployment.oid },
+            data: { defaultConfigOid: config.oid }
+          });
+        }
+
+        return config;
       })();
 
       if (d.providerDeployment) {
@@ -201,6 +244,8 @@ class providerConfigServiceImpl {
       metadata?: Record<string, any>;
     };
   }) {
+    checkTenant(d, d.providerConfig);
+
     return withTransaction(async db => {
       let config = await db.providerConfig.update({
         where: {

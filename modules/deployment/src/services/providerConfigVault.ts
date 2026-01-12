@@ -14,6 +14,7 @@ import {
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import { checkTenant } from '@metorial-subspace/module-tenant';
 import {
   providerConfigVaultCreatedQueue,
   providerConfigVaultUpdatedQueue
@@ -77,6 +78,8 @@ class providerConfigVaultServiceImpl {
       };
     };
   }) {
+    checkTenant(d, d.providerDeployment);
+
     return await withTransaction(async db => {
       let config = await providerConfigService.createProviderConfig({
         tenant: d.tenant,
@@ -124,6 +127,8 @@ class providerConfigVaultServiceImpl {
       metadata?: Record<string, any>;
     };
   }) {
+    checkTenant(d, d.providerConfigVault);
+
     return withTransaction(async db => {
       let vault = await db.providerConfigVault.update({
         where: {

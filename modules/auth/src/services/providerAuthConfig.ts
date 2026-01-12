@@ -17,6 +17,7 @@ import {
   withTransaction
 } from '@metorial-subspace/db';
 import { providerDeploymentInternalService } from '@metorial-subspace/module-provider-internal';
+import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
 import { ProviderAuthConfigCreateRes } from '@metorial-subspace/provider-utils';
 import {
@@ -73,6 +74,8 @@ class providerAuthConfigServiceImpl {
       metadata?: Record<string, any>;
     };
   }) {
+    checkTenant(d, d.providerAuthConfig);
+
     return withTransaction(async db => {
       let config = await db.providerAuthConfig.update({
         where: {
@@ -114,6 +117,8 @@ class providerAuthConfigServiceImpl {
       authMethodId: string;
     };
   }) {
+    checkTenant(d, d.providerDeployment);
+
     return withTransaction(async db => {
       if (!d.provider.defaultVariant) {
         throw new Error('Provider has no default variant');
@@ -199,6 +204,9 @@ class providerAuthConfigServiceImpl {
     authMethod: ProviderAuthMethod;
     backendProviderAuthConfig: ProviderAuthConfigCreateRes;
   }) {
+    checkTenant(d, d.providerDeployment);
+    checkTenant(d, d.backendProviderAuthConfig.slateAuthConfig);
+
     return withTransaction(async db => {
       let providerAuthConfig = await db.providerAuthConfig.create({
         data: {

@@ -9,6 +9,7 @@ import {
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import { checkTenant } from '@metorial-subspace/module-tenant';
 
 let include = {};
 
@@ -21,6 +22,10 @@ class providerAuthConfigInternalServiceImpl {
     providerConfig: ProviderConfig;
     authConfig: ProviderAuthConfig;
   }) {
+    checkTenant(d, d.providerDeployment);
+    checkTenant(d, d.providerConfig);
+    checkTenant(d, d.authConfig);
+
     return await withTransaction(async db => {
       await db.providerAuthConfigUsedForConfig.createMany({
         skipDuplicates: true,

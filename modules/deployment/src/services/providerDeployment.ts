@@ -16,6 +16,7 @@ import {
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
 import {
   providerDeploymentCreatedQueue,
@@ -23,7 +24,11 @@ import {
 } from '../queues/lifecycle/providerDeployment';
 import { providerConfigService } from './providerConfig';
 
-let include = {};
+let include = {
+  provider: true,
+  providerVariant: true,
+  lockedVersion: true
+};
 
 class providerDeploymentServiceImpl {
   async listProviderDeployments(d: { tenant: Tenant; solution: Solution }) {
@@ -88,6 +93,8 @@ class providerDeploymentServiceImpl {
           };
     };
   }) {
+    if (d.input.config.type == 'vault') checkTenant(d, d.input.config.vault);
+
     return withTransaction(async db => {
       if (!d.provider.defaultVariant) {
         throw new Error('Provider has no default variant');
