@@ -21,7 +21,10 @@ import {
 } from '../queues/lifecycle/providerConfigVault';
 import { providerConfigService } from './providerConfig';
 
-let include = {};
+let include = {
+  provider: true,
+  deployment: true
+};
 
 class providerConfigVaultServiceImpl {
   async listProviderConfigVaults(d: { tenant: Tenant; solution: Solution }) {
@@ -106,7 +109,8 @@ class providerConfigVaultServiceImpl {
           providerOid: d.provider.oid,
           solutionOid: d.solution.oid,
           deploymentOid: d.providerDeployment?.oid
-        }
+        },
+        include
       });
 
       await addAfterTransactionHook(async () =>

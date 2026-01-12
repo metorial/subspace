@@ -1,4 +1,9 @@
-import { notFoundError, preconditionFailedError, ServiceError } from '@lowerdeck/error';
+import {
+  badRequestError,
+  notFoundError,
+  preconditionFailedError,
+  ServiceError
+} from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
@@ -104,7 +109,7 @@ class providerConfigServiceImpl {
 
     if (d.input.isDefault && !d.providerDeployment) {
       throw new ServiceError(
-        preconditionFailedError({
+        badRequestError({
           message: 'Default provider configs must be associated with a deployment',
           code: 'default_config_requires_deployment'
         })

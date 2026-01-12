@@ -1,53 +1,52 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { providerConfigPresenter } from '@metorial-subspace/db';
-import { providerService } from '@metorial-subspace/module-catalog';
+import { providerDeploymentPresenter } from '@metorial-subspace/db';
+import { providerService, providerVersionService } from '@metorial-subspace/module-catalog';
 import {
-  providerConfigService,
   providerConfigVaultService,
   providerDeploymentService
 } from '@metorial-subspace/module-deployment';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 
-export let providerConfigApp = tenantApp.use(async ctx => {
-  let providerConfigId = ctx.body.providerConfigId;
-  if (!providerConfigId) throw new Error('ProviderConfig ID is required');
+export let providerDeploymentApp = tenantApp.use(async ctx => {
+  let providerDeploymentId = ctx.body.providerDeploymentId;
+  if (!providerDeploymentId) throw new Error('ProviderDeployment ID is required');
 
-  let providerConfig = await providerConfigService.getProviderConfigById({
-    providerConfigId,
+  let providerDeployment = await providerDeploymentService.getProviderDeploymentById({
+    providerDeploymentId,
     tenant: ctx.tenant,
     solution: ctx.solution
   });
 
-  return { providerConfig };
+  return { providerDeployment };
 });
 
-export let providerConfigController = app.controller({
+export let providerDeploymentController = app.controller({
   list: tenantApp
     .handler()
     .input(Paginator.validate(v.object({})))
     .do(async ctx => {
-      let paginator = await providerConfigService.listProviderConfigs({
+      let paginator = await providerDeploymentService.listProviderDeployments({
         tenant: ctx.tenant,
         solution: ctx.solution
       });
 
       let list = await paginator.run(ctx.input);
 
-      return Paginator.presentLight(list, providerConfigPresenter);
+      return Paginator.presentLight(list, providerDeploymentPresenter);
     }),
 
-  get: providerConfigApp
+  get: providerDeploymentApp
     .handler()
     .input(
       v.object({
-        providerConfigId: v.string()
+        providerDeploymentId: v.string()
       })
     )
-    .do(async ctx => providerConfigPresenter(ctx.providerConfig)),
+    .do(async ctx => providerDeploymentPresenter(ctx.providerDeployment)),
 
-  create: providerConfigApp
+  create: providerDeploymentApp
     .handler()
     .input(
       v.object({
@@ -58,9 +57,12 @@ export let providerConfigController = app.controller({
         isEphemeral: v.optional(v.boolean()),
 
         providerId: v.string(),
-        providerDeploymentId: v.optional(v.string()),
+        lockedProviderVersionId: v.optional(v.string()),
 
         config: v.union([
+          v.object({
+            type: v.literal('none')
+          }),
           v.object({
             type: v.literal('inline'),
             data: v.record(v.any())
@@ -79,20 +81,20 @@ export let providerConfigController = app.controller({
         solution: ctx.solution
       });
 
-      let providerDeployment = ctx.input.providerDeploymentId
-        ? await providerDeploymentService.getProviderDeploymentById({
-            providerDeploymentId: ctx.input.providerDeploymentId,
+      let lockedVersion = ctx.input.lockedProviderVersionId
+        ? await providerVersionService.getProviderVersionById({
+            providerVersionId: ctx.input.lockedProviderVersionId,
             tenant: ctx.tenant,
             solution: ctx.solution
           })
         : undefined;
 
-      let providerConfig = await providerConfigService.createProviderConfig({
+      let providerDeployment = await providerDeploymentService.createProviderDeployment({
         tenant: ctx.tenant,
         solution: ctx.solution,
 
         provider,
-        providerDeployment,
+        lockedVersion,
 
         input: {
           name: ctx.input.name,
@@ -111,21 +113,18 @@ export let providerConfigController = app.controller({
                     solution: ctx.solution
                   })
                 }
-              : {
-                  type: 'inline',
-                  data: ctx.input.config.data
-                }
+              : ctx.input.config
         }
       });
 
-      return providerConfigPresenter(providerConfig);
+      return providerDeploymentPresenter(providerDeployment);
     }),
 
-  update: providerConfigApp
+  update: providerDeploymentApp
     .handler()
     .input(
       v.object({
-        providerConfigId: v.string(),
+        providerDeploymentId: v.string(),
 
         name: v.optional(v.string()),
         description: v.optional(v.string()),
@@ -133,8 +132,8 @@ export let providerConfigController = app.controller({
       })
     )
     .do(async ctx => {
-      let providerConfig = await providerConfigService.updateProviderConfig({
-        providerConfig: ctx.providerConfig,
+      let providerDeployment = await providerDeploymentService.updateProviderDeployment({
+        providerDeployment: ctx.providerDeployment,
         tenant: ctx.tenant,
         solution: ctx.solution,
 
@@ -145,6 +144,6 @@ export let providerConfigController = app.controller({
         }
       });
 
-      return providerConfigPresenter(providerConfig);
+      return providerDeploymentPresenter(providerDeployment);
     })
 });

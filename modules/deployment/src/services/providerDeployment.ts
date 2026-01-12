@@ -27,7 +27,8 @@ import { providerConfigService } from './providerConfig';
 let include = {
   provider: true,
   providerVariant: true,
-  lockedVersion: true
+  lockedVersion: true,
+  defaultConfig: true
 };
 
 class providerDeploymentServiceImpl {
@@ -76,8 +77,7 @@ class providerDeploymentServiceImpl {
       name: string;
       description?: string;
       metadata?: Record<string, any>;
-      isEphemeral: boolean;
-      isDefault: boolean;
+      isEphemeral?: boolean;
 
       config:
         | {
@@ -138,8 +138,7 @@ class providerDeploymentServiceImpl {
         data: {
           ...ids,
 
-          isEphemeral: d.input.isEphemeral,
-          isDefault: d.input.isDefault,
+          isEphemeral: !!d.input.isEphemeral,
 
           name: d.input.name,
           description: d.input.description,

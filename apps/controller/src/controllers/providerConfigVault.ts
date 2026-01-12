@@ -1,53 +1,52 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { providerConfigPresenter } from '@metorial-subspace/db';
+import { providerConfigVaultPresenter } from '@metorial-subspace/db';
 import { providerService } from '@metorial-subspace/module-catalog';
 import {
-  providerConfigService,
   providerConfigVaultService,
   providerDeploymentService
 } from '@metorial-subspace/module-deployment';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 
-export let providerConfigApp = tenantApp.use(async ctx => {
-  let providerConfigId = ctx.body.providerConfigId;
-  if (!providerConfigId) throw new Error('ProviderConfig ID is required');
+export let providerConfigVaultApp = tenantApp.use(async ctx => {
+  let providerConfigVaultId = ctx.body.providerConfigVaultId;
+  if (!providerConfigVaultId) throw new Error('ProviderConfigVault ID is required');
 
-  let providerConfig = await providerConfigService.getProviderConfigById({
-    providerConfigId,
+  let providerConfigVault = await providerConfigVaultService.getProviderConfigVaultById({
+    providerConfigVaultId,
     tenant: ctx.tenant,
     solution: ctx.solution
   });
 
-  return { providerConfig };
+  return { providerConfigVault };
 });
 
-export let providerConfigController = app.controller({
+export let providerConfigVaultController = app.controller({
   list: tenantApp
     .handler()
     .input(Paginator.validate(v.object({})))
     .do(async ctx => {
-      let paginator = await providerConfigService.listProviderConfigs({
+      let paginator = await providerConfigVaultService.listProviderConfigVaults({
         tenant: ctx.tenant,
         solution: ctx.solution
       });
 
       let list = await paginator.run(ctx.input);
 
-      return Paginator.presentLight(list, providerConfigPresenter);
+      return Paginator.presentLight(list, providerConfigVaultPresenter);
     }),
 
-  get: providerConfigApp
+  get: providerConfigVaultApp
     .handler()
     .input(
       v.object({
-        providerConfigId: v.string()
+        providerConfigVaultId: v.string()
       })
     )
-    .do(async ctx => providerConfigPresenter(ctx.providerConfig)),
+    .do(async ctx => providerConfigVaultPresenter(ctx.providerConfigVault)),
 
-  create: providerConfigApp
+  create: providerConfigVaultApp
     .handler()
     .input(
       v.object({
@@ -55,21 +54,13 @@ export let providerConfigController = app.controller({
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
 
-        isEphemeral: v.optional(v.boolean()),
-
         providerId: v.string(),
         providerDeploymentId: v.optional(v.string()),
 
-        config: v.union([
-          v.object({
-            type: v.literal('inline'),
-            data: v.record(v.any())
-          }),
-          v.object({
-            type: v.literal('vault'),
-            providerConfigVaultId: v.string()
-          })
-        ])
+        config: v.object({
+          type: v.literal('inline'),
+          data: v.record(v.any())
+        })
       })
     )
     .do(async ctx => {
@@ -87,7 +78,7 @@ export let providerConfigController = app.controller({
           })
         : undefined;
 
-      let providerConfig = await providerConfigService.createProviderConfig({
+      let providerConfigVault = await providerConfigVaultService.createProviderConfigVault({
         tenant: ctx.tenant,
         solution: ctx.solution,
 
@@ -99,33 +90,21 @@ export let providerConfigController = app.controller({
           description: ctx.input.description,
           metadata: ctx.input.metadata,
 
-          isEphemeral: ctx.input.isEphemeral,
-
-          config:
-            ctx.input.config.type == 'vault'
-              ? {
-                  type: 'vault',
-                  vault: await providerConfigVaultService.getProviderConfigVaultById({
-                    providerConfigVaultId: ctx.input.config.providerConfigVaultId,
-                    tenant: ctx.tenant,
-                    solution: ctx.solution
-                  })
-                }
-              : {
-                  type: 'inline',
-                  data: ctx.input.config.data
-                }
+          config: {
+            type: 'inline',
+            data: ctx.input.config.data
+          }
         }
       });
 
-      return providerConfigPresenter(providerConfig);
+      return providerConfigVaultPresenter(providerConfigVault);
     }),
 
-  update: providerConfigApp
+  update: providerConfigVaultApp
     .handler()
     .input(
       v.object({
-        providerConfigId: v.string(),
+        providerConfigVaultId: v.string(),
 
         name: v.optional(v.string()),
         description: v.optional(v.string()),
@@ -133,8 +112,8 @@ export let providerConfigController = app.controller({
       })
     )
     .do(async ctx => {
-      let providerConfig = await providerConfigService.updateProviderConfig({
-        providerConfig: ctx.providerConfig,
+      let providerConfigVault = await providerConfigVaultService.updateProviderConfigVault({
+        providerConfigVault: ctx.providerConfigVault,
         tenant: ctx.tenant,
         solution: ctx.solution,
 
@@ -145,6 +124,6 @@ export let providerConfigController = app.controller({
         }
       });
 
-      return providerConfigPresenter(providerConfig);
+      return providerConfigVaultPresenter(providerConfigVault);
     })
 });
