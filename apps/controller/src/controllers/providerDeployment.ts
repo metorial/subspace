@@ -25,7 +25,13 @@ export let providerDeploymentApp = tenantApp.use(async ctx => {
 export let providerDeploymentController = app.controller({
   list: tenantApp
     .handler()
-    .input(Paginator.validate(v.object({})))
+    .input(
+      Paginator.validate(
+        v.object({
+          tenantId: v.string()
+        })
+      )
+    )
     .do(async ctx => {
       let paginator = await providerDeploymentService.listProviderDeployments({
         tenant: ctx.tenant,
@@ -41,6 +47,7 @@ export let providerDeploymentController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         providerDeploymentId: v.string()
       })
     )
@@ -50,6 +57,8 @@ export let providerDeploymentController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
+
         name: v.string(),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
@@ -124,6 +133,7 @@ export let providerDeploymentController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         providerDeploymentId: v.string(),
 
         name: v.optional(v.string()),

@@ -23,7 +23,13 @@ export let providerListingCollectionApp = tenantApp.use(async ctx => {
 export let providerListingCollectionController = app.controller({
   list: tenantApp
     .handler()
-    .input(Paginator.validate(v.object({})))
+    .input(
+      Paginator.validate(
+        v.object({
+          tenantId: v.string()
+        })
+      )
+    )
     .do(async ctx => {
       let paginator = await providerListingCollectionService.listProviderListingCollections({
         tenant: ctx.tenant,
@@ -39,6 +45,7 @@ export let providerListingCollectionController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         providerListingCollectionId: v.string()
       })
     )
@@ -48,6 +55,7 @@ export let providerListingCollectionController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         name: v.string(),
         slug: v.string(),
         description: v.string()

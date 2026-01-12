@@ -21,7 +21,13 @@ export let providerVariantApp = tenantApp.use(async ctx => {
 export let providerVariantController = app.controller({
   list: tenantApp
     .handler()
-    .input(Paginator.validate(v.object({})))
+    .input(
+      Paginator.validate(
+        v.object({
+          tenantId: v.string()
+        })
+      )
+    )
     .do(async ctx => {
       let paginator = await providerVariantService.listProviderVariants({
         tenant: ctx.tenant,
@@ -37,6 +43,7 @@ export let providerVariantController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         providerVariantId: v.string()
       })
     )

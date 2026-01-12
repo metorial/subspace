@@ -20,7 +20,13 @@ export let publisherApp = tenantApp.use(async ctx => {
 export let publisherController = app.controller({
   list: tenantApp
     .handler()
-    .input(Paginator.validate(v.object({})))
+    .input(
+      Paginator.validate(
+        v.object({
+          tenantId: v.string()
+        })
+      )
+    )
     .do(async ctx => {
       let paginator = await publisherService.listPublishers({
         tenant: ctx.tenant
@@ -35,6 +41,7 @@ export let publisherController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         publisherId: v.string()
       })
     )

@@ -26,7 +26,13 @@ export let providerOAuthSetupApp = tenantApp.use(async ctx => {
 export let providerOAuthSetupController = app.controller({
   list: tenantApp
     .handler()
-    .input(Paginator.validate(v.object({})))
+    .input(
+      Paginator.validate(
+        v.object({
+          tenantId: v.string()
+        })
+      )
+    )
     .do(async ctx => {
       let paginator = await providerOAuthSetupService.listProviderOAuthSetups({
         tenant: ctx.tenant,
@@ -42,6 +48,7 @@ export let providerOAuthSetupController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         providerOAuthSetupId: v.string()
       })
     )
@@ -51,6 +58,8 @@ export let providerOAuthSetupController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
+
         name: v.string(),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
@@ -114,6 +123,7 @@ export let providerOAuthSetupController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         providerOAuthSetupId: v.string(),
 
         name: v.optional(v.string()),
