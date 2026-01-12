@@ -25,7 +25,13 @@ export let providerConfigVaultApp = tenantApp.use(async ctx => {
 export let providerConfigVaultController = app.controller({
   list: tenantApp
     .handler()
-    .input(Paginator.validate(v.object({})))
+    .input(
+      Paginator.validate(
+        v.object({
+          tenantId: v.string()
+        })
+      )
+    )
     .do(async ctx => {
       let paginator = await providerConfigVaultService.listProviderConfigVaults({
         tenant: ctx.tenant,
@@ -41,6 +47,7 @@ export let providerConfigVaultController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         providerConfigVaultId: v.string()
       })
     )
@@ -50,6 +57,7 @@ export let providerConfigVaultController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         name: v.string(),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
@@ -104,6 +112,7 @@ export let providerConfigVaultController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         providerConfigVaultId: v.string(),
 
         name: v.optional(v.string()),

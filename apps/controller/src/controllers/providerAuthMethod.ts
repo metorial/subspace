@@ -21,7 +21,13 @@ export let providerAuthMethodApp = tenantApp.use(async ctx => {
 export let providerAuthMethodController = app.controller({
   list: tenantApp
     .handler()
-    .input(Paginator.validate(v.object({})))
+    .input(
+      Paginator.validate(
+        v.object({
+          tenantId: v.string()
+        })
+      )
+    )
     .do(async ctx => {
       let paginator = await providerAuthMethodService.listProviderAuthMethods({
         tenant: ctx.tenant,
@@ -37,6 +43,7 @@ export let providerAuthMethodController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         providerAuthMethodId: v.string()
       })
     )

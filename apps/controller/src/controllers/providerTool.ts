@@ -21,7 +21,13 @@ export let providerToolApp = tenantApp.use(async ctx => {
 export let providerToolController = app.controller({
   list: tenantApp
     .handler()
-    .input(Paginator.validate(v.object({})))
+    .input(
+      Paginator.validate(
+        v.object({
+          tenantId: v.string()
+        })
+      )
+    )
     .do(async ctx => {
       let paginator = await providerToolService.listProviderTools({
         tenant: ctx.tenant,
@@ -37,6 +43,7 @@ export let providerToolController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         providerToolId: v.string()
       })
     )

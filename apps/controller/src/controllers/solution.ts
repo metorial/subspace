@@ -17,6 +17,7 @@ export let solutionController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         name: v.string(),
         identifier: v.string()
       })
@@ -35,6 +36,7 @@ export let solutionController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         solutionId: v.string()
       })
     )

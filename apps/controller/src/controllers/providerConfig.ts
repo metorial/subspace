@@ -30,7 +30,13 @@ export let providerConfigApp = tenantApp.use(async ctx => {
 export let providerConfigController = app.controller({
   list: tenantApp
     .handler()
-    .input(Paginator.validate(v.object({})))
+    .input(
+      Paginator.validate(
+        v.object({
+          tenantId: v.string()
+        })
+      )
+    )
     .do(async ctx => {
       let paginator = await providerConfigService.listProviderConfigs({
         tenant: ctx.tenant,
@@ -46,6 +52,7 @@ export let providerConfigController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         providerId: v.optional(v.string()),
         providerConfigId: v.optional(v.string()),
         providerVersionId: v.optional(v.string()),
@@ -96,6 +103,7 @@ export let providerConfigController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         providerConfigId: v.string()
       })
     )
@@ -105,6 +113,7 @@ export let providerConfigController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         name: v.string(),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
@@ -179,6 +188,7 @@ export let providerConfigController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         providerConfigId: v.string(),
 
         name: v.optional(v.string()),

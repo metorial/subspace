@@ -24,6 +24,8 @@ export let providerListingController = app.controller({
     .input(
       Paginator.validate(
         v.object({
+          tenantId: v.string(),
+
           search: v.optional(v.string()),
 
           collectionIds: v.optional(v.array(v.string())),
@@ -71,6 +73,7 @@ export let providerListingController = app.controller({
     .handler()
     .input(
       v.object({
+        tenantId: v.string(),
         providerListingId: v.string()
       })
     )
