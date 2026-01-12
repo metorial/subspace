@@ -16,7 +16,7 @@ import { providerListingCollectionPresenter } from './providerListingCollection'
 import { providerListingGroupPresenter } from './providerListingGroup';
 
 export let providerListingPresenter = (
-  providerListing: ProviderListing & {
+  providerListing: Omit<ProviderListing, 'readme'> & {
     provider: Provider & {
       entry: ProviderEntry;
       publisher: Publisher;
@@ -33,6 +33,8 @@ export let providerListingPresenter = (
     categories: ProviderListingCategory[];
     collections: ProviderListingCollection[];
     groups: ProviderListingGroup[];
+  } & {
+    readme?: string | null;
   }
 ) => ({
   object: 'provider.listing',
@@ -51,7 +53,7 @@ export let providerListingPresenter = (
   slug: providerListing.slug,
   image: providerListing.image,
 
-  readme: providerListing.readme,
+  readme: providerListing.readme ?? null,
   skills: providerListing.skills,
 
   rank: providerListing.rank,
