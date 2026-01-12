@@ -10,8 +10,8 @@ import { providerToolPresenter } from './providerTool';
 export let providerSpecificationPresenter = (
   providerSpecification: ProviderSpecification & {
     provider: Provider;
-    tools: ProviderTool[];
-    authMethods: ProviderAuthMethod[];
+    providerTools: ProviderTool[];
+    providerAuthMethods: ProviderAuthMethod[];
   }
 ) => ({
   object: 'provider.capabilities.specification',
@@ -22,16 +22,21 @@ export let providerSpecificationPresenter = (
   name: providerSpecification.name,
   description: providerSpecification.description,
 
-  tools: providerSpecification.tools.map(t =>
+  configSchema: providerSpecification.value.specification.configJsonSchema,
+  configVisibility: providerSpecification.value.specification.configVisibility,
+
+  tools: providerSpecification.providerTools.map(t =>
     providerToolPresenter({
       ...t,
+      specification: providerSpecification,
       provider: providerSpecification.provider
     })
   ),
 
-  authMethods: providerSpecification.authMethods.map(am =>
+  authMethods: providerSpecification.providerAuthMethods.map(am =>
     providerAuthMethodPresenter({
       ...am,
+      specification: providerSpecification,
       provider: providerSpecification.provider
     })
   ),
