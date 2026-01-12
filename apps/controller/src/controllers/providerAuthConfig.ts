@@ -83,6 +83,11 @@ export let providerAuthConfigController = app.controller({
         provider,
         providerDeployment,
 
+        import: {
+          ip: ctx.context.ip,
+          ua: ctx.context.ua
+        },
+
         input: {
           authMethodId: ctx.input.providerAuthMethodId,
 
@@ -113,6 +118,11 @@ export let providerAuthConfigController = app.controller({
         providerAuthConfig: ctx.providerAuthConfig,
         tenant: ctx.tenant,
         solution: ctx.solution,
+
+        import: {
+          ip: ctx.context.ip,
+          ua: ctx.context.ua
+        },
 
         input: {
           name: ctx.input.name,

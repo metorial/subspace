@@ -63,6 +63,8 @@ class providerOAuthSetupInternalServiceImpl {
             authConfig = existing;
           } else {
             authConfig = await providerAuthConfigService.createProviderAuthConfigInternal({
+              backend: backend.backend,
+              type: 'oauth_automated',
               tenant: providerOAuthSetup.tenant,
               provider: providerOAuthSetup.provider,
               solution: providerOAuthSetup.solution,
@@ -76,7 +78,8 @@ class providerOAuthSetupInternalServiceImpl {
               },
               authMethod: providerOAuthSetup.authMethod,
               backendProviderAuthConfig: {
-                slateAuthConfig: record.slateAuthConfig
+                slateAuthConfig: record.slateAuthConfig,
+                expiresAt: null
               }
             });
           }

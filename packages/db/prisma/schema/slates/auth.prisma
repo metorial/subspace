@@ -40,5 +40,6 @@ model SlateAuthConfig {
 
   createdAt DateTime @default(now())
 
-  providerAuthConfigs ProviderAuthConfig[]
+  providerAuthConfigs      ProviderAuthConfig[]
+  providerAuthConfigUpdate ProviderAuthConfigUpdate?
 }

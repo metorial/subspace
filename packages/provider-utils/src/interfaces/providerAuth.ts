@@ -1,5 +1,6 @@
 import type {
   Provider,
+  ProviderAuthConfig,
   ProviderAuthCredentials,
   ProviderAuthCredentialsType,
   ProviderAuthMethod,
@@ -29,6 +30,10 @@ export abstract class IProviderAuth extends IProviderFunctionality {
   abstract retrieveProviderOAuthSetup(
     data: ProviderOAuthSetupRetrieveParam
   ): Promise<ProviderOAuthSetupRetrieveRes>;
+
+  abstract getDecryptedAuthConfig(
+    data: GetDecryptedAuthConfigParam
+  ): Promise<GetDecryptedAuthConfigRes>;
 }
 
 export interface ProviderAuthCredentialsCreateParam {
@@ -57,6 +62,7 @@ export interface ProviderAuthConfigCreateParam {
 
 export interface ProviderAuthConfigCreateRes {
   slateAuthConfig?: SlateAuthConfig;
+  expiresAt: Date | null;
 }
 
 export interface ProviderOAuthSetupCreateParam {
@@ -89,4 +95,15 @@ export interface ProviderOAuthSetupRetrieveRes {
     code: string;
     message: string;
   } | null;
+}
+
+export interface GetDecryptedAuthConfigParam {
+  tenant: Tenant;
+  authConfig: ProviderAuthConfig;
+  note: string;
+}
+
+export interface GetDecryptedAuthConfigRes {
+  decryptedConfigData: Record<string, any>;
+  expiresAt: Date | null;
 }

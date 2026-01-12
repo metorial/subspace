@@ -3,10 +3,13 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
+  Backend,
   db,
   getId,
   Provider,
   ProviderAuthConfig,
+  ProviderAuthConfigType,
+  ProviderAuthImport,
   ProviderAuthMethod,
   ProviderAuthMethodType,
   ProviderDeployment,
@@ -31,6 +34,8 @@ let include = {
   authCredentials: true,
   authMethod: true
 };
+
+export let providerAuthConfigInclude = include;
 
 class providerAuthConfigServiceImpl {
   async listProviderAuthConfigs(d: { tenant: Tenant; solution: Solution }) {
@@ -69,41 +74,6 @@ class providerAuthConfigServiceImpl {
     return providerAuthConfig;
   }
 
-  async updateProviderAuthConfig(d: {
-    tenant: Tenant;
-    solution: Solution;
-    providerAuthConfig: ProviderAuthConfig;
-    input: {
-      name?: string;
-      description?: string;
-      metadata?: Record<string, any>;
-    };
-  }) {
-    checkTenant(d, d.providerAuthConfig);
-
-    return withTransaction(async db => {
-      let config = await db.providerAuthConfig.update({
-        where: {
-          oid: d.providerAuthConfig.oid,
-          tenantOid: d.tenant.oid,
-          solutionOid: d.solution.oid
-        },
-        data: {
-          name: d.input.name ?? d.providerAuthConfig.name,
-          description: d.input.description ?? d.providerAuthConfig.description,
-          metadata: d.input.metadata ?? d.providerAuthConfig.metadata
-        },
-        include
-      });
-
-      await addAfterTransactionHook(async () =>
-        providerAuthConfigUpdatedQueue.add({ providerAuthConfigId: config.id })
-      );
-
-      return config;
-    });
-  }
-
   async createProviderAuthConfig(d: {
     tenant: Tenant;
     solution: Solution;
@@ -119,12 +89,25 @@ class providerAuthConfigServiceImpl {
       metadata?: Record<string, any>;
       isEphemeral?: boolean;
       isDefault?: boolean;
-      authMethodId: string;
-
+      authMethodId?: string;
       config: Record<string, any>;
+    };
+    import: {
+      ip: string | undefined;
+      ua: string | undefined;
+      note?: string | undefined;
     };
   }) {
     checkTenant(d, d.providerDeployment);
+
+    if (d.providerDeployment && d.providerDeployment.providerOid != d.provider.oid) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Provider deployment does not belong to provider',
+          code: 'provider_mismatch'
+        })
+      );
+    }
 
     if (d.input.isDefault && !d.providerDeployment) {
       throw new ServiceError(
@@ -140,56 +123,23 @@ class providerAuthConfigServiceImpl {
         throw new Error('Provider has no default variant');
       }
 
-      let version = await providerDeploymentInternalService.getCurrentVersionOptional({
-        provider: d.provider,
-        deployment: d.providerDeployment
-      });
-      if (!version.specificationOid) {
-        throw new ServiceError(
-          badRequestError({
-            message: 'Provider has not been discovered'
-          })
-        );
-      }
-
-      let authMethod = await db.providerAuthMethod.findFirst({
-        where: {
-          providerOid: d.provider.oid,
-          specificationOid: version.specificationOid,
-          OR: [
-            { id: d.input.authMethodId },
-            { specId: d.input.authMethodId },
-            { specUniqueIdentifier: d.input.authMethodId },
-            { key: d.input.authMethodId },
-            { callableId: d.input.authMethodId },
-
-            ...(ProviderAuthMethodType[
-              d.input.authMethodId as keyof typeof ProviderAuthMethodType
-            ]
-              ? [{ type: d.input.authMethodId as any }]
-              : [])
-          ]
-        }
-      });
-      if (!authMethod) {
-        throw new ServiceError(
-          badRequestError({
-            message: 'Invalid auth method for provider',
-            code: 'invalid_auth_method'
-          })
-        );
-      }
-
-      let backend = await getBackend({
-        entity: d.provider.defaultVariant!
-      });
-
-      let backendProviderAuthConfig = await backend.auth.createProviderAuthConfig({
+      let { version, authMethod } = await this.getVersionAndAuthMethod({
         tenant: d.tenant,
+        solution: d.solution,
+        provider: d.provider,
+        providerDeployment: d.providerDeployment,
+        authMethodId: d.input.authMethodId
+      });
+
+      let backendRes = await this.createBackendProviderAuthConfig({
+        tenant: d.tenant,
+        solution: d.solution,
+
         provider: d.provider,
         providerVersion: version,
         authMethod,
-        input: d.input.config
+
+        config: d.input.config
       });
 
       return await this.createProviderAuthConfigInternal({
@@ -198,9 +148,140 @@ class providerAuthConfigServiceImpl {
         provider: d.provider,
         providerDeployment: d.providerDeployment,
         input: d.input,
+        import: d.import,
         authMethod,
-        backendProviderAuthConfig
+        backend: backendRes.backend,
+        backendProviderAuthConfig: backendRes.backendProviderAuthConfig,
+        type: authMethod.type == 'oauth' ? 'oauth_manual' : 'manual'
       });
+    });
+  }
+
+  async updateProviderAuthConfig(d: {
+    tenant: Tenant;
+    solution: Solution;
+    providerAuthConfig: ProviderAuthConfig;
+
+    input: {
+      name?: string;
+      description?: string;
+      metadata?: Record<string, any>;
+      config?: Record<string, any>;
+
+      authMethodId?: string;
+    };
+
+    import: {
+      ip: string | undefined;
+      ua: string | undefined;
+      note?: string | undefined;
+    };
+  }) {
+    checkTenant(d, d.providerAuthConfig);
+
+    if (d.providerAuthConfig.type == 'oauth_automated') {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Cannot update automated OAuth provider auth configs',
+          code: 'cannot_update_automated_oauth_config'
+        })
+      );
+    }
+
+    return withTransaction(async db => {
+      let provider = await db.provider.findFirstOrThrow({
+        where: { oid: d.providerAuthConfig.providerOid },
+        include: { defaultVariant: true }
+      });
+      let providerDeployment = d.providerAuthConfig.deploymentOid
+        ? await db.providerDeployment.findFirstOrThrow({
+            where: { oid: d.providerAuthConfig.deploymentOid },
+            include: { lockedVersion: true }
+          })
+        : undefined;
+
+      let { version, authMethod } = await this.getVersionAndAuthMethod({
+        tenant: d.tenant,
+        solution: d.solution,
+        provider: provider,
+        providerDeployment,
+        authMethodId: d.providerAuthConfig.authMethodOid
+      });
+      if (d.input.authMethodId && d.input.authMethodId != authMethod.id) {
+        throw new ServiceError(
+          badRequestError({
+            message: 'Cannot change auth method of existing auth config',
+            code: 'cannot_change_auth_method'
+          })
+        );
+      }
+
+      let backendRes = d.input.config
+        ? await this.createBackendProviderAuthConfig({
+            tenant: d.tenant,
+            solution: d.solution,
+
+            provider,
+            providerVersion: version,
+            authMethod,
+
+            config: d.input.config
+          })
+        : undefined;
+
+      let config = await db.providerAuthConfig.update({
+        where: {
+          oid: d.providerAuthConfig.oid,
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid
+        },
+        data: {
+          name: d.input.name ?? d.providerAuthConfig.name,
+          description: d.input.description ?? d.providerAuthConfig.description,
+          metadata: d.input.metadata ?? d.providerAuthConfig.metadata,
+
+          slateAuthConfigOid: backendRes?.backendProviderAuthConfig?.slateAuthConfig?.oid
+        },
+        include
+      });
+
+      let authImport: ProviderAuthImport | undefined = undefined;
+
+      if (backendRes) {
+        let update = await db.providerAuthConfigUpdate.create({
+          data: {
+            ...getId('providerAuthConfigUpdate'),
+            authConfigOid: config.oid,
+            slateAuthConfigOid: config.slateAuthConfigOid
+          }
+        });
+
+        authImport = await db.providerAuthImport.create({
+          data: {
+            ...getId('providerAuthImport'),
+
+            tenantOid: d.tenant.oid,
+            solutionOid: d.solution.oid,
+            authConfigOid: config.oid,
+            authConfigUpdateOid: update.oid,
+            deploymentOid: d.providerAuthConfig.deploymentOid,
+
+            ip: d.import.ip,
+            ua: d.import.ua,
+            note: d.import.note,
+            metadata: d.input.metadata
+          }
+        });
+      }
+
+      await addAfterTransactionHook(async () =>
+        providerAuthConfigUpdatedQueue.add({ providerAuthConfigId: config.id })
+      );
+
+      return {
+        ...config,
+        authImport
+      };
     });
   }
 
@@ -209,12 +290,19 @@ class providerAuthConfigServiceImpl {
     solution: Solution;
     provider: Provider;
     providerDeployment?: ProviderDeployment;
+    backend: Backend;
+    type: ProviderAuthConfigType;
     input: {
       name?: string;
       description?: string;
       metadata?: Record<string, any>;
       isEphemeral?: boolean;
       isDefault?: boolean;
+    };
+    import?: {
+      ip: string | undefined;
+      ua: string | undefined;
+      note?: string | undefined;
     };
 
     authMethod: ProviderAuthMethod;
@@ -223,12 +311,31 @@ class providerAuthConfigServiceImpl {
     checkTenant(d, d.providerDeployment);
     checkTenant(d, d.backendProviderAuthConfig.slateAuthConfig);
 
+    if (d.providerDeployment && d.providerDeployment.providerOid != d.provider.oid) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Provider deployment does not belong to provider',
+          code: 'provider_mismatch'
+        })
+      );
+    }
+    if (d.authMethod.providerOid != d.provider.oid) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Auth method does not belong to provider',
+          code: 'provider_mismatch'
+        })
+      );
+    }
+
     return withTransaction(async db => {
       let providerAuthConfig = await db.providerAuthConfig.create({
         data: {
           ...getId('providerAuthConfig'),
 
-          type: 'manual',
+          backendOid: d.backend.oid,
+
+          type: d.type,
 
           name: d.input.name,
           description: d.input.description,
@@ -247,6 +354,37 @@ class providerAuthConfigServiceImpl {
         },
         include
       });
+
+      let update = await db.providerAuthConfigUpdate.create({
+        data: {
+          ...getId('providerAuthConfigUpdate'),
+          authConfigOid: providerAuthConfig.oid,
+          slateAuthConfigOid: providerAuthConfig.slateAuthConfigOid
+        }
+      });
+
+      let authImport: ProviderAuthImport | undefined = undefined;
+
+      if (d.import && providerAuthConfig.type != 'oauth_automated') {
+        authImport = await db.providerAuthImport.create({
+          data: {
+            ...getId('providerAuthImport'),
+
+            tenantOid: d.tenant.oid,
+            solutionOid: d.solution.oid,
+            authConfigOid: providerAuthConfig.oid,
+            authConfigUpdateOid: update.oid,
+            deploymentOid: d.providerDeployment?.oid,
+
+            ip: d.import.ip,
+            ua: d.import.ua,
+            note: d.import.note,
+            metadata: d.input.metadata,
+
+            expiresAt: d.backendProviderAuthConfig.expiresAt
+          }
+        });
+      }
 
       if (providerAuthConfig.isDefault && d.providerDeployment) {
         if (d.providerDeployment.defaultAuthConfigOid) {
@@ -269,8 +407,114 @@ class providerAuthConfigServiceImpl {
         providerAuthConfigCreatedQueue.add({ providerAuthConfigId: providerAuthConfig.id })
       );
 
-      return providerAuthConfig;
+      return {
+        ...providerAuthConfig,
+        authImport
+      };
     });
+  }
+
+  private async getVersionAndAuthMethod(d: {
+    tenant: Tenant;
+    solution: Solution;
+    provider: Provider & { defaultVariant: ProviderVariant | null };
+    providerDeployment?: ProviderDeployment & {
+      lockedVersion: ProviderVersion | null;
+    };
+    authMethodId?: string | bigint;
+  }) {
+    let version = await providerDeploymentInternalService.getCurrentVersionOptional({
+      provider: d.provider,
+      deployment: d.providerDeployment
+    });
+    if (!version.specificationOid) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Provider has not been discovered'
+        })
+      );
+    }
+
+    if (!d.authMethodId) {
+      let authMethod = await db.providerAuthMethod.findFirst({
+        where: {
+          providerOid: d.provider.oid,
+          specificationOid: version.specificationOid,
+          isDefault: true
+        }
+      });
+      if (!authMethod) {
+        throw new ServiceError(
+          badRequestError({
+            message: 'Provider does not support authentication'
+          })
+        );
+      }
+
+      return { version, authMethod };
+    }
+
+    let authMethod = await db.providerAuthMethod.findFirst({
+      where: {
+        providerOid: d.provider.oid,
+        specificationOid: version.specificationOid,
+
+        ...(typeof d.authMethodId == 'string'
+          ? {
+              OR: [
+                { id: d.authMethodId },
+                { specId: d.authMethodId },
+                { specUniqueIdentifier: d.authMethodId },
+                { key: d.authMethodId },
+                { callableId: d.authMethodId },
+
+                ...(ProviderAuthMethodType[
+                  d.authMethodId as keyof typeof ProviderAuthMethodType
+                ]
+                  ? [{ type: d.authMethodId as any }]
+                  : [])
+              ]
+            }
+          : { oid: d.authMethodId })
+      }
+    });
+    if (!authMethod) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Invalid auth method for provider',
+          code: 'invalid_auth_method'
+        })
+      );
+    }
+
+    return { version, authMethod };
+  }
+
+  private async createBackendProviderAuthConfig(d: {
+    tenant: Tenant;
+    solution: Solution;
+    provider: Provider & { defaultVariant: ProviderVariant | null };
+    providerVersion: ProviderVersion;
+    authMethod: ProviderAuthMethod;
+
+    config: Record<string, any>;
+  }) {
+    let backend = await getBackend({
+      entity: d.provider.defaultVariant!
+    });
+
+    let backendProviderAuthConfig = await backend.auth.createProviderAuthConfig({
+      tenant: d.tenant,
+      provider: d.provider,
+      providerVersion: d.providerVersion,
+      authMethod: d.authMethod,
+      input: d.config
+    });
+
+    return {
+      backend: backend.backend,
+      backendProviderAuthConfig
+    };
   }
 }
 

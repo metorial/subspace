@@ -1,6 +1,8 @@
 import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { db, snowflake } from '@metorial-subspace/db';
 import type {
+  GetDecryptedAuthConfigParam,
+  GetDecryptedAuthConfigRes,
   ProviderAuthConfigCreateParam,
   ProviderAuthConfigCreateRes,
   ProviderAuthCredentialsCreateParam,
@@ -151,7 +153,8 @@ export class ProviderAuth extends IProviderAuth {
     });
 
     return {
-      slateAuthConfig
+      slateAuthConfig,
+      expiresAt: config.tokenExpiresAt
     };
   }
 
@@ -196,6 +199,31 @@ export class ProviderAuth extends IProviderAuth {
       }[record.status],
       url: record.url,
       error: record.error
+    };
+  }
+
+  override async getDecryptedAuthConfig(
+    data: GetDecryptedAuthConfigParam
+  ): Promise<GetDecryptedAuthConfigRes> {
+    let tenant = await getTenantForSlates(data.tenant);
+
+    if (!data.authConfig.slateAuthConfigOid) {
+      throw new Error('Auth config does not have associated slate auth config');
+    }
+
+    let slateAuthConfig = await db.slateAuthConfig.findUniqueOrThrow({
+      where: { oid: data.authConfig.slateAuthConfigOid }
+    });
+
+    let record = await slates.slateAuthConfig.decrypt({
+      tenantId: tenant.id,
+      slateAuthConfigId: slateAuthConfig.id,
+      note: data.note
+    });
+
+    return {
+      decryptedConfigData: record.decryptedAuthConfig,
+      expiresAt: record.authConfig.tokenExpiresAt
     };
   }
 }

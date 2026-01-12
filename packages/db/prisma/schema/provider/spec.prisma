@@ -45,6 +45,8 @@ model ProviderAuthMethod {
 
   type ProviderAuthMethodType
 
+  isDefault Boolean
+
   name        String
   description String?
 

@@ -29,4 +29,6 @@ model Tenant {
   providerAuthConfigs                      ProviderAuthConfig[]
   providerSpecificationChangeNotifications ProviderSpecificationChangeNotification[]
   providerSessions                         ProviderSession[]
+  providerAuthExports                      ProviderAuthExport[]
+  providerAuthImports                      ProviderAuthImport[]
 }

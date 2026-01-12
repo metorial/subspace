@@ -29,6 +29,9 @@ model ProviderAuthConfig {
   solutionOid BigInt
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
+  backendOid BigInt
+  backend    Backend @relation(fields: [backendOid], references: [oid])
+
   deploymentOid BigInt?
   deployment    ProviderDeployment? @relation(fields: [deploymentOid], references: [oid])
 
@@ -45,6 +48,24 @@ model ProviderAuthConfig {
   providerAuthConfigUsedForConfigs ProviderAuthConfigUsedForConfig[]
   providerOAuthSetups              ProviderOAuthSetup[]
   deploymentAuthConfigs            ProviderDeployment[]                  @relation("defaultAuthConfig")
+  providerAuthExports              ProviderAuthExport[]
+  providerAuthImports              ProviderAuthImport[]
+  providerAuthConfigUpdates        ProviderAuthConfigUpdate[]
+}
+
+model ProviderAuthConfigUpdate {
+  oid BigInt @id
+  id  String @unique
+
+  authConfigOid BigInt
+  authConfig    ProviderAuthConfig @relation(fields: [authConfigOid], references: [oid])
+
+  slateAuthConfigOid BigInt?          @unique
+  slateAuthConfig    SlateAuthConfig? @relation(fields: [slateAuthConfigOid], references: [oid])
+
+  createdAt DateTime @default(now())
+
+  providerAuthImports ProviderAuthImport[]
 }
 
 model ProviderAuthConfigUsedForDeployment {

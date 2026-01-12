@@ -49,4 +49,5 @@ model ProviderDeployment {
   providerConfigVaults                 ProviderConfigVault[]
   providerConfigs                      ProviderConfig[]
   providerAuthConfigs                  ProviderAuthConfig[]
+  providerAuthImports                  ProviderAuthImport[]
 }

@@ -217,7 +217,7 @@
         "@lowerdeck/shadow-id": "^1.0.4",
         "@lowerdeck/slugify": "^1.0.4",
         "@lowerdeck/validation": "^1.0.4",
-        "@metorial-services/slates-hub-client": "^1.0.10",
+        "@metorial-services/slates-hub-client": "^1.0.12",
         "@metorial-subspace/db": "^1.0.0",
         "@prisma/adapter-pg": "^7.2.0",
         "@prisma/client": "^7.2.0",
@@ -1147,6 +1147,8 @@
     "@lowerdeck/slugify/@lowerdeck/id": ["@lowerdeck/id@1.0.5", "", { "dependencies": { "@lowerdeck/error": "^1.0.8", "@lowerdeck/hash": "^1.0.4", "nanoid": "^5.0.7", "short-uuid": "^5.2.0", "snowflake-uuid": "^1.0.0" } }, "sha512-8Xik3NbqE7mkfYTliMG+zxWjn+my1wK09BIHiKdxylvkdtAKaxBzls+XoALFO2JZ+VSZIdLG2DvtndXjFSwPQg=="],
 
     "@metorial-subspace/provider/@metorial-services/slates-hub-client": ["@metorial-services/slates-hub-client@1.0.8", "", { "dependencies": { "@lowerdeck/rpc-client": "^1.0.2" } }, "sha512-J3O0R4vZ2NgyP9tr0eCo1yo+AkYoRS+5vy3YSX08kZhr75wTlENTtpQ5IGOivIvxsog6IGMOBAtBc8pgn8I9fg=="],
+
+    "@metorial-subspace/provider-slates/@metorial-services/slates-hub-client": ["@metorial-services/slates-hub-client@1.0.12", "", { "dependencies": { "@lowerdeck/rpc-client": "^1.0.2" } }, "sha512-ln1Y4IOAHkWaPvkbJlHSGhqngQip99Nsces49o/SiqtR1b1YOkbqCmGH6fSZTB1QizGnOEqPBxUy3P75gcWfUQ=="],
 
     "@metorial-subspace/provider-utils/@metorial-services/slates-hub-client": ["@metorial-services/slates-hub-client@1.0.8", "", { "dependencies": { "@lowerdeck/rpc-client": "^1.0.2" } }, "sha512-J3O0R4vZ2NgyP9tr0eCo1yo+AkYoRS+5vy3YSX08kZhr75wTlENTtpQ5IGOivIvxsog6IGMOBAtBc8pgn8I9fg=="],
 

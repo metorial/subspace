@@ -40,5 +40,8 @@ export let providerAuthConfigPresenter = (
   authMethod: providerAuthMethodPresenter({
     ...providerAuthConfig.authMethod,
     provider: providerAuthConfig.provider
-  })
+  }),
+
+  createdAt: providerAuthConfig.createdAt,
+  updatedAt: providerAuthConfig.updatedAt
 });
