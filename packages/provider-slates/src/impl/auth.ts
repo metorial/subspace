@@ -59,7 +59,8 @@ export class ProviderAuth extends IProviderAuth {
     });
 
     return {
-      slateOAuthCredentials
+      slateOAuthCredentials,
+      type: 'oauth'
     };
   }
 

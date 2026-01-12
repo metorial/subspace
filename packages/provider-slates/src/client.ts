@@ -23,7 +23,7 @@ export let getTenantForSlates = async (tenant: Tenant) => {
   }
 
   return {
-    id: tenant.slateTenantId,
+    id: tenant.slateTenantId!,
     identifier: tenant.slateTenantIdentifier!
   };
 };
