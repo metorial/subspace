@@ -26,7 +26,17 @@ import {
   providerOAuthSetupUpdatedQueue
 } from '../queues/lifecycle/providerOAuthSetup';
 
-let include = {};
+let include = {
+  provider: true,
+  authCredentials: true,
+  authMethod: true,
+  deployment: true,
+  authConfig: {
+    include: {
+      deployment: true
+    }
+  }
+};
 
 class providerOAuthSetupServiceImpl {
   async listProviderOAuthSetups(d: { tenant: Tenant; solution: Solution }) {
@@ -79,10 +89,11 @@ class providerOAuthSetupServiceImpl {
       name: string;
       description?: string;
       metadata?: Record<string, any>;
-      isEphemeral: boolean;
-      isDefault: boolean;
+      isEphemeral?: boolean;
+      isDefault?: boolean;
       authMethodId: string;
-      redirectUrl: string;
+      redirectUrl?: string;
+      config: Record<string, any>;
     };
   }) {
     checkTenant(d, d.providerDeployment);
@@ -143,7 +154,7 @@ class providerOAuthSetupServiceImpl {
         tenant: d.tenant,
         provider: d.provider,
         providerVersion: version,
-        input: d.input,
+        input: d.input.config,
         credentials: d.credentials,
         authMethod,
         redirectUrl: `${env.service.OAUTH_HOOK_URL}/subspace/oauth-setup/backend-callback/${newId.id}`
@@ -161,7 +172,7 @@ class providerOAuthSetupServiceImpl {
           description: d.input.description,
           metadata: d.input.metadata,
 
-          isEphemeral: d.input.isEphemeral,
+          isEphemeral: !!d.input.isEphemeral,
 
           redirectUrl: d.input.redirectUrl,
 
@@ -172,7 +183,8 @@ class providerOAuthSetupServiceImpl {
           authMethodOid: authMethod.oid,
 
           slateOAuthSetupOid: backendProviderOAuthSetup.slateOAuthSetup?.oid
-        }
+        },
+        include
       });
 
       await addAfterTransactionHook(async () =>

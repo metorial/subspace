@@ -25,7 +25,12 @@ import {
   providerAuthConfigUpdatedQueue
 } from '../queues/lifecycle/providerAuthConfig';
 
-let include = {};
+let include = {
+  provider: true,
+  deployment: true,
+  authCredentials: true,
+  authMethod: true
+};
 
 class providerAuthConfigServiceImpl {
   async listProviderAuthConfigs(d: { tenant: Tenant; solution: Solution }) {
@@ -112,12 +117,23 @@ class providerAuthConfigServiceImpl {
       name: string;
       description?: string;
       metadata?: Record<string, any>;
-      isEphemeral: boolean;
-      isDefault: boolean;
+      isEphemeral?: boolean;
+      isDefault?: boolean;
       authMethodId: string;
+
+      config: Record<string, any>;
     };
   }) {
     checkTenant(d, d.providerDeployment);
+
+    if (d.input.isDefault && !d.providerDeployment) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Default provider configs must be associated with a deployment',
+          code: 'default_config_requires_deployment'
+        })
+      );
+    }
 
     return withTransaction(async db => {
       if (!d.provider.defaultVariant) {
@@ -173,7 +189,7 @@ class providerAuthConfigServiceImpl {
         provider: d.provider,
         providerVersion: version,
         authMethod,
-        input: d.input
+        input: d.input.config
       });
 
       return await this.createProviderAuthConfigInternal({
@@ -197,8 +213,8 @@ class providerAuthConfigServiceImpl {
       name?: string;
       description?: string;
       metadata?: Record<string, any>;
-      isEphemeral: boolean;
-      isDefault: boolean;
+      isEphemeral?: boolean;
+      isDefault?: boolean;
     };
 
     authMethod: ProviderAuthMethod;
@@ -218,8 +234,8 @@ class providerAuthConfigServiceImpl {
           description: d.input.description,
           metadata: d.input.metadata,
 
-          isEphemeral: d.input.isEphemeral,
-          isDefault: d.input.isDefault,
+          isEphemeral: !!d.input.isEphemeral,
+          isDefault: !!d.input.isDefault,
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,
@@ -228,8 +244,26 @@ class providerAuthConfigServiceImpl {
           deploymentOid: d.providerDeployment?.oid,
 
           slateAuthConfigOid: d.backendProviderAuthConfig.slateAuthConfig?.oid
-        }
+        },
+        include
       });
+
+      if (providerAuthConfig.isDefault && d.providerDeployment) {
+        if (d.providerDeployment.defaultAuthConfigOid) {
+          await db.providerAuthConfig.updateMany({
+            where: {
+              deploymentOid: d.providerDeployment.oid,
+              isDefault: true
+            },
+            data: { isDefault: false }
+          });
+        }
+
+        await db.providerDeployment.update({
+          where: { oid: d.providerDeployment.oid },
+          data: { defaultAuthConfigOid: providerAuthConfig.oid }
+        });
+      }
 
       await addAfterTransactionHook(async () =>
         providerAuthConfigCreatedQueue.add({ providerAuthConfigId: providerAuthConfig.id })

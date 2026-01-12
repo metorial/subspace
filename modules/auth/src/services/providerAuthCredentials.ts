@@ -18,7 +18,9 @@ import {
   providerAuthCredentialsUpdatedQueue
 } from '../queues/lifecycle/providerAuthCredentials';
 
-let include = {};
+let include = {
+  provider: true
+};
 
 class providerAuthCredentialsServiceImpl {
   async listProviderAuthCredentials(d: { tenant: Tenant; solution: Solution }) {
@@ -65,13 +67,15 @@ class providerAuthCredentialsServiceImpl {
       name: string;
       description?: string;
       metadata?: Record<string, any>;
-      isEphemeral: boolean;
-      isDefault: boolean;
-    } & {
-      type: 'oauth';
-      clientId: string;
-      clientSecret: string;
-      scopes: string[];
+      isEphemeral?: boolean;
+      isDefault?: boolean;
+
+      config: {
+        type: 'oauth';
+        clientId: string;
+        clientSecret: string;
+        scopes: string[];
+      };
     };
   }) {
     return withTransaction(async db => {
@@ -86,7 +90,7 @@ class providerAuthCredentialsServiceImpl {
       let backendProviderAuthCredentials = await backend.auth.createProviderAuthCredentials({
         tenant: d.tenant,
         provider: d.provider,
-        input: d.input
+        input: d.input.config
       });
 
       let providerAuthCredentials = await db.providerAuthCredentials.create({
@@ -103,13 +107,14 @@ class providerAuthCredentialsServiceImpl {
           description: d.input.description,
           metadata: d.input.metadata,
 
-          isEphemeral: d.input.isEphemeral,
-          isDefault: d.input.isDefault,
+          isEphemeral: !!d.input.isEphemeral,
+          isDefault: !!d.input.isDefault,
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,
           providerOid: d.provider.oid
-        }
+        },
+        include
       });
 
       await addAfterTransactionHook(async () =>

@@ -9,7 +9,6 @@ model ProviderDeployment {
   id  String @unique
 
   isEphemeral Boolean
-  isDefault   Boolean
 
   name        String?
   description String?
@@ -34,6 +33,9 @@ model ProviderDeployment {
 
   defaultConfigOid BigInt?         @unique
   defaultConfig    ProviderConfig? @relation(fields: [defaultConfigOid], references: [oid], name: "defaultConfig")
+
+  defaultAuthConfigOid BigInt?             @unique
+  defaultAuthConfig    ProviderAuthConfig? @relation(fields: [defaultAuthConfigOid], references: [oid], name: "defaultAuthConfig")
 
   specificationOid BigInt?
   specification    ProviderSpecification? @relation(fields: [specificationOid], references: [oid])

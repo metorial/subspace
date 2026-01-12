@@ -2,6 +2,7 @@ export * from './authConfig';
 export * from './authCredentials';
 export * from './config';
 export * from './deployment';
+export * from './oauthSetup';
 export * from './provider';
 export * from './providerAuthMethod';
 export * from './providerEntry';

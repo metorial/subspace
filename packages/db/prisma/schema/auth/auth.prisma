@@ -44,6 +44,7 @@ model ProviderAuthConfig {
   usingDeployments                 ProviderAuthConfigUsedForDeployment[]
   providerAuthConfigUsedForConfigs ProviderAuthConfigUsedForConfig[]
   providerOAuthSetups              ProviderOAuthSetup[]
+  deploymentAuthConfigs            ProviderDeployment[]                  @relation("defaultAuthConfig")
 }
 
 model ProviderAuthConfigUsedForDeployment {
