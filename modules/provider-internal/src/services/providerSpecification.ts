@@ -39,6 +39,11 @@ class providerSpecificationInternalServiceImpl {
     });
     if (existingSpec) return existingSpec;
 
+    let defaultAuthConfig =
+      d.authMethods.find(am => am.type == 'token') ??
+      d.authMethods.find(am => am.type == 'oauth') ??
+      d.authMethods[0];
+
     return await db.providerSpecification.create({
       data: {
         ...getId('providerSpecification'),
@@ -71,6 +76,8 @@ class providerSpecificationInternalServiceImpl {
               specUniqueIdentifier: am.specUniqueIdentifier,
               callableId: am.callableId,
               key: am.key,
+
+              isDefault: am.specId == defaultAuthConfig?.specId,
 
               name: am.name,
               description: am.description,

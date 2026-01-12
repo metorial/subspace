@@ -99,6 +99,23 @@ class providerOAuthSetupServiceImpl {
     checkTenant(d, d.providerDeployment);
     checkTenant(d, d.credentials);
 
+    if (d.providerDeployment && d.providerDeployment.providerOid != d.provider.oid) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Provider deployment does not belong to provider',
+          code: 'provider_mismatch'
+        })
+      );
+    }
+    if (d.credentials.providerOid != d.provider.oid) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Auth credentials do not belong to provider',
+          code: 'provider_mismatch'
+        })
+      );
+    }
+
     return withTransaction(async db => {
       if (!d.provider.defaultVariant) {
         throw new Error('Provider has no default variant');

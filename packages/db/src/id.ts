@@ -41,6 +41,10 @@ export let ID = createIdGenerator({
   providerAuthConfig: idType.sorted('pacf'),
   providerOAuthSetup: idType.sorted('poas'),
   providerOAuthSetup_clientSecret: idType.key('poas_secret'),
+  providerAuthConfigUpdate: idType.sorted('pacu'),
+
+  providerAuthImport: idType.sorted('paci'),
+  providerAuthExport: idType.sorted('pace'),
 
   providerAuthConfigUsedForConfig: idType.sorted('pacufc'),
   providerAuthConfigUsedForDeployment: idType.sorted('pacufd')
