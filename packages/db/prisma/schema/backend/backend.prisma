@@ -16,4 +16,5 @@ model Backend {
   slatesSyncChangeNotificationCursor SlatesSyncChangeNotificationCursor?
   providerVariants                   ProviderVariant[]
   providerAuthCredentials            ProviderAuthCredentials[]
+  providerAuthConfigs                ProviderAuthConfig[]
 }

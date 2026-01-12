@@ -20,4 +20,6 @@ model Solution {
   providerSpecificationChangeNotifications ProviderSpecificationChangeNotification[]
   sessions                                 Session[]
   providerSessions                         ProviderSession[]
+  providerAuthExports                      ProviderAuthExport[]
+  providerAuthImports                      ProviderAuthImport[]
 }

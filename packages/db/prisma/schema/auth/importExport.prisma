@@ -1,0 +1,49 @@
+model ProviderAuthExport {
+  oid BigInt @id @default(autoincrement())
+  id  String @unique
+
+  note     String?
+  ip       String?
+  ua       String?
+  metadata Json?
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid BigInt
+  solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
+
+  authConfigOid BigInt
+  authConfig    ProviderAuthConfig @relation(fields: [authConfigOid], references: [oid])
+
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+}
+
+model ProviderAuthImport {
+  oid BigInt @id @default(autoincrement())
+  id  String @unique
+
+  ip       String?
+  ua       String?
+  note     String?
+  metadata Json?
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid BigInt
+  solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
+
+  authConfigOid BigInt
+  authConfig    ProviderAuthConfig @relation(fields: [authConfigOid], references: [oid])
+
+  authConfigUpdateOid BigInt
+  authConfigUpdate    ProviderAuthConfigUpdate @relation(fields: [authConfigUpdateOid], references: [oid])
+
+  deploymentOid BigInt?
+  deployment    ProviderDeployment? @relation(fields: [deploymentOid], references: [oid])
+
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+}
