@@ -1,0 +1,83 @@
+import { Paginator } from '@lowerdeck/pagination';
+import { v } from '@lowerdeck/validation';
+import { providerAuthExportPresenter } from '@metorial-subspace/db';
+import {
+  providerAuthConfigService,
+  providerAuthExportService
+} from '@metorial-subspace/module-auth';
+import { app } from './_app';
+import { tenantApp } from './tenant';
+
+export let providerAuthExportApp = tenantApp.use(async ctx => {
+  let providerAuthExportId = ctx.body.providerAuthExportId;
+  if (!providerAuthExportId) throw new Error('ProviderAuthExport ID is required');
+
+  let providerAuthExport = await providerAuthExportService.getProviderAuthExportById({
+    providerAuthExportId,
+    tenant: ctx.tenant,
+    solution: ctx.solution
+  });
+
+  return { providerAuthExport };
+});
+
+export let providerAuthExportController = app.controller({
+  list: tenantApp
+    .handler()
+    .input(Paginator.validate(v.object({})))
+    .do(async ctx => {
+      let paginator = await providerAuthExportService.listProviderAuthExports({
+        tenant: ctx.tenant,
+        solution: ctx.solution
+      });
+
+      let list = await paginator.run(ctx.input);
+
+      return Paginator.presentLight(list, providerAuthExportPresenter);
+    }),
+
+  get: providerAuthExportApp
+    .handler()
+    .input(
+      v.object({
+        providerAuthExportId: v.string()
+      })
+    )
+    .do(async ctx => providerAuthExportPresenter(ctx.providerAuthExport)),
+
+  create: providerAuthExportApp
+    .handler()
+    .input(
+      v.object({
+        note: v.string(),
+        metadata: v.optional(v.record(v.any())),
+
+        providerAuthConfigId: v.string()
+      })
+    )
+    .do(async ctx => {
+      let providerAuthConfig = await providerAuthConfigService.getProviderAuthConfigById({
+        tenant: ctx.tenant,
+        solution: ctx.solution,
+        providerAuthConfigId: ctx.input.providerAuthConfigId
+      });
+
+      let providerAuthExport = await providerAuthExportService.createProviderAuthExport({
+        tenant: ctx.tenant,
+        solution: ctx.solution,
+        authConfig: providerAuthConfig,
+
+        input: {
+          ip: ctx.context.ip,
+          ua: ctx.context.ua,
+          note: ctx.input.note,
+          metadata: ctx.input.metadata
+        }
+      });
+
+      return {
+        ...providerAuthExportPresenter(providerAuthExport.authExport),
+        value: providerAuthExport.decryptedConfigData
+      };
+    })
+});
