@@ -2,6 +2,7 @@ import type {
   Provider,
   ProviderConfig,
   ProviderDeployment,
+  ProviderSpecification,
   ProviderVariant,
   ProviderVersion
 } from '../../prisma/generated/client';
@@ -12,7 +13,7 @@ export let providerDeploymentPresenter = (
   providerDeployment: ProviderDeployment & {
     provider: Provider;
     providerVariant: ProviderVariant;
-    lockedVersion: ProviderVersion | null;
+    lockedVersion: (ProviderVersion & { specification: ProviderSpecification | null }) | null;
     defaultConfig: ProviderConfig | null;
   }
 ) => ({
@@ -21,7 +22,6 @@ export let providerDeploymentPresenter = (
   id: providerDeployment.id,
 
   isEphemeral: providerDeployment.isEphemeral,
-  isDefault: providerDeployment.isDefault,
 
   name: providerDeployment.name,
   description: providerDeployment.description,
@@ -57,7 +57,6 @@ export let providerDeploymentPreviewPresenter = (
   id: providerDeployment.id,
 
   isEphemeral: providerDeployment.isEphemeral,
-  isDefault: providerDeployment.isDefault,
 
   name: providerDeployment.name,
   description: providerDeployment.description,

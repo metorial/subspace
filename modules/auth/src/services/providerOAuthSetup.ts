@@ -20,6 +20,7 @@ import {
 import { providerDeploymentInternalService } from '@metorial-subspace/module-provider-internal';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
+import { addMinutes } from 'date-fns';
 import { env } from '../env';
 import {
   providerOAuthSetupCreatedQueue,
@@ -90,6 +91,7 @@ class providerOAuthSetupServiceImpl {
       authMethodId: string;
       redirectUrl?: string;
       config: Record<string, any>;
+      expiresAt?: Date;
     };
   }) {
     checkTenant(d, d.providerDeployment);
@@ -195,7 +197,9 @@ class providerOAuthSetupServiceImpl {
           authCredentialsOid: d.credentials.oid,
           authMethodOid: authMethod.oid,
 
-          slateOAuthSetupOid: backendProviderOAuthSetup.slateOAuthSetup?.oid
+          slateOAuthSetupOid: backendProviderOAuthSetup.slateOAuthSetup?.oid,
+
+          expiresAt: addMinutes(new Date(), 30)
         },
         include
       });

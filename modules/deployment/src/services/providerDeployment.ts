@@ -26,9 +26,9 @@ import { providerConfigService } from './providerConfig';
 
 let include = {
   provider: true,
+  defaultConfig: true,
   providerVariant: true,
-  lockedVersion: true,
-  defaultConfig: true
+  lockedVersion: { include: { specification: true } }
 };
 
 class providerDeploymentServiceImpl {
