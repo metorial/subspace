@@ -103,8 +103,8 @@ class providerAuthCredentialsServiceImpl {
 
           slateCredentialsOid: backendProviderAuthCredentials.slateOAuthCredentials.oid,
 
-          name: d.input.name,
-          description: d.input.description,
+          name: d.input.name?.trim() || undefined,
+          description: d.input.description?.trim() || undefined,
           metadata: d.input.metadata,
 
           isEphemeral: !!d.input.isEphemeral,
@@ -116,6 +116,21 @@ class providerAuthCredentialsServiceImpl {
         },
         include
       });
+
+      if (providerAuthCredentials.isDefault) {
+        await db.providerAuthCredentials.updateMany({
+          where: {
+            tenantOid: d.tenant.oid,
+            solutionOid: d.solution.oid,
+            providerOid: d.provider.oid,
+            oid: {
+              not: providerAuthCredentials.oid
+            },
+            isDefault: true
+          },
+          data: { isDefault: false }
+        });
+      }
 
       await addAfterTransactionHook(async () =>
         providerAuthCredentialsCreatedQueue.add({

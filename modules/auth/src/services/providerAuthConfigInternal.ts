@@ -1,14 +1,20 @@
+import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
 import {
+  db,
   getId,
   Provider,
   ProviderAuthConfig,
+  ProviderAuthMethodType,
   ProviderConfig,
   ProviderDeployment,
+  ProviderVariant,
   ProviderVersion,
+  Solution,
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import { providerDeploymentInternalService } from '@metorial-subspace/module-provider-internal';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 
 let include = {};
@@ -47,6 +53,82 @@ class providerAuthConfigInternalServiceImpl {
 
       return d.authConfig;
     });
+  }
+
+  async getVersionAndAuthMethod(d: {
+    tenant: Tenant;
+    solution: Solution;
+    provider: Provider & { defaultVariant: ProviderVariant | null };
+    providerDeployment?: ProviderDeployment & {
+      lockedVersion: ProviderVersion | null;
+    };
+    authMethodId?: string | bigint;
+  }) {
+    let version = await providerDeploymentInternalService.getCurrentVersionOptional({
+      provider: d.provider,
+      deployment: d.providerDeployment
+    });
+    if (!version.specificationOid) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Provider has not been discovered'
+        })
+      );
+    }
+
+    if (!d.authMethodId) {
+      let authMethod = await db.providerAuthMethod.findFirst({
+        where: {
+          providerOid: d.provider.oid,
+          specificationOid: version.specificationOid,
+          isDefault: true
+        }
+      });
+      if (!authMethod) {
+        throw new ServiceError(
+          badRequestError({
+            message: 'Provider does not support authentication'
+          })
+        );
+      }
+
+      return { version, authMethod };
+    }
+
+    let authMethod = await db.providerAuthMethod.findFirst({
+      where: {
+        providerOid: d.provider.oid,
+        specificationOid: version.specificationOid,
+
+        ...(typeof d.authMethodId == 'string'
+          ? {
+              OR: [
+                { id: d.authMethodId },
+                { specId: d.authMethodId },
+                { specUniqueIdentifier: d.authMethodId },
+                { key: d.authMethodId },
+                { callableId: d.authMethodId },
+
+                ...(ProviderAuthMethodType[
+                  d.authMethodId as keyof typeof ProviderAuthMethodType
+                ]
+                  ? [{ type: d.authMethodId as any }]
+                  : [])
+              ]
+            }
+          : { oid: d.authMethodId })
+      }
+    });
+    if (!authMethod) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Invalid auth method for provider',
+          code: 'invalid_auth_method'
+        })
+      );
+    }
+
+    return { version, authMethod };
   }
 }
 

@@ -8,10 +8,10 @@ import {
   getId,
   Provider,
   ProviderAuthConfig,
+  ProviderAuthConfigSource,
   ProviderAuthConfigType,
   ProviderAuthImport,
   ProviderAuthMethod,
-  ProviderAuthMethodType,
   ProviderDeployment,
   ProviderVariant,
   ProviderVersion,
@@ -19,7 +19,6 @@ import {
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
-import { providerDeploymentInternalService } from '@metorial-subspace/module-provider-internal';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
 import { ProviderAuthConfigCreateRes } from '@metorial-subspace/provider-utils';
@@ -27,6 +26,7 @@ import {
   providerAuthConfigCreatedQueue,
   providerAuthConfigUpdatedQueue
 } from '../queues/lifecycle/providerAuthConfig';
+import { providerAuthConfigInternalService } from './providerAuthConfigInternal';
 
 let include = {
   provider: true,
@@ -83,8 +83,9 @@ class providerAuthConfigServiceImpl {
       providerVariant: ProviderVariant;
       lockedVersion: ProviderVersion | null;
     };
+    source: ProviderAuthConfigSource;
     input: {
-      name: string;
+      name?: string;
       description?: string;
       metadata?: Record<string, any>;
       isEphemeral?: boolean;
@@ -123,13 +124,14 @@ class providerAuthConfigServiceImpl {
         throw new Error('Provider has no default variant');
       }
 
-      let { version, authMethod } = await this.getVersionAndAuthMethod({
-        tenant: d.tenant,
-        solution: d.solution,
-        provider: d.provider,
-        providerDeployment: d.providerDeployment,
-        authMethodId: d.input.authMethodId
-      });
+      let { version, authMethod } =
+        await providerAuthConfigInternalService.getVersionAndAuthMethod({
+          tenant: d.tenant,
+          solution: d.solution,
+          provider: d.provider,
+          providerDeployment: d.providerDeployment,
+          authMethodId: d.input.authMethodId
+        });
 
       let backendRes = await this.createBackendProviderAuthConfig({
         tenant: d.tenant,
@@ -147,6 +149,7 @@ class providerAuthConfigServiceImpl {
         solution: d.solution,
         provider: d.provider,
         providerDeployment: d.providerDeployment,
+        source: d.source,
         input: d.input,
         import: d.import,
         authMethod,
@@ -200,13 +203,14 @@ class providerAuthConfigServiceImpl {
           })
         : undefined;
 
-      let { version, authMethod } = await this.getVersionAndAuthMethod({
-        tenant: d.tenant,
-        solution: d.solution,
-        provider: provider,
-        providerDeployment,
-        authMethodId: d.providerAuthConfig.authMethodOid
-      });
+      let { version, authMethod } =
+        await providerAuthConfigInternalService.getVersionAndAuthMethod({
+          tenant: d.tenant,
+          solution: d.solution,
+          provider: provider,
+          providerDeployment,
+          authMethodId: d.providerAuthConfig.authMethodOid
+        });
       if (d.input.authMethodId && d.input.authMethodId != authMethod.id) {
         throw new ServiceError(
           badRequestError({
@@ -236,8 +240,8 @@ class providerAuthConfigServiceImpl {
           solutionOid: d.solution.oid
         },
         data: {
-          name: d.input.name ?? d.providerAuthConfig.name,
-          description: d.input.description ?? d.providerAuthConfig.description,
+          name: d.input.name?.trim() || d.providerAuthConfig.name,
+          description: d.input.description?.trim() || d.providerAuthConfig.description,
           metadata: d.input.metadata ?? d.providerAuthConfig.metadata,
 
           slateAuthConfigOid: backendRes?.backendProviderAuthConfig?.slateAuthConfig?.oid
@@ -292,6 +296,7 @@ class providerAuthConfigServiceImpl {
     providerDeployment?: ProviderDeployment;
     backend: Backend;
     type: ProviderAuthConfigType;
+    source: ProviderAuthConfigSource;
     input: {
       name?: string;
       description?: string;
@@ -336,9 +341,10 @@ class providerAuthConfigServiceImpl {
           backendOid: d.backend.oid,
 
           type: d.type,
+          source: d.source,
 
-          name: d.input.name,
-          description: d.input.description,
+          name: d.input.name?.trim() || undefined,
+          description: d.input.description?.trim() || undefined,
           metadata: d.input.metadata,
 
           isEphemeral: !!d.input.isEphemeral,
@@ -412,82 +418,6 @@ class providerAuthConfigServiceImpl {
         authImport
       };
     });
-  }
-
-  private async getVersionAndAuthMethod(d: {
-    tenant: Tenant;
-    solution: Solution;
-    provider: Provider & { defaultVariant: ProviderVariant | null };
-    providerDeployment?: ProviderDeployment & {
-      lockedVersion: ProviderVersion | null;
-    };
-    authMethodId?: string | bigint;
-  }) {
-    let version = await providerDeploymentInternalService.getCurrentVersionOptional({
-      provider: d.provider,
-      deployment: d.providerDeployment
-    });
-    if (!version.specificationOid) {
-      throw new ServiceError(
-        badRequestError({
-          message: 'Provider has not been discovered'
-        })
-      );
-    }
-
-    if (!d.authMethodId) {
-      let authMethod = await db.providerAuthMethod.findFirst({
-        where: {
-          providerOid: d.provider.oid,
-          specificationOid: version.specificationOid,
-          isDefault: true
-        }
-      });
-      if (!authMethod) {
-        throw new ServiceError(
-          badRequestError({
-            message: 'Provider does not support authentication'
-          })
-        );
-      }
-
-      return { version, authMethod };
-    }
-
-    let authMethod = await db.providerAuthMethod.findFirst({
-      where: {
-        providerOid: d.provider.oid,
-        specificationOid: version.specificationOid,
-
-        ...(typeof d.authMethodId == 'string'
-          ? {
-              OR: [
-                { id: d.authMethodId },
-                { specId: d.authMethodId },
-                { specUniqueIdentifier: d.authMethodId },
-                { key: d.authMethodId },
-                { callableId: d.authMethodId },
-
-                ...(ProviderAuthMethodType[
-                  d.authMethodId as keyof typeof ProviderAuthMethodType
-                ]
-                  ? [{ type: d.authMethodId as any }]
-                  : [])
-              ]
-            }
-          : { oid: d.authMethodId })
-      }
-    });
-    if (!authMethod) {
-      throw new ServiceError(
-        badRequestError({
-          message: 'Invalid auth method for provider',
-          code: 'invalid_auth_method'
-        })
-      );
-    }
-
-    return { version, authMethod };
   }
 
   private async createBackendProviderAuthConfig(d: {

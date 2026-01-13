@@ -2,13 +2,17 @@ import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { createLock } from '@lowerdeck/lock';
 import { Service } from '@lowerdeck/service';
 import {
+  addAfterTransactionHook,
   db,
+  getId,
   ProviderAuthConfig,
   ProviderOAuthSetup,
   withTransaction
 } from '@metorial-subspace/db';
 import { getBackend } from '@metorial-subspace/provider';
 import { env } from '../env';
+import { providerAuthSessionUpdatedQueue } from '../queues/lifecycle/providerAuthSession';
+import { providerOAuthSetupUpdatedQueue } from '../queues/lifecycle/providerOAuthSetup';
 import { providerAuthConfigService } from './providerAuthConfig';
 
 let include = {};
@@ -32,7 +36,13 @@ class providerOAuthSetupInternalServiceImpl {
     return providerOAuthSetup;
   }
 
-  async syncProviderOAuthSetupRecord(d: { providerOAuthSetup: ProviderOAuthSetup }) {
+  async handleOAuthSetupResponse(d: {
+    providerOAuthSetup: ProviderOAuthSetup;
+    context: {
+      ip: string;
+      ua: string;
+    };
+  }) {
     return syncLock.usingLock(d.providerOAuthSetup.id, () =>
       withTransaction(async db => {
         let providerOAuthSetup = await db.providerOAuthSetup.findUniqueOrThrow({
@@ -43,7 +53,8 @@ class providerOAuthSetupInternalServiceImpl {
             authMethod: true,
             provider: true,
             deployment: true,
-            solution: true
+            solution: true,
+            providerAuthSession: true
           }
         });
 
@@ -65,6 +76,7 @@ class providerOAuthSetupInternalServiceImpl {
           } else {
             authConfig = await providerAuthConfigService.createProviderAuthConfigInternal({
               backend: backend.backend,
+              source: providerOAuthSetup.providerAuthSession ? 'auth_session' : 'system',
               type: 'oauth_automated',
               tenant: providerOAuthSetup.tenant,
               provider: providerOAuthSetup.provider,
@@ -86,7 +98,7 @@ class providerOAuthSetupInternalServiceImpl {
           }
         }
 
-        return db.providerOAuthSetup.update({
+        let setup = await db.providerOAuthSetup.update({
           where: { oid: providerOAuthSetup.oid },
           data: {
             status:
@@ -103,6 +115,82 @@ class providerOAuthSetupInternalServiceImpl {
             authConfigOid: authConfig?.oid ?? null
           }
         });
+
+        let session = await db.providerAuthSession.findFirst({
+          where: {
+            oauthSetupOid: providerOAuthSetup.oid,
+            status: { notIn: ['completed', 'expired', 'archived', 'deleted'] }
+          }
+        });
+        if (session) {
+          if (setup.status == 'completed') {
+            await db.providerAuthSession.update({
+              where: { oid: session.oid },
+              data: {
+                status: 'completed',
+                authCredentialsOid: setup.authCredentialsOid,
+                authConfigOid: setup.authConfigOid
+              }
+            });
+
+            await db.providerAuthSessionEvent.createMany({
+              data: [
+                {
+                  ...getId('providerAuthSessionEvent'),
+                  type: 'oauth_setup_completed',
+                  ip: d.context.ip,
+                  ua: d.context.ua,
+                  sessionOid: session.oid
+                },
+                {
+                  ...getId('providerAuthSessionEvent'),
+                  type: 'completed',
+                  sessionOid: session.oid,
+                  ip: d.context.ip,
+                  ua: d.context.ua
+                }
+              ]
+            });
+
+            setup = await db.providerOAuthSetup.update({
+              where: { oid: setup.oid },
+              data: { redirectUrl: session.redirectUrl }
+            });
+          } else {
+            await db.providerAuthSession.update({
+              where: { oid: session.oid },
+              data: {
+                status: 'failed',
+                authCredentialsOid: setup.authCredentialsOid,
+                authConfigOid: setup.authConfigOid
+              }
+            });
+
+            await db.providerAuthSessionEvent.createMany({
+              data: [
+                {
+                  ...getId('providerAuthSessionEvent'),
+                  type: 'oauth_setup_failed',
+                  ip: d.context.ip,
+                  ua: d.context.ua,
+                  sessionOid: session.oid
+                }
+              ]
+            });
+          }
+        }
+
+        if (session) {
+          addAfterTransactionHook(async () =>
+            providerAuthSessionUpdatedQueue.add({ providerAuthSessionId: session.id })
+          );
+        }
+
+        addAfterTransactionHook(async () =>
+          providerOAuthSetupUpdatedQueue.add({ providerOAuthSetupId: setup.id })
+        );
+
+        return setup;
       })
     );
   }
