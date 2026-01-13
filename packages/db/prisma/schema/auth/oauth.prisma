@@ -52,25 +52,9 @@ model ProviderOAuthSetup {
   updatedAt DateTime @default(now()) @updatedAt
   expiresAt DateTime
 
-  events ProviderOAuthSetupEvent[]
+  providerAuthSession       ProviderAuthSession?
+  providerAuthSessionEvents ProviderAuthSessionEvent[]
 
   @@index([status])
   @@index([expiresAt])
-}
-
-enum ProviderOAuthSetupEventType {
-  setup_link_opened
-  setup_started
-  oauth_setup_completed
-  oauth_setup_failed
-}
-
-model ProviderOAuthSetupEvent {
-  oid  BigInt                      @id
-  type ProviderOAuthSetupEventType
-
-  setupOid BigInt
-  setup    ProviderOAuthSetup @relation(fields: [setupOid], references: [oid], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
 }

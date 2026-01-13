@@ -50,4 +50,5 @@ model ProviderDeployment {
   providerConfigs                      ProviderConfig[]
   providerAuthConfigs                  ProviderAuthConfig[]
   providerAuthImports                  ProviderAuthImport[]
+  providerAuthSessions                 ProviderAuthSession[]
 }

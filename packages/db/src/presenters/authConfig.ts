@@ -21,6 +21,7 @@ export let providerAuthConfigPresenter = (
 
   id: providerAuthConfig.id,
   type: providerAuthConfig.type,
+  source: providerAuthConfig.source,
 
   isEphemeral: providerAuthConfig.isEphemeral,
   isDefault: providerAuthConfig.isDefault,

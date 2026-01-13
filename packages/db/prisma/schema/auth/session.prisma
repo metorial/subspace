@@ -1,0 +1,83 @@
+enum ProviderAuthSessionStatus {
+  unused
+  opened
+  completed
+  failed
+  expired
+
+  archived
+  deleted
+}
+
+model ProviderAuthSession {
+  oid BigInt @id
+  id  String @unique
+
+  status ProviderAuthSessionStatus
+
+  clientSecret String
+
+  name        String?
+  description String?
+  metadata    Json?
+
+  redirectUrl String?
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid BigInt
+  solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
+
+  providerOid BigInt
+  provider    Provider @relation(fields: [providerOid], references: [oid])
+
+  authMethodOid BigInt
+  authMethod    ProviderAuthMethod @relation(fields: [authMethodOid], references: [oid])
+
+  deploymentOid BigInt?
+  deployment    ProviderDeployment? @relation(fields: [deploymentOid], references: [oid])
+
+  authConfigOid BigInt?             @unique
+  authConfig    ProviderAuthConfig? @relation(fields: [authConfigOid], references: [oid])
+
+  oauthSetupOid BigInt?             @unique
+  oauthSetup    ProviderOAuthSetup? @relation(fields: [oauthSetupOid], references: [oid])
+
+  authCredentialsOid BigInt?
+  authCredentials    ProviderAuthCredentials? @relation(fields: [authCredentialsOid], references: [oid])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  expiresAt DateTime
+
+  events ProviderAuthSessionEvent[]
+}
+
+enum ProviderAuthSessionEventType {
+  created
+  link_opened
+  config_created
+  oauth_setup_completed
+  oauth_setup_failed
+  completed
+  expired
+}
+
+model ProviderAuthSessionEvent {
+  oid BigInt @id
+  id  String @unique
+
+  type ProviderAuthSessionEventType
+
+  ip String?
+  ua String?
+
+  setupOid BigInt?
+  setup    ProviderOAuthSetup? @relation(fields: [setupOid], references: [oid], onDelete: Cascade)
+
+  sessionOid BigInt
+  session    ProviderAuthSession @relation(fields: [sessionOid], references: [oid], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}

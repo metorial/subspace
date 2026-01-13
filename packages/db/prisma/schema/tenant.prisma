@@ -31,4 +31,5 @@ model Tenant {
   providerSessions                         ProviderSession[]
   providerAuthExports                      ProviderAuthExport[]
   providerAuthImports                      ProviderAuthImport[]
+  providerAuthSessions                     ProviderAuthSession[]
 }

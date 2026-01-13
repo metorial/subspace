@@ -22,4 +22,5 @@ model Solution {
   providerSessions                         ProviderSession[]
   providerAuthExports                      ProviderAuthExport[]
   providerAuthImports                      ProviderAuthImport[]
+  providerAuthSessions                     ProviderAuthSession[]
 }

@@ -113,12 +113,14 @@ model ProviderAuthMethod {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  providerOAuthSetups ProviderOAuthSetup[]
-  providerAuthConfigs ProviderAuthConfig[]
-  currentInGlobal     ProviderAuthMethodGlobal[] @relation("currentAuthMethodInstance")
+  providerOAuthSetups  ProviderOAuthSetup[]
+  providerAuthConfigs  ProviderAuthConfig[]
+  currentInGlobal      ProviderAuthMethodGlobal[] @relation("currentAuthMethodInstance")
+  providerAuthSessions ProviderAuthSession[]
 
   @@unique([providerOid, specificationOid, hash])
   @@unique([specificationOid, key])
+  @@index([isDefault])
 }
 
 model ProviderSpecification {

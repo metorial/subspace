@@ -4,11 +4,18 @@ enum ProviderAuthConfigType {
   oauth_manual
 }
 
+enum ProviderAuthConfigSource {
+  manual
+  auth_session
+  system
+}
+
 model ProviderAuthConfig {
   oid BigInt @id
   id  String @unique
 
-  type ProviderAuthConfigType
+  type   ProviderAuthConfigType
+  source ProviderAuthConfigSource
 
   isEphemeral Boolean
   isDefault   Boolean
@@ -41,6 +48,9 @@ model ProviderAuthConfig {
   slateAuthConfigOid BigInt?          @unique
   slateAuthConfig    SlateAuthConfig? @relation(fields: [slateAuthConfigOid], references: [oid])
 
+  providerAuthSession       ProviderAuthSession?
+  fromProviderAuthSessionId String?              @unique // for efficient querying
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
@@ -51,6 +61,8 @@ model ProviderAuthConfig {
   providerAuthExports              ProviderAuthExport[]
   providerAuthImports              ProviderAuthImport[]
   providerAuthConfigUpdates        ProviderAuthConfigUpdate[]
+
+  @@index([isDefault])
 }
 
 model ProviderAuthConfigUpdate {

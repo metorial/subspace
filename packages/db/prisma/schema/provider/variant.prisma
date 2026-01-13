@@ -35,4 +35,6 @@ model ProviderVariant {
 
   providerVersions    ProviderVersion[]
   providerDeployments ProviderDeployment[]
+
+  @@index([isDefault])
 }
