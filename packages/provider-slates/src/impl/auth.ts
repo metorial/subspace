@@ -110,6 +110,10 @@ export class ProviderAuth extends IProviderAuth {
       }
     });
 
+    if (!oauthSetup.url) {
+      throw new Error('OAuth setup did not return a URL');
+    }
+
     return {
       url: oauthSetup.url,
       slateOAuthSetup

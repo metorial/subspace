@@ -20,6 +20,7 @@ model ProviderOAuthSetup {
   metadata    Json?
 
   redirectUrl String?
+  backendUrl  String
 
   errorCode    String?
   errorMessage String?

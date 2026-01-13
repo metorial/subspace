@@ -164,6 +164,7 @@ class providerOAuthSetupServiceImpl {
       });
 
       let newId = getId('providerOAuthSetup');
+      let clientSecret = await ID.generateId('providerOAuthSetup_clientSecret');
 
       let backendProviderOAuthSetup = await backend.auth.createProviderOAuthSetup({
         tenant: d.tenant,
@@ -172,16 +173,15 @@ class providerOAuthSetupServiceImpl {
         input: d.input.config,
         credentials: d.credentials,
         authMethod,
-        redirectUrl: `${env.service.OAUTH_HOOK_URL}/subspace/oauth-setup/backend-callback/${newId.id}`
+        redirectUrl: `${env.service.OAUTH_HOOK_URL}/oauth-setup/${newId.id}/callback?client_secret=${clientSecret}`
       });
 
       let providerOAuthSetup = await db.providerOAuthSetup.create({
         data: {
           ...newId,
+          clientSecret,
 
           status: 'unused',
-
-          clientSecret: await ID.generateId('providerOAuthSetup_clientSecret'),
 
           name: d.input.name?.trim() || undefined,
           description: d.input.description?.trim() || undefined,
@@ -190,6 +190,7 @@ class providerOAuthSetupServiceImpl {
           isEphemeral: !!d.input.isEphemeral,
 
           redirectUrl: d.input.redirectUrl,
+          backendUrl: backendProviderOAuthSetup.url,
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,

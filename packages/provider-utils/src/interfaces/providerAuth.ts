@@ -77,7 +77,7 @@ export interface ProviderOAuthSetupCreateParam {
 
 export interface ProviderOAuthSetupCreateRes {
   slateOAuthSetup?: SlateOAuthSetup;
-  url: string | null;
+  url: string;
 }
 
 export interface ProviderOAuthSetupRetrieveParam {

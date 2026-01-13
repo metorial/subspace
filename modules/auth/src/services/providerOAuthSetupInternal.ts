@@ -22,9 +22,10 @@ let syncLock = createLock({
 });
 
 class providerOAuthSetupInternalServiceImpl {
-  async getProviderOAuthSetupByClientSecret(d: { clientSecret: string }) {
+  async getProviderOAuthSetupByClientSecret(d: { setupId: string; clientSecret: string }) {
     let providerOAuthSetup = await db.providerOAuthSetup.findFirst({
       where: {
+        id: d.setupId,
         clientSecret: d.clientSecret,
         expiresAt: { gt: new Date() }
       },

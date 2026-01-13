@@ -1,5 +1,5 @@
 {
-  "name": "@metorial-subspace/app-controller",
+  "name": "@metorial-subspace/app-public",
   "module": "index.ts",
   "type": "module",
   "private": true,

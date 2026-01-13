@@ -1,0 +1,57 @@
+import { createHono } from '@lowerdeck/hono';
+import { providerOAuthSetupInternalService } from '@metorial-subspace/module-auth';
+
+export let oauthSetupApp = createHono()
+  .use(async (c, next) => {
+    await next();
+
+    c.res.headers.set('Access-Control-Allow-Origin', c.req.header('Origin') || '*');
+    c.res.headers.set(
+      'Access-Control-Allow-Methods',
+      'GET, POST, PUT, DELETE, OPTIONS, PATCH'
+    );
+    c.res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    c.res.headers.set('Access-Control-Allow-Credentials', 'true');
+  })
+  .get('/:setupId', async c => {
+    let setupId = c.req.param('setupId');
+    let clientSecret = c.req.query('client_secret');
+    if (!clientSecret) return c.text('Missing client_secret', 400);
+
+    let setup = await providerOAuthSetupInternalService.getProviderOAuthSetupByClientSecret({
+      setupId,
+      clientSecret
+    });
+
+    if (
+      setup.expiresAt < new Date() ||
+      setup.status == 'expired' ||
+      setup.status == 'completed'
+    ) {
+      return c.text('OAuth setup is no longer valid', 400);
+    }
+
+    return c.redirect(setup.backendUrl);
+  })
+  .get('/:setupId/callback', async c => {
+    let setupId = c.req.param('setupId');
+    let clientSecret = c.req.query('client_secret');
+    if (!clientSecret) return c.text('Missing client_secret', 400);
+
+    let setup = await providerOAuthSetupInternalService.getProviderOAuthSetupByClientSecret({
+      setupId,
+      clientSecret
+    });
+
+    if (
+      setup.expiresAt < new Date() ||
+      setup.status == 'expired' ||
+      setup.status == 'completed'
+    ) {
+      return c.text('OAuth setup is no longer valid', 400);
+    }
+
+    if (setup.redirectUrl) return c.redirect(setup.redirectUrl);
+
+    return c.text('OAuth setup completed successfully');
+  });
