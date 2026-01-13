@@ -8,6 +8,10 @@ import {
   providerAuthCredentialsUpdatedQueueProcessor
 } from './providerAuthCredentials';
 import {
+  providerAuthSessionCreatedQueueProcessor,
+  providerAuthSessionUpdatedQueueProcessor
+} from './providerAuthSession';
+import {
   providerOAuthSetupCreatedQueueProcessor,
   providerOAuthSetupUpdatedQueueProcessor
 } from './providerOAuthSetup';
@@ -18,5 +22,7 @@ export let lifecycleQueues = combineQueueProcessors([
   providerAuthConfigCreatedQueueProcessor,
   providerAuthConfigUpdatedQueueProcessor,
   providerOAuthSetupCreatedQueueProcessor,
-  providerOAuthSetupUpdatedQueueProcessor
+  providerOAuthSetupUpdatedQueueProcessor,
+  providerAuthSessionCreatedQueueProcessor,
+  providerAuthSessionUpdatedQueueProcessor
 ]);
