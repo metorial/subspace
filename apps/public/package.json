@@ -5,8 +5,9 @@
   "private": true,
   "scripts": {
     "start:dev:server": "bun --watch ./src/server.ts",
-    "start:dev:vite": "vite build --watch ./frontend",
+    "start:dev:vite": "bun run dev",
     "start:dev": "bun run start:dev:server",
+    "dev": "vite build --watch ./frontend",
     "start": "bun ./src/server.ts",
     "build": "vite build ./frontend"
   },
