@@ -3,15 +3,12 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
-  Backend,
   db,
   getId,
   Provider,
   ProviderAuthConfig,
   ProviderAuthConfigSource,
-  ProviderAuthConfigType,
   ProviderAuthImport,
-  ProviderAuthMethod,
   ProviderDeployment,
   ProviderVariant,
   ProviderVersion,
@@ -20,12 +17,7 @@ import {
   withTransaction
 } from '@metorial-subspace/db';
 import { checkTenant } from '@metorial-subspace/module-tenant';
-import { getBackend } from '@metorial-subspace/provider';
-import { ProviderAuthConfigCreateRes } from '@metorial-subspace/provider-utils';
-import {
-  providerAuthConfigCreatedQueue,
-  providerAuthConfigUpdatedQueue
-} from '../queues/lifecycle/providerAuthConfig';
+import { providerAuthConfigUpdatedQueue } from '../queues/lifecycle/providerAuthConfig';
 import { providerAuthConfigInternalService } from './providerAuthConfigInternal';
 
 let include = {
@@ -133,18 +125,20 @@ class providerAuthConfigServiceImpl {
           authMethodId: d.input.authMethodId
         });
 
-      let backendRes = await this.createBackendProviderAuthConfig({
-        tenant: d.tenant,
-        solution: d.solution,
+      let backendRes = await providerAuthConfigInternalService.createBackendProviderAuthConfig(
+        {
+          tenant: d.tenant,
+          solution: d.solution,
 
-        provider: d.provider,
-        providerVersion: version,
-        authMethod,
+          provider: d.provider,
+          providerVersion: version,
+          authMethod,
 
-        config: d.input.config
-      });
+          config: d.input.config
+        }
+      );
 
-      return await this.createProviderAuthConfigInternal({
+      return await providerAuthConfigInternalService.createProviderAuthConfigInternal({
         tenant: d.tenant,
         solution: d.solution,
         provider: d.provider,
@@ -221,7 +215,7 @@ class providerAuthConfigServiceImpl {
       }
 
       let backendRes = d.input.config
-        ? await this.createBackendProviderAuthConfig({
+        ? await providerAuthConfigInternalService.createBackendProviderAuthConfig({
             tenant: d.tenant,
             solution: d.solution,
 
@@ -287,164 +281,6 @@ class providerAuthConfigServiceImpl {
         authImport
       };
     });
-  }
-
-  async createProviderAuthConfigInternal(d: {
-    tenant: Tenant;
-    solution: Solution;
-    provider: Provider;
-    providerDeployment?: ProviderDeployment;
-    backend: Backend;
-    type: ProviderAuthConfigType;
-    source: ProviderAuthConfigSource;
-    input: {
-      name?: string;
-      description?: string;
-      metadata?: Record<string, any>;
-      isEphemeral?: boolean;
-      isDefault?: boolean;
-    };
-    import?: {
-      ip: string | undefined;
-      ua: string | undefined;
-      note?: string | undefined;
-    };
-
-    authMethod: ProviderAuthMethod;
-    backendProviderAuthConfig: ProviderAuthConfigCreateRes;
-  }) {
-    checkTenant(d, d.providerDeployment);
-    checkTenant(d, d.backendProviderAuthConfig.slateAuthConfig);
-
-    if (d.providerDeployment && d.providerDeployment.providerOid != d.provider.oid) {
-      throw new ServiceError(
-        badRequestError({
-          message: 'Provider deployment does not belong to provider',
-          code: 'provider_mismatch'
-        })
-      );
-    }
-    if (d.authMethod.providerOid != d.provider.oid) {
-      throw new ServiceError(
-        badRequestError({
-          message: 'Auth method does not belong to provider',
-          code: 'provider_mismatch'
-        })
-      );
-    }
-
-    return withTransaction(async db => {
-      let providerAuthConfig = await db.providerAuthConfig.create({
-        data: {
-          ...getId('providerAuthConfig'),
-
-          backendOid: d.backend.oid,
-
-          type: d.type,
-          source: d.source,
-
-          name: d.input.name?.trim() || undefined,
-          description: d.input.description?.trim() || undefined,
-          metadata: d.input.metadata,
-
-          isEphemeral: !!d.input.isEphemeral,
-          isDefault: !!d.input.isDefault,
-
-          tenantOid: d.tenant.oid,
-          solutionOid: d.solution.oid,
-          providerOid: d.provider.oid,
-          authMethodOid: d.authMethod.oid,
-          deploymentOid: d.providerDeployment?.oid,
-
-          slateAuthConfigOid: d.backendProviderAuthConfig.slateAuthConfig?.oid
-        },
-        include
-      });
-
-      let update = await db.providerAuthConfigUpdate.create({
-        data: {
-          ...getId('providerAuthConfigUpdate'),
-          authConfigOid: providerAuthConfig.oid,
-          slateAuthConfigOid: providerAuthConfig.slateAuthConfigOid
-        }
-      });
-
-      let authImport: ProviderAuthImport | undefined = undefined;
-
-      if (d.import && providerAuthConfig.type != 'oauth_automated') {
-        authImport = await db.providerAuthImport.create({
-          data: {
-            ...getId('providerAuthImport'),
-
-            tenantOid: d.tenant.oid,
-            solutionOid: d.solution.oid,
-            authConfigOid: providerAuthConfig.oid,
-            authConfigUpdateOid: update.oid,
-            deploymentOid: d.providerDeployment?.oid,
-
-            ip: d.import.ip,
-            ua: d.import.ua,
-            note: d.import.note,
-            metadata: d.input.metadata,
-
-            expiresAt: d.backendProviderAuthConfig.expiresAt
-          }
-        });
-      }
-
-      if (providerAuthConfig.isDefault && d.providerDeployment) {
-        if (d.providerDeployment.defaultAuthConfigOid) {
-          await db.providerAuthConfig.updateMany({
-            where: {
-              deploymentOid: d.providerDeployment.oid,
-              isDefault: true
-            },
-            data: { isDefault: false }
-          });
-        }
-
-        await db.providerDeployment.update({
-          where: { oid: d.providerDeployment.oid },
-          data: { defaultAuthConfigOid: providerAuthConfig.oid }
-        });
-      }
-
-      await addAfterTransactionHook(async () =>
-        providerAuthConfigCreatedQueue.add({ providerAuthConfigId: providerAuthConfig.id })
-      );
-
-      return {
-        ...providerAuthConfig,
-        authImport
-      };
-    });
-  }
-
-  private async createBackendProviderAuthConfig(d: {
-    tenant: Tenant;
-    solution: Solution;
-    provider: Provider & { defaultVariant: ProviderVariant | null };
-    providerVersion: ProviderVersion;
-    authMethod: ProviderAuthMethod;
-
-    config: Record<string, any>;
-  }) {
-    let backend = await getBackend({
-      entity: d.provider.defaultVariant!
-    });
-
-    let backendProviderAuthConfig = await backend.auth.createProviderAuthConfig({
-      tenant: d.tenant,
-      provider: d.provider,
-      providerVersion: d.providerVersion,
-      authMethod: d.authMethod,
-      input: d.config
-    });
-
-    return {
-      backend: backend.backend,
-      backendProviderAuthConfig
-    };
   }
 }
 

@@ -4,16 +4,15 @@ import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
   db,
-  getId,
   ProviderAuthConfig,
   ProviderOAuthSetup,
   withTransaction
 } from '@metorial-subspace/db';
 import { getBackend } from '@metorial-subspace/provider';
 import { env } from '../env';
-import { providerAuthSessionUpdatedQueue } from '../queues/lifecycle/providerAuthSession';
 import { providerOAuthSetupUpdatedQueue } from '../queues/lifecycle/providerOAuthSetup';
-import { providerAuthConfigService } from './providerAuthConfig';
+import { providerAuthConfigInternalService } from './providerAuthConfigInternal';
+import { providerAuthSessionInternalService } from './providerAuthSessionInternal';
 
 let include = {};
 
@@ -74,27 +73,28 @@ class providerOAuthSetupInternalServiceImpl {
           if (existing) {
             authConfig = existing;
           } else {
-            authConfig = await providerAuthConfigService.createProviderAuthConfigInternal({
-              backend: backend.backend,
-              source: providerOAuthSetup.providerAuthSession ? 'auth_session' : 'system',
-              type: 'oauth_automated',
-              tenant: providerOAuthSetup.tenant,
-              provider: providerOAuthSetup.provider,
-              solution: providerOAuthSetup.solution,
-              providerDeployment: providerOAuthSetup.deployment ?? undefined,
-              input: {
-                name: providerOAuthSetup.name ?? undefined,
-                description: providerOAuthSetup.description ?? undefined,
-                metadata: providerOAuthSetup.metadata ?? undefined,
-                isEphemeral: providerOAuthSetup.isEphemeral,
-                isDefault: false
-              },
-              authMethod: providerOAuthSetup.authMethod,
-              backendProviderAuthConfig: {
-                slateAuthConfig: record.slateAuthConfig,
-                expiresAt: null
-              }
-            });
+            authConfig =
+              await providerAuthConfigInternalService.createProviderAuthConfigInternal({
+                backend: backend.backend,
+                source: providerOAuthSetup.providerAuthSession ? 'auth_session' : 'system',
+                type: 'oauth_automated',
+                tenant: providerOAuthSetup.tenant,
+                provider: providerOAuthSetup.provider,
+                solution: providerOAuthSetup.solution,
+                providerDeployment: providerOAuthSetup.deployment ?? undefined,
+                input: {
+                  name: providerOAuthSetup.name ?? undefined,
+                  description: providerOAuthSetup.description ?? undefined,
+                  metadata: providerOAuthSetup.metadata ?? undefined,
+                  isEphemeral: providerOAuthSetup.isEphemeral,
+                  isDefault: false
+                },
+                authMethod: providerOAuthSetup.authMethod,
+                backendProviderAuthConfig: {
+                  slateAuthConfig: record.slateAuthConfig,
+                  expiresAt: null
+                }
+              });
           }
         }
 
@@ -123,67 +123,11 @@ class providerOAuthSetupInternalServiceImpl {
           }
         });
         if (session) {
-          if (setup.status == 'completed') {
-            await db.providerAuthSession.update({
-              where: { oid: session.oid },
-              data: {
-                status: 'completed',
-                authCredentialsOid: setup.authCredentialsOid,
-                authConfigOid: setup.authConfigOid
-              }
-            });
-
-            await db.providerAuthSessionEvent.createMany({
-              data: [
-                {
-                  ...getId('providerAuthSessionEvent'),
-                  type: 'oauth_setup_completed',
-                  ip: d.context.ip,
-                  ua: d.context.ua,
-                  sessionOid: session.oid
-                },
-                {
-                  ...getId('providerAuthSessionEvent'),
-                  type: 'completed',
-                  sessionOid: session.oid,
-                  ip: d.context.ip,
-                  ua: d.context.ua
-                }
-              ]
-            });
-
-            setup = await db.providerOAuthSetup.update({
-              where: { oid: setup.oid },
-              data: { redirectUrl: session.redirectUrl }
-            });
-          } else {
-            await db.providerAuthSession.update({
-              where: { oid: session.oid },
-              data: {
-                status: 'failed',
-                authCredentialsOid: setup.authCredentialsOid,
-                authConfigOid: setup.authConfigOid
-              }
-            });
-
-            await db.providerAuthSessionEvent.createMany({
-              data: [
-                {
-                  ...getId('providerAuthSessionEvent'),
-                  type: 'oauth_setup_failed',
-                  ip: d.context.ip,
-                  ua: d.context.ua,
-                  sessionOid: session.oid
-                }
-              ]
-            });
-          }
-        }
-
-        if (session) {
-          addAfterTransactionHook(async () =>
-            providerAuthSessionUpdatedQueue.add({ providerAuthSessionId: session.id })
-          );
+          setup = await providerAuthSessionInternalService.oauthSetupCompleted({
+            session,
+            setup,
+            context: d.context
+          });
         }
 
         addAfterTransactionHook(async () =>

@@ -10,6 +10,7 @@ import {
   ProviderAuthMethod,
   ProviderAuthSession,
   ProviderDeployment,
+  ProviderOAuthSetup,
   ProviderVariant,
   ProviderVersion,
   Solution,
@@ -229,6 +230,84 @@ class providerAuthSessionInternalServiceImpl {
         authCredentialsOid: config.authCredentialsOid
       };
     }
+  }
+
+  async oauthSetupCompleted(d: {
+    session: ProviderAuthSession;
+    setup: ProviderOAuthSetup;
+    context: { ip: string; ua: string };
+  }) {
+    return withTransaction(async db => {
+      if (
+        d.session.status == 'completed' ||
+        d.session.status == 'archived' ||
+        d.session.status == 'deleted' ||
+        d.session.status == 'expired'
+      )
+        return d.setup;
+
+      if (d.setup.status == 'completed') {
+        await db.providerAuthSession.update({
+          where: { oid: d.session.oid },
+          data: {
+            status: 'completed',
+            authCredentialsOid: d.setup.authCredentialsOid ?? undefined,
+            authConfigOid: d.setup.authConfigOid ?? undefined
+          }
+        });
+
+        await db.providerAuthSessionEvent.createMany({
+          data: [
+            {
+              ...getId('providerAuthSessionEvent'),
+              type: 'oauth_setup_completed',
+              ip: d.context.ip,
+              ua: d.context.ua,
+              sessionOid: d.session.oid
+            },
+            {
+              ...getId('providerAuthSessionEvent'),
+              type: 'completed',
+              sessionOid: d.session.oid,
+              ip: d.context.ip,
+              ua: d.context.ua
+            }
+          ]
+        });
+
+        d.setup = await db.providerOAuthSetup.update({
+          where: { oid: d.setup.oid },
+          data: { redirectUrl: d.session.redirectUrl }
+        });
+      } else {
+        await db.providerAuthSession.update({
+          where: { oid: d.session.oid },
+          data: {
+            status: 'failed',
+            authCredentialsOid: d.setup.authCredentialsOid ?? undefined,
+            authConfigOid: d.setup.authConfigOid ?? undefined
+          }
+        });
+
+        await db.providerAuthSessionEvent.createMany({
+          data: [
+            {
+              ...getId('providerAuthSessionEvent'),
+              type: 'oauth_setup_failed',
+              ip: d.context.ip,
+              ua: d.context.ua,
+              sessionOid: d.session.oid
+            }
+          ]
+        });
+      }
+
+      addAfterTransactionHook(async () =>
+        providerAuthSessionUpdatedQueue.add({ providerAuthSessionId: d.session.id })
+      );
+
+      return d.setup;
+    });
   }
 }
 
