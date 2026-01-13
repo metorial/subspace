@@ -222,7 +222,11 @@ class providerAuthConfigInternalServiceImpl {
 
       let authImport: ProviderAuthImport | undefined = undefined;
 
-      if (d.import && providerAuthConfig.type != 'oauth_automated') {
+      if (
+        d.import &&
+        providerAuthConfig.source == 'manual' &&
+        providerAuthConfig.type != 'oauth_automated'
+      ) {
         authImport = await db.providerAuthImport.create({
           data: {
             ...getId('providerAuthImport'),
