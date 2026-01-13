@@ -90,7 +90,7 @@ class providerConfigServiceImpl {
       lockedVersion: ProviderVersion | null;
     };
     input: {
-      name: string;
+      name?: string;
       description?: string;
       metadata?: Record<string, any>;
       isEphemeral?: boolean;

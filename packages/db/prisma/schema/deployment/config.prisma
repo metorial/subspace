@@ -42,6 +42,7 @@ model ProviderConfig {
   vault                            ProviderConfigVault?
   deploymentPairs                  ProviderDeploymentConfigPair[]
   providerAuthConfigUsedForConfigs ProviderAuthConfigUsedForConfig[]
+  providerSetupSession             ProviderSetupSession?
 
   @@index([isDefault])
 }

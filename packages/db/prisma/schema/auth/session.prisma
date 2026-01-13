@@ -1,4 +1,4 @@
-enum ProviderAuthSessionStatus {
+enum ProviderSetupSessionStatus {
   pending
   completed
   failed
@@ -8,11 +8,17 @@ enum ProviderAuthSessionStatus {
   deleted
 }
 
-model ProviderAuthSession {
+enum ProviderSetupSessionType {
+  auth_only
+  auth_and_config
+}
+
+model ProviderSetupSession {
   oid BigInt @id
   id  String @unique
 
-  status ProviderAuthSessionStatus
+  status ProviderSetupSessionStatus
+  type   ProviderSetupSessionType
 
   clientSecret String
 
@@ -40,6 +46,9 @@ model ProviderAuthSession {
   authConfigOid BigInt?             @unique
   authConfig    ProviderAuthConfig? @relation(fields: [authConfigOid], references: [oid])
 
+  configOid BigInt?         @unique
+  config    ProviderConfig? @relation(fields: [configOid], references: [oid])
+
   oauthSetupOid BigInt?             @unique
   oauthSetup    ProviderOAuthSetup? @relation(fields: [oauthSetupOid], references: [oid])
 
@@ -50,24 +59,25 @@ model ProviderAuthSession {
   updatedAt DateTime @default(now()) @updatedAt
   expiresAt DateTime
 
-  events ProviderAuthSessionEvent[]
+  events ProviderSetupSessionEvent[]
 }
 
-enum ProviderAuthSessionEventType {
+enum ProviderSetupSessionEventType {
   created
   link_opened
-  config_created
+  config_set
+  auth_config_set
   oauth_setup_completed
   oauth_setup_failed
   completed
   expired
 }
 
-model ProviderAuthSessionEvent {
+model ProviderSetupSessionEvent {
   oid BigInt @id
   id  String @unique
 
-  type ProviderAuthSessionEventType
+  type ProviderSetupSessionEventType
 
   ip String?
   ua String?
@@ -76,7 +86,7 @@ model ProviderAuthSessionEvent {
   setup    ProviderOAuthSetup? @relation(fields: [setupOid], references: [oid], onDelete: Cascade)
 
   sessionOid BigInt
-  session    ProviderAuthSession @relation(fields: [sessionOid], references: [oid], onDelete: Cascade)
+  session    ProviderSetupSession @relation(fields: [sessionOid], references: [oid], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 }
