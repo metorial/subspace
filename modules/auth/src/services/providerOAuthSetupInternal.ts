@@ -77,7 +77,7 @@ class providerOAuthSetupInternalServiceImpl {
             authConfig =
               await providerAuthConfigInternalService.createProviderAuthConfigInternal({
                 backend: backend.backend,
-                source: providerOAuthSetup.providerSetupSession ? 'auth_session' : 'system',
+                source: providerOAuthSetup.providerSetupSession ? 'setup_session' : 'system',
                 type: 'oauth_automated',
                 tenant: providerOAuthSetup.tenant,
                 provider: providerOAuthSetup.provider,

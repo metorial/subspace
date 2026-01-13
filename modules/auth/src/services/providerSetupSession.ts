@@ -3,6 +3,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
+  Brand,
   db,
   getId,
   ID,
@@ -75,7 +76,9 @@ class providerSetupSessionServiceImpl {
       include
     });
     if (!providerSetupSession)
-      throw new ServiceError(notFoundError('provider.auth_session', d.providerSetupSessionId));
+      throw new ServiceError(
+        notFoundError('provider.setup_session', d.providerSetupSessionId)
+      );
 
     return providerSetupSession;
   }
@@ -90,6 +93,7 @@ class providerSetupSessionServiceImpl {
       lockedVersion: ProviderVersion | null;
     };
     credentials?: ProviderAuthCredentials;
+    brand?: Brand;
     input: {
       name: string;
       authMethodId?: string;
@@ -230,6 +234,7 @@ class providerSetupSessionServiceImpl {
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,
           providerOid: d.provider.oid,
+          brandOid: d.brand?.oid,
 
           expiresAt
         },

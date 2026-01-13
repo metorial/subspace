@@ -7,6 +7,7 @@ import {
 } from '@metorial-subspace/module-auth';
 import { providerService } from '@metorial-subspace/module-catalog';
 import { providerDeploymentService } from '@metorial-subspace/module-deployment';
+import { brandService } from '@metorial-subspace/module-tenant';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 
@@ -69,6 +70,7 @@ export let providerSetupSessionController = app.controller({
         providerId: v.string(),
         providerAuthCredentialsId: v.optional(v.string()),
         providerDeploymentId: v.optional(v.string()),
+        brandId: v.optional(v.string()),
 
         providerAuthMethodId: v.optional(v.string()),
         redirectUrl: v.optional(v.string()),
@@ -102,6 +104,10 @@ export let providerSetupSessionController = app.controller({
           })
         : undefined;
 
+      let brand = ctx.input.brandId
+        ? await brandService.getBrandById({ id: ctx.input.brandId })
+        : undefined;
+
       let providerSetupSession = await providerSetupSessionService.createProviderSetupSession({
         tenant: ctx.tenant,
         solution: ctx.solution,
@@ -109,6 +115,7 @@ export let providerSetupSessionController = app.controller({
         provider,
         providerDeployment,
         credentials,
+        brand,
 
         import: {
           ip: ctx.input.ip,

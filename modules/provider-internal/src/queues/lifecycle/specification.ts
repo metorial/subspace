@@ -18,8 +18,6 @@ export let specificationCreatedQueueProcessor = specificationCreatedQueue.proces
     });
     if (!spec) throw new QueueRetryError();
 
-    console.log('Processing specification created:', spec);
-
     await specificationCreatedAssocToolQueue.addMany(
       spec.providerTools.map(t => ({ toolOid: t.oid, globalOid: t.globalOid }))
     );

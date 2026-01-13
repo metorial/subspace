@@ -30,15 +30,20 @@ let updateLock = createLock({
 });
 
 class providerSetupSessionInternalServiceImpl {
-  async getProviderSetupSessionByClientSecret(d: { clientSecret: string }) {
+  async getProviderSetupSessionByClientSecret(d: { sessionId: string; clientSecret: string }) {
     let providerSetupSession = await db.providerSetupSession.findFirst({
       where: {
+        id: d.sessionId,
         clientSecret: d.clientSecret,
         status: { notIn: ['archived', 'deleted'] }
       },
-      include: providerSetupSessionInclude
+      include: {
+        ...providerSetupSessionInclude,
+        brand: true,
+        tenant: true
+      }
     });
-    if (!providerSetupSession) throw new ServiceError(notFoundError('provider.auth_session'));
+    if (!providerSetupSession) throw new ServiceError(notFoundError('provider.setup_session'));
 
     return providerSetupSession;
   }
@@ -246,7 +251,7 @@ class providerSetupSessionInternalServiceImpl {
         provider: d.provider,
         providerDeployment: d.providerDeployment,
         import: d.import,
-        source: 'auth_session',
+        source: 'setup_session',
         input: {
           name: d.input.name,
           description: d.input.description,
