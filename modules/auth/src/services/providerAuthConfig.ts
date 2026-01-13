@@ -54,9 +54,13 @@ class providerAuthConfigServiceImpl {
   }) {
     let providerAuthConfig = await db.providerAuthConfig.findFirst({
       where: {
-        id: d.providerAuthConfigId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+
+        OR: [
+          { id: d.providerAuthConfigId },
+          { providerAuthSession: { id: d.providerAuthConfigId } }
+        ]
       },
       include
     });
