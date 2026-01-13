@@ -102,7 +102,7 @@ class providerConfigVaultServiceImpl {
         data: {
           ...getId('providerConfigVault'),
           name: d.input.name,
-          description: d.input.description,
+          description: d.input.description?.trim() || undefined,
           metadata: d.input.metadata,
           tenantOid: d.tenant.oid,
           configOid: config.oid,

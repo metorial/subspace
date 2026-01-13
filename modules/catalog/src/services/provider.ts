@@ -85,8 +85,8 @@ class providerServiceImpl {
     await providerInternalService.updateProvider({
       provider: d.provider,
       input: {
-        name: d.input.name,
-        description: d.input.description,
+        name: d.input.name?.trim() || undefined,
+        description: d.input.description?.trim() || undefined,
         slug: d.input.slug,
         image: d.input.image,
         skills: d.input.skills

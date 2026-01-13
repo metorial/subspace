@@ -140,8 +140,8 @@ class providerDeploymentServiceImpl {
 
           isEphemeral: !!d.input.isEphemeral,
 
-          name: d.input.name,
-          description: d.input.description,
+          name: d.input.name?.trim() || undefined,
+          description: d.input.description?.trim() || undefined,
           metadata: d.input.metadata,
 
           tenantOid: d.tenant.oid,

@@ -207,16 +207,18 @@ class providerInternalServiceImpl {
       let provider = await db.provider.update({
         where: { id: d.provider.id },
         data: {
-          name: d.input.name,
-          description: d.input.description
+          slug: d.input.slug,
+          name: d.input.name?.trim() || undefined,
+          description: d.input.description?.trim() || undefined
         }
       });
 
       let listing = await db.providerListing.update({
         where: { oid: provider.oid, isCustomized: true },
         data: {
-          name: d.input.name,
-          description: d.input.description,
+          slug: provider.slug,
+          name: provider.name,
+          description: provider.description,
           skills: d.input.skills,
           image: d.input.image ?? undefined
         }

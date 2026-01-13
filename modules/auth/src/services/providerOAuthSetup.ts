@@ -83,7 +83,7 @@ class providerOAuthSetupServiceImpl {
     };
     credentials: ProviderAuthCredentials;
     input: {
-      name: string;
+      name?: string;
       description?: string;
       metadata?: Record<string, any>;
       isEphemeral?: boolean;
@@ -183,8 +183,8 @@ class providerOAuthSetupServiceImpl {
 
           clientSecret: await ID.generateId('providerOAuthSetup_clientSecret'),
 
-          name: d.input.name,
-          description: d.input.description,
+          name: d.input.name?.trim() || undefined,
+          description: d.input.description?.trim() || undefined,
           metadata: d.input.metadata,
 
           isEphemeral: !!d.input.isEphemeral,

@@ -132,8 +132,8 @@ class providerConfigServiceImpl {
       let ids = getId('providerConfig');
 
       let data = {
-        name: d.input.name,
-        description: d.input.description,
+        name: d.input.name?.trim() || undefined,
+        description: d.input.description?.trim() || undefined,
         metadata: d.input.metadata,
 
         isEphemeral: !!d.input.isEphemeral,
