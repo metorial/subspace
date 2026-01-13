@@ -12,7 +12,7 @@ import { getBackend } from '@metorial-subspace/provider';
 import { env } from '../env';
 import { providerOAuthSetupUpdatedQueue } from '../queues/lifecycle/providerOAuthSetup';
 import { providerAuthConfigInternalService } from './providerAuthConfigInternal';
-import { providerAuthSessionInternalService } from './providerAuthSessionInternal';
+import { providerSetupSessionInternalService } from './providerSetupSessionInternal';
 
 let include = {};
 
@@ -54,7 +54,7 @@ class providerOAuthSetupInternalServiceImpl {
             provider: true,
             deployment: true,
             solution: true,
-            providerAuthSession: true
+            providerSetupSession: true
           }
         });
 
@@ -77,7 +77,7 @@ class providerOAuthSetupInternalServiceImpl {
             authConfig =
               await providerAuthConfigInternalService.createProviderAuthConfigInternal({
                 backend: backend.backend,
-                source: providerOAuthSetup.providerAuthSession ? 'auth_session' : 'system',
+                source: providerOAuthSetup.providerSetupSession ? 'auth_session' : 'system',
                 type: 'oauth_automated',
                 tenant: providerOAuthSetup.tenant,
                 provider: providerOAuthSetup.provider,
@@ -117,14 +117,14 @@ class providerOAuthSetupInternalServiceImpl {
           }
         });
 
-        let session = await db.providerAuthSession.findFirst({
+        let session = await db.providerSetupSession.findFirst({
           where: {
             oauthSetupOid: providerOAuthSetup.oid,
             status: { notIn: ['completed', 'expired', 'archived', 'deleted'] }
           }
         });
         if (session) {
-          setup = await providerAuthSessionInternalService.oauthSetupCompleted({
+          setup = await providerSetupSessionInternalService.oauthSetupCompleted({
             session,
             setup,
             context: d.context
