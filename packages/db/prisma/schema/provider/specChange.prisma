@@ -35,11 +35,11 @@ model ProviderSpecificationChangeNotification {
   versionOid BigInt
   version    ProviderVersion @relation(fields: [versionOid], references: [oid])
 
-  tenantOid BigInt
-  tenant    Tenant @relation(fields: [tenantOid], references: [oid], onDelete: Cascade)
+  tenantOid BigInt?
+  tenant    Tenant? @relation(fields: [tenantOid], references: [oid], onDelete: Cascade)
 
-  solutionOid BigInt
-  solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
+  solutionOid BigInt?
+  solution    Solution? @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
   versionSpecificationChangeOid BigInt?                             @unique
   versionSpecificationChange    ProviderVersionSpecificationChange? @relation(fields: [versionSpecificationChangeOid], references: [oid])

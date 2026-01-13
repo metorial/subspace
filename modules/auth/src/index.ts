@@ -5,7 +5,7 @@ import { searchQueues } from './queues/search';
 
 export * from './services';
 
-export let deploymentQueueProcessor = combineQueueProcessors([
+export let authQueueProcessor = combineQueueProcessors([
   lifecycleQueues,
   searchQueues,
   cronQueues

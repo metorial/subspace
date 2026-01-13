@@ -53,7 +53,7 @@ export let providerDeploymentController = app.controller({
     )
     .do(async ctx => providerDeploymentPresenter(ctx.providerDeployment)),
 
-  create: providerDeploymentApp
+  create: tenantApp
     .handler()
     .input(
       v.object({

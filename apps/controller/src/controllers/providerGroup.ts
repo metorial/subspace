@@ -49,7 +49,7 @@ export let providerListingGroupController = app.controller({
     )
     .do(async ctx => providerListingGroupPresenter(ctx.providerListingGroup)),
 
-  create: providerListingGroupApp
+  create: tenantApp
     .handler()
     .input(
       v.object({

@@ -51,7 +51,7 @@ export let providerAuthCredentialsController = app.controller({
     )
     .do(async ctx => providerAuthCredentialsPresenter(ctx.providerAuthCredentials)),
 
-  create: providerAuthCredentialsApp
+  create: tenantApp
     .handler()
     .input(
       v.object({

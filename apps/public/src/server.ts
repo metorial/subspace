@@ -1,4 +1,4 @@
-import { app } from './controllers';
+import { app } from './api/public';
 
 let server = Bun.serve({
   fetch: app.fetch,

@@ -54,7 +54,7 @@ export let providerAuthSessionController = app.controller({
     )
     .do(async ctx => providerAuthSessionPresenter(ctx.providerAuthSession)),
 
-  create: providerAuthSessionApp
+  create: tenantApp
     .handler()
     .input(
       v.object({

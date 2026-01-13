@@ -128,7 +128,7 @@ export let providerAuthImportController = app.controller({
     )
     .do(async ctx => providerAuthImportPresenter(ctx.providerAuthImport)),
 
-  create: providerAuthImportApp
+  create: tenantApp
     .handler()
     .input(
       v.object({

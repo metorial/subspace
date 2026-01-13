@@ -119,7 +119,7 @@ class providerAuthSessionServiceImpl {
           solution: d.solution,
           provider: d.provider,
           providerDeployment: d.providerDeployment,
-          authMethodId: d.input.authMethodId
+          authMethodId: d.input.authMethodId ?? (d.credentials ? 'oauth' : undefined)
         });
 
       if (d.credentials && authMethod.type != 'oauth') d.credentials = undefined;
@@ -159,7 +159,7 @@ class providerAuthSessionServiceImpl {
             provider: d.provider,
             providerDeployment: d.providerDeployment,
             credentials: d.credentials,
-            authMethod: authMethod,
+            authMethod,
             expiresAt,
             input: {
               name: d.input.name,

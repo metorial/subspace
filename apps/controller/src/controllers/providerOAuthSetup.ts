@@ -54,7 +54,7 @@ export let providerOAuthSetupController = app.controller({
     )
     .do(async ctx => providerOAuthSetupPresenter(ctx.providerOAuthSetup)),
 
-  create: providerOAuthSetupApp
+  create: tenantApp
     .handler()
     .input(
       v.object({
@@ -68,9 +68,9 @@ export let providerOAuthSetupController = app.controller({
         isEphemeral: v.optional(v.boolean()),
 
         providerId: v.string(),
-        providerDeploymentId: v.string(),
         providerAuthCredentialsId: v.string(),
-        providerAuthMethodId: v.string(),
+        providerDeploymentId: v.optional(v.string()),
+        providerAuthMethodId: v.optional(v.string()),
 
         config: v.record(v.any())
       })

@@ -1,7 +1,7 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
 import { providerAuthMethodPresenter } from '@metorial-subspace/db';
-import { providerAuthMethodService } from '@metorial-subspace/module-catalog';
+import { providerAuthMethodService, providerService } from '@metorial-subspace/module-catalog';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 
@@ -24,14 +24,23 @@ export let providerAuthMethodController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+          providerId: v.string()
         })
       )
     )
     .do(async ctx => {
-      let paginator = await providerAuthMethodService.listProviderAuthMethods({
+      let provider = await providerService.getProviderById({
+        providerId: ctx.input.providerId,
         tenant: ctx.tenant,
         solution: ctx.solution
+      });
+
+      let paginator = await providerAuthMethodService.listProviderAuthMethods({
+        tenant: ctx.tenant,
+        solution: ctx.solution,
+
+        provider
       });
 
       let list = await paginator.run(ctx.input);

@@ -143,7 +143,7 @@ export class ProviderAuth extends IProviderAuth {
       tenantId: tenant.id,
       slateId: slate.id,
       slateVersionId: slateVersion.id,
-      authMethodId: data.authMethod.specUniqueIdentifier,
+      authMethodId: data.authMethod.value.callableId,
       authConfig: data.input
     });
 

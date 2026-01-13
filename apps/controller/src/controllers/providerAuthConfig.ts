@@ -51,7 +51,7 @@ export let providerAuthConfigController = app.controller({
     )
     .do(async ctx => providerAuthConfigPresenter(ctx.providerAuthConfig)),
 
-  create: providerAuthConfigApp
+  create: tenantApp
     .handler()
     .input(
       v.object({

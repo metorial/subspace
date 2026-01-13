@@ -1,0 +1,281 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: subspace-postgres
+    restart: unless-stopped
+    ports:
+      - "45432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres_data2:/var/lib/postgresql/data
+    networks:
+      - subspace-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: subspace-redis
+    restart: unless-stopped
+    networks:
+      - subspace-network
+
+  object-storage:
+    image: ghcr.io/metorial/object-storage:latest
+    volumes:
+      - object-store-data:/app/data
+    environment:
+      RUST_LOG: info
+      AWS_ACCESS_KEY_ID: ${OBJECT_STORAGE_AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${OBJECT_STORAGE_AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${OBJECT_STORAGE_AWS_REGION}
+      
+      OBJECT_STORE__SERVER__HOST: 0.0.0.0
+      OBJECT_STORE__SERVER__PORT: 52010
+      OBJECT_STORE__BACKEND__TYPE: s3
+      OBJECT_STORE__BACKEND__REGION: ${OBJECT_STORAGE_AWS_REGION}
+      OBJECT_STORE__BACKEND__PHYSICAL_BUCKET: ${OBJECT_STORAGE_AWS_S3_BUCKET}
+
+    container_name: subspace-object-storage
+    restart: unless-stopped
+    networks:
+      - subspace-network
+
+
+  forge:  
+    image: ghcr.io/metorial/forge:latest
+    container_name: subspace-forge
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/forge
+      REDIS_URL: redis://redis:6379/0
+      
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      DEFAULT_PROVIDER: aws.code-build
+
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      LOG_BUCKET_NAME: logs
+      ARTIFACT_BUCKET_NAME: artifacts
+
+      CODE_BUILD_AWS_REGION: ${CODE_BUILD_AWS_REGION:-}
+      CODE_BUILD_AWS_ACCESS_KEY_ID: ${CODE_BUILD_AWS_ACCESS_KEY_ID:-}
+      CODE_BUILD_AWS_SECRET_ACCESS_KEY: ${CODE_BUILD_AWS_SECRET_ACCESS_KEY:-}
+      CODE_BUILD_PROJECT_NAME: ${CODE_BUILD_PROJECT_NAME:-}
+      CODE_BUILD_ROLE_ARN: ${CODE_BUILD_ROLE_ARN:-}
+    depends_on:
+      - postgres
+      - redis
+      - object-storage
+    networks:
+      - subspace-network
+
+  function-bay:  
+    image: ghcr.io/metorial/function-bay:latest
+    container_name: subspace-function-bay
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/function-bay
+      REDIS_URL: redis://redis:6379/0
+      
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      DEFAULT_PROVIDER: ${DEFAULT_PROVIDER}
+
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      BUNDLE_BUCKET_NAME: bundles
+
+      FORGE_API_URL: http://forge:52020/metorial-forge
+
+      LAMBDA_AWS_REGION: ${LAMBDA_AWS_REGION:-}
+      LAMBDA_AWS_ACCESS_KEY_ID: ${LAMBDA_AWS_ACCESS_KEY_ID:-}
+      LAMBDA_AWS_SECRET_ACCESS_KEY: ${LAMBDA_AWS_SECRET_ACCESS_KEY:-}
+      LAMBDA_ROLE_ARN: ${LAMBDA_ROLE_ARN:-}
+    depends_on:
+      - postgres
+      - redis
+      - object-storage
+      - forge
+    networks:
+      - subspace-network
+
+  signal:  
+    image: ghcr.io/metorial/signal:latest
+    container_name: subspace-signal
+    restart: unless-stopped
+    ports:
+      - "52050:52050"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/signal
+      REDIS_URL: redis://redis:6379/0
+
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      LOGS_BUCKET_NAME: bundles
+    depends_on:
+      - postgres
+      - redis
+      - object-storage
+    networks:
+      - subspace-network
+
+  voyager:
+    image: ghcr.io/metorial/voyager:latest
+    container_name: subspace-voyager
+    restart: unless-stopped
+    ports:
+      - "52060:52060"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/voyager
+      SEARCH_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/voyager-search
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - subspace-network
+
+  slates-registry:  
+    image: ghcr.io/metorial/slates-registry:latest
+    container_name: subspace-slates-registry
+    restart: unless-stopped
+    ports:
+      - "52040:52040"
+      - "52041:52041"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/slates-registry
+      REDIS_URL: redis://redis:6379/0
+
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      PACKAGE_BUCKET_NAME: subspace-packages
+
+      SERVICE_PUBLIC_URL: http://localhost:52040
+      PUBLIC_ACCESS_PERMITTED: 'true'
+    depends_on:
+      - postgres
+      - redis
+      - object-storage
+    networks:
+      - subspace-network
+
+  slates-hub:
+    image: ghcr.io/metorial/slates-hub:latest
+    container_name: subspace-slates-hub
+    restart: unless-stopped
+    ports:
+      - "52045:52045"
+      - "52046:52046"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/slates-hub
+      REDIS_URL: redis://redis:6379/0
+      METORIAL_ENV: development
+
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+
+      FUNCTION_BAY_API_URL: http://function-bay:52030/metorial-function-bay
+      FUNCTION_BAY_TENANT_IDENTIFIER: dev-tenant
+      FUNCTION_BAY_DEFAULT_MEMORY_MB: 512
+      FUNCTION_BAY_DEFAULT_TIMEOUT_SECONDS: 15
+
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      INVOCATIONS_BUCKET_NAME: subspace-invocations
+
+      INITIAL_REGISTRIES: "http://slates-registry:52040"
+
+      SIGNAL_API_URL: http://signal:52050/metorial-signal
+      SIGNAL_SENDER_IDENTIFIER: dev-subspace
+
+      SLATES_HUB_INSTANCE_IDENTIFIER: dev-subspace
+      SERVICE_PUBLIC_URL: http://localhost:52045
+    depends_on:
+      - postgres
+      - redis
+      - object-storage
+      - slates-registry
+      - forge
+      - function-bay
+      - signal
+    networks:
+      - subspace-network
+
+  subspace-controller:
+    build:
+      context: .
+      dockerfile: ./apps/controller/dev.Dockerfile
+    container_name: subspace-controller-service
+    restart: unless-stopped
+    ports:
+      - "52070:52070"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
+      REDIS_URL: redis://redis:6379/0
+      METORIAL_ENV: development
+
+      PUBLIC_SERVICE_URL: http://localhost:52071
+
+      SLATES_HUB_URL: http://slates-hub:52046/slates-hub
+      VOYAGER_URL: http://voyager:52060/metorial-voyager
+
+    volumes:
+      - ./apps/controller:/app/apps/controller:ro
+      - ./apps/controller/package.json:/app/apps/controller/package.json:ro
+      - ./modules:/app/modules:ro
+      - ./packages:/app/packages:ro
+    depends_on:
+      - postgres
+      - redis
+      - object-storage
+      - slates-registry
+      - forge
+      - function-bay
+      - signal
+      - voyager
+      - slates-hub
+    networks:
+      - subspace-network
+
+  subspace-public:
+    build:
+      context: .
+      dockerfile: ./apps/public/dev.Dockerfile
+    container_name: subspace-public-service
+    restart: unless-stopped
+    ports:
+      - "52071:52071"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
+      REDIS_URL: redis://redis:6379/0
+      METORIAL_ENV: development
+
+      PUBLIC_SERVICE_URL: http://localhost:52071
+
+      SLATES_HUB_URL: http://slates-hub:52046/slates-hub
+      VOYAGER_URL: http://voyager:52060/metorial-voyager
+
+    volumes:
+      - ./apps/public:/app/apps/public:ro
+      - ./apps/public/package.json:/app/apps/public/package.json:ro
+      - ./modules:/app/modules:ro
+      - ./packages:/app/packages:ro
+    depends_on:
+      - postgres
+      - redis
+      - object-storage
+      - slates-registry
+      - forge
+      - function-bay
+      - signal
+      - voyager
+      - slates-hub
+    networks:
+      - subspace-network
+
+volumes:
+  postgres_data2:
+    driver: local
+  object-store-data:
+    driver: local
+
+networks:
+  subspace-network:
+    driver: bridge

@@ -1,5 +1,6 @@
 import { canonicalize } from '@lowerdeck/canonicalize';
 import { Hash } from '@lowerdeck/hash';
+import { createLock } from '@lowerdeck/lock';
 import { Service } from '@lowerdeck/service';
 import { db, getId, Provider, ProviderVersion } from '@metorial-subspace/db';
 import {
@@ -8,6 +9,13 @@ import {
   SpecificationFeatures,
   SpecificationTool
 } from '@metorial-subspace/provider-utils';
+import { env } from '../env';
+import { specificationCreatedQueue } from '../queues/lifecycle/specification';
+
+let specLock = createLock({
+  name: 'pint/pspec/lock/ensure',
+  redisUrl: env.service.REDIS_URL
+});
 
 class providerSpecificationInternalServiceImpl {
   async ensureProviderSpecification(d: {
@@ -29,119 +37,129 @@ class providerSpecificationInternalServiceImpl {
       })
     );
 
-    let existingSpec = await db.providerSpecification.findUnique({
-      where: {
-        providerOid_hash: {
+    return await specLock.usingLock([d.provider.id, specHash], async () => {
+      let existingSpec = await db.providerSpecification.findUnique({
+        where: {
+          providerOid_hash: {
+            providerOid: d.provider.oid,
+            hash: specHash
+          }
+        }
+      });
+      if (existingSpec) return existingSpec;
+
+      let defaultAuthConfig =
+        d.authMethods.find(am => am.type == 'token') ??
+        d.authMethods.find(am => am.type == 'oauth') ??
+        d.authMethods[0];
+
+      await db.providerToolGlobal.createMany({
+        skipDuplicates: true,
+        data: d.tools.map(t => ({
+          ...getId('providerToolGlobal'),
+          key: t.key,
+          providerOid: d.provider.oid
+        }))
+      });
+      await db.providerAuthMethodGlobal.createMany({
+        skipDuplicates: true,
+        data: d.authMethods.map(am => ({
+          ...getId('providerAuthMethodGlobal'),
+          key: am.key,
+          providerOid: d.provider.oid
+        }))
+      });
+
+      let globalTools = await db.providerToolGlobal.findMany({
+        where: { providerOid: d.provider.oid },
+        select: { oid: true, key: true }
+      });
+      let globalAuthMethods = await db.providerAuthMethodGlobal.findMany({
+        where: { providerOid: d.provider.oid },
+        select: { oid: true, key: true }
+      });
+
+      let globalToolsMap = new Map(globalTools.map(t => [t.key, t]));
+      let globalAuthMethodsMap = new Map(globalAuthMethods.map(am => [am.key, am]));
+
+      let spec = await db.providerSpecification.create({
+        data: {
+          ...getId('providerSpecification'),
           providerOid: d.provider.oid,
-          hash: specHash
-        }
-      }
-    });
-    if (existingSpec) return existingSpec;
 
-    let defaultAuthConfig =
-      d.authMethods.find(am => am.type == 'token') ??
-      d.authMethods.find(am => am.type == 'oauth') ??
-      d.authMethods[0];
+          hash: specHash,
 
-    await db.providerToolGlobal.createMany({
-      skipDuplicates: true,
-      data: d.tools.map(t => ({
-        ...getId('providerToolGlobal'),
-        key: t.key,
-        providerOid: d.provider.oid
-      }))
-    });
-    await db.providerAuthMethodGlobal.createMany({
-      skipDuplicates: true,
-      data: d.authMethods.map(am => ({
-        ...getId('providerAuthMethodGlobal'),
-        key: am.key,
-        providerOid: d.provider.oid
-      }))
-    });
+          specId: d.specification.specId,
+          specUniqueIdentifier: d.specification.specUniqueIdentifier,
+          key: d.specification.key,
 
-    let globalTools = await db.providerToolGlobal.findMany({
-      where: { providerOid: d.provider.oid },
-      select: { oid: true, key: true }
-    });
-    let globalAuthMethods = await db.providerAuthMethodGlobal.findMany({
-      where: { providerOid: d.provider.oid },
-      select: { oid: true, key: true }
-    });
+          name: d.specification.name,
+          description: d.specification.description,
 
-    let globalToolsMap = new Map(globalTools.map(t => [t.key, t]));
-    let globalAuthMethodsMap = new Map(globalAuthMethods.map(am => [am.key, am]));
+          value: {
+            specification: d.specification,
+            authMethods: d.authMethods,
+            features: d.features,
+            tools: d.tools
+          },
 
-    return await db.providerSpecification.create({
-      data: {
-        ...getId('providerSpecification'),
-        providerOid: d.provider.oid,
+          supportsAuthMethod: d.features.supportsAuthMethod,
+          configContainsAuth: d.features.configContainsAuth,
 
-        hash: specHash,
+          providerAuthMethods: {
+            create: await Promise.all(
+              d.authMethods.map(async am => ({
+                ...getId('providerAuthMethod'),
+                specId: am.specId,
+                specUniqueIdentifier: am.specUniqueIdentifier,
+                callableId: am.callableId,
 
-        specId: d.specification.specId,
-        specUniqueIdentifier: d.specification.specUniqueIdentifier,
-        key: d.specification.key,
+                type: am.type,
+                key: am.key,
+                isDefault: am.specId == defaultAuthConfig?.specId,
 
-        name: d.specification.name,
-        description: d.specification.description,
+                name: am.name,
+                description: am.description,
 
-        value: {
-          specification: d.specification,
-          authMethods: d.authMethods,
-          features: d.features,
-          tools: d.tools
+                value: am,
+
+                providerOid: d.provider.oid,
+                globalOid: globalAuthMethodsMap.get(am.key)!.oid,
+                hash: await Hash.sha256(canonicalize([d.provider.id, am]))
+              }))
+            )
+          },
+
+          providerTools: {
+            create: await Promise.all(
+              d.tools.map(async t => ({
+                ...getId('providerTool'),
+                specId: t.specId,
+                specUniqueIdentifier: t.specUniqueIdentifier,
+                callableId: t.callableId,
+                key: t.key,
+
+                name: t.name,
+                description: t.description,
+
+                value: t,
+
+                providerOid: d.provider.oid,
+                globalOid: globalToolsMap.get(t.key)!.oid,
+                hash: await Hash.sha256(canonicalize([d.provider.id, t]))
+              }))
+            )
+          }
         },
-
-        supportsAuthMethod: d.features.supportsAuthMethod,
-        configContainsAuth: d.features.configContainsAuth,
-
-        providerAuthMethods: {
-          create: await Promise.all(
-            d.authMethods.map(async am => ({
-              ...getId('providerAuthMethod'),
-              specId: am.specId,
-              specUniqueIdentifier: am.specUniqueIdentifier,
-              callableId: am.callableId,
-
-              type: am.type,
-              key: am.key,
-              isDefault: am.specId == defaultAuthConfig?.specId,
-
-              name: am.name,
-              description: am.description,
-
-              value: am,
-
-              providerOid: d.provider.oid,
-              globalOid: globalAuthMethodsMap.get(am.key)!.oid,
-              hash: await Hash.sha256(canonicalize([d.provider.id, am]))
-            }))
-          )
-        },
-
-        providerTools: {
-          create: await Promise.all(
-            d.tools.map(async t => ({
-              ...getId('providerTool'),
-              specId: t.specId,
-              specUniqueIdentifier: t.specUniqueIdentifier,
-              callableId: t.callableId,
-              key: t.key,
-
-              name: t.name,
-              description: t.description,
-
-              value: t,
-
-              providerOid: d.provider.oid,
-              globalOid: globalToolsMap.get(t.key)!.oid,
-              hash: await Hash.sha256(canonicalize([d.provider.id, t]))
-            }))
-          )
+        include: {
+          providerAuthMethods: true,
+          providerTools: true
         }
-      }
+      });
+
+      await specificationCreatedQueue.add({ specificationId: spec.id });
+
+      return spec;
     });
   }
 }

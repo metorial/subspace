@@ -53,7 +53,7 @@ export let providerConfigVaultController = app.controller({
     )
     .do(async ctx => providerConfigVaultPresenter(ctx.providerConfigVault)),
 
-  create: providerConfigVaultApp
+  create: tenantApp
     .handler()
     .input(
       v.object({
