@@ -4,19 +4,22 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "bun ./src/server.ts"
+    "start:dev:server": "bun --watch ./src/server.ts",
+    "start:dev:vite": "bun run dev",
+    "start:dev": "bun run start:dev:server",
+    "dev": "vite build --watch ./frontend",
+    "start": "bun ./src/server.ts",
+    "build": "vite build ./frontend"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "@metorial-subspace/module-tenant": "^1.0.0",
-    "@metorial-subspace/module-auth": "^1.0.0",
-    "@metorial-subspace/module-catalog": "^1.0.0",
-    "@metorial-subspace/module-deployment": "^1.0.0",
     "@aws-sdk/client-cloudwatch-logs": "^3.957.0",
     "@aws-sdk/client-iam": "^3.957.0",
     "@aws-sdk/client-lambda": "^3.958.0",
@@ -42,19 +45,34 @@
     "@lowerdeck/shadow-id": "^1.0.4",
     "@lowerdeck/slugify": "^1.0.4",
     "@lowerdeck/validation": "^1.0.4",
+    "@metorial-io/data-hooks": "^1.0.1",
+    "@metorial-io/layout": "^1.0.1",
+    "@metorial-io/pages": "^1.0.0",
+    "@metorial-io/ui": "^1.0.0",
+    "@metorial-subspace/module-auth": "^1.0.0",
+    "@metorial-subspace/module-catalog": "^1.0.0",
+    "@metorial-subspace/module-deployment": "^1.0.0",
+    "@metorial-subspace/module-tenant": "^1.0.0",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "@types/semver": "^7.7.1",
     "@types/unzipper": "^0.10.11",
+    "@vitejs/plugin-react": "^4.3.1",
+    "babel-plugin-styled-components": "^2.1.4",
     "date-fns": "^4.1.0",
     "hono": "^4.11.3",
     "jszip": "^3.10.1",
     "object-storage-client": "^0.2.5",
     "prisma": "^7.2.0",
     "prisma-json-types-generator": "^4.0.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-router-dom": "^7.12.0",
     "semver": "^7.7.3",
     "snowflake-uuid": "^1.0.0",
+    "styled-components": "^6.1.13",
     "unzipper": "^0.12.3",
+    "vite": "^5.4.1",
     "yaml": "^2.8.2"
   }
 }

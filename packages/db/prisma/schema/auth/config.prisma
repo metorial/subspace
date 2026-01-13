@@ -6,7 +6,7 @@ enum ProviderAuthConfigType {
 
 enum ProviderAuthConfigSource {
   manual
-  auth_session
+  setup_session
   system
 }
 
@@ -48,7 +48,7 @@ model ProviderAuthConfig {
   slateAuthConfigOid BigInt?          @unique
   slateAuthConfig    SlateAuthConfig? @relation(fields: [slateAuthConfigOid], references: [oid])
 
-  providerAuthSession ProviderAuthSession?
+  providerSetupSession ProviderSetupSession?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt

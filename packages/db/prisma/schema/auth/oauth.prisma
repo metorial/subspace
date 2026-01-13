@@ -53,8 +53,8 @@ model ProviderOAuthSetup {
   updatedAt DateTime @default(now()) @updatedAt
   expiresAt DateTime
 
-  providerAuthSession       ProviderAuthSession?
-  providerAuthSessionEvents ProviderAuthSessionEvent[]
+  providerSetupSession       ProviderSetupSession?
+  providerSetupSessionEvents ProviderSetupSessionEvent[]
 
   @@index([status])
   @@index([expiresAt])

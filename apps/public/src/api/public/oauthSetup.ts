@@ -1,4 +1,4 @@
-import { createHono } from '@lowerdeck/hono';
+import { createHono, useRequestContext } from '@lowerdeck/hono';
 import { providerOAuthSetupInternalService } from '@metorial-subspace/module-auth';
 
 export let oauthSetupApp = createHono()
@@ -49,6 +49,20 @@ export let oauthSetupApp = createHono()
       setup.status == 'completed'
     ) {
       return c.text('OAuth setup is no longer valid', 400);
+    }
+
+    let context = useRequestContext(c);
+
+    setup = await providerOAuthSetupInternalService.handleOAuthSetupResponse({
+      providerOAuthSetup: setup,
+      context: {
+        ip: context.ip,
+        ua: context.ua ?? 'unknown'
+      }
+    });
+
+    if (setup.status != 'completed' && setup.status != 'failed') {
+      return c.redirect(`/oauth-setup/${setup.id}?client_secret=${clientSecret}`);
     }
 
     if (setup.redirectUrl) return c.redirect(setup.redirectUrl);

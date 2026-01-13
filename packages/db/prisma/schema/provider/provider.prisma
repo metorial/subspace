@@ -78,5 +78,5 @@ model Provider {
   providerAuthConfigs       ProviderAuthConfig[]
   providerToolGlobals       ProviderToolGlobal[]
   providerAuthMethodGlobals ProviderAuthMethodGlobal[]
-  providerAuthSessions      ProviderAuthSession[]
+  providerSetupSessions     ProviderSetupSession[]
 }

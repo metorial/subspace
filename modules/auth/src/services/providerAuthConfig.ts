@@ -59,7 +59,7 @@ class providerAuthConfigServiceImpl {
 
         OR: [
           { id: d.providerAuthConfigId },
-          { providerAuthSession: { id: d.providerAuthConfigId } }
+          { providerSetupSession: { id: d.providerAuthConfigId } }
         ]
       },
       include

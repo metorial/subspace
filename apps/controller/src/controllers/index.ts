@@ -7,7 +7,6 @@ import { providerAuthCredentialsController } from './providerAuthCredentials';
 import { providerAuthExportController } from './providerAuthExport';
 import { providerAuthImportController } from './providerAuthImport';
 import { providerAuthMethodController } from './providerAuthMethod';
-import { providerAuthSessionController } from './providerAuthSession';
 import { providerListingCategoryController } from './providerCategory';
 import { providerListingCollectionController } from './providerCollection';
 import { providerConfigController } from './providerConfig';
@@ -16,6 +15,7 @@ import { providerDeploymentController } from './providerDeployment';
 import { providerListingGroupController } from './providerGroup';
 import { providerListingController } from './providerListing';
 import { providerOAuthSetupController } from './providerOAuthSetup';
+import { providerSetupSessionController } from './providerSetupSession';
 import { providerSpecificationController } from './providerSpecification';
 import { providerToolController } from './providerTool';
 import { providerVariantController } from './providerVariant';
@@ -31,7 +31,7 @@ export let rootController = app.controller({
   providerAuthExport: providerAuthExportController,
   providerAuthImport: providerAuthImportController,
   providerAuthMethod: providerAuthMethodController,
-  providerAuthSession: providerAuthSessionController,
+  providerSetupSession: providerSetupSessionController,
   providerListingCategory: providerListingCategoryController,
   providerListingCollection: providerListingCollectionController,
   providerListingGroup: providerListingGroupController,

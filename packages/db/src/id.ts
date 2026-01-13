@@ -5,6 +5,7 @@ export let ID = createIdGenerator({
   tenant: idType.sorted('ktn'),
   solution: idType.sorted('kso'),
   backend: idType.sorted('kbe'),
+  brand: idType.sorted('kbr'),
 
   publisher: idType.sorted('pub'),
 
@@ -44,9 +45,9 @@ export let ID = createIdGenerator({
   providerOAuthSetup: idType.sorted('poas'),
   providerOAuthSetup_clientSecret: idType.key('poas_secret'),
   providerAuthConfigUpdate: idType.sorted('pacu'),
-  providerAuthSession: idType.sorted('pas'),
-  providerAuthSession_clientSecret: idType.key('pas_secret'),
-  providerAuthSessionEvent: idType.sorted('pase'),
+  providerSetupSession: idType.sorted('pas'),
+  providerSetupSession_clientSecret: idType.key('pas_secret'),
+  providerSetupSessionEvent: idType.sorted('pase'),
 
   providerAuthImport: idType.sorted('paci'),
   providerAuthExport: idType.sorted('pace'),
