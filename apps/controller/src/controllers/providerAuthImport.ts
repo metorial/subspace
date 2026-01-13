@@ -67,6 +67,9 @@ export let providerAuthImportController = app.controller({
         providerAuthConfigId: v.optional(v.string()),
         providerAuthMethodId: v.optional(v.string()),
 
+        ip: v.string(),
+        ua: v.string(),
+
         config: v.record(v.any())
       })
     )
@@ -106,8 +109,8 @@ export let providerAuthImportController = app.controller({
         input: {
           authMethodId: ctx.input.providerAuthMethodId,
 
-          ip: ctx.context.ip,
-          ua: ctx.context.ua,
+          ip: ctx.input.ip,
+          ua: ctx.input.ua,
           note: ctx.input.note,
           metadata: ctx.input.metadata,
 

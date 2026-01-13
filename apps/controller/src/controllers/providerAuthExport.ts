@@ -60,6 +60,9 @@ export let providerAuthExportController = app.controller({
         note: v.string(),
         metadata: v.optional(v.record(v.any())),
 
+        ip: v.string(),
+        ua: v.string(),
+
         providerAuthConfigId: v.string()
       })
     )
@@ -76,8 +79,8 @@ export let providerAuthExportController = app.controller({
         authConfig: providerAuthConfig,
 
         input: {
-          ip: ctx.context.ip,
-          ua: ctx.context.ua,
+          ip: ctx.input.ip,
+          ua: ctx.input.ua,
           note: ctx.input.note,
           metadata: ctx.input.metadata
         }

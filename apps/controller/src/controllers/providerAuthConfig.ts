@@ -62,6 +62,9 @@ export let providerAuthConfigController = app.controller({
 
         isEphemeral: v.optional(v.boolean()),
 
+        ip: v.string(),
+        ua: v.string(),
+
         providerId: v.string(),
         providerDeploymentId: v.optional(v.string()),
         providerAuthMethodId: v.string(),
@@ -88,12 +91,14 @@ export let providerAuthConfigController = app.controller({
         tenant: ctx.tenant,
         solution: ctx.solution,
 
+        source: 'manual',
+
         provider,
         providerDeployment,
 
         import: {
-          ip: ctx.context.ip,
-          ua: ctx.context.ua
+          ip: ctx.input.ip,
+          ua: ctx.input.ua
         },
 
         input: {
@@ -117,6 +122,9 @@ export let providerAuthConfigController = app.controller({
         tenantId: v.string(),
         providerAuthConfigId: v.string(),
 
+        ip: v.string(),
+        ua: v.string(),
+
         name: v.optional(v.string()),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any()))
@@ -129,8 +137,8 @@ export let providerAuthConfigController = app.controller({
         solution: ctx.solution,
 
         import: {
-          ip: ctx.context.ip,
-          ua: ctx.context.ua
+          ip: ctx.input.ip,
+          ua: ctx.input.ua
         },
 
         input: {
