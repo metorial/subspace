@@ -5,6 +5,7 @@ import type {
   ProviderListingCategory,
   ProviderListingCollection,
   ProviderListingGroup,
+  ProviderSpecification,
   ProviderVariant,
   ProviderVersion,
   Publisher,
@@ -25,7 +26,11 @@ export let providerListingPresenter = (
       defaultVariant:
         | (ProviderVariant & {
             provider: Provider;
-            currentVersion: ProviderVersion | null;
+            currentVersion:
+              | (ProviderVersion & {
+                  specification: Omit<ProviderSpecification, 'value'> | null;
+                })
+              | null;
           })
         | null;
     };

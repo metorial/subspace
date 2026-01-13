@@ -18,6 +18,7 @@ export * from './providerTool';
 export * from './providerVariant';
 export * from './providerVersion';
 export * from './publisher';
+export * from './session';
 export * from './solution';
 export * from './tenant';
 export * from './vault';

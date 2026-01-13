@@ -22,10 +22,17 @@ import {
   providerAuthSessionCreatedQueue,
   providerAuthSessionUpdatedQueue
 } from '../queues/lifecycle/providerAuthSession';
+import { providerAuthConfigInclude } from './providerAuthConfig';
 import { providerAuthConfigInternalService } from './providerAuthConfigInternal';
 import { providerAuthSessionInternalService } from './providerAuthSessionInternal';
 
-let include = {};
+let include = {
+  authConfig: { include: providerAuthConfigInclude },
+  deployment: true,
+  provider: true,
+  authMethod: { include: { specification: { omit: { value: true } } } },
+  authCredentials: true
+};
 
 export let providerAuthSessionInclude = include;
 
@@ -117,16 +124,16 @@ class providerAuthSessionServiceImpl {
 
       if (d.credentials && authMethod.type != 'oauth') d.credentials = undefined;
       if (authMethod.type == 'oauth' && !d.credentials) {
-        d.credentials =
-          (await db.providerAuthCredentials.findFirst({
-            where: {
-              providerOid: d.provider.oid,
-              tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid,
-              isDefault: true
-            }
-          })) ?? undefined;
-        if (!d.credentials) {
+        let defaultCredentials = await db.providerAuthCredentials.findFirst({
+          where: {
+            providerOid: d.provider.oid,
+            tenantOid: d.tenant.oid,
+            solutionOid: d.solution.oid,
+            isDefault: true
+          }
+        });
+
+        if (!defaultCredentials) {
           throw new ServiceError(
             badRequestError({
               message: 'No default provider auth credentials found for oauth method',
@@ -134,6 +141,8 @@ class providerAuthSessionServiceImpl {
             })
           );
         }
+
+        d.credentials = defaultCredentials;
       }
 
       let expiresAt = d.input.expiresAt ?? addMinutes(new Date(), 30);
@@ -172,7 +181,7 @@ class providerAuthSessionServiceImpl {
 
             clientSecret: await ID.generateId('providerAuthSession_clientSecret'),
 
-            status: inner.authConfigOid ? 'completed' : 'unused',
+            status: inner.authConfigOid ? 'completed' : 'pending',
 
             name: d.input.name?.trim() || undefined,
             description: d.input.description?.trim() || undefined,

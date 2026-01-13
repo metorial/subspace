@@ -7,6 +7,7 @@ import type {
   ProviderOAuthSetup,
   ProviderSpecification
 } from '../../prisma/generated/client';
+import { env } from '../env';
 import { providerAuthConfigPresenter } from './authConfig';
 import { providerAuthCredentialsPresenter } from './authCredentials';
 import { providerDeploymentPreviewPresenter } from './deployment';
@@ -39,6 +40,8 @@ export let providerOAuthSetupPresenter = (
   metadata: providerOAuthSetup.metadata,
 
   redirectUrl: providerOAuthSetup.redirectUrl,
+
+  url: `${env.service.PUBLIC_SERVICE_URL}/oauth-setup/${providerOAuthSetup.id}?client_secret=${providerOAuthSetup.clientSecret}`,
 
   authConfig: providerOAuthSetup.authConfig
     ? providerAuthConfigPresenter({

@@ -7,7 +7,7 @@ let include = {
   backend: true,
   publisher: true,
   slate: true,
-  currentVersion: true,
+  currentVersion: { include: { specification: { omit: { value: true } } } },
   provider: true
 };
 

@@ -1,11 +1,17 @@
-import type { ProviderVariant, ProviderVersion } from '../../prisma/generated/browser';
-import type { Provider } from '../../prisma/generated/client';
+import type {
+  Provider,
+  ProviderSpecification,
+  ProviderVariant,
+  ProviderVersion
+} from '../../prisma/generated/client';
 import { providerVersionPresenter } from './providerVersion';
 
 export let providerVariantPresenter = (
   providerVariant: ProviderVariant & {
     provider: Provider;
-    currentVersion: ProviderVersion | null;
+    currentVersion:
+      | (ProviderVersion & { specification: Omit<ProviderSpecification, 'value'> | null })
+      | null;
   }
 ) => ({
   object: 'provider.variant',

@@ -4,7 +4,11 @@ import type {
   Publisher,
   Tenant
 } from '../../prisma/generated/browser';
-import type { Provider, ProviderEntry } from '../../prisma/generated/client';
+import type {
+  Provider,
+  ProviderEntry,
+  ProviderSpecification
+} from '../../prisma/generated/client';
 import { providerEntryPresenter } from './providerEntry';
 import { providerVariantPresenter } from './providerVariant';
 import { providerVersionPresenter } from './providerVersion';
@@ -20,7 +24,11 @@ export let providerPresenter = (
     defaultVariant:
       | (ProviderVariant & {
           provider: Provider;
-          currentVersion: ProviderVersion | null;
+          currentVersion:
+            | (ProviderVersion & {
+                specification: Omit<ProviderSpecification, 'value'> | null;
+              })
+            | null;
         })
       | null;
   }

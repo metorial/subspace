@@ -1,6 +1,5 @@
 enum ProviderAuthSessionStatus {
-  unused
-  opened
+  pending
   completed
   failed
   expired

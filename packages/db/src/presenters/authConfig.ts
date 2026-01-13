@@ -14,7 +14,7 @@ export let providerAuthConfigPresenter = (
     provider: Provider;
     deployment: ProviderDeployment | null;
     authCredentials: ProviderAuthCredentials | null;
-    authMethod: ProviderAuthMethod & { specification: ProviderSpecification };
+    authMethod: ProviderAuthMethod & { specification: Omit<ProviderSpecification, 'value'> };
   }
 ) => ({
   object: 'provider.auth_config',
