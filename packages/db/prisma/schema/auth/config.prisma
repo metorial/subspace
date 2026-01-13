@@ -6,7 +6,7 @@ enum ProviderAuthConfigType {
 
 enum ProviderAuthConfigSource {
   manual
-  auth_session
+  setup_session
   system
 }
 

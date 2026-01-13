@@ -50,14 +50,14 @@ export let providerSetupSessionPresenter = (
       : providerSetupSession.status;
 
   return {
-    object: 'provider.auth_session',
+    object: 'provider.setup_session',
 
     id: providerSetupSession.id,
     type: providerSetupSession.type,
 
     status,
 
-    url: `${env.service.PUBLIC_SERVICE_URL}/auth-session/${providerSetupSession.id}?client_secret=${providerSetupSession.clientSecret}`,
+    url: `${env.service.PUBLIC_SERVICE_URL}/setup-session/${providerSetupSession.id}?client_secret=${providerSetupSession.clientSecret}`,
 
     name: providerSetupSession.name,
     description: providerSetupSession.description,

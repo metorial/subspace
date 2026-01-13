@@ -55,6 +55,9 @@ model ProviderSetupSession {
   authCredentialsOid BigInt?
   authCredentials    ProviderAuthCredentials? @relation(fields: [authCredentialsOid], references: [oid])
 
+  brandOid BigInt?
+  brand    Brand?  @relation(fields: [brandOid], references: [oid], onDelete: Cascade)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
   expiresAt DateTime

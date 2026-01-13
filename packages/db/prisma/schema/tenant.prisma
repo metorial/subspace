@@ -32,4 +32,5 @@ model Tenant {
   providerAuthExports                      ProviderAuthExport[]
   providerAuthImports                      ProviderAuthImport[]
   providerSetupSessions                    ProviderSetupSession[]
+  brand                                    Brand?
 }
