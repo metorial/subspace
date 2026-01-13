@@ -1,29 +1,29 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { providerAuthSessionPresenter } from '@metorial-subspace/db';
+import { providerSetupSessionPresenter } from '@metorial-subspace/db';
 import {
   providerAuthCredentialsService,
-  providerAuthSessionService
+  providerSetupSessionService
 } from '@metorial-subspace/module-auth';
 import { providerService } from '@metorial-subspace/module-catalog';
 import { providerDeploymentService } from '@metorial-subspace/module-deployment';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 
-export let providerAuthSessionApp = tenantApp.use(async ctx => {
-  let providerAuthSessionId = ctx.body.providerAuthSessionId;
-  if (!providerAuthSessionId) throw new Error('ProviderAuthSession ID is required');
+export let providerSetupSessionApp = tenantApp.use(async ctx => {
+  let providerSetupSessionId = ctx.body.providerSetupSessionId;
+  if (!providerSetupSessionId) throw new Error('ProviderSetupSession ID is required');
 
-  let providerAuthSession = await providerAuthSessionService.getProviderAuthSessionById({
-    providerAuthSessionId,
+  let providerSetupSession = await providerSetupSessionService.getProviderSetupSessionById({
+    providerSetupSessionId,
     tenant: ctx.tenant,
     solution: ctx.solution
   });
 
-  return { providerAuthSession };
+  return { providerSetupSession };
 });
 
-export let providerAuthSessionController = app.controller({
+export let providerSetupSessionController = app.controller({
   list: tenantApp
     .handler()
     .input(
@@ -34,25 +34,25 @@ export let providerAuthSessionController = app.controller({
       )
     )
     .do(async ctx => {
-      let paginator = await providerAuthSessionService.listProviderAuthSessions({
+      let paginator = await providerSetupSessionService.listProviderSetupSessions({
         tenant: ctx.tenant,
         solution: ctx.solution
       });
 
       let list = await paginator.run(ctx.input);
 
-      return Paginator.presentLight(list, providerAuthSessionPresenter);
+      return Paginator.presentLight(list, providerSetupSessionPresenter);
     }),
 
-  get: providerAuthSessionApp
+  get: providerSetupSessionApp
     .handler()
     .input(
       v.object({
         tenantId: v.string(),
-        providerAuthSessionId: v.string()
+        providerSetupSessionId: v.string()
       })
     )
-    .do(async ctx => providerAuthSessionPresenter(ctx.providerAuthSession)),
+    .do(async ctx => providerSetupSessionPresenter(ctx.providerSetupSession)),
 
   create: tenantApp
     .handler()
@@ -72,7 +72,11 @@ export let providerAuthSessionController = app.controller({
 
         providerAuthMethodId: v.optional(v.string()),
         redirectUrl: v.optional(v.string()),
-        config: v.optional(v.record(v.any()))
+
+        authConfigInput: v.optional(v.record(v.any())),
+        configInput: v.optional(v.record(v.any())),
+
+        type: v.enumOf(['auth_and_config', 'auth_only'])
       })
     )
     .do(async ctx => {
@@ -98,7 +102,7 @@ export let providerAuthSessionController = app.controller({
           })
         : undefined;
 
-      let providerAuthSession = await providerAuthSessionService.createProviderAuthSession({
+      let providerSetupSession = await providerSetupSessionService.createProviderSetupSession({
         tenant: ctx.tenant,
         solution: ctx.solution,
 
@@ -114,24 +118,27 @@ export let providerAuthSessionController = app.controller({
         input: {
           authMethodId: ctx.input.providerAuthMethodId,
 
+          type: ctx.input.type,
+
           name: ctx.input.name,
           description: ctx.input.description,
           metadata: ctx.input.metadata,
-          config: ctx.input.config,
+          redirectUrl: ctx.input.redirectUrl,
 
-          redirectUrl: ctx.input.redirectUrl
+          authConfigInput: ctx.input.authConfigInput,
+          configInput: ctx.input.configInput
         }
       });
 
-      return providerAuthSessionPresenter(providerAuthSession);
+      return providerSetupSessionPresenter(providerSetupSession);
     }),
 
-  update: providerAuthSessionApp
+  update: providerSetupSessionApp
     .handler()
     .input(
       v.object({
         tenantId: v.string(),
-        providerAuthSessionId: v.string(),
+        providerSetupSessionId: v.string(),
 
         name: v.optional(v.string()),
         description: v.optional(v.string()),
@@ -139,8 +146,8 @@ export let providerAuthSessionController = app.controller({
       })
     )
     .do(async ctx => {
-      let providerAuthSession = await providerAuthSessionService.updateProviderAuthSession({
-        providerAuthSession: ctx.providerAuthSession,
+      let providerSetupSession = await providerSetupSessionService.updateProviderSetupSession({
+        providerSetupSession: ctx.providerSetupSession,
         tenant: ctx.tenant,
         solution: ctx.solution,
 
@@ -151,6 +158,6 @@ export let providerAuthSessionController = app.controller({
         }
       });
 
-      return providerAuthSessionPresenter(providerAuthSession);
+      return providerSetupSessionPresenter(providerSetupSession);
     })
 });
