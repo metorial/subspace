@@ -1,7 +1,9 @@
 {
   "name": "@metorial-subspace/root",
   "private": true,
-  "scripts": {},
+  "scripts": {
+    "dev": "docker compose -p subspace -f ./docker-compose.dev.yml up --pull always --build slates-hub slates-registry signal function-bay forge voyager subspace-controller subspace-public"
+  },
   "devDependencies": {
     "prettier": "^3.5.3",
     "turbo": "^2.5.5",
@@ -13,6 +15,7 @@
   },
   "packageManager": "bun@1.2.15",
   "workspaces": [
+    "apps/*",
     "packages/*",
     "modules/*"
   ],
