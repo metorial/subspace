@@ -1,4 +1,4 @@
-import { createQueue } from '@lowerdeck/queue';
+import { createQueue, QueueRetryError } from '@lowerdeck/queue';
 import {
   db,
   getId,
@@ -25,9 +25,20 @@ export let providerDeploymentConfigPairSetSpecificationQueue = createQueue<{
 
 export let providerDeploymentConfigPairSetSpecificationQueueProcessor =
   providerDeploymentConfigPairSetSpecificationQueue.process(async data => {
-    let version = await db.providerVersion.findFirstOrThrow({
-      where: { oid: data.versionOid }
+    let pair = await db.providerDeploymentConfigPair.findFirst({
+      where: { oid: data.providerDeploymentConfigPairOid },
+      include: { providerDeployment: true }
     });
+    if (!pair) throw new QueueRetryError();
+
+    let version = await db.providerVersion.findFirst({
+      where: {
+        oid: data.versionOid,
+        providerVariantOid: pair.providerDeployment.providerVariantOid
+      }
+    });
+    if (!version) throw new QueueRetryError();
+
     let pairVersion = await db.providerDeploymentConfigPairProviderVersion.findUnique({
       where: {
         pairOid_versionOid: {
@@ -102,6 +113,9 @@ export let providerDeploymentConfigPairSetSpecificationQueueProcessor =
           await db.providerSpecificationChangeNotification.create({
             data: {
               ...getId('providerSpecificationChangeNotification'),
+
+              tenantOid: pair.providerDeployment.tenantOid,
+              solutionOid: pair.providerDeployment.solutionOid,
 
               target: 'deployment_config_pair',
               versionOid: version.oid,

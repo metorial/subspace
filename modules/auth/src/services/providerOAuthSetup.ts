@@ -88,7 +88,7 @@ class providerOAuthSetupServiceImpl {
       metadata?: Record<string, any>;
       isEphemeral?: boolean;
       isDefault?: boolean;
-      authMethodId: string;
+      authMethodId?: string;
       redirectUrl?: string;
       config: Record<string, any>;
       expiresAt?: Date;
@@ -131,30 +131,48 @@ class providerOAuthSetupServiceImpl {
         );
       }
 
-      let authMethod = await db.providerAuthMethod.findFirst({
-        where: {
-          providerOid: d.provider.oid,
-          specificationOid: version.specificationOid,
-          OR: [
-            { id: d.input.authMethodId },
-            { specId: d.input.authMethodId },
-            { specUniqueIdentifier: d.input.authMethodId },
-            { key: d.input.authMethodId },
-            { callableId: d.input.authMethodId },
+      let authMethod = d.input.authMethodId
+        ? await db.providerAuthMethod.findFirst({
+            where: {
+              providerOid: d.provider.oid,
+              specificationOid: version.specificationOid,
+              OR: [
+                { id: d.input.authMethodId },
+                { specId: d.input.authMethodId },
+                { specUniqueIdentifier: d.input.authMethodId },
+                { key: d.input.authMethodId },
+                { callableId: d.input.authMethodId },
 
-            ...(ProviderAuthMethodType[
-              d.input.authMethodId as keyof typeof ProviderAuthMethodType
-            ]
-              ? [{ type: d.input.authMethodId as any }]
-              : [])
-          ]
-        }
-      });
+                ...(ProviderAuthMethodType[
+                  d.input.authMethodId as keyof typeof ProviderAuthMethodType
+                ]
+                  ? [{ type: d.input.authMethodId as any }]
+                  : [])
+              ]
+            }
+          })
+        : await db.providerAuthMethod.findFirst({
+            where: {
+              providerOid: d.provider.oid,
+              specificationOid: version.specificationOid,
+              type: 'oauth'
+            },
+            orderBy: { createdAt: 'asc' }
+          });
       if (!authMethod) {
+        if (d.input.authMethodId) {
+          throw new ServiceError(
+            badRequestError({
+              message: 'Invalid auth method for provider',
+              code: 'invalid_auth_method'
+            })
+          );
+        }
+
         throw new ServiceError(
           badRequestError({
-            message: 'Invalid auth method for provider',
-            code: 'invalid_auth_method'
+            message: 'Provider has no OAuth auth method',
+            code: 'missing_oauth_method'
           })
         );
       }
@@ -173,7 +191,7 @@ class providerOAuthSetupServiceImpl {
         input: d.input.config,
         credentials: d.credentials,
         authMethod,
-        redirectUrl: `${env.service.OAUTH_HOOK_URL}/oauth-setup/${newId.id}/callback?client_secret=${clientSecret}`
+        redirectUrl: `${env.service.PUBLIC_SERVICE_URL}/oauth-setup/${newId.id}/callback?client_secret=${clientSecret}`
       });
 
       let providerOAuthSetup = await db.providerOAuthSetup.create({

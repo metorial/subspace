@@ -25,8 +25,7 @@ import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
 import { ProviderAuthConfigCreateRes } from '@metorial-subspace/provider-utils';
 import { providerAuthConfigCreatedQueue } from '../queues/lifecycle/providerAuthConfig';
-
-let include = {};
+import { providerAuthConfigInclude } from './providerAuthConfig';
 
 class providerAuthConfigInternalServiceImpl {
   async useProviderAuthConfigForDeploymentSession(d: {
@@ -209,7 +208,7 @@ class providerAuthConfigInternalServiceImpl {
 
           slateAuthConfigOid: d.backendProviderAuthConfig.slateAuthConfig?.oid
         },
-        include
+        include: providerAuthConfigInclude
       });
 
       let update = await db.providerAuthConfigUpdate.create({

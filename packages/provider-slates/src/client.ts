@@ -7,7 +7,7 @@ export let slates = createSlatesHubInternalClient({
 });
 
 export let getTenantForSlates = async (tenant: Tenant) => {
-  if (tenant.slateTenantId) {
+  if (!tenant.slateTenantId) {
     let slateTenant = await slates.tenant.upsert({
       identifier: tenant.identifier,
       name: tenant.name

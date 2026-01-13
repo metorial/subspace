@@ -109,7 +109,7 @@ export let providerConfigController = app.controller({
     )
     .do(async ctx => providerConfigPresenter(ctx.providerConfig)),
 
-  create: providerConfigApp
+  create: tenantApp
     .handler()
     .input(
       v.object({

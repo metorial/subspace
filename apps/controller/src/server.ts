@@ -1,5 +1,7 @@
 import { subspaceControllerApi } from './controllers';
 
+import './worker';
+
 let server = Bun.serve({
   fetch: subspaceControllerApi,
   port: 52070

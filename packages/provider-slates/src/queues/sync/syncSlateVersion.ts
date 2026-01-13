@@ -17,7 +17,7 @@ export let syncSlateVersionQueue = createQueue<{
   slateVersionId: string;
 }>({
   name: 'kst/sltv/sync',
-  redisUrl: env.service.SLATES_HUB_URL,
+  redisUrl: env.service.REDIS_URL,
   workerOpts: {
     concurrency: 1,
     limiter: {

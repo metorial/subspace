@@ -1,9 +1,9 @@
 import { v } from '@lowerdeck/validation';
 import { solutionPresenter } from '@metorial-subspace/db';
 import { solutionService } from '@metorial-subspace/module-tenant';
-import { app } from './_app';
+import { app, appWithoutSolution } from './_app';
 
-export let solutionApp = app.use(async ctx => {
+export let solutionApp = appWithoutSolution.use(async ctx => {
   let solutionId = ctx.body.solutionId;
   if (!solutionId) throw new Error('Solution ID is required');
 
@@ -13,11 +13,10 @@ export let solutionApp = app.use(async ctx => {
 });
 
 export let solutionController = app.controller({
-  upsert: app
+  upsert: appWithoutSolution
     .handler()
     .input(
       v.object({
-        tenantId: v.string(),
         name: v.string(),
         identifier: v.string()
       })

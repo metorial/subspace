@@ -56,9 +56,7 @@ class providerAuthMethodServiceImpl {
                 }
               }
             ],
-
             providerOid: d.provider?.oid,
-
             ...(version?.specificationOid
               ? {
                   providerAuthMethods: {
@@ -86,7 +84,7 @@ class providerAuthMethodServiceImpl {
         });
 
         return listRes
-          .filter(g => g.currentInstance || g.providerAuthMethods.length)
+          .filter(g => g.currentInstance || g.providerAuthMethods?.length)
           .map(global => {
             let inner = global.providerAuthMethods?.[0] ?? global.currentInstance!;
 

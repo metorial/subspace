@@ -31,7 +31,7 @@ export let providerAuthMethodPresenter = (
           object: 'provider.capabilities.auth_method.scope',
           ...s,
           scope: s.id,
-          id: shadowId('pamsco', [providerAuthMethod.id], [s.id])
+          id: shadowId('pamsco_', [providerAuthMethod.id], [s.id])
         }))
       : null,
 

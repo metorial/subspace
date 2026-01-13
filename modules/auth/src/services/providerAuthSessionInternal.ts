@@ -17,6 +17,7 @@ import {
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import { env } from '../env';
 import { providerAuthSessionUpdatedQueue } from '../queues/lifecycle/providerAuthSession';
 import { providerAuthConfigService } from './providerAuthConfig';
 import { providerAuthSessionInclude } from './providerAuthSession';
@@ -24,7 +25,7 @@ import { providerOAuthSetupService } from './providerOAuthSetup';
 
 let updateLock = createLock({
   name: 'auth/providerAuthSession/service',
-  redisUrl: process.env.REDIS_URL!
+  redisUrl: env.service.REDIS_URL
 });
 
 class providerAuthSessionInternalServiceImpl {

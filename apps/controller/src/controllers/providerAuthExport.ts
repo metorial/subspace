@@ -52,7 +52,7 @@ export let providerAuthExportController = app.controller({
     )
     .do(async ctx => providerAuthExportPresenter(ctx.providerAuthExport)),
 
-  create: providerAuthExportApp
+  create: tenantApp
     .handler()
     .input(
       v.object({

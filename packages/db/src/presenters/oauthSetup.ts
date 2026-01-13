@@ -21,57 +21,64 @@ export let providerOAuthSetupPresenter = (
     authMethod: ProviderAuthMethod & { specification: ProviderSpecification };
     authConfig: (ProviderAuthConfig & { deployment: ProviderDeployment | null }) | null;
   }
-) => ({
-  object: 'provider.oauth_setup',
-
-  id: providerOAuthSetup.id,
-  status:
+) => {
+  let status =
     (providerOAuthSetup.status == 'opened' || providerOAuthSetup.status == 'unused') &&
     providerOAuthSetup.expiresAt <= new Date()
       ? ('expired' as const)
-      : providerOAuthSetup.status,
+      : providerOAuthSetup.status;
 
-  isEphemeral: providerOAuthSetup.isEphemeral,
+  return {
+    object: 'provider.oauth_setup',
 
-  providerId: providerOAuthSetup.provider.id,
+    id: providerOAuthSetup.id,
+    status,
 
-  name: providerOAuthSetup.name,
-  description: providerOAuthSetup.description,
-  metadata: providerOAuthSetup.metadata,
+    isEphemeral: providerOAuthSetup.isEphemeral,
 
-  redirectUrl: providerOAuthSetup.redirectUrl,
+    providerId: providerOAuthSetup.provider.id,
 
-  url: `${env.service.PUBLIC_SERVICE_URL}/oauth-setup/${providerOAuthSetup.id}?client_secret=${providerOAuthSetup.clientSecret}`,
+    name: providerOAuthSetup.name,
+    description: providerOAuthSetup.description,
+    metadata: providerOAuthSetup.metadata,
 
-  authConfig: providerOAuthSetup.authConfig
-    ? providerAuthConfigPresenter({
-        ...providerOAuthSetup.authConfig,
-        provider: providerOAuthSetup.provider,
-        authCredentials: providerOAuthSetup.authCredentials,
-        authMethod: providerOAuthSetup.authMethod
-      })
-    : null,
+    redirectUrl: providerOAuthSetup.redirectUrl,
 
-  credentials: providerOAuthSetup.authCredentials
-    ? providerAuthCredentialsPresenter({
-        ...providerOAuthSetup.authCredentials,
-        provider: providerOAuthSetup.provider
-      })
-    : null,
+    url:
+      status != 'expired' && status != 'completed'
+        ? `${env.service.PUBLIC_SERVICE_URL}/oauth-setup/${providerOAuthSetup.id}?client_secret=${providerOAuthSetup.clientSecret}`
+        : null,
 
-  authMethod: providerAuthMethodPresenter({
-    ...providerOAuthSetup.authMethod,
-    provider: providerOAuthSetup.provider
-  }),
+    authConfig: providerOAuthSetup.authConfig
+      ? providerAuthConfigPresenter({
+          ...providerOAuthSetup.authConfig,
+          provider: providerOAuthSetup.provider,
+          authCredentials: providerOAuthSetup.authCredentials,
+          authMethod: providerOAuthSetup.authMethod
+        })
+      : null,
 
-  deployment: providerOAuthSetup.deployment
-    ? providerDeploymentPreviewPresenter({
-        ...providerOAuthSetup.deployment,
-        provider: providerOAuthSetup.provider
-      })
-    : null,
+    credentials: providerOAuthSetup.authCredentials
+      ? providerAuthCredentialsPresenter({
+          ...providerOAuthSetup.authCredentials,
+          provider: providerOAuthSetup.provider
+        })
+      : null,
 
-  createdAt: providerOAuthSetup.createdAt,
-  updatedAt: providerOAuthSetup.updatedAt,
-  expiresAt: providerOAuthSetup.expiresAt
-});
+    authMethod: providerAuthMethodPresenter({
+      ...providerOAuthSetup.authMethod,
+      provider: providerOAuthSetup.provider
+    }),
+
+    deployment: providerOAuthSetup.deployment
+      ? providerDeploymentPreviewPresenter({
+          ...providerOAuthSetup.deployment,
+          provider: providerOAuthSetup.provider
+        })
+      : null,
+
+    createdAt: providerOAuthSetup.createdAt,
+    updatedAt: providerOAuthSetup.updatedAt,
+    expiresAt: providerOAuthSetup.expiresAt
+  };
+};

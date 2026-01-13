@@ -5,6 +5,6 @@ export let env = createValidatedEnv({
   service: {
     REDIS_URL: v.string(),
 
-    OAUTH_HOOK_URL: v.string()
+    PUBLIC_SERVICE_URL: v.string()
   }
 });
