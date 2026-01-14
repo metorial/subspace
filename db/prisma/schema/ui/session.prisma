@@ -14,12 +14,18 @@ enum ProviderSetupSessionType {
   auth_and_config
 }
 
+enum ProviderSetupSessionUiMode {
+  metorial_elements // For consumer facing UIs
+  dashboard_embeddable // For embedding in dashboards
+}
+
 model ProviderSetupSession {
   oid BigInt @id
   id  String @unique
 
   status ProviderSetupSessionStatus
   type   ProviderSetupSessionType
+  uiMode ProviderSetupSessionUiMode @default(metorial_elements)
 
   clientSecret String
 
