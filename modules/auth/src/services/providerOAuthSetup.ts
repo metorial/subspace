@@ -35,6 +35,8 @@ let include = {
   authMethod: { include: { specification: { omit: { value: true } } } }
 };
 
+export let providerOAuthSetupInclude = include;
+
 class providerOAuthSetupServiceImpl {
   async listProviderOAuthSetups(d: { tenant: Tenant; solution: Solution }) {
     return Paginator.create(({ prisma }) =>
