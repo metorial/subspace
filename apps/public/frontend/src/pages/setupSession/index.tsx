@@ -1,25 +1,11 @@
-import type { ErrorData } from '@lowerdeck/error';
-import { htmlDecode } from '../../../../src/lib/htmlEncode';
-import { useSetupSession } from '../../state';
-import { client } from '../../state/client';
-
-let PRELOAD = JSON.parse(htmlDecode(document.querySelector('#preload-data')?.textContent!)) as
-  | {
-      type: 'error';
-      error: ErrorData<string, number>;
-    }
-  | {
-      type: 'data';
-      data: Awaited<ReturnType<typeof client.setupSession.get>>;
-      input: { sessionId: string; clientSecret: string };
-    };
+import { useSetupSession } from '../../state/setupSession';
 
 export let SetupSessionPage = () => {
-  if (PRELOAD.type === 'error') {
-    return 'Error';
-  }
+  let setupSession = useSetupSession();
 
-  let setupSession = useSetupSession(PRELOAD);
+  if (setupSession.error) {
+    return 'Error page... (already in ui kit)';
+  }
 
   return 'Data Loaded';
 };

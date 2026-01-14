@@ -12,6 +12,7 @@ import { providerConfigService } from '@metorial-subspace/module-deployment';
 import { env } from '../env';
 import { providerSetupSessionUpdatedQueue } from '../queues/lifecycle/providerSetupSession';
 import { providerAuthConfigService } from './providerAuthConfig';
+import { providerOAuthSetupInclude } from './providerOAuthSetup';
 import { providerSetupSessionInclude } from './providerSetupSession';
 import { providerSetupSessionInternalService } from './providerSetupSessionInternal';
 
@@ -105,6 +106,15 @@ class providerSetupSessionUiServiceImpl {
       type: 'required' as const,
       schema: schema.inputJsonSchema
     };
+  }
+
+  async getOAuthSetup(d: { providerSetupSession: ProviderSetupSession }) {
+    if (!d.providerSetupSession.oauthSetupOid) return null;
+
+    return await db.providerOAuthSetup.findUnique({
+      where: { oid: d.providerSetupSession.oauthSetupOid },
+      include: providerOAuthSetupInclude
+    });
   }
 
   async setAuthConfig(d: {

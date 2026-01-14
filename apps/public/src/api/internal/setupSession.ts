@@ -1,15 +1,43 @@
 import { v } from '@lowerdeck/validation';
-import { brandPresenter, providerSetupSessionPresenter } from '@metorial-subspace/db';
-import { providerSetupSessionInternalService } from '@metorial-subspace/module-auth';
+import {
+  brandPresenter,
+  providerOAuthSetupPresenter,
+  providerSetupSessionPresenter
+} from '@metorial-subspace/db';
+import { providerSetupSessionUiService } from '@metorial-subspace/module-auth';
 import { brandService } from '@metorial-subspace/module-tenant';
 import { app } from './_app';
 
-export let getFullSession = async (input: { sessionId: string; clientSecret: string }) => {
+let sessionApp = app.use(async ctx => {
+  let sessionId = ctx.body.sessionId;
+  let clientSecret = ctx.body.clientSecret;
+  if (!sessionId || !clientSecret) {
+    throw new Error('Missing sessionId or clientSecret');
+  }
+
+  let session = await providerSetupSessionUiService.getProviderSetupSessionByClientSecret({
+    sessionId,
+    clientSecret
+  });
+
+  return { session };
+});
+
+export let getFullSession = async (
+  input: {
+    sessionId: string;
+    clientSecret: string;
+  },
+  inputSession?: Awaited<
+    ReturnType<typeof providerSetupSessionUiService.getProviderSetupSessionByClientSecret>
+  >
+) => {
   let session =
-    await providerSetupSessionInternalService.getProviderSetupSessionByClientSecret({
+    inputSession ??
+    (await providerSetupSessionUiService.getProviderSetupSessionByClientSecret({
       sessionId: input.sessionId,
       clientSecret: input.clientSecret
-    });
+    }));
 
   let brand =
     session.brand ?? (await brandService.getBrandForTenant({ tenantId: session.tenant.id }));
@@ -21,7 +49,7 @@ export let getFullSession = async (input: { sessionId: string; clientSecret: str
 };
 
 export let setupSessionController = app.controller({
-  get: app
+  get: sessionApp
     .handler()
     .input(
       v.object({
@@ -29,5 +57,94 @@ export let setupSessionController = app.controller({
         clientSecret: v.string()
       })
     )
-    .do(async ctx => await getFullSession(ctx.input))
+    .do(async ctx => await getFullSession(ctx.input, ctx.session)),
+
+  getAuthConfigSchema: sessionApp
+    .handler()
+    .input(
+      v.object({
+        sessionId: v.string(),
+        clientSecret: v.string()
+      })
+    )
+    .do(async ctx => {
+      let schema = await providerSetupSessionUiService.getAuthConfigSchema({
+        providerSetupSession: ctx.session
+      });
+
+      return { schema };
+    }),
+
+  getConfigSchema: sessionApp
+    .handler()
+    .input(
+      v.object({
+        sessionId: v.string(),
+        clientSecret: v.string()
+      })
+    )
+    .do(async ctx => {
+      let schema = await providerSetupSessionUiService.getConfigSchema({
+        providerSetupSession: ctx.session
+      });
+
+      return { schema };
+    }),
+
+  setConfig: sessionApp
+    .handler()
+    .input(
+      v.object({
+        sessionId: v.string(),
+        clientSecret: v.string(),
+
+        configInput: v.record(v.any())
+      })
+    )
+    .do(async ctx => {
+      await providerSetupSessionUiService.setConfig({
+        providerSetupSession: ctx.session,
+        input: {
+          configInput: ctx.input.configInput
+        },
+        context: ctx.context
+      });
+    }),
+
+  setAuthConfig: sessionApp
+    .handler()
+    .input(
+      v.object({
+        sessionId: v.string(),
+        clientSecret: v.string(),
+
+        authConfigInput: v.record(v.any())
+      })
+    )
+    .do(async ctx => {
+      await providerSetupSessionUiService.setAuthConfig({
+        providerSetupSession: ctx.session,
+        input: {
+          authConfigInput: ctx.input.authConfigInput
+        },
+        context: ctx.context
+      });
+    }),
+
+  getOauthSetup: sessionApp
+    .handler()
+    .input(
+      v.object({
+        sessionId: v.string(),
+        clientSecret: v.string()
+      })
+    )
+    .do(async ctx => {
+      let oauthSetup = await providerSetupSessionUiService.getOAuthSetup({
+        providerSetupSession: ctx.session
+      });
+      if (!oauthSetup) return null;
+
+      return providerOAuthSetupPresenter(oauthSetup);
+    })
 });
