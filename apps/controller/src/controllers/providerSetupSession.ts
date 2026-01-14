@@ -78,7 +78,8 @@ export let providerSetupSessionController = app.controller({
         authConfigInput: v.optional(v.record(v.any())),
         configInput: v.optional(v.record(v.any())),
 
-        type: v.enumOf(['auth_and_config', 'auth_only'])
+        type: v.enumOf(['auth_and_config', 'auth_only', 'config_only']),
+        uiMode: v.enumOf(['metorial_elements', 'dashboard_embeddable'])
       })
     )
     .do(async ctx => {
@@ -126,6 +127,7 @@ export let providerSetupSessionController = app.controller({
           authMethodId: ctx.input.providerAuthMethodId,
 
           type: ctx.input.type,
+          uiMode: ctx.input.uiMode,
 
           name: ctx.input.name,
           description: ctx.input.description,

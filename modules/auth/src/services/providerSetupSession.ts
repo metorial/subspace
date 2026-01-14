@@ -12,6 +12,7 @@ import {
   ProviderDeployment,
   ProviderSetupSession,
   ProviderSetupSessionType,
+  ProviderSetupSessionUiMode,
   ProviderVariant,
   ProviderVersion,
   Solution,
@@ -102,6 +103,7 @@ class providerSetupSessionServiceImpl {
       expiresAt?: Date;
       redirectUrl?: string;
       type: ProviderSetupSessionType;
+      uiMode: ProviderSetupSessionUiMode;
 
       authConfigInput?: Record<string, any>;
       configInput?: Record<string, any>;
@@ -231,6 +233,7 @@ class providerSetupSessionServiceImpl {
           clientSecret: await ID.generateId('providerSetupSession_clientSecret'),
 
           type: d.input.type,
+          uiMode: d.input.uiMode,
           status: inner.authConfigOid ? 'completed' : 'pending',
 
           name: d.input.name?.trim() || undefined,
