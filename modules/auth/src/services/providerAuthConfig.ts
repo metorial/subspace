@@ -70,6 +70,67 @@ class providerAuthConfigServiceImpl {
     return providerAuthConfig;
   }
 
+  async getProviderAuthConfigSchema(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    provider?: Provider & { defaultVariant: ProviderVariant | null };
+    providerVersion?: ProviderVersion;
+    providerDeployment?: ProviderDeployment & {
+      provider: Provider;
+      providerVariant: ProviderVariant;
+      lockedVersion: ProviderVersion | null;
+    };
+
+    providerAuthConfig?: ProviderAuthConfig & { deployment: ProviderDeployment | null };
+
+    authMethodId?: string;
+  }) {
+    if (d.providerAuthConfig) {
+      let authMethod = await db.providerAuthMethod.findFirstOrThrow({
+        where: { oid: d.providerAuthConfig.authMethodOid }
+      });
+      return authMethod.value;
+    }
+
+    let provider: (Provider & { defaultVariant: ProviderVariant | null }) | undefined =
+      undefined;
+    if (d.provider) {
+      provider = d.provider;
+    } else if (d.providerDeployment) {
+      provider = await db.provider.findFirstOrThrow({
+        where: { oid: d.providerDeployment.providerOid },
+        include: { defaultVariant: true }
+      });
+    } else if (d.providerVersion) {
+      provider = await db.provider.findFirstOrThrow({
+        where: { oid: d.providerVersion.providerOid },
+        include: { defaultVariant: true }
+      });
+    }
+
+    if (!provider) {
+      throw new ServiceError(
+        badRequestError({
+          message:
+            'Must provide provider, provider deployment, provider version, or provider auth config to get schema',
+          code: 'missing_provider_information'
+        })
+      );
+    }
+
+    let { authMethod } = await providerAuthConfigInternalService.getVersionAndAuthMethod({
+      tenant: d.tenant,
+      solution: d.solution,
+
+      provider,
+      providerDeployment: d.providerDeployment,
+      authMethodId: d.authMethodId
+    });
+
+    return authMethod.value;
+  }
+
   async createProviderAuthConfig(d: {
     tenant: Tenant;
     solution: Solution;

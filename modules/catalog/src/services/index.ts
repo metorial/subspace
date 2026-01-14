@@ -2,7 +2,6 @@ export * from './provider';
 export * from './providerAuthMethod';
 export * from './providerCategory';
 export * from './providerCollection';
-export * from './providerConfig';
 export * from './providerGroup';
 export * from './providerListing';
 export * from './providerSpecification';

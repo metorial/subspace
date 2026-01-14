@@ -1,9 +1,7 @@
-import { badRequestError, notFoundError, ServiceError } from '@lowerdeck/error';
-import { createLock } from '@lowerdeck/lock';
+import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
-  db,
   getId,
   Provider,
   ProviderAuthCredentials,
@@ -18,177 +16,12 @@ import {
   withTransaction
 } from '@metorial-subspace/db';
 import { providerConfigService } from '@metorial-subspace/module-deployment';
-import { env } from '../env';
 import { providerSetupSessionUpdatedQueue } from '../queues/lifecycle/providerSetupSession';
 import { providerAuthConfigService } from './providerAuthConfig';
 import { providerOAuthSetupService } from './providerOAuthSetup';
-import { providerSetupSessionInclude } from './providerSetupSession';
-
-let updateLock = createLock({
-  name: 'auth/providerSetupSession/service',
-  redisUrl: env.service.REDIS_URL
-});
 
 class providerSetupSessionInternalServiceImpl {
-  async getProviderSetupSessionByClientSecret(d: { sessionId: string; clientSecret: string }) {
-    let providerSetupSession = await db.providerSetupSession.findFirst({
-      where: {
-        id: d.sessionId,
-        clientSecret: d.clientSecret,
-        status: { notIn: ['archived', 'deleted'] }
-      },
-      include: {
-        ...providerSetupSessionInclude,
-        brand: true,
-        tenant: true
-      }
-    });
-    if (!providerSetupSession) throw new ServiceError(notFoundError('provider.setup_session'));
-
-    return providerSetupSession;
-  }
-
-  async updateProviderSetupSessionInternal(d: {
-    providerSetupSession: ProviderSetupSession;
-    input: {
-      authConfigInput: Record<string, any>;
-      configInput?: Record<string, any>;
-    };
-    context: {
-      ip: string;
-      ua: string;
-    };
-  }) {
-    if (d.providerSetupSession.status == 'completed') {
-      throw new ServiceError(
-        badRequestError({
-          message: 'Cannot update a completed provider auth session'
-        })
-      );
-    }
-    if (d.providerSetupSession.expiresAt < new Date()) {
-      throw new ServiceError(
-        badRequestError({
-          message: 'Cannot update an expired provider auth session'
-        })
-      );
-    }
-
-    if (d.providerSetupSession.type === 'auth_and_config' && !d.input.configInput) {
-      throw new ServiceError(
-        badRequestError({
-          message: 'Config input is required for auth_and_config session type'
-        })
-      );
-    }
-
-    return updateLock.usingLock(d.providerSetupSession.id, () =>
-      withTransaction(async db => {
-        let currentSession = await db.providerSetupSession.findUniqueOrThrow({
-          where: {
-            oid: d.providerSetupSession.oid
-          },
-          include: {
-            tenant: true,
-            solution: true,
-            authCredentials: true,
-            provider: { include: { defaultVariant: true } },
-            authMethod: true,
-            deployment: {
-              include: {
-                provider: true,
-                providerVariant: true,
-                lockedVersion: true
-              }
-            }
-          }
-        });
-        if (currentSession.status == 'completed' || currentSession.authConfigOid) {
-          throw new ServiceError(
-            badRequestError({
-              message: 'Cannot update a completed provider auth session'
-            })
-          );
-        }
-
-        let setAuthConfigInner = await this.setAuthConfig({
-          tenant: currentSession.tenant,
-          solution: currentSession.solution,
-          provider: currentSession.provider,
-          providerDeployment: currentSession.deployment ?? undefined,
-          credentials: currentSession.authCredentials ?? undefined,
-          authMethod: currentSession.authMethod,
-          expiresAt: currentSession.expiresAt,
-          input: {
-            name: currentSession.name ?? undefined,
-            description: currentSession.description ?? undefined,
-            metadata: currentSession.metadata ?? undefined,
-            config: d.input.authConfigInput
-          },
-          import: {
-            ip: d.context.ip,
-            ua: d.context.ua
-          }
-        });
-
-        let setConfigInner = d.input.configInput
-          ? await this.setConfig({
-              tenant: currentSession.tenant,
-              solution: currentSession.solution,
-              provider: currentSession.provider,
-              providerDeployment: currentSession.deployment ?? undefined,
-              input: {
-                name: currentSession.name ?? undefined,
-                description: currentSession.description ?? undefined,
-                metadata: currentSession.metadata ?? undefined,
-                config: d.input.configInput
-              }
-            })
-          : {};
-
-        let session = await db.providerSetupSession.update({
-          where: { oid: d.providerSetupSession.oid },
-          data: {
-            ...setAuthConfigInner,
-            ...setConfigInner
-          }
-        });
-
-        if (session.authConfigOid) {
-          await db.providerSetupSessionEvent.createMany({
-            data: {
-              ...getId('providerSetupSessionEvent'),
-              type: 'auth_config_set',
-              sessionOid: session.oid
-            }
-          });
-        }
-
-        if (session.configOid) {
-          await db.providerSetupSessionEvent.createMany({
-            data: {
-              ...getId('providerSetupSessionEvent'),
-              type: 'config_set',
-              sessionOid: session.oid
-            }
-          });
-        }
-
-        session = await this.evaluate({
-          session: session,
-          context: { ip: d.context.ip, ua: d.context.ua }
-        });
-
-        await addAfterTransactionHook(() =>
-          providerSetupSessionUpdatedQueue.add({ providerSetupSessionId: session.id })
-        );
-
-        return session;
-      })
-    );
-  }
-
-  async setAuthConfig(d: {
+  async createProviderAuthConfig(d: {
     tenant: Tenant;
     solution: Solution;
     provider: Provider & { defaultVariant: ProviderVariant | null };
@@ -271,7 +104,7 @@ class providerSetupSessionInternalServiceImpl {
     }
   }
 
-  async setConfig(d: {
+  async createProviderConfig(d: {
     tenant: Tenant;
     solution: Solution;
     provider: Provider & { defaultVariant: ProviderVariant | null };
@@ -405,44 +238,31 @@ class providerSetupSessionInternalServiceImpl {
       let hasAuthConfig = d.session.authConfigOid !== null;
       let hasConfig = d.session.configOid !== null;
 
-      if (d.session.type == 'auth_only') {
-        if (hasAuthConfig) {
-          result = await db.providerSetupSession.update({
-            where: { oid: d.session.oid },
-            data: { status: 'completed' }
-          });
+      let isComplete = false;
 
-          await db.providerSetupSessionEvent.createMany({
-            data: [
-              {
-                ...getId('providerSetupSessionEvent'),
-                type: 'completed',
-                sessionOid: d.session.oid,
-                ip: d.context.ip,
-                ua: d.context.ua
-              }
-            ]
-          });
-        }
-      }
+      if (d.session.type == 'auth_only' && hasAuthConfig) isComplete = true;
 
-      if (d.session.type == 'auth_and_config') {
-        if (hasAuthConfig && hasConfig) {
-          result = await db.providerSetupSession.update({
-            where: { oid: d.session.oid },
-            data: { status: 'completed' }
-          });
+      if (d.session.type == 'auth_and_config' && hasAuthConfig && hasConfig) isComplete = true;
 
-          await db.providerSetupSessionEvent.createMany({
-            data: {
+      if (d.session.type == 'config_only' && hasConfig) isComplete = true;
+
+      if (isComplete) {
+        result = await db.providerSetupSession.update({
+          where: { oid: d.session.oid },
+          data: { status: 'completed' }
+        });
+
+        await db.providerSetupSessionEvent.createMany({
+          data: [
+            {
               ...getId('providerSetupSessionEvent'),
               type: 'completed',
               sessionOid: d.session.oid,
               ip: d.context.ip,
               ua: d.context.ua
             }
-          });
-        }
+          ]
+        });
       }
 
       return result;

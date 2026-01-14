@@ -1,11 +1,7 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
 import { providerConfigPresenter, providerConfigSchemaPresenter } from '@metorial-subspace/db';
-import {
-  providerConfigSchemaService,
-  providerService,
-  providerVersionService
-} from '@metorial-subspace/module-catalog';
+import { providerService, providerVersionService } from '@metorial-subspace/module-catalog';
 import {
   providerConfigService,
   providerConfigVaultService,
@@ -86,7 +82,7 @@ export let providerConfigController = app.controller({
           })
         : undefined;
 
-      let config = await providerConfigSchemaService.getProviderConfigSchema({
+      let config = await providerConfigService.getProviderConfigSchema({
         tenant: ctx.tenant,
         solution: ctx.solution,
 

@@ -123,12 +123,17 @@ class providerSetupSessionServiceImpl {
       );
     }
 
-    if (d.input.type == 'auth_and_config' && d.input.authConfigInput && !d.input.configInput) {
+    if (d.input.type === 'config_only' && d.input.authConfigInput) {
       throw new ServiceError(
         badRequestError({
-          message:
-            'Config input must be provided when auth_and_config type is selected with auth config input',
-          code: 'missing_config_input'
+          message: 'Auth config input provided for config_only session type'
+        })
+      );
+    }
+    if (d.input.type === 'auth_only' && d.input.configInput) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Config input provided for auth_only session type'
         })
       );
     }
@@ -176,32 +181,33 @@ class providerSetupSessionServiceImpl {
         authMethodOid: authMethod.oid
       };
 
-      if (d.input.authConfigInput) {
-        let authConfigInner = await providerSetupSessionInternalService.setAuthConfig({
-          tenant: d.tenant,
-          solution: d.solution,
-          provider: d.provider,
-          providerDeployment: d.providerDeployment,
-          credentials: d.credentials,
-          authMethod,
-          expiresAt,
-          input: {
-            name: d.input.name,
-            description: d.input.description,
-            metadata: d.input.metadata,
-            config: d.input.authConfigInput
-          },
-          import: {
-            ip: d.import.ip,
-            ua: d.import.ua
-          }
-        });
+      if (d.input.authConfigInput && d.input.type != 'config_only') {
+        let authConfigInner =
+          await providerSetupSessionInternalService.createProviderAuthConfig({
+            tenant: d.tenant,
+            solution: d.solution,
+            provider: d.provider,
+            providerDeployment: d.providerDeployment,
+            credentials: d.credentials,
+            authMethod,
+            expiresAt,
+            input: {
+              name: d.input.name,
+              description: d.input.description,
+              metadata: d.input.metadata,
+              config: d.input.authConfigInput
+            },
+            import: {
+              ip: d.import.ip,
+              ua: d.import.ua
+            }
+          });
 
         inner = { ...inner, ...authConfigInner };
       }
 
-      if (d.input.configInput) {
-        let configInner = await providerSetupSessionInternalService.setConfig({
+      if (d.input.configInput && d.input.type != 'auth_only') {
+        let configInner = await providerSetupSessionInternalService.createProviderConfig({
           tenant: d.tenant,
           solution: d.solution,
           provider: d.provider,
