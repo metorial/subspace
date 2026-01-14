@@ -10,6 +10,7 @@ enum ProviderSetupSessionStatus {
 
 enum ProviderSetupSessionType {
   auth_only
+  config_only
   auth_and_config
 }
 
