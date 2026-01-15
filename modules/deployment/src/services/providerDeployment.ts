@@ -139,6 +139,7 @@ class providerDeploymentServiceImpl {
           ...ids,
 
           isEphemeral: !!d.input.isEphemeral,
+          isDefault: false,
 
           name: d.input.name?.trim() || undefined,
           description: d.input.description?.trim() || undefined,
@@ -181,6 +182,19 @@ class providerDeploymentServiceImpl {
         await db.providerConfig.updateMany({
           where: { oid: config.oid },
           data: { isDefault: true }
+        });
+      }
+
+      if (providerDeployment.isDefault) {
+        await db.providerDeployment.updateMany({
+          where: {
+            tenantOid: d.tenant.oid,
+            solutionOid: d.solution.oid,
+            providerOid: d.provider.oid,
+            oid: { not: providerDeployment.oid },
+            isDefault: true
+          },
+          data: { isDefault: false }
         });
       }
 

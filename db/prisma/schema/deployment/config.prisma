@@ -43,6 +43,7 @@ model ProviderConfig {
   deploymentPairs                  ProviderDeploymentConfigPair[]
   providerAuthConfigUsedForConfigs ProviderAuthConfigUsedForConfig[]
   providerSetupSession             ProviderSetupSession?
+  sessionProviders                 SessionProvider[]
 
   @@index([isDefault])
 }

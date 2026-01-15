@@ -181,7 +181,7 @@ class providerConfigServiceImpl {
         metadata: d.input.metadata,
 
         isEphemeral: !!d.input.isEphemeral,
-        isDefault: !!d.input.isDefault,
+        isDefault: !!(d.input.isDefault && d.providerDeployment),
         isForVault: !!d.input.isForVault,
 
         tenantOid: d.tenant.oid,
@@ -264,18 +264,15 @@ class providerConfigServiceImpl {
           include
         });
 
-        if (d.input.isDefault && d.providerDeployment) {
-          if (d.providerDeployment.defaultConfigOid) {
-            await db.providerConfig.updateMany({
-              where: {
-                OR: [
-                  { oid: d.providerDeployment.defaultConfigOid },
-                  { deploymentOid: d.providerDeployment.oid }
-                ]
-              },
-              data: { isDefault: false }
-            });
-          }
+        if (config.isDefault && d.providerDeployment) {
+          await db.providerConfig.updateMany({
+            where: {
+              isDefault: true,
+              deploymentOid: d.providerDeployment.oid,
+              oid: { not: config.oid }
+            },
+            data: { isDefault: false }
+          });
 
           await db.providerDeployment.updateMany({
             where: { oid: d.providerDeployment.oid },

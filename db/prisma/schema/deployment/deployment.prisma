@@ -9,6 +9,7 @@ model ProviderDeployment {
   id  String @unique
 
   isEphemeral Boolean
+  isDefault   Boolean
 
   name        String?
   description String?
@@ -51,4 +52,7 @@ model ProviderDeployment {
   providerAuthConfigs                  ProviderAuthConfig[]
   providerAuthImports                  ProviderAuthImport[]
   providerSetupSessions                ProviderSetupSession[]
+  sessionProviders                     SessionProvider[]
+
+  @@index([isDefault])
 }
