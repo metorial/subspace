@@ -79,11 +79,11 @@ let processSingleRankQueueProcessor = processSingleRankQueue.process(async data 
   deploymentsCount = await db.providerDeployment.count({
     where: { providerOid: providerListing.providerOid }
   });
-  providerSessionsCount = await db.providerSession.count({
+  providerSessionsCount = await db.sessionProvider.count({
     where: { providerOid: providerListing.providerOid }
   });
 
-  let providerMessagesCountAgg = await db.providerSession.aggregate({
+  let providerMessagesCountAgg = await db.sessionProvider.aggregate({
     where: { providerOid: providerListing.providerOid },
     _sum: {
       totalProductiveServerMessageCount: true,

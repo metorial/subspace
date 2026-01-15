@@ -1,4 +1,5 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
+import { createLock } from '@lowerdeck/lock';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
@@ -18,6 +19,7 @@ import {
 } from '@metorial-subspace/db';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
+import { env } from '../env';
 import {
   providerDeploymentCreatedQueue,
   providerDeploymentUpdatedQueue
@@ -30,6 +32,11 @@ let include = {
   providerVariant: true,
   lockedVersion: { include: { specification: true } }
 };
+
+let defaultLock = createLock({
+  name: 'dep/pdep/def/lock',
+  redisUrl: env.service.REDIS_URL
+});
 
 class providerDeploymentServiceImpl {
   async listProviderDeployments(d: { tenant: Tenant; solution: Solution }) {
@@ -78,6 +85,7 @@ class providerDeploymentServiceImpl {
       description?: string;
       metadata?: Record<string, any>;
       isEphemeral?: boolean;
+      isDefault?: boolean;
 
       config:
         | {
@@ -139,7 +147,7 @@ class providerDeploymentServiceImpl {
           ...ids,
 
           isEphemeral: !!d.input.isEphemeral,
-          isDefault: false,
+          isDefault: !!d.input.isDefault,
 
           name: d.input.name?.trim() || undefined,
           description: d.input.description?.trim() || undefined,
@@ -161,7 +169,7 @@ class providerDeploymentServiceImpl {
       });
 
       if (d.input.config.type != 'none') {
-        let config = await providerConfigService.createProviderConfig({
+        await providerConfigService.createProviderConfig({
           tenant: d.tenant,
           providerDeployment,
           provider: d.provider,
@@ -173,15 +181,6 @@ class providerDeploymentServiceImpl {
             metadata: d.input.metadata,
             isDefault: true
           }
-        });
-
-        await db.providerDeployment.update({
-          where: { oid: providerDeployment.oid },
-          data: { defaultConfigOid: config.oid }
-        });
-        await db.providerConfig.updateMany({
-          where: { oid: config.oid },
-          data: { isDefault: true }
         });
       }
 
@@ -205,6 +204,32 @@ class providerDeploymentServiceImpl {
       return await db.providerDeployment.findFirstOrThrow({
         where: { oid: providerDeployment.oid },
         include
+      });
+    });
+  }
+
+  async ensureDefaultProviderDeployment(d: {
+    tenant: Tenant;
+    solution: Solution;
+    provider: Provider & { defaultVariant: ProviderVariant | null };
+  }) {
+    let currentDefault = await this.getDefaultProviderDeployment(d);
+    if (currentDefault) return currentDefault;
+
+    return await defaultLock.usingLock(d.provider.id, async () => {
+      let currentDefault = await this.getDefaultProviderDeployment(d);
+      if (currentDefault) return currentDefault;
+
+      return await this.createProviderDeployment({
+        tenant: d.tenant,
+        solution: d.solution,
+        provider: d.provider,
+        input: {
+          name: `Default Deployment for ${d.provider.name}`,
+          description: 'Auto-created by Metorial',
+          config: { type: 'none' },
+          isDefault: true
+        }
       });
     });
   }
@@ -240,6 +265,26 @@ class providerDeploymentServiceImpl {
 
       return providerDeployment;
     });
+  }
+
+  private async getDefaultProviderDeployment(d: {
+    tenant: Tenant;
+    solution: Solution;
+    provider: Provider;
+  }) {
+    return await withTransaction(
+      db =>
+        db.providerDeployment.findFirst({
+          where: {
+            tenantOid: d.tenant.oid,
+            solutionOid: d.solution.oid,
+            providerOid: d.provider.oid,
+            isDefault: true
+          },
+          include
+        }),
+      { ifExists: true }
+    );
   }
 }
 

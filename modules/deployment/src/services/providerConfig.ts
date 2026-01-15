@@ -4,6 +4,7 @@ import {
   preconditionFailedError,
   ServiceError
 } from '@lowerdeck/error';
+import { createLock } from '@lowerdeck/lock';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
@@ -26,6 +27,7 @@ import {
 } from '@metorial-subspace/module-provider-internal';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
+import { env } from '../env';
 import {
   providerConfigCreatedQueue,
   providerConfigUpdatedQueue
@@ -41,6 +43,11 @@ let include = {
     }
   }
 };
+
+let defaultLock = createLock({
+  name: 'dep/pconf/def/lock',
+  redisUrl: env.service.REDIS_URL
+});
 
 class providerConfigServiceImpl {
   async listProviderConfigs(d: { tenant: Tenant; solution: Solution }) {
@@ -188,8 +195,7 @@ class providerConfigServiceImpl {
         providerOid: d.provider.oid,
         solutionOid: d.solution.oid,
 
-        specificationDiscoveryStatus: 'discovering' as const,
-        providerDeploymentOid: d.providerDeployment?.oid
+        deploymentOid: d.providerDeployment?.oid
       };
 
       let config = await (async () => {
@@ -249,7 +255,7 @@ class providerConfigServiceImpl {
           provider: d.provider,
           providerVariant: d.provider.defaultVariant!,
           deployment: d.providerDeployment ?? null,
-          config: d.input.config
+          config: d.input.config.data
         });
 
         let config = await db.providerConfig.create({
@@ -298,6 +304,55 @@ class providerConfigServiceImpl {
     });
   }
 
+  async ensureDefaultEmptyProviderConfig(d: {
+    tenant: Tenant;
+    solution: Solution;
+    provider: Provider & { defaultVariant: ProviderVariant | null };
+    providerDeployment: ProviderDeployment;
+  }) {
+    return withTransaction(
+      async db => {
+        let currentDefault = await this.getDefaultProviderConfig(d);
+        if (currentDefault) return currentDefault;
+
+        return await defaultLock.usingLock(d.provider.id, async () => {
+          let currentDefault = await this.getDefaultProviderConfig(d);
+          if (currentDefault) return currentDefault;
+
+          let deployment = await db.providerDeployment.findFirstOrThrow({
+            where: {
+              oid: d.providerDeployment.oid,
+              tenantOid: d.tenant.oid,
+              solutionOid: d.solution.oid
+            },
+            include: {
+              provider: true,
+              providerVariant: true,
+              lockedVersion: true
+            }
+          });
+
+          let innerName = deployment.name ?? d.provider.name;
+          if (innerName.includes('Default ')) innerName = d.provider.name;
+
+          return await this.createProviderConfig({
+            tenant: d.tenant,
+            solution: d.solution,
+            provider: d.provider,
+            providerDeployment: deployment,
+            input: {
+              name: `Default Config for ${innerName}`,
+              description: 'Auto-created by Metorial',
+              isDefault: true,
+              config: { type: 'inline', data: {} }
+            }
+          });
+        });
+      },
+      { ifExists: true }
+    );
+  }
+
   async updateProviderConfig(d: {
     tenant: Tenant;
     solution: Solution;
@@ -331,6 +386,24 @@ class providerConfigServiceImpl {
 
       return config;
     });
+  }
+
+  private async getDefaultProviderConfig(d: {
+    tenant: Tenant;
+    solution: Solution;
+    providerDeployment: ProviderDeployment;
+  }) {
+    return withTransaction(db =>
+      db.providerConfig.findFirst({
+        where: {
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid,
+          deploymentOid: d.providerDeployment.oid,
+          isDefault: true
+        },
+        include
+      })
+    );
   }
 }
 

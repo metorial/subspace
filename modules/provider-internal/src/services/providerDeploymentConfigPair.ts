@@ -35,7 +35,7 @@ class providerDeploymentConfigPairInternalServiceImpl {
       if (existing) {
         return {
           pair: existing,
-          version: existing.versions[0],
+          version: existing.versions?.[0],
           created: false
         };
       }
@@ -73,7 +73,7 @@ class providerDeploymentConfigPairInternalServiceImpl {
       return {
         pair,
         created,
-        version: pair.versions[0]
+        version: pair.versions?.[0]
       };
     });
   }
@@ -145,8 +145,8 @@ class providerDeploymentConfigPairInternalServiceImpl {
     }
 
     if (res.version.specificationDiscoveryStatus == 'discovering') {
-      for (let i = 0; i < 50; i++) {
-        await delay(100);
+      for (let i = 1; i < 75; i++) {
+        await delay(Math.min(100, 25 * i));
         res.version = await db.providerDeploymentConfigPairProviderVersion.findFirstOrThrow({
           where: { oid: res.version.oid }
         });
