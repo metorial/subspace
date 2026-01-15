@@ -21,6 +21,8 @@ import { providerToolController } from './providerTool';
 import { providerVariantController } from './providerVariant';
 import { providerVersionController } from './providerVersion';
 import { publisherController } from './publisher';
+import { sessionController } from './session';
+import { sessionProviderController } from './sessionProvider';
 import { solutionController } from './solution';
 import { tenantController } from './tenant';
 
@@ -46,6 +48,8 @@ export let rootController = app.controller({
   providerVersion: providerVersionController,
   publisher: publisherController,
   solution: solutionController,
+  session: sessionController,
+  sessionProvider: sessionProviderController,
   tenant: tenantController
 });
 

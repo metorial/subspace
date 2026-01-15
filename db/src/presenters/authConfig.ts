@@ -47,3 +47,27 @@ export let providerAuthConfigPresenter = (
   createdAt: providerAuthConfig.createdAt,
   updatedAt: providerAuthConfig.updatedAt
 });
+
+export let providerAuthConfigPreviewPresenter = (
+  providerAuthConfig: ProviderAuthConfig & {
+    provider: Provider;
+  }
+) => ({
+  object: 'provider.auth_config',
+
+  id: providerAuthConfig.id,
+  type: providerAuthConfig.type,
+  source: providerAuthConfig.source,
+
+  isEphemeral: providerAuthConfig.isEphemeral,
+  isDefault: providerAuthConfig.isDefault,
+
+  providerId: providerAuthConfig.provider.id,
+
+  name: providerAuthConfig.name,
+  description: providerAuthConfig.description,
+  metadata: providerAuthConfig.metadata,
+
+  createdAt: providerAuthConfig.createdAt,
+  updatedAt: providerAuthConfig.updatedAt
+});

@@ -22,6 +22,7 @@ export let providerDeploymentPresenter = (
   id: providerDeployment.id,
 
   isEphemeral: providerDeployment.isEphemeral,
+  isDefault: providerDeployment.isDefault,
 
   name: providerDeployment.name,
   description: providerDeployment.description,
@@ -57,6 +58,7 @@ export let providerDeploymentPreviewPresenter = (
   id: providerDeployment.id,
 
   isEphemeral: providerDeployment.isEphemeral,
+  isDefault: providerDeployment.isDefault,
 
   name: providerDeployment.name,
   description: providerDeployment.description,
