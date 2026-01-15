@@ -12,6 +12,116 @@
         "typescript": "5.8.2",
       },
     },
+    "apps/connection-endpoint": {
+      "name": "@metorial-subspace/app-connection-endpoint",
+      "dependencies": {
+        "@aws-sdk/client-cloudwatch-logs": "^3.957.0",
+        "@aws-sdk/client-iam": "^3.957.0",
+        "@aws-sdk/client-lambda": "^3.958.0",
+        "@hono/zod-validator": "^0.7.6",
+        "@lowerdeck/api-key": "^1.0.1",
+        "@lowerdeck/api-mux": "^1.0.1",
+        "@lowerdeck/cache": "^1.0.0",
+        "@lowerdeck/canonicalize": "^1.0.4",
+        "@lowerdeck/cron": "^1.0.4",
+        "@lowerdeck/encryption": "^1.0.6",
+        "@lowerdeck/env": "^1.0.4",
+        "@lowerdeck/error": "^1.0.10",
+        "@lowerdeck/hash": "^1.0.4",
+        "@lowerdeck/hono": "^1.0.6",
+        "@lowerdeck/id": "^1.0.5",
+        "@lowerdeck/lock": "^1.0.3",
+        "@lowerdeck/once": "^1.0.4",
+        "@lowerdeck/pagination": "^1.0.4",
+        "@lowerdeck/programmable-promise": "^1.0.6",
+        "@lowerdeck/queue": "^1.0.4",
+        "@lowerdeck/rpc-client": "^1.0.2",
+        "@lowerdeck/rpc-server": "^1.0.5",
+        "@lowerdeck/service": "^1.0.3",
+        "@lowerdeck/shadow-id": "^1.0.4",
+        "@lowerdeck/slugify": "^1.0.4",
+        "@lowerdeck/validation": "^1.0.4",
+        "@metorial-subspace/module-auth": "^1.0.0",
+        "@metorial-subspace/module-catalog": "^1.0.0",
+        "@metorial-subspace/module-deployment": "^1.0.0",
+        "@metorial-subspace/module-tenant": "^1.0.0",
+        "@prisma/adapter-pg": "^7.2.0",
+        "@prisma/client": "^7.2.0",
+        "@types/semver": "^7.7.1",
+        "@types/unzipper": "^0.10.11",
+        "date-fns": "^4.1.0",
+        "hono": "^4.11.3",
+        "jszip": "^3.10.1",
+        "object-storage-client": "^0.2.5",
+        "prisma": "^7.2.0",
+        "prisma-json-types-generator": "^4.0.1",
+        "semver": "^7.7.3",
+        "snowflake-uuid": "^1.0.0",
+        "unzipper": "^0.12.3",
+        "yaml": "^2.8.2",
+        "zod": "^4.3.5",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
+    "apps/connection-manager": {
+      "name": "@metorial-subspace/app-connection-manager",
+      "dependencies": {
+        "@aws-sdk/client-cloudwatch-logs": "^3.957.0",
+        "@aws-sdk/client-iam": "^3.957.0",
+        "@aws-sdk/client-lambda": "^3.958.0",
+        "@hono/zod-validator": "^0.7.6",
+        "@lowerdeck/api-key": "^1.0.1",
+        "@lowerdeck/api-mux": "^1.0.1",
+        "@lowerdeck/cache": "^1.0.0",
+        "@lowerdeck/canonicalize": "^1.0.4",
+        "@lowerdeck/cron": "^1.0.4",
+        "@lowerdeck/encryption": "^1.0.6",
+        "@lowerdeck/env": "^1.0.4",
+        "@lowerdeck/error": "^1.0.10",
+        "@lowerdeck/hash": "^1.0.4",
+        "@lowerdeck/hono": "^1.0.6",
+        "@lowerdeck/id": "^1.0.5",
+        "@lowerdeck/lock": "^1.0.3",
+        "@lowerdeck/once": "^1.0.4",
+        "@lowerdeck/pagination": "^1.0.4",
+        "@lowerdeck/queue": "^1.0.4",
+        "@lowerdeck/rpc-client": "^1.0.2",
+        "@lowerdeck/rpc-server": "^1.0.5",
+        "@lowerdeck/service": "^1.0.3",
+        "@lowerdeck/shadow-id": "^1.0.4",
+        "@lowerdeck/slugify": "^1.0.4",
+        "@lowerdeck/validation": "^1.0.4",
+        "@metorial-subspace/module-auth": "^1.0.0",
+        "@metorial-subspace/module-catalog": "^1.0.0",
+        "@metorial-subspace/module-deployment": "^1.0.0",
+        "@metorial-subspace/module-tenant": "^1.0.0",
+        "@prisma/adapter-pg": "^7.2.0",
+        "@prisma/client": "^7.2.0",
+        "@types/semver": "^7.7.1",
+        "@types/unzipper": "^0.10.11",
+        "date-fns": "^4.1.0",
+        "hono": "^4.11.3",
+        "jszip": "^3.10.1",
+        "object-storage-client": "^0.2.5",
+        "prisma": "^7.2.0",
+        "prisma-json-types-generator": "^4.0.1",
+        "semver": "^7.7.3",
+        "snowflake-uuid": "^1.0.0",
+        "unzipper": "^0.12.3",
+        "yaml": "^2.8.2",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
     "apps/controller": {
       "name": "@metorial-subspace/app-controller",
       "dependencies": {
@@ -254,6 +364,27 @@
         "vitest": "^3.1.2",
       },
     },
+    "modules/connection": {
+      "name": "@metorial-subspace/module-connection",
+      "version": "1.0.0",
+      "dependencies": {
+        "@lowerdeck/canonicalize": "^1.0.0",
+        "@lowerdeck/cron": "^1.0.0",
+        "@lowerdeck/error": "^1.0.0",
+        "@lowerdeck/hash": "^1.0.0",
+        "@lowerdeck/pagination": "^1.0.0",
+        "@lowerdeck/queue": "^1.0.0",
+        "@lowerdeck/service": "^1.0.0",
+        "@metorial-subspace/db": "^1.0.0",
+        "@types/fs-extra": "^11.0.4",
+        "fs-extra": "^11.3.0",
+      },
+      "devDependencies": {
+        "@metorial-subspace/tsconfig": "^1.0.0",
+        "typescript": "5.8.2",
+        "vitest": "^3.1.2",
+      },
+    },
     "modules/deployment": {
       "name": "@metorial-subspace/module-deployment",
       "version": "1.0.0",
@@ -326,6 +457,27 @@
       },
       "peerDependencies": {
         "typescript": "^5",
+      },
+    },
+    "modules/session": {
+      "name": "@metorial-subspace/module-session",
+      "version": "1.0.0",
+      "dependencies": {
+        "@lowerdeck/canonicalize": "^1.0.0",
+        "@lowerdeck/cron": "^1.0.0",
+        "@lowerdeck/error": "^1.0.0",
+        "@lowerdeck/hash": "^1.0.0",
+        "@lowerdeck/pagination": "^1.0.0",
+        "@lowerdeck/queue": "^1.0.0",
+        "@lowerdeck/service": "^1.0.0",
+        "@metorial-subspace/db": "^1.0.0",
+        "@types/fs-extra": "^11.0.4",
+        "fs-extra": "^11.3.0",
+      },
+      "devDependencies": {
+        "@metorial-subspace/tsconfig": "^1.0.0",
+        "typescript": "5.8.2",
+        "vitest": "^3.1.2",
       },
     },
     "modules/tenant": {
@@ -728,6 +880,8 @@
 
     "@lowerdeck/pagination": ["@lowerdeck/pagination@1.0.5", "", { "dependencies": { "@lowerdeck/base62": "^1.0.4", "@lowerdeck/error": "^1.0.10", "@lowerdeck/validation": "^1.0.4" } }, "sha512-QrDhQAmWmSG5NTNUci/hYnSc1mAF5Rglxvt2RPrOoLuMzMBtbGYxal8l24nuPLCxeO9MGui14wWUcyHzzZJSig=="],
 
+    "@lowerdeck/programmable-promise": ["@lowerdeck/programmable-promise@1.0.6", "", {}, "sha512-37ZWpHNSbjQgrHoGEcgFVa72D5db7tPFwc5glECFBszy+LN9/8uC5zzEHg7t9+0QIlnz2ET+wFmmckxXlWwa7Q=="],
+
     "@lowerdeck/proxy": ["@lowerdeck/proxy@1.0.4", "", {}, "sha512-29S6bDAtkeD0Iww6RiMiwok4eCPWLfoyJW9XIfJxcpvRhQov/GIKtaix9W9lkZvqlt7u78X4LkLmWFc6QA/BjA=="],
 
     "@lowerdeck/queue": ["@lowerdeck/queue@1.0.4", "", { "dependencies": { "@lowerdeck/delay": "^1.0.4", "@lowerdeck/execution-context": "^1.0.2", "@lowerdeck/id": "^1.0.5", "@lowerdeck/memo": "^1.0.4", "@lowerdeck/redis": "^1.0.3", "@lowerdeck/sentry": "^1.0.2", "bullmq": "^5.66.0", "superjson": "^2.2.6" } }, "sha512-Ks+PFwdQClD0+zBNVX6M4VHpHExrAwSmxi7LxN3HRONPaQNONvsJ6J+lEd7RMAt/dX7GwviGraKLrPTgMNvnRw=="],
@@ -764,6 +918,10 @@
 
     "@metorial-services/voyager-client": ["@metorial-services/voyager-client@1.0.0", "", { "dependencies": { "@lowerdeck/rpc-client": "^1.0.2" } }, "sha512-2rXOJwbBRji+cJpko5cS2pVWGuPaZzWB9q1O3+Gj+98ZJtOWa6dBlQuZY+DEsx2jySOsDDEpeTDqcMXe+IblVQ=="],
 
+    "@metorial-subspace/app-connection-endpoint": ["@metorial-subspace/app-connection-endpoint@workspace:apps/connection-endpoint"],
+
+    "@metorial-subspace/app-connection-manager": ["@metorial-subspace/app-connection-manager@workspace:apps/connection-manager"],
+
     "@metorial-subspace/app-controller": ["@metorial-subspace/app-controller@workspace:apps/controller"],
 
     "@metorial-subspace/app-public": ["@metorial-subspace/app-public@workspace:apps/public"],
@@ -776,11 +934,15 @@
 
     "@metorial-subspace/module-catalog": ["@metorial-subspace/module-catalog@workspace:modules/catalog"],
 
+    "@metorial-subspace/module-connection": ["@metorial-subspace/module-connection@workspace:modules/connection"],
+
     "@metorial-subspace/module-deployment": ["@metorial-subspace/module-deployment@workspace:modules/deployment"],
 
     "@metorial-subspace/module-provider-internal": ["@metorial-subspace/module-provider-internal@workspace:modules/provider-internal"],
 
     "@metorial-subspace/module-search": ["@metorial-subspace/module-search@workspace:modules/search"],
+
+    "@metorial-subspace/module-session": ["@metorial-subspace/module-session@workspace:modules/session"],
 
     "@metorial-subspace/module-tenant": ["@metorial-subspace/module-tenant@workspace:modules/tenant"],
 
@@ -1096,7 +1258,7 @@
 
     "@types/babel__traverse": ["@types/babel__traverse@7.28.0", "", { "dependencies": { "@babel/types": "^7.28.2" } }, "sha512-8PvcXf70gTDZBgt9ptxJ8elBeBjcLOAcOtoO/mPJjtji1+CdGbHgm77om1GrsPxsiE+uXIpNSK64UYaIwQXd4Q=="],
 
-    "@types/bun": ["@types/bun@1.3.5", "", { "dependencies": { "bun-types": "1.3.5" } }, "sha512-RnygCqNrd3srIPEWBd5LFeUYG7plCoH2Yw9WaZGyNmdTEei+gWaHqydbaIRkIkcbXwhBT94q78QljxN0Sk838w=="],
+    "@types/bun": ["@types/bun@1.3.6", "", { "dependencies": { "bun-types": "1.3.6" } }, "sha512-uWCv6FO/8LcpREhenN1d1b6fcspAB+cefwD7uti8C8VffIv0Um08TKMn98FynpTiU38+y2dUO55T11NgDt8VAA=="],
 
     "@types/chai": ["@types/chai@5.2.3", "", { "dependencies": { "@types/deep-eql": "*", "assertion-error": "^2.0.1" } }, "sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA=="],
 
@@ -1184,7 +1346,7 @@
 
     "bullmq": ["bullmq@5.66.4", "", { "dependencies": { "cron-parser": "4.9.0", "ioredis": "5.8.2", "msgpackr": "1.11.5", "node-abort-controller": "3.1.1", "semver": "7.7.3", "tslib": "2.8.1", "uuid": "11.1.0" } }, "sha512-y2VRk2z7d1YNI2JQDD7iThoD0X/0iZZ3VEp8lqT5s5U0XDl9CIjXp1LQgmE9EKy6ReHtzmYXS1f328PnUbZGtQ=="],
 
-    "bun-types": ["bun-types@1.3.5", "", { "dependencies": { "@types/node": "*" } }, "sha512-inmAYe2PFLs0SUbFOWSVD24sg1jFlMPxOjOSSCYqUgn4Hsc3rDc7dFvfVYjFPNHtov6kgUeulV4SxbuIV/stPw=="],
+    "bun-types": ["bun-types@1.3.6", "", { "dependencies": { "@types/node": "*" } }, "sha512-OlFwHcnNV99r//9v5IIOgQ9Uk37gZqrNMCcqEaExdkVq3Avwqok1bJFmvGMCkCE0FqzdY8VMOZpfpR3lwI+CsQ=="],
 
     "c12": ["c12@3.1.0", "", { "dependencies": { "chokidar": "^4.0.3", "confbox": "^0.2.2", "defu": "^6.1.4", "dotenv": "^16.6.1", "exsolve": "^1.0.7", "giget": "^2.0.0", "jiti": "^2.4.2", "ohash": "^2.0.11", "pathe": "^2.0.3", "perfect-debounce": "^1.0.0", "pkg-types": "^2.2.0", "rc9": "^2.1.2" }, "peerDependencies": { "magicast": "^0.3.5" }, "optionalPeers": ["magicast"] }, "sha512-uWoS8OU1MEIsOv8p/5a82c3H31LsWVR5qiyXVfBNOzfffjUWtPnhAb4BYI2uG2HfGmZmFjCtui5XNWaps+iFuw=="],
 
@@ -1990,21 +2152,13 @@
 
     "@babel/helper-compilation-targets/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 
+    "@lowerdeck/lock/@types/bun": ["@types/bun@1.3.5", "", { "dependencies": { "bun-types": "1.3.5" } }, "sha512-RnygCqNrd3srIPEWBd5LFeUYG7plCoH2Yw9WaZGyNmdTEei+gWaHqydbaIRkIkcbXwhBT94q78QljxN0Sk838w=="],
+
     "@lowerdeck/slugify/@lowerdeck/id": ["@lowerdeck/id@1.0.5", "", { "dependencies": { "@lowerdeck/error": "^1.0.8", "@lowerdeck/hash": "^1.0.4", "nanoid": "^5.0.7", "short-uuid": "^5.2.0", "snowflake-uuid": "^1.0.0" } }, "sha512-8Xik3NbqE7mkfYTliMG+zxWjn+my1wK09BIHiKdxylvkdtAKaxBzls+XoALFO2JZ+VSZIdLG2DvtndXjFSwPQg=="],
 
-    "@metorial-subspace/app-worker/@types/bun": ["@types/bun@1.3.6", "", { "dependencies": { "bun-types": "1.3.6" } }, "sha512-uWCv6FO/8LcpREhenN1d1b6fcspAB+cefwD7uti8C8VffIv0Um08TKMn98FynpTiU38+y2dUO55T11NgDt8VAA=="],
+    "@metorial-subspace/app-controller/@types/bun": ["@types/bun@1.3.5", "", { "dependencies": { "bun-types": "1.3.5" } }, "sha512-RnygCqNrd3srIPEWBd5LFeUYG7plCoH2Yw9WaZGyNmdTEei+gWaHqydbaIRkIkcbXwhBT94q78QljxN0Sk838w=="],
 
-    "@metorial-subspace/db/@types/bun": ["@types/bun@1.3.6", "", { "dependencies": { "bun-types": "1.3.6" } }, "sha512-uWCv6FO/8LcpREhenN1d1b6fcspAB+cefwD7uti8C8VffIv0Um08TKMn98FynpTiU38+y2dUO55T11NgDt8VAA=="],
-
-    "@metorial-subspace/module-search/@types/bun": ["@types/bun@1.3.6", "", { "dependencies": { "bun-types": "1.3.6" } }, "sha512-uWCv6FO/8LcpREhenN1d1b6fcspAB+cefwD7uti8C8VffIv0Um08TKMn98FynpTiU38+y2dUO55T11NgDt8VAA=="],
-
-    "@metorial-subspace/provider/@types/bun": ["@types/bun@1.3.6", "", { "dependencies": { "bun-types": "1.3.6" } }, "sha512-uWCv6FO/8LcpREhenN1d1b6fcspAB+cefwD7uti8C8VffIv0Um08TKMn98FynpTiU38+y2dUO55T11NgDt8VAA=="],
-
-    "@metorial-subspace/provider-slates/@types/bun": ["@types/bun@1.3.6", "", { "dependencies": { "bun-types": "1.3.6" } }, "sha512-uWCv6FO/8LcpREhenN1d1b6fcspAB+cefwD7uti8C8VffIv0Um08TKMn98FynpTiU38+y2dUO55T11NgDt8VAA=="],
-
-    "@metorial-subspace/provider-utils/@types/bun": ["@types/bun@1.3.6", "", { "dependencies": { "bun-types": "1.3.6" } }, "sha512-uWCv6FO/8LcpREhenN1d1b6fcspAB+cefwD7uti8C8VffIv0Um08TKMn98FynpTiU38+y2dUO55T11NgDt8VAA=="],
-
-    "@metorial-subspace/wire/@types/bun": ["@types/bun@1.3.6", "", { "dependencies": { "bun-types": "1.3.6" } }, "sha512-uWCv6FO/8LcpREhenN1d1b6fcspAB+cefwD7uti8C8VffIv0Um08TKMn98FynpTiU38+y2dUO55T11NgDt8VAA=="],
+    "@metorial-subspace/app-public/@types/bun": ["@types/bun@1.3.5", "", { "dependencies": { "bun-types": "1.3.5" } }, "sha512-RnygCqNrd3srIPEWBd5LFeUYG7plCoH2Yw9WaZGyNmdTEei+gWaHqydbaIRkIkcbXwhBT94q78QljxN0Sk838w=="],
 
     "@metorial-subspace/wire/vitest": ["vitest@2.1.9", "", { "dependencies": { "@vitest/expect": "2.1.9", "@vitest/mocker": "2.1.9", "@vitest/pretty-format": "^2.1.9", "@vitest/runner": "2.1.9", "@vitest/snapshot": "2.1.9", "@vitest/spy": "2.1.9", "@vitest/utils": "2.1.9", "chai": "^5.1.2", "debug": "^4.3.7", "expect-type": "^1.1.0", "magic-string": "^0.30.12", "pathe": "^1.1.2", "std-env": "^3.8.0", "tinybench": "^2.9.0", "tinyexec": "^0.3.1", "tinypool": "^1.0.1", "tinyrainbow": "^1.2.0", "vite": "^5.0.0", "vite-node": "2.1.9", "why-is-node-running": "^2.3.0" }, "peerDependencies": { "@edge-runtime/vm": "*", "@types/node": "^18.0.0 || >=20.0.0", "@vitest/browser": "2.1.9", "@vitest/ui": "2.1.9", "happy-dom": "*", "jsdom": "*" }, "optionalPeers": ["@edge-runtime/vm", "@types/node", "@vitest/browser", "@vitest/ui", "happy-dom", "jsdom"], "bin": { "vitest": "vitest.mjs" } }, "sha512-MSmPM9REYqDGBI8439mA4mWhV5sKmDlBKWIYbA3lRb2PTHACE0mgKwA8yQ2xq9vxDTuk4iPrECBAEW2aoFXY0Q=="],
 
@@ -2066,19 +2220,11 @@
 
     "@aws-crypto/util/@smithy/util-utf8/@smithy/util-buffer-from": ["@smithy/util-buffer-from@2.2.0", "", { "dependencies": { "@smithy/is-array-buffer": "^2.2.0", "tslib": "^2.6.2" } }, "sha512-IJdWBbTcMQ6DA0gdNhh/BwrLkDR+ADW5Kr1aZmd4k3DIF6ezMV4R2NIAmT08wQJ3yUK82thHWmC/TnK/wpMMIA=="],
 
-    "@metorial-subspace/app-worker/@types/bun/bun-types": ["bun-types@1.3.6", "", { "dependencies": { "@types/node": "*" } }, "sha512-OlFwHcnNV99r//9v5IIOgQ9Uk37gZqrNMCcqEaExdkVq3Avwqok1bJFmvGMCkCE0FqzdY8VMOZpfpR3lwI+CsQ=="],
+    "@lowerdeck/lock/@types/bun/bun-types": ["bun-types@1.3.5", "", { "dependencies": { "@types/node": "*" } }, "sha512-inmAYe2PFLs0SUbFOWSVD24sg1jFlMPxOjOSSCYqUgn4Hsc3rDc7dFvfVYjFPNHtov6kgUeulV4SxbuIV/stPw=="],
 
-    "@metorial-subspace/db/@types/bun/bun-types": ["bun-types@1.3.6", "", { "dependencies": { "@types/node": "*" } }, "sha512-OlFwHcnNV99r//9v5IIOgQ9Uk37gZqrNMCcqEaExdkVq3Avwqok1bJFmvGMCkCE0FqzdY8VMOZpfpR3lwI+CsQ=="],
+    "@metorial-subspace/app-controller/@types/bun/bun-types": ["bun-types@1.3.5", "", { "dependencies": { "@types/node": "*" } }, "sha512-inmAYe2PFLs0SUbFOWSVD24sg1jFlMPxOjOSSCYqUgn4Hsc3rDc7dFvfVYjFPNHtov6kgUeulV4SxbuIV/stPw=="],
 
-    "@metorial-subspace/module-search/@types/bun/bun-types": ["bun-types@1.3.6", "", { "dependencies": { "@types/node": "*" } }, "sha512-OlFwHcnNV99r//9v5IIOgQ9Uk37gZqrNMCcqEaExdkVq3Avwqok1bJFmvGMCkCE0FqzdY8VMOZpfpR3lwI+CsQ=="],
-
-    "@metorial-subspace/provider-slates/@types/bun/bun-types": ["bun-types@1.3.6", "", { "dependencies": { "@types/node": "*" } }, "sha512-OlFwHcnNV99r//9v5IIOgQ9Uk37gZqrNMCcqEaExdkVq3Avwqok1bJFmvGMCkCE0FqzdY8VMOZpfpR3lwI+CsQ=="],
-
-    "@metorial-subspace/provider-utils/@types/bun/bun-types": ["bun-types@1.3.6", "", { "dependencies": { "@types/node": "*" } }, "sha512-OlFwHcnNV99r//9v5IIOgQ9Uk37gZqrNMCcqEaExdkVq3Avwqok1bJFmvGMCkCE0FqzdY8VMOZpfpR3lwI+CsQ=="],
-
-    "@metorial-subspace/provider/@types/bun/bun-types": ["bun-types@1.3.6", "", { "dependencies": { "@types/node": "*" } }, "sha512-OlFwHcnNV99r//9v5IIOgQ9Uk37gZqrNMCcqEaExdkVq3Avwqok1bJFmvGMCkCE0FqzdY8VMOZpfpR3lwI+CsQ=="],
-
-    "@metorial-subspace/wire/@types/bun/bun-types": ["bun-types@1.3.6", "", { "dependencies": { "@types/node": "*" } }, "sha512-OlFwHcnNV99r//9v5IIOgQ9Uk37gZqrNMCcqEaExdkVq3Avwqok1bJFmvGMCkCE0FqzdY8VMOZpfpR3lwI+CsQ=="],
+    "@metorial-subspace/app-public/@types/bun/bun-types": ["bun-types@1.3.5", "", { "dependencies": { "@types/node": "*" } }, "sha512-inmAYe2PFLs0SUbFOWSVD24sg1jFlMPxOjOSSCYqUgn4Hsc3rDc7dFvfVYjFPNHtov6kgUeulV4SxbuIV/stPw=="],
 
     "@metorial-subspace/wire/vitest/@vitest/expect": ["@vitest/expect@2.1.9", "", { "dependencies": { "@vitest/spy": "2.1.9", "@vitest/utils": "2.1.9", "chai": "^5.1.2", "tinyrainbow": "^1.2.0" } }, "sha512-UJCIkTBenHeKT1TTlKMJWy1laZewsRIzYighyYiJKZreqtdxSos/S1t+ktRMQWu2CKqaarrkeszJx1cgC5tGZw=="],
 

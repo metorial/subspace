@@ -2,7 +2,7 @@
   "name": "@metorial-subspace/root",
   "private": true,
   "scripts": {
-    "dev": "docker compose -p subspace -f ./docker-compose.dev.yml up --pull always --build slates-hub slates-registry signal function-bay forge voyager subspace-controller subspace-public subspace-worker"
+    "dev": "docker compose -p subspace -f ./docker-compose.dev.yml up --pull always --build slates-hub slates-registry signal function-bay forge voyager subspace-controller subspace-public subspace-worker subspace-connection-endpoint subspace-connection-manager"
   },
   "devDependencies": {
     "prettier": "^3.5.3",
