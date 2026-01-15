@@ -100,7 +100,11 @@ export let createRedisNatsWire = (opts: {
   };
 };
 
-export let createWire = (adapter = createMemoryWire()) => {
+export type Adapter =
+  | ReturnType<typeof createMemoryWire>
+  | ReturnType<typeof createRedisNatsWire>;
+
+export let createWire = (adapter: Adapter = createMemoryWire()) => {
   let { wireId, coordination, transport } = adapter;
 
   return {

@@ -7,7 +7,7 @@ import { Receiver } from './receiver';
 export interface TopicContext {
   topic: string;
   extendTtl: (ms: number) => void;
-  onMessage: (handler: (data: unknown) => Promise<unknown> | unknown) => Promise<void>;
+  onMessage: (handler: (data: any) => Promise<unknown> | unknown) => Promise<void>;
   onClose: (handler: () => Promise<void> | void) => Promise<void>;
   close: () => Promise<void>;
 }

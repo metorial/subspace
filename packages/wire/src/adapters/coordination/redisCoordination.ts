@@ -15,6 +15,8 @@ export class RedisCoordination implements ICoordinationAdapter {
   private readonly CACHE_TTL = 1000; // 1 second cache
 
   constructor(config: RedisConfig, wireId: string = 'default') {
+    console.log('Connecting to Redis for coordination...');
+
     this.redis = new Redis({
       host: config.host,
       port: config.port,
@@ -42,6 +44,8 @@ export class RedisCoordination implements ICoordinationAdapter {
   }
 
   async registerReceiver(receiverId: string, ttl: number): Promise<void> {
+    console.log('Registering receiver', receiverId);
+
     const key = this.receiverKey(receiverId);
     const ttlSeconds = Math.ceil(ttl / 1000);
     const expiryTime = Date.now() + ttl;
