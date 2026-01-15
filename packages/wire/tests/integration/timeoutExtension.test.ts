@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { createMemoryWire } from '../../src/index';
+import { createWire } from '../../src/index';
 
 describe('Timeout Extension Integration', () => {
   test('should handle long processing with timeout extension', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       defaultTimeout: 2000 // 2 second timeout
     });
@@ -35,7 +35,7 @@ describe('Timeout Extension Integration', () => {
   }, 15000);
 
   test('should timeout if processing takes too long even with extensions', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       defaultTimeout: 1000 // 1 second timeout
     });
@@ -65,7 +65,7 @@ describe('Timeout Extension Integration', () => {
   }, 5000);
 
   test('should not send extension for fast processing', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       defaultTimeout: 5000
     });
@@ -94,7 +94,7 @@ describe('Timeout Extension Integration', () => {
   });
 
   test('should handle multiple extensions for very long processing', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       defaultTimeout: 2000
     });

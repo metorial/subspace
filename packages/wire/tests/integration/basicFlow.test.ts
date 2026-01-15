@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type { Receiver, Sender } from '../../src/index';
-import { createMemoryWire } from '../../src/index';
+import { createWire } from '../../src/index';
 
 describe('Basic Flow Integration', () => {
   let sender: Sender;
@@ -8,7 +8,7 @@ describe('Basic Flow Integration', () => {
   let cleanup: () => Promise<void>;
 
   beforeEach(async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
 
     // Create sender
     sender = wire.createSender();
@@ -72,7 +72,7 @@ describe('Basic Flow Integration', () => {
     await receiver.stop();
 
     // Create a wire and receiver that throws errors
-    const wire2 = createMemoryWire();
+    const wire2 = createWire();
     const errorReceiver = wire2.createReceiver(async () => {
       throw new Error('Processing failed');
     });

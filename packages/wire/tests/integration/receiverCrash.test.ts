@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { createMemoryWire } from '../../src/index';
+import { createWire } from '../../src/index';
 
 describe('Receiver Crash Integration', () => {
   test('should handle receiver crash and retry to new receiver', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       defaultTimeout: 500,
       maxRetries: 3,
@@ -52,7 +52,7 @@ describe('Receiver Crash Integration', () => {
   }, 10000);
 
   test('should fail gracefully when no receivers available after crash', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       defaultTimeout: 200,
       maxRetries: 2,
@@ -86,7 +86,7 @@ describe('Receiver Crash Integration', () => {
   }, 10000);
 
   test('should handle multiple receivers crashing', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       defaultTimeout: 500,
       maxRetries: 5,
@@ -131,7 +131,7 @@ describe('Receiver Crash Integration', () => {
   }, 10000);
 
   test('should recover when receiver comes back online', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       defaultTimeout: 300,
       maxRetries: 10,

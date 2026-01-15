@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { createMemoryWire } from '../../src/index';
+import { createWire } from '../../src/index';
 
 describe('Ownership Transfer Integration', () => {
   test('should transfer topic ownership when receiver stops', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender();
 
     // Create first receiver
@@ -46,7 +46,7 @@ describe('Ownership Transfer Integration', () => {
   }, 10000);
 
   test('should maintain topic ownership across multiple messages', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender();
 
     const receiver = wire.createReceiver(async (topic, payload) => {
@@ -69,7 +69,7 @@ describe('Ownership Transfer Integration', () => {
   });
 
   test('should handle graceful ownership release', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender();
 
     const receiver1 = wire.createReceiver(async (topic, payload) => {
@@ -101,7 +101,7 @@ describe('Ownership Transfer Integration', () => {
   });
 
   test('should distribute topics across multiple receivers', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender();
 
     // Create 3 receivers
