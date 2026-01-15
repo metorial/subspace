@@ -244,6 +244,8 @@ services:
       - signal
       - voyager
       - slates-hub
+      - nats-1
+      - nats-2
     networks:
       - subspace-network
 
@@ -281,6 +283,8 @@ services:
       - signal
       - voyager
       - slates-hub
+      - nats-1
+      - nats-2
     networks:
       - subspace-network
 
@@ -316,6 +320,8 @@ services:
       - signal
       - voyager
       - slates-hub
+      - nats-1
+      - nats-2
     networks:
       - subspace-network
 
@@ -351,6 +357,8 @@ services:
       - signal
       - voyager
       - slates-hub
+      - nats-1
+      - nats-2
     networks:
       - subspace-network
 
@@ -388,6 +396,8 @@ services:
       - signal
       - voyager
       - slates-hub
+      - nats-1
+      - nats-2
     networks:
       - subspace-network
 

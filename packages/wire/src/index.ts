@@ -55,7 +55,7 @@ export type {
 
 let getSenderConfig = (config?: Partial<SenderConfig>): SenderConfig => ({
   defaultTimeout: 5000,
-  maxRetries: 3,
+  maxRetries: 10,
   retryBackoffMs: 100,
   retryBackoffMultiplier: 2,
   inFlightCacheTtl: 60000,
@@ -64,10 +64,10 @@ let getSenderConfig = (config?: Partial<SenderConfig>): SenderConfig => ({
 });
 
 let getReceiverConfig = (config?: Partial<ReceiverConfig>): ReceiverConfig => ({
-  heartbeatInterval: 5000,
+  heartbeatInterval: 3000,
   heartbeatTtl: 10000,
-  topicOwnershipTtl: 30000,
-  ownershipRenewalInterval: 10000, // Renew at TTL/3 for safety margin
+  topicOwnershipTtl: 15000,
+  ownershipRenewalInterval: 5000,
   messageCacheTtl: 60000,
   messageCacheSize: 10000,
   timeoutExtensionThreshold: 1000,
