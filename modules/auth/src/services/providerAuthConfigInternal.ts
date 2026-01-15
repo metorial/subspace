@@ -183,6 +183,23 @@ class providerAuthConfigInternalServiceImpl {
       );
     }
 
+    if (d.input.isDefault && !d.providerDeployment) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Default auth configs must be associated with a deployment',
+          code: 'invalid_default_auth_config'
+        })
+      );
+    }
+    if (d.input.isDefault && d.authMethod.type == 'oauth') {
+      throw new ServiceError(
+        badRequestError({
+          message: 'OAuth auth methods cannot have default auth configs',
+          code: 'invalid_default_auth_config'
+        })
+      );
+    }
+
     return withTransaction(async db => {
       let providerAuthConfig = await db.providerAuthConfig.create({
         data: {
