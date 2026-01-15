@@ -18,6 +18,7 @@ interface InFlightMessage {
   timeout: Timer;
   currentTimeout: number;
   messageId: string;
+  subscriptionId?: string;
 }
 
 export class Sender {
@@ -27,6 +28,8 @@ export class Sender {
   private inFlightMessages: Map<string, InFlightMessage> = new Map();
   private topicSubscriptions: Map<string, string> = new Map(); // topic -> subscriptionId
   private readonly wireId: string;
+  private failedUnsubscribes: Set<string> = new Set(); // Track failed unsubscribes
+  private cleanupInterval: Timer | null = null;
 
   constructor(
     private coordination: ICoordinationAdapter,
@@ -41,9 +44,26 @@ export class Sender {
       config.retryBackoffMs,
       config.retryBackoffMultiplier
     );
+
+    // Start cleanup interval for failed unsubscribes
+    this.cleanupInterval = setInterval(() => {
+      this.retryFailedUnsubscribes().catch(err => {
+        console.error('Error retrying failed unsubscribes:', err);
+      });
+    }, 30000); // Retry every 30 seconds
   }
 
   async send(topic: string, payload: unknown, timeout?: number): Promise<WireResponse> {
+    // Check max in-flight limit
+    if (this.inFlightMessages.size >= this.config.maxInFlightMessages) {
+      throw new WireSendError(
+        `Max in-flight messages limit reached (${this.config.maxInFlightMessages}). Cannot send new message.`,
+        'N/A',
+        topic,
+        0
+      );
+    }
+
     let actualTimeout = timeout ?? this.config.defaultTimeout;
     let messageId = this.generateMessageId();
 
@@ -111,6 +131,12 @@ export class Sender {
   }
 
   async close(): Promise<void> {
+    // Stop cleanup interval
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+    }
+
     // Cancel all in-flight messages
     for (let [messageId, inFlight] of this.inFlightMessages.entries()) {
       clearTimeout(inFlight.timeout);
@@ -122,6 +148,38 @@ export class Sender {
     let topics = Array.from(this.topicSubscriptions.keys());
     for (let topic of topics) {
       await this.unsubscribeTopic(topic);
+    }
+
+    // Final attempt to clean up failed unsubscribes
+    await this.retryFailedUnsubscribes();
+  }
+
+  private async safeUnsubscribe(subscriptionId: string): Promise<void> {
+    try {
+      await this.transport.unsubscribe(subscriptionId);
+      // Successfully unsubscribed, remove from failed set if it was there
+      this.failedUnsubscribes.delete(subscriptionId);
+    } catch (err) {
+      console.warn(`Failed to unsubscribe ${subscriptionId}, will retry later:`, err);
+      this.failedUnsubscribes.add(subscriptionId);
+      throw err;
+    }
+  }
+
+  private async retryFailedUnsubscribes(): Promise<void> {
+    if (this.failedUnsubscribes.size === 0) {
+      return;
+    }
+
+    let toRetry = Array.from(this.failedUnsubscribes);
+    for (let subscriptionId of toRetry) {
+      try {
+        await this.transport.unsubscribe(subscriptionId);
+        this.failedUnsubscribes.delete(subscriptionId);
+      } catch (err) {
+        // Still failing, keep in set for next retry
+        console.warn(`Retry unsubscribe failed for ${subscriptionId}:`, err);
+      }
     }
   }
 
@@ -145,7 +203,12 @@ export class Sender {
 
       // Set up timeout
       let timeoutHandle = setTimeout(() => {
+        let inFlight = this.inFlightMessages.get(message.messageId);
         this.inFlightMessages.delete(message.messageId);
+        // Clean up subscription
+        if (inFlight?.subscriptionId) {
+          this.safeUnsubscribe(inFlight.subscriptionId).catch(() => {});
+        }
         reject(
           new WireSendError(
             `Request timeout after ${currentTimeout}ms`,
@@ -156,16 +219,26 @@ export class Sender {
         );
       }, currentTimeout);
 
-      // Store in-flight message
+      // Store in-flight message (will be updated with subscriptionId later)
       this.inFlightMessages.set(message.messageId, {
         resolve: (response: WireResponse) => {
           clearTimeout(timeoutHandle);
+          let inFlight = this.inFlightMessages.get(message.messageId);
           this.inFlightMessages.delete(message.messageId);
+          // Clean up subscription
+          if (inFlight?.subscriptionId) {
+            this.safeUnsubscribe(inFlight.subscriptionId).catch(() => {});
+          }
           resolve(response);
         },
         reject: (error: Error) => {
           clearTimeout(timeoutHandle);
+          let inFlight = this.inFlightMessages.get(message.messageId);
           this.inFlightMessages.delete(message.messageId);
+          // Clean up subscription
+          if (inFlight?.subscriptionId) {
+            this.safeUnsubscribe(inFlight.subscriptionId).catch(() => {});
+          }
           reject(error);
         },
         timeout: timeoutHandle,
@@ -173,13 +246,12 @@ export class Sender {
         messageId: message.messageId
       });
 
-      // Encode and send message
-      let encoder = new TextEncoder();
-      let data = encoder.encode(JSON.stringify(message));
+      // Generate a unique reply subject and subscribe to it
+      let replySubject = `_INBOX.${crypto.randomUUID()}`;
 
-      this.transport
-        .request(subject, data, timeout + 1000) // Add buffer to transport timeout
-        .then(responseData => {
+      // Set up response handler by subscribing to reply subject
+      let subscriptionPromise = this.transport.subscribe(replySubject, async (responseData: Uint8Array) => {
+        try {
           let decoder = new TextDecoder();
           let responseStr = decoder.decode(responseData);
           let response = JSON.parse(responseStr) as WireResponse | TimeoutExtension;
@@ -187,16 +259,49 @@ export class Sender {
           // Check if it's a timeout extension
           if (isTimeoutExtension(response)) {
             this.handleTimeoutExtension(response);
-            return; // Don't resolve yet
+            return; // Continue waiting for actual response
           }
 
-          // It's a response
+          // It's the final response - resolve and cleanup
           let inFlight = this.inFlightMessages.get(message.messageId);
           if (inFlight) {
             inFlight.resolve(response as WireResponse);
           }
-        })
-        .catch(err => {
+        } catch (err) {
+          let inFlight = this.inFlightMessages.get(message.messageId);
+          if (inFlight) {
+            inFlight.reject(
+              new WireSendError(
+                `Response parsing error: ${err instanceof Error ? err.message : String(err)}`,
+                message.messageId,
+                message.topic,
+                message.retryCount,
+                err instanceof Error ? err : new Error(String(err))
+              )
+            );
+          }
+        }
+      });
+
+      // After subscription is set up, send the message
+      subscriptionPromise.then(subscriptionId => {
+        // Store subscription ID for cleanup
+        let inFlight = this.inFlightMessages.get(message.messageId);
+        if (inFlight) {
+          inFlight.subscriptionId = subscriptionId;
+        }
+
+        // Add reply subject to message
+        let messageWithReply = { ...message, replySubject };
+
+        // Encode and send message
+        let encoder = new TextEncoder();
+        let data = encoder.encode(JSON.stringify(messageWithReply));
+
+        return this.transport.publish(subject, data).catch(err => {
+          // Clean up subscription
+          this.safeUnsubscribe(subscriptionId).catch(() => {});
+
           let inFlight = this.inFlightMessages.get(message.messageId);
           if (inFlight) {
             inFlight.reject(
@@ -210,6 +315,20 @@ export class Sender {
             );
           }
         });
+      }).catch(err => {
+        let inFlight = this.inFlightMessages.get(message.messageId);
+        if (inFlight) {
+          inFlight.reject(
+            new WireSendError(
+              `Subscription error: ${err.message}`,
+              message.messageId,
+              message.topic,
+              message.retryCount,
+              err
+            )
+          );
+        }
+      });
     });
   }
 
