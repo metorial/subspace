@@ -67,7 +67,6 @@ model Provider {
   tenantProviders           TenantProvider[]
   deployment                ProviderDeployment[]
   listing                   ProviderListing?
-  sessionProviders          ProviderSession[]
   providerConfigs           ProviderConfig[]
   tools                     ProviderTool[]
   authMethods               ProviderAuthMethod[]
@@ -79,4 +78,6 @@ model Provider {
   providerToolGlobals       ProviderToolGlobal[]
   providerAuthMethodGlobals ProviderAuthMethodGlobal[]
   providerSetupSessions     ProviderSetupSession[]
+  sessionProviders          SessionProvider[]
+  providerRuns              ProviderRun[]
 }

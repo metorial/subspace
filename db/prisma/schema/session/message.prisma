@@ -1,0 +1,34 @@
+enum SessionMessageStatus {
+  waiting_for_response
+  failed
+  completed
+}
+
+enum SessionMessageType {
+  tool_call
+}
+
+model SessionMessage {
+  oid BigInt @id
+  id  String @unique
+
+  status SessionMessageStatus
+  type   SessionMessageType
+
+  input  Json
+  output Json?
+
+  toolKey String
+
+  sessionOid BigInt
+  session    Session @relation(fields: [sessionOid], references: [oid])
+
+  providerRunOid BigInt?
+  providerRun    ProviderRun? @relation(fields: [providerRunOid], references: [oid])
+
+  toolOid BigInt?
+  tool    ProviderTool? @relation(fields: [toolOid], references: [oid])
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+}

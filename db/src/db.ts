@@ -32,5 +32,19 @@ declare global {
     type ProviderAuthMethodValue = SpecificationAuthMethod;
 
     type ProviderToolValue = SpecificationTool;
+
+    type ToolFilter =
+      | {
+          type: 'v1.allow_all';
+        }
+      | {
+          type: 'v1.whitelist';
+          filters: {
+            type: 'tools';
+            keys: string[];
+          }[];
+
+          // TODO: add restrictions for resources and prompts as well
+        };
   }
 }

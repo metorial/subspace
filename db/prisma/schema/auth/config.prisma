@@ -60,6 +60,7 @@ model ProviderAuthConfig {
   providerAuthExports              ProviderAuthExport[]
   providerAuthImports              ProviderAuthImport[]
   providerAuthConfigUpdates        ProviderAuthConfigUpdate[]
+  sessionProviders                 SessionProvider[]
 
   @@index([isDefault])
 }

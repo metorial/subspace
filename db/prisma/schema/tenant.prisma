@@ -28,9 +28,9 @@ model Tenant {
   slateAuthConfigs                         SlateAuthConfig[]
   providerAuthConfigs                      ProviderAuthConfig[]
   providerSpecificationChangeNotifications ProviderSpecificationChangeNotification[]
-  providerSessions                         ProviderSession[]
   providerAuthExports                      ProviderAuthExport[]
   providerAuthImports                      ProviderAuthImport[]
   providerSetupSessions                    ProviderSetupSession[]
   brand                                    Brand?
+  sessionProviders                         SessionProvider[]
 }

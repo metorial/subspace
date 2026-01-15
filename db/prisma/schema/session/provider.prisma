@@ -1,0 +1,47 @@
+enum SessionProviderStatus {
+  active
+  inactive
+}
+
+model SessionProvider {
+  oid BigInt @id
+  id  String @unique
+
+  status SessionProviderStatus
+
+  totalProductiveClientMessageCount Int @default(0)
+  totalProductiveServerMessageCount Int @default(0)
+
+  tag String
+
+  /// [ToolFilter]
+  toolFilter Json
+
+  sessionOid BigInt
+  session    Session @relation(fields: [sessionOid], references: [oid])
+
+  providerOid BigInt
+  provider    Provider @relation(fields: [providerOid], references: [oid])
+
+  deploymentOid BigInt
+  deployment    ProviderDeployment @relation(fields: [deploymentOid], references: [oid])
+
+  configOid BigInt
+  config    ProviderConfig @relation(fields: [configOid], references: [oid])
+
+  authConfigOid BigInt?
+  authConfig    ProviderAuthConfig? @relation(fields: [authConfigOid], references: [oid])
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid BigInt
+  solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  sessionProviderInstances SessionProviderInstance[]
+
+  @@unique([sessionOid, tag])
+}

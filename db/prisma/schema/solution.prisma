@@ -19,8 +19,8 @@ model Solution {
   providers                                Provider[]
   providerSpecificationChangeNotifications ProviderSpecificationChangeNotification[]
   sessions                                 Session[]
-  providerSessions                         ProviderSession[]
   providerAuthExports                      ProviderAuthExport[]
   providerAuthImports                      ProviderAuthImport[]
   providerSetupSessions                    ProviderSetupSession[]
+  sessionProviders                         SessionProvider[]
 }
