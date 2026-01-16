@@ -1,7 +1,7 @@
 import { createQueue, QueueRetryError } from '@lowerdeck/queue';
 import { db } from '@metorial-subspace/db';
 import { differenceInMinutes } from 'date-fns';
-import { env } from '../../env';
+import { env } from '../env';
 
 export let postprocessMessageQueue = createQueue<{ messageId: string }>({
   name: 'con/msg/post',

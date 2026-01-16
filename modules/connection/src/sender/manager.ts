@@ -465,7 +465,8 @@ export class SenderManager {
     await db.session.updateMany({
       where: { oid: this.session.oid },
       data: {
-        lastConnectionCreatedAt: new Date()
+        lastConnectionCreatedAt: new Date(),
+        lastActiveAt: new Date()
       }
     });
 

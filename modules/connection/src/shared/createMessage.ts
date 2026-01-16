@@ -10,7 +10,7 @@ import {
   type SessionConnection,
   type SessionProvider
 } from '@metorial-subspace/db';
-import { postprocessMessageQueue } from '../queues/message/postprocess';
+import { postprocessMessageQueue } from '../queues/postprocessMessage';
 
 export interface CreateMessageProps {
   status: SessionMessageStatus;

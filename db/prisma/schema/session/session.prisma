@@ -32,4 +32,7 @@ model Session {
   sessionMessages SessionMessage[]
   sessionEvents   SessionEvent[]
   connections     SessionConnection[]
+
+  @@index([lastActiveAt])
+  @@index([connectionState])
 }
