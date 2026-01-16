@@ -1,0 +1,61 @@
+import { serialize } from '@lowerdeck/serialize';
+import { broadcastNats } from '../lib/nats';
+import { topics } from '../lib/topic';
+import { WireResult } from '../types/wireMessage';
+import { wireResultToMcpMessage } from './lib/wireResultToMcpMessage';
+import { McpManager } from './manager';
+
+export type McpControlMessage = {
+  type: 'mcp_control_message';
+  wire: WireResult;
+  channel: 'targeted_response' | 'broadcast_response_or_notification';
+};
+
+export class McpControlMessageHandler {
+  constructor(private readonly manager: McpManager) {}
+
+  get session() {
+    return this.manager.session;
+  }
+
+  async sendControlMessage(msg: McpControlMessage) {
+    let connection = await this.manager.getConnection();
+
+    await broadcastNats.publish(
+      topics.mcpConnection.encode({
+        session: this.session,
+        connection
+      }),
+      serialize.encode(msg)
+    );
+  }
+
+  async controlListener(d: { selectedChannels: 'all' | 'broadcast' }) {
+    let connection = await this.manager.getConnection();
+
+    let sub = broadcastNats.subscribe(
+      topics.mcpConnection.encode({
+        session: this.session,
+        connection
+      })
+    );
+
+    return {
+      close: () => sub.unsubscribe(),
+
+      async *[Symbol.asyncIterator]() {
+        for await (let msg of sub) {
+          let data = serialize.decode(new TextDecoder().decode(msg.data)) as McpControlMessage;
+          let wireRes = await wireResultToMcpMessage(data.wire);
+
+          // Ignore targeted messages if we only want broadcasts
+          if (d.selectedChannels == 'broadcast' && data.channel == 'targeted_response') {
+            continue;
+          }
+
+          if (wireRes) yield { mcp: wireRes, message: data.wire.message };
+        }
+      }
+    };
+  }
+}
