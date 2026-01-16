@@ -1,7 +1,7 @@
 enum SessionMessageStatus {
   waiting_for_response
   failed
-  completed
+  succeeded
 }
 
 enum SessionMessageType {
@@ -29,6 +29,11 @@ model SessionMessage {
   toolOid BigInt?
   tool    ProviderTool? @relation(fields: [toolOid], references: [oid])
 
+  slateToolCallOid BigInt?
+  slateToolCall    SlateToolCall? @relation(fields: [slateToolCallOid], references: [oid])
+
   createdAt   DateTime  @default(now())
   completedAt DateTime?
+
+  sessionEvents SessionEvent[]
 }

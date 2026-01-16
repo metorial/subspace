@@ -33,4 +33,5 @@ model Tenant {
   providerSetupSessions                    ProviderSetupSession[]
   brand                                    Brand?
   sessionProviders                         SessionProvider[]
+  sessionClients                           SessionClient[]
 }

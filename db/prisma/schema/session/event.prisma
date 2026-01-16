@@ -1,0 +1,28 @@
+enum SessionEventType {
+  session_started
+  provider_run_started
+  provider_run_stopped
+  message_processed
+  client_connected
+}
+
+model SessionEvent {
+  oid BigInt @id
+  id  String @unique
+
+  type SessionEventType
+
+  sessionOid BigInt
+  session    Session @relation(fields: [sessionOid], references: [oid])
+
+  providerRunOid BigInt?
+  providerRun    ProviderRun? @relation(fields: [providerRunOid], references: [oid])
+
+  messageOid BigInt?
+  message    SessionMessage? @relation(fields: [messageOid], references: [oid])
+
+  clientConnectionOid BigInt?
+  clientConnection    SessionClientConnection? @relation(fields: [clientConnectionOid], references: [oid])
+
+  createdAt DateTime @default(now())
+}
