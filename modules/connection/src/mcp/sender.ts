@@ -2,16 +2,16 @@ import { Cases } from '@lowerdeck/case';
 import { internalServerError, isServiceError } from '@lowerdeck/error';
 import { ID, SessionConnectionMcpConnectionTransport } from '@metorial-subspace/db';
 import {
-  CallToolRequest,
+  type CallToolRequest,
   CallToolRequestSchema,
-  InitializeRequest,
+  type InitializeRequest,
   InitializeRequestSchema,
-  InitializeResult,
-  JSONRPCErrorResponse,
-  JSONRPCMessage,
-  JSONRPCResponse,
+  type InitializeResult,
+  type JSONRPCErrorResponse,
+  type JSONRPCMessage,
+  type JSONRPCResponse,
   ListToolsRequestSchema,
-  ListToolsResult
+  type ListToolsResult
 } from '@modelcontextprotocol/sdk/types.js';
 import { providerToolPresenter } from '../presenter';
 import { McpControlMessageHandler } from './control';
@@ -286,7 +286,7 @@ export class McpSender {
           serverInfo: {
             name:
               providers.length === 1
-                ? Cases.toPascalCase(providers[0].provider.name)
+                ? Cases.toPascalCase(providers[0]!.provider.name)
                 : 'UnifiedProvider',
             title: name,
             version: '1.0.0',

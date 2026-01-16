@@ -1,4 +1,8 @@
-import { ProviderTool, SessionProvider, SessionProviderInstance } from '@metorial-subspace/db';
+import type {
+  ProviderTool,
+  SessionProvider,
+  SessionProviderInstance
+} from '@metorial-subspace/db';
 
 export let providerToolPresenter = (
   providerTool: ProviderTool & {

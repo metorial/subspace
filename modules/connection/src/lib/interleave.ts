@@ -39,13 +39,13 @@ export async function* interleave<T extends readonly AsyncIterable<any>[]>(
         results[index] = result.value;
         remaining--;
       } else {
-        nextPromises[index] = getNext(iterators[index], index);
+        nextPromises[index] = getNext(iterators[index]!, index);
         yield result.value as AsyncValue<T[number]>;
       }
     }
   } finally {
     for (let index = 0; index < iterators.length; index++) {
-      let iterator = iterators[index];
+      let iterator = iterators[index]!;
       if (nextPromises[index] !== never && iterator.return != null) {
         iterator.return();
       }

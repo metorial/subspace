@@ -1,4 +1,4 @@
-import { JSONRPCErrorResponse } from '@modelcontextprotocol/sdk/types';
+import type { JSONRPCErrorResponse } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 
 export let mcpValidate = <S extends z.ZodSchema>(

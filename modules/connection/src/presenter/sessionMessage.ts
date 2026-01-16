@@ -1,4 +1,4 @@
-import { SessionMessage } from '@metorial-subspace/db';
+import type { SessionMessage } from '@metorial-subspace/db';
 
 export let sessionMessagePresenter = (sessionMessage: SessionMessage) => ({
   object: 'session.message',
@@ -7,7 +7,7 @@ export let sessionMessagePresenter = (sessionMessage: SessionMessage) => ({
   status: sessionMessage.status,
   type: sessionMessage.type,
 
-  toolKey: sessionMessage.toolKey,
+  toolKey: sessionMessage.methodOrToolKey,
 
   createdAt: sessionMessage.createdAt,
   completedAt: sessionMessage.completedAt

@@ -1,5 +1,5 @@
 import { ServiceError } from '@lowerdeck/error';
-import { JSONRPCErrorResponse } from '@modelcontextprotocol/sdk/types';
+import type { JSONRPCErrorResponse } from '@modelcontextprotocol/sdk/types.js';
 
 export let serviceErrorToMcpError = ({ data: error }: ServiceError<any>) => {
   if (error.status == 404 && error.entity == 'tool') {

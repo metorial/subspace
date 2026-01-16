@@ -1,10 +1,10 @@
 import { SessionConnectionMcpConnectionTransport } from '@metorial-subspace/db';
-import { JSONRPCMessage } from '@modelcontextprotocol/sdk/types';
+import type { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
 import { interleave } from '../lib/interleave';
-import { SenderMangerProps } from '../sender';
+import type { SenderMangerProps } from '../sender';
 import { McpControlMessageHandler } from './control';
 import { McpManager } from './manager';
-import { HandleResponseOpts, McpSender } from './sender';
+import { type HandleResponseOpts, McpSender } from './sender';
 
 export class McpConnection {
   #control: McpControlMessageHandler;

@@ -1,7 +1,7 @@
 import { serialize } from '@lowerdeck/serialize';
 import { broadcastNats } from '../lib/nats';
 import { topics } from '../lib/topic';
-import { WireResult } from '../types/wireMessage';
+import type { WireResult } from '../types/wireMessage';
 import { wireResultToMcpMessage } from './lib/wireResultToMcpMessage';
 import { McpManager } from './manager';
 

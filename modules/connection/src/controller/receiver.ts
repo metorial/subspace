@@ -8,7 +8,7 @@ import { broadcastNats } from '../lib/nats';
 import { Store } from '../lib/store';
 import { topics } from '../lib/topic';
 import { wire } from '../lib/wire';
-import { BroadcastMessage, WireInput, WireResult } from '../types/wireMessage';
+import type { BroadcastMessage, WireInput, WireResult } from '../types/wireMessage';
 
 export let startController = () => {
   let receiver = wire.createWireReceiver(async ctx => {

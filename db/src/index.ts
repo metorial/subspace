@@ -4,3 +4,4 @@ export * from './db';
 export * from './id';
 export * from './presenters';
 export * from './transaction';
+export * from './utils';

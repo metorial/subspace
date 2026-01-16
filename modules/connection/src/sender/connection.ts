@@ -1,15 +1,15 @@
 import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { serialize } from '@lowerdeck/serialize';
-import { SessionProvider } from '@metorial-subspace/db';
+import type { SessionProvider } from '@metorial-subspace/db';
 import { broadcastNats } from '../lib/nats';
 import { topics } from '../lib/topic';
-import { BroadcastMessage } from '../types/wireMessage';
+import type { BroadcastMessage } from '../types/wireMessage';
 import {
-  CallToolProps,
-  CreateMessageProps,
-  InitProps,
+  type CallToolProps,
+  type CreateMessageProps,
+  type InitProps,
   SenderManager,
-  SenderMangerProps
+  type SenderMangerProps
 } from './manager';
 
 export class SenderConnection {

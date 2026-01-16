@@ -12,16 +12,16 @@ import {
   db,
   getId,
   ID,
-  ProviderTool,
-  Session,
-  SessionConnection,
+  type ProviderTool,
+  type Session,
+  type SessionConnection,
   SessionConnectionMcpConnectionTransport,
   SessionMessageSource,
   SessionMessageStatus,
   SessionMessageType,
-  SessionProvider,
-  Solution,
-  Tenant,
+  type SessionProvider,
+  type Solution,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
 import {
@@ -37,7 +37,7 @@ import {
 import { env } from '../env';
 import { topics } from '../lib/topic';
 import { wire } from '../lib/wire';
-import { WireInput, WireResult } from '../types/wireMessage';
+import type { WireInput, WireResult } from '../types/wireMessage';
 
 let instanceLock = createLock({
   name: 'conn/sess/inst/lock',
@@ -155,9 +155,9 @@ export class SenderManager {
             isManuallyDisabled: false,
 
             sessionOid: session.oid,
-            clientOid: connection.clientOid,
+            clientOid: connection!.clientOid,
 
-            mcpData: connection.mcpData,
+            mcpData: connection!.mcpData,
 
             expiresAt: addDays(new Date(), DEFAULT_SESSION_EXPIRATION_DAYS),
             lastPingAt: new Date()
@@ -274,7 +274,7 @@ export class SenderManager {
     let [providerTag, ...toolKeyParts] = d.toolId.split('_');
     let toolKey = toolKeyParts.join('_');
 
-    let provider = await this.getProviderByTag({ tag: providerTag });
+    let provider = await this.getProviderByTag({ tag: providerTag! });
 
     // Get the current instance for the provider
     let instance = await this.ensureProviderInstance(provider);

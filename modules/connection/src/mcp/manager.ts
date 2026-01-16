@@ -1,4 +1,9 @@
-import { CallToolProps, CreateMessageProps, InitProps, SenderMangerProps } from '../sender';
+import type {
+  CallToolProps,
+  CreateMessageProps,
+  InitProps,
+  SenderMangerProps
+} from '../sender';
 import { SenderConnection } from '../sender/connection';
 import { wireResultToMcpMessage } from './lib/wireResultToMcpMessage';
 

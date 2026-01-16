@@ -1,4 +1,8 @@
-import { Session, SessionConnection, SessionProviderInstance } from '@metorial-subspace/db';
+import type {
+  Session,
+  SessionConnection,
+  SessionProviderInstance
+} from '@metorial-subspace/db';
 
 let INSTANCE_PREFIX = 'v1-spi-';
 let SESSION_PREFIX = 'v1-ses-';
@@ -14,8 +18,8 @@ export let topics = {
       let rest = topic.slice(INSTANCE_PREFIX.length);
       let [instanceOid, connectionOid] = rest.split('-');
       return {
-        instanceOid: BigInt(instanceOid),
-        connectionOid: BigInt(connectionOid)
+        instanceOid: BigInt(instanceOid!),
+        connectionOid: BigInt(connectionOid!)
       };
     }
   },

@@ -1,4 +1,4 @@
-import { SessionConnection } from '@metorial-subspace/db';
+import type { SessionConnection } from '@metorial-subspace/db';
 
 export let connectionPresenter = (connection: SessionConnection) => ({
   object: 'session.connection',
