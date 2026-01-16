@@ -1,13 +1,20 @@
-import { SessionProviderInstance } from '@metorial-subspace/db';
+import { Session, SessionProviderInstance } from '@metorial-subspace/db';
 
-let PREFIX = 'v1-spi-';
+let INSTANCE_PREFIX = 'v1-spi-';
+let SESSION_PREFIX = 'v1-ses-';
 
 export let topics = {
-  encode: (d: { instance: SessionProviderInstance }) => PREFIX + d.instance.oid,
-  decode: (topic: string) => {
-    if (!topic.startsWith(PREFIX)) return null;
+  instance: {
+    encode: (d: { instance: SessionProviderInstance }) => INSTANCE_PREFIX + d.instance.oid,
+    decode: (topic: string) => {
+      if (!topic.startsWith(INSTANCE_PREFIX)) return null;
 
-    let oid = topic.slice(PREFIX.length);
-    return { instanceOid: BigInt(oid) };
+      let oid = topic.slice(INSTANCE_PREFIX.length);
+      return { instanceOid: BigInt(oid) };
+    }
+  },
+
+  session: {
+    encode: (d: { session: Session }) => SESSION_PREFIX + d.session.id
   }
 };

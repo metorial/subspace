@@ -8,10 +8,10 @@ export let providerToolPresenter = (
 ) => ({
   object: 'provider.capabilities.tool',
 
-  id: providerTool.id,
   key: `${providerTool.sessionProvider.tag}_${providerTool.key}`,
 
   sessionProvider: providerTool.sessionProvider.id,
+  internalToolId: providerTool.id,
 
   name: providerTool.name,
   description: providerTool.description,

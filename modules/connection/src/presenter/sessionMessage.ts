@@ -9,5 +9,6 @@ export let sessionMessagePresenter = (sessionMessage: SessionMessage) => ({
 
   toolKey: sessionMessage.toolKey,
 
-  createdAt: sessionMessage.createdAt
+  createdAt: sessionMessage.createdAt,
+  completedAt: sessionMessage.completedAt
 });

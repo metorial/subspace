@@ -1,8 +1,8 @@
-export abstract class Response<Suc, Err> {
+export abstract class ConResponse<Suc, Err> {
   constructor(
     public readonly status: 'success' | 'error',
-    public readonly data: Suc | null,
-    public readonly error: Err | null
+    public readonly data: Suc | undefined,
+    public readonly error: Err | undefined
   ) {}
 
   static just<T>(data: T): Just<T> {
@@ -26,16 +26,24 @@ export abstract class Response<Suc, Err> {
       error: this.error!
     };
   }
-}
 
-export class Just<T> extends Response<T, null> {
-  constructor(data: T) {
-    super('success', data, null);
+  static isError<Suc, Err>(res: ConResponse<Suc, Err>): res is Fail<Err> {
+    return res.status === 'error';
+  }
+
+  static isSuccess<Suc, Err>(res: ConResponse<Suc, Err>): res is Just<Suc> {
+    return res.status === 'success';
   }
 }
 
-export class Fail<E> extends Response<null, E> {
+export class Just<T> extends ConResponse<T, undefined> {
+  constructor(data: T) {
+    super('success', data, undefined);
+  }
+}
+
+export class Fail<E> extends ConResponse<undefined, E> {
   constructor(error: E) {
-    super('error', null, error);
+    super('error', undefined, error);
   }
 }
