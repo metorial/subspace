@@ -18,6 +18,8 @@ model ProviderRun {
   updatedAt DateTime @default(now()) @updatedAt
 
   sessionMessages SessionMessage[]
+  sessionEvents   SessionEvent[]
+  slateSessions   SlateSession[]
 }
 
 model SessionProviderInstance {
