@@ -1,4 +1,5 @@
-import { api, websocket } from './api';
+import { api } from './api';
+import { websocket } from './api/metorialIntegrationProtocol';
 
 Bun.serve({
   fetch: api.fetch,
