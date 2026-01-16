@@ -1,3 +1,4 @@
+import { serialize } from '@lowerdeck/serialize';
 import type { ICoordinationAdapter } from '../adapters/coordination/coordinationAdapter';
 import type { ITransportAdapter } from '../adapters/transport/transportAdapter';
 import type { SenderConfig } from '../types/config';
@@ -95,7 +96,7 @@ export class Sender {
       try {
         let decoder = new TextDecoder();
         let broadcastStr = decoder.decode(data);
-        let broadcast: TopicResponseBroadcast = JSON.parse(broadcastStr);
+        let broadcast: TopicResponseBroadcast = serialize.decode(broadcastStr);
 
         // Call listener (don't await to avoid blocking)
         Promise.resolve(listener(broadcast)).catch(err => {
@@ -250,63 +251,82 @@ export class Sender {
       let replySubject = `_INBOX.${crypto.randomUUID()}`;
 
       // Set up response handler by subscribing to reply subject
-      let subscriptionPromise = this.transport.subscribe(replySubject, async (responseData: Uint8Array) => {
-        try {
-          let decoder = new TextDecoder();
-          let responseStr = decoder.decode(responseData);
-          let response = JSON.parse(responseStr) as WireResponse | TimeoutExtension;
+      let subscriptionPromise = this.transport.subscribe(
+        replySubject,
+        async (responseData: Uint8Array) => {
+          try {
+            let decoder = new TextDecoder();
+            let responseStr = decoder.decode(responseData);
+            let response = serialize.decode(responseStr) as WireResponse | TimeoutExtension;
 
-          // Check if it's a timeout extension
-          if (isTimeoutExtension(response)) {
-            this.handleTimeoutExtension(response);
-            return; // Continue waiting for actual response
-          }
+            // Check if it's a timeout extension
+            if (isTimeoutExtension(response)) {
+              this.handleTimeoutExtension(response);
+              return; // Continue waiting for actual response
+            }
 
-          // It's the final response - resolve and cleanup
-          let inFlight = this.inFlightMessages.get(message.messageId);
-          if (inFlight) {
-            inFlight.resolve(response as WireResponse);
-          }
-        } catch (err) {
-          let inFlight = this.inFlightMessages.get(message.messageId);
-          if (inFlight) {
-            inFlight.reject(
-              new WireSendError(
-                `Response parsing error: ${err instanceof Error ? err.message : String(err)}`,
-                message.messageId,
-                message.topic,
-                message.retryCount,
-                err instanceof Error ? err : new Error(String(err))
-              )
-            );
+            // It's the final response - resolve and cleanup
+            let inFlight = this.inFlightMessages.get(message.messageId);
+            if (inFlight) {
+              inFlight.resolve(response as WireResponse);
+            }
+          } catch (err) {
+            let inFlight = this.inFlightMessages.get(message.messageId);
+            if (inFlight) {
+              inFlight.reject(
+                new WireSendError(
+                  `Response parsing error: ${err instanceof Error ? err.message : String(err)}`,
+                  message.messageId,
+                  message.topic,
+                  message.retryCount,
+                  err instanceof Error ? err : new Error(String(err))
+                )
+              );
+            }
           }
         }
-      });
+      );
 
       // After subscription is set up, send the message
-      subscriptionPromise.then(subscriptionId => {
-        // Store subscription ID for cleanup
-        let inFlight = this.inFlightMessages.get(message.messageId);
-        if (inFlight) {
-          inFlight.subscriptionId = subscriptionId;
-        }
+      subscriptionPromise
+        .then(subscriptionId => {
+          // Store subscription ID for cleanup
+          let inFlight = this.inFlightMessages.get(message.messageId);
+          if (inFlight) {
+            inFlight.subscriptionId = subscriptionId;
+          }
 
-        // Add reply subject to message
-        let messageWithReply = { ...message, replySubject };
+          // Add reply subject to message
+          let messageWithReply = { ...message, replySubject };
 
-        // Encode and send message
-        let encoder = new TextEncoder();
-        let data = encoder.encode(JSON.stringify(messageWithReply));
+          // Encode and send message
+          let encoder = new TextEncoder();
+          let data = encoder.encode(serialize.encode(messageWithReply));
 
-        return this.transport.publish(subject, data).catch(err => {
-          // Clean up subscription
-          this.safeUnsubscribe(subscriptionId).catch(() => {});
+          return this.transport.publish(subject, data).catch(err => {
+            // Clean up subscription
+            this.safeUnsubscribe(subscriptionId).catch(() => {});
 
+            let inFlight = this.inFlightMessages.get(message.messageId);
+            if (inFlight) {
+              inFlight.reject(
+                new WireSendError(
+                  `Transport error: ${err.message}`,
+                  message.messageId,
+                  message.topic,
+                  message.retryCount,
+                  err
+                )
+              );
+            }
+          });
+        })
+        .catch(err => {
           let inFlight = this.inFlightMessages.get(message.messageId);
           if (inFlight) {
             inFlight.reject(
               new WireSendError(
-                `Transport error: ${err.message}`,
+                `Subscription error: ${err.message}`,
                 message.messageId,
                 message.topic,
                 message.retryCount,
@@ -315,20 +335,6 @@ export class Sender {
             );
           }
         });
-      }).catch(err => {
-        let inFlight = this.inFlightMessages.get(message.messageId);
-        if (inFlight) {
-          inFlight.reject(
-            new WireSendError(
-              `Subscription error: ${err.message}`,
-              message.messageId,
-              message.topic,
-              message.retryCount,
-              err
-            )
-          );
-        }
-      });
     });
   }
 

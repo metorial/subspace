@@ -1,3 +1,4 @@
+import { serialize } from '@lowerdeck/serialize';
 import type { ICoordinationAdapter } from '../adapters/coordination/coordinationAdapter';
 import type { MemoryTransport } from '../adapters/transport/memoryTransport';
 import type { ITransportAdapter } from '../adapters/transport/transportAdapter';
@@ -117,7 +118,7 @@ export class Receiver {
       // Decode message
       let decoder = new TextDecoder();
       let messageStr = decoder.decode(data);
-      let message: WireMessage = JSON.parse(messageStr);
+      let message: WireMessage = serialize.decode(messageStr);
 
       // Check if we've seen this message before
       let cachedResponse = this.messageCache.get(message.messageId);
@@ -248,7 +249,7 @@ export class Receiver {
     extension: TimeoutExtension
   ): Promise<void> {
     let encoder = new TextEncoder();
-    let data = encoder.encode(JSON.stringify(extension));
+    let data = encoder.encode(serialize.encode(extension));
 
     // For MemoryTransport, we need special handling
     if (this.isMemoryTransport()) {
@@ -261,7 +262,7 @@ export class Receiver {
 
   private async sendResponse(message: WireMessage, response: WireResponse): Promise<void> {
     let encoder = new TextEncoder();
-    let data = encoder.encode(JSON.stringify(response));
+    let data = encoder.encode(serialize.encode(response));
 
     // Send direct reply to sender
     if (this.isMemoryTransport()) {
@@ -289,7 +290,7 @@ export class Receiver {
   //     };
 
   //     let encoder = new TextEncoder();
-  //     let data = encoder.encode(JSON.stringify(broadcast));
+  //     let data = encoder.encode(serialize.encode(broadcast));
   //     let subject = `wire.${this.wireId}.topic.responses.${message.topic}`;
 
   //     await this.transport.publish(subject, data);
