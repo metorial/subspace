@@ -6,22 +6,40 @@ enum SessionMessageStatus {
 
 enum SessionMessageType {
   tool_call
+  mcp_control
+  unknown
+}
+
+enum SessionMessageSource {
+  client
 }
 
 model SessionMessage {
-  oid BigInt @id
-  id  String @unique
+  oid        BigInt @id
+  id         String @unique
+  toolCallId String @unique
 
   status SessionMessageStatus
   type   SessionMessageType
+  source SessionMessageSource
 
-  input  Json
+  /// [SessionMessageClientMcpId]
+  clientMcpId Json
+
+  /// [SessionMessageInput]
+  input Json
+
+  /// [SessionMessageOutput]
   output Json?
 
-  toolKey String
+  methodOrToolKey String?
+  isViaMcp        Boolean
 
   sessionOid BigInt
   session    Session @relation(fields: [sessionOid], references: [oid])
+
+  connectionOid BigInt?
+  connection    SessionConnection? @relation(fields: [connectionOid], references: [oid])
 
   providerRunOid BigInt?
   providerRun    ProviderRun? @relation(fields: [providerRunOid], references: [oid])

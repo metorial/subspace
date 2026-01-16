@@ -11,27 +11,8 @@ model SessionClient {
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
 
-  createdAt DateTime @default(now())
-
-  sessionClientConnections SessionClientConnection[]
-  sessions                 Session[]
+  createdAt          DateTime            @default(now())
+  sessionConnections SessionConnection[]
 
   @@unique([tenantOid, hash])
-}
-
-model SessionClientConnection {
-  oid BigInt @id
-  id  String @unique
-
-  clientOid BigInt
-  client    SessionClient @relation(fields: [clientOid], references: [oid])
-
-  sessionOid BigInt
-  session    Session @relation(fields: [sessionOid], references: [oid])
-
-  createdAt DateTime @default(now())
-
-  sessionEvents SessionEvent[]
-
-  @@unique([clientOid, sessionOid])
 }

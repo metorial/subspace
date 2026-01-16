@@ -19,6 +19,7 @@
     "@lowerdeck/shadow-id": "^1.0.4",
     "@lowerdeck/slugify": "^1.0.4",
     "@lowerdeck/validation": "^1.0.4",
+    "@modelcontextprotocol/sdk": "^1.25.2",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "prisma": "^7.2.0",

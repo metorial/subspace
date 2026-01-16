@@ -1,9 +1,11 @@
+import type { ErrorData } from '@lowerdeck/error';
 import {
   type Specification,
   type SpecificationAuthMethod,
   type SpecificationFeatures,
   type SpecificationTool
 } from '@metorial-subspace/provider-utils';
+import type { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../prisma/generated/client';
 import { env } from './env';
@@ -46,5 +48,21 @@ declare global {
 
           // TODO: add restrictions for resources and prompts as well
         };
+
+    type SessionConnectionMcpData = {
+      capabilities?: any;
+      protocolVersion?: string;
+    };
+
+    type SessionMessageOutput =
+      | { type: 'tool.result'; data: any }
+      | { type: 'error'; data: ErrorData<any, any> | { code: number; message: string } }
+      | { type: 'mcp'; data: JSONRPCMessage };
+
+    type SessionMessageInput =
+      | { type: 'tool.call'; data: any }
+      | { type: 'mcp'; data: JSONRPCMessage };
+
+    type SessionMessageClientMcpId = string | number | null;
   }
 }

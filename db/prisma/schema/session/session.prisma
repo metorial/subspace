@@ -1,17 +1,13 @@
-enum SessionConnectionState {
-  connected
-  disconnected
-}
-
 model Session {
   oid BigInt @id
   id  String @unique
 
-  connectionState SessionConnectionState @default(disconnected)
-
   name        String?
   description String?
   metadata    Json?
+
+  sharedProviderName        String?
+  sharedProviderDescription String?
 
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
@@ -19,20 +15,17 @@ model Session {
   solutionOid BigInt
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
-  clientOid BigInt?
-  client    SessionClient? @relation(fields: [clientOid], references: [oid])
-
   totalProductiveClientMessageCount Int @default(0)
   totalProductiveServerMessageCount Int @default(0)
 
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @default(now()) @updatedAt
-  lastConnectionAt DateTime?
-  lastPingAt       DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @default(now()) @updatedAt
+  lastConnectionCreatedAt DateTime?
+  lastActiveAt            DateTime?
 
-  providers                SessionProvider[]
-  providerRuns             ProviderRun[]
-  sessionMessages          SessionMessage[]
-  sessionEvents            SessionEvent[]
-  sessionClientConnections SessionClientConnection[]
+  providers       SessionProvider[]
+  providerRuns    ProviderRun[]
+  sessionMessages SessionMessage[]
+  sessionEvents   SessionEvent[]
+  connections     SessionConnection[]
 }

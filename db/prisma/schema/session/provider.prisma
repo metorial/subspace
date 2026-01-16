@@ -38,8 +38,9 @@ model SessionProvider {
   solutionOid BigInt
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+  lastMessageAt DateTime?
 
   sessionProviderInstances SessionProviderInstance[]
 

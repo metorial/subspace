@@ -3,7 +3,7 @@ enum SessionEventType {
   provider_run_started
   provider_run_stopped
   message_processed
-  client_connected
+  connection_created
 }
 
 model SessionEvent {
@@ -21,8 +21,8 @@ model SessionEvent {
   messageOid BigInt?
   message    SessionMessage? @relation(fields: [messageOid], references: [oid])
 
-  clientConnectionOid BigInt?
-  clientConnection    SessionClientConnection? @relation(fields: [clientConnectionOid], references: [oid])
+  connectionOid BigInt?
+  connection    SessionConnection? @relation(fields: [connectionOid], references: [oid])
 
   createdAt DateTime @default(now())
 }

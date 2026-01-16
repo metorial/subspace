@@ -14,6 +14,9 @@ model ProviderRun {
   instanceOid BigInt
   instance    SessionProviderInstance @relation(fields: [instanceOid], references: [oid])
 
+  connectionOid BigInt
+  connection    SessionConnection @relation(fields: [connectionOid], references: [oid])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 

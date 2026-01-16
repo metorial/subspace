@@ -1,0 +1,50 @@
+enum SessionConnectionState {
+  connected
+  disconnected
+}
+
+enum SessionConnectionInitState {
+  pending
+  completed
+}
+
+enum SessionConnectionMcpConnectionTransport {
+  none
+  sse
+  streamable_http
+}
+
+model SessionConnection {
+  oid BigInt @id
+  id  String @unique
+
+  token String @unique
+
+  state              SessionConnectionState
+  initState          SessionConnectionInitState
+  isManuallyDisabled Boolean
+
+  sessionOid BigInt
+  session    Session @relation(fields: [sessionOid], references: [oid])
+
+  clientOid BigInt?
+  client    SessionClient? @relation(fields: [clientOid], references: [oid])
+
+  /// [SessionConnectionMcpData]
+  mcpData            Json
+  mcpTransport       SessionConnectionMcpConnectionTransport
+  mcpProtocolVersion String?
+
+  createdAt DateTime @default(now())
+
+  // When a connection is expired and a client tries to connect to it, 
+  // a new connection is created and the token is passed to the new one
+  expiresAt DateTime
+
+  lastPingAt    DateTime?
+  lastMessageAt DateTime?
+
+  sessionEvents   SessionEvent[]
+  providerRuns    ProviderRun[]
+  sessionMessages SessionMessage[]
+}
