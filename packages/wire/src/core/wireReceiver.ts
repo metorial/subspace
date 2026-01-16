@@ -35,6 +35,7 @@ interface TopicState {
   pendingMessages: PendingMessage[]; // Queue of messages waiting for handler registration
   isProcessingQueue: boolean; // Flag to prevent concurrent queue processing
   onMessagePromise: Promise<void> | null; // Promise that resolves when onMessage completes
+  ttlExpiresAt: number; // Logical TTL - when this receiver wants to stop handling this topic
 }
 
 export class WireReceiver {
@@ -42,6 +43,7 @@ export class WireReceiver {
   private topicHandler: TopicHandler;
   private topicStates: Map<string, TopicState> = new Map();
   private readonly coordination: ICoordinationAdapter;
+  private ttlCheckInterval: Timer | null = null;
 
   constructor(config: WireReceiverConfig) {
     this.coordination = config.coordination;
@@ -81,9 +83,22 @@ export class WireReceiver {
         console.error(`Error handling ownership loss for topic ${topic}:`, err);
       });
     });
+
+    // Start TTL expiration checker (check every 1 second)
+    this.ttlCheckInterval = setInterval(() => {
+      this.checkTtlExpirations().catch(err => {
+        console.error('Error checking TTL expirations:', err);
+      });
+    }, 1000);
   }
 
   async stop(): Promise<void> {
+    // Stop TTL checker
+    if (this.ttlCheckInterval) {
+      clearInterval(this.ttlCheckInterval);
+      this.ttlCheckInterval = null;
+    }
+
     // Close all topics
     let topics = Array.from(this.topicStates.keys());
     await Promise.all(topics.map(topic => this.closeTopic(topic)));
@@ -109,7 +124,8 @@ export class WireReceiver {
         closed: false,
         pendingMessages: [],
         isProcessingQueue: false,
-        onMessagePromise: null
+        onMessagePromise: null,
+        ttlExpiresAt: Infinity // By default, never expire (until extendTtl is called)
       };
       this.topicStates.set(topic, state);
 
@@ -193,8 +209,9 @@ export class WireReceiver {
           return;
         }
 
-        // Update the TTL in the ownership manager
-        this.receiver.getOwnershipManager().setTopicTtl(topic, ms);
+        // Set logical TTL expiration time
+        // This is when the receiver wants to voluntarily give up the topic
+        state.ttlExpiresAt = Date.now() + ms;
       },
 
       onMessage: async (handler: (data: unknown) => Promise<unknown> | unknown) => {
@@ -263,12 +280,32 @@ export class WireReceiver {
     }
   }
 
+  private async checkTtlExpirations(): Promise<void> {
+    let now = Date.now();
+
+    for (let [topic, state] of this.topicStates.entries()) {
+      if (state.closed) continue;
+
+      // Check if the logical TTL has expired
+      if (state.ttlExpiresAt <= now) {
+        console.log(`WireReceiver: TTL expired for topic ${topic}, closing voluntarily`);
+        await this.closeTopic(topic);
+      }
+    }
+  }
+
   private async closeTopic(topic: string): Promise<void> {
     let state = this.topicStates.get(topic);
     if (!state || state.closed) {
+      console.log(
+        `[WireReceiver] closeTopic called for ${topic} but state is ${!state ? 'missing' : 'already closed'}`
+      );
       return;
     }
 
+    console.log(
+      `[WireReceiver] Closing topic ${topic}, has ${state.closeHandlers.length} close handlers`
+    );
     state.closed = true;
 
     // Reject all pending messages
@@ -280,7 +317,9 @@ export class WireReceiver {
     // Call all close handlers
     for (let handler of state.closeHandlers) {
       try {
+        console.log(`[WireReceiver] Calling close handler for ${topic}`);
         await handler();
+        console.log(`[WireReceiver] Close handler completed for ${topic}`);
       } catch (err) {
         console.error(`Error in close handler for topic ${topic}:`, err);
       }
@@ -289,7 +328,10 @@ export class WireReceiver {
     // Remove from our state
     this.topicStates.delete(topic);
 
-    // Release ownership in coordination
+    // Remove from ownership manager (updates internal owned set)
+    this.receiver.getOwnershipManager().removeTopic(topic);
+
+    // Release ownership in coordination (updates Redis)
     await this.coordination.releaseTopicOwnership(topic, this.receiver.getReceiverId());
   }
 
@@ -309,9 +351,6 @@ export class WireReceiver {
     return this.receiver.isRunning();
   }
 
-  /**
-   * Get the topics currently being handled (with registered handlers)
-   */
   getHandledTopics(): string[] {
     return Array.from(this.topicStates.keys()).filter(topic => {
       let state = this.topicStates.get(topic);

@@ -46,12 +46,6 @@ export class OwnershipManager {
     this.topicTtls.delete(topic);
   }
 
-  setTopicTtl(topic: string, ttl: number): void {
-    if (this.ownedTopics.has(topic)) {
-      this.topicTtls.set(topic, ttl);
-    }
-  }
-
   onOwnershipLoss(callback: OwnershipLossCallback): void {
     this.ownershipLossCallbacks.push(callback);
   }
@@ -81,11 +75,7 @@ export class OwnershipManager {
         // Use per-topic TTL if available, otherwise use default
         const ttl = this.topicTtls.get(topic) ?? this.ownershipTtl;
 
-        let renewed = await this.coordination.renewTopicOwnership(
-          topic,
-          this.receiverId,
-          ttl
-        );
+        let renewed = await this.coordination.renewTopicOwnership(topic, this.receiverId, ttl);
 
         // If renewal failed, we lost ownership
         if (!renewed) {
