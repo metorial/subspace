@@ -180,11 +180,12 @@ export let startController = () => {
           slateToolCallOid: res.slateToolCallOid
         }
       });
-
-      await db.sessionEvent.updateMany({
-        where: { messageOid: message.oid },
-        data: { providerRunOid: providerRun.oid }
-      });
+      db.sessionEvent
+        .updateMany({
+          where: { messageOid: message.oid },
+          data: { providerRunOid: providerRun.oid }
+        })
+        .catch(() => {});
 
       let result = {
         message,

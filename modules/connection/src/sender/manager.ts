@@ -12,13 +12,9 @@ import {
   db,
   getId,
   ID,
-  type ProviderTool,
   type Session,
   type SessionConnection,
   SessionConnectionMcpConnectionTransport,
-  SessionMessageSource,
-  SessionMessageStatus,
-  SessionMessageType,
   type SessionProvider,
   type Solution,
   type Tenant,
@@ -37,6 +33,7 @@ import {
 import { env } from '../env';
 import { topics } from '../lib/topic';
 import { wire } from '../lib/wire';
+import { createMessage, type CreateMessageProps } from '../shared/createMessage';
 import type { WireInput, WireResult } from '../types/wireMessage';
 
 let instanceLock = createLock({
@@ -70,21 +67,6 @@ export interface SenderMangerProps {
   solutionId: string;
   tenantId: string;
   connectionToken?: string;
-}
-
-export interface CreateMessageProps {
-  status: SessionMessageStatus;
-  type: SessionMessageType;
-  source: SessionMessageSource;
-
-  input: PrismaJson.SessionMessageInput;
-  output?: PrismaJson.SessionMessageOutput;
-
-  tool?: ProviderTool;
-  methodOrToolKey?: string;
-
-  clientMcpId?: PrismaJson.SessionMessageClientMcpId;
-  isViaMcp: boolean;
 }
 
 export class SenderManager {
@@ -302,39 +284,11 @@ export class SenderManager {
   }
 
   async createMessage(d: CreateMessageProps) {
-    let message = await db.sessionMessage.create({
-      data: {
-        ...getId('sessionMessage'),
-        toolCallId: await ID.generateId('toolCall'),
-        sessionOid: this.session.oid,
-        status: 'waiting_for_response',
-        type: 'tool_call',
-        source: d.source,
-
-        input: d.input,
-        output: d.output,
-
-        methodOrToolKey: d.methodOrToolKey ?? d.tool?.key ?? null,
-        toolOid: d.tool?.oid,
-        clientMcpId: d.clientMcpId ?? null,
-        isViaMcp: d.isViaMcp
-      }
+    return await createMessage({
+      ...d,
+      session: this.session,
+      connection: this.connection ?? null
     });
-
-    db.sessionEvent
-      .createMany({
-        data: {
-          ...getId('sessionEvent'),
-          type: 'message_processed',
-          sessionOid: this.session.oid,
-          connectionOid: this.connection?.oid,
-          providerRunOid: message.providerRunOid,
-          messageOid: message.oid
-        }
-      })
-      .catch(() => {});
-
-    return message;
   }
 
   async callTool(d: CallToolProps) {
@@ -360,7 +314,9 @@ export class SenderManager {
       },
       clientMcpId: d.clientMcpId,
       isViaMcp: d.isViaMcp,
-      tool
+      tool,
+      isProductive: true,
+      provider
     });
 
     let processingPromise = (async () => {
@@ -509,8 +465,7 @@ export class SenderManager {
     await db.session.updateMany({
       where: { oid: this.session.oid },
       data: {
-        lastConnectionCreatedAt: new Date(),
-        lastActiveAt: new Date()
+        lastConnectionCreatedAt: new Date()
       }
     });
 

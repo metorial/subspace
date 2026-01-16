@@ -5,17 +5,29 @@ import type { WireResult } from '../types/wireMessage';
 import { wireResultToMcpMessage } from './lib/wireResultToMcpMessage';
 import { McpManager } from './manager';
 
-export type McpControlMessage = {
-  type: 'mcp_control_message';
-  wire: WireResult;
-  channel: 'targeted_response' | 'broadcast_response_or_notification';
-};
+export type McpControlMessage =
+  | {
+      type: 'mcp_control_message';
+      wire: WireResult;
+      channel: 'targeted_response' | 'broadcast_response_or_notification';
+    }
+  | {
+      type: 'ping_received';
+    };
 
 export class McpControlMessageHandler {
-  constructor(private readonly manager: McpManager) {}
+  #lastInteractionAt: number;
+
+  constructor(private readonly manager: McpManager) {
+    this.#lastInteractionAt = Date.now();
+  }
 
   get session() {
     return this.manager.session;
+  }
+
+  get lastInteractionAt() {
+    return this.#lastInteractionAt;
   }
 
   async sendControlMessage(msg: McpControlMessage) {
@@ -40,20 +52,27 @@ export class McpControlMessageHandler {
       })
     );
 
+    let self = this;
+
     return {
       close: () => sub.unsubscribe(),
 
       async *[Symbol.asyncIterator]() {
         for await (let msg of sub) {
           let data = serialize.decode(new TextDecoder().decode(msg.data)) as McpControlMessage;
-          let wireRes = await wireResultToMcpMessage(data.wire);
 
-          // Ignore targeted messages if we only want broadcasts
-          if (d.selectedChannels == 'broadcast' && data.channel == 'targeted_response') {
-            continue;
+          self.#lastInteractionAt = Date.now();
+
+          if (data.type == 'mcp_control_message') {
+            let wireRes = await wireResultToMcpMessage(data.wire);
+
+            // Ignore targeted messages if we only want broadcasts
+            if (d.selectedChannels == 'broadcast' && data.channel == 'targeted_response') {
+              continue;
+            }
+
+            if (wireRes) yield { mcp: wireRes, message: data.wire.message };
           }
-
-          if (wireRes) yield { mcp: wireRes, message: data.wire.message };
         }
       }
     };

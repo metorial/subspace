@@ -56,7 +56,10 @@ declare global {
 
     type SessionMessageOutput =
       | { type: 'tool.result'; data: any }
-      | { type: 'error'; data: ErrorData<any, any> | { code: number; message: string } }
+      | {
+          type: 'error';
+          data: ErrorData<any, any> | { code: number | string; message: string };
+        }
       | { type: 'mcp'; data: JSONRPCMessage };
 
     type SessionMessageInput =

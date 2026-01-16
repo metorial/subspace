@@ -1,6 +1,6 @@
 import { Cases } from '@lowerdeck/case';
 import { internalServerError, isServiceError } from '@lowerdeck/error';
-import { ID, SessionConnectionMcpConnectionTransport } from '@metorial-subspace/db';
+import { db, ID, SessionConnectionMcpConnectionTransport } from '@metorial-subspace/db';
 import {
   type CallToolRequest,
   CallToolRequestSchema,
@@ -13,6 +13,7 @@ import {
   ListToolsRequestSchema,
   type ListToolsResult
 } from '@modelcontextprotocol/sdk/types.js';
+import { PING_MESSAGE_ID_PREFIX } from '../const';
 import { providerToolPresenter } from '../presenter';
 import { McpControlMessageHandler } from './control';
 import { markdownList } from './lib/markdownList';
@@ -35,6 +36,10 @@ export class McpSender {
     return this.manager.session;
   }
 
+  get connection() {
+    return this.manager.connection;
+  }
+
   async handleMessage(msg: JSONRPCMessage, opts: HandleResponseOpts) {
     let method = 'method' in msg ? msg.method : undefined;
     let id = 'id' in msg ? msg.id : undefined;
@@ -45,11 +50,13 @@ export class McpSender {
 
       let message = 'message' in res ? res.message : null;
       let isBroadcastBySender = !!message;
+
       if (res.store && !message) {
         message = await this.manager.createMessage({
           status: 'error' in res.mcp ? 'failed' : 'succeeded',
           type: 'mcp_control',
           source: 'client',
+          isProductive: true,
 
           input: { type: 'mcp', data: msg },
           output: { type: 'mcp', data: res.mcp },
@@ -88,6 +95,7 @@ export class McpSender {
         status: 'failed',
         type: 'unknown',
         source: 'client',
+        isProductive: true,
 
         input: { type: 'mcp', data: msg },
         output: {
@@ -131,7 +139,8 @@ export class McpSender {
     let id = 'id' in msg ? msg.id : null;
 
     if (method === 'ping' && id) return this.handlePingRequest(id);
-    if (typeof id == 'string' && id.startsWith('mt/ping/')) return this.handlePingResponse(id);
+    if (typeof id == 'string' && id.startsWith(PING_MESSAGE_ID_PREFIX))
+      return this.handlePingResponse(id);
 
     if (!method) {
       // TODO: handle responses for mcp-compatible backends
@@ -181,6 +190,22 @@ export class McpSender {
   }
 
   private async handlePingResponse(id: ID) {
+    if (this.connection) {
+      await db.sessionConnection.updateMany({
+        where: { oid: this.connection.oid },
+        data: { lastPingAt: new Date(), lastActiveAt: new Date() }
+      });
+    }
+
+    await db.session.updateMany({
+      where: { oid: this.session.oid },
+      data: { lastActiveAt: new Date() }
+    });
+
+    await this.control.sendControlMessage({
+      type: 'ping_received'
+    });
+
     return { store: false, mcp: null };
   }
 

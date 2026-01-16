@@ -3,10 +3,10 @@ import { serialize } from '@lowerdeck/serialize';
 import type { SessionProvider } from '@metorial-subspace/db';
 import { broadcastNats } from '../lib/nats';
 import { topics } from '../lib/topic';
+import type { CreateMessageProps } from '../shared/createMessage';
 import type { BroadcastMessage } from '../types/wireMessage';
 import {
   type CallToolProps,
-  type CreateMessageProps,
   type InitProps,
   SenderManager,
   type SenderMangerProps
