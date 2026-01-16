@@ -1,20 +1,22 @@
-import { notFoundError, ServiceError } from '@lowerdeck/error';
+import { canonicalize } from '@lowerdeck/canonicalize';
+import { internalServerError, notFoundError, ServiceError } from '@lowerdeck/error';
+import { Hash } from '@lowerdeck/hash';
 import { createLock } from '@lowerdeck/lock';
 import { db, getId, Session, SessionProvider, Solution, Tenant } from '@metorial-subspace/db';
 import {
   providerDeploymentConfigPairInternalService,
   providerDeploymentInternalService
 } from '@metorial-subspace/module-provider-internal';
-import { addMinutes } from 'date-fns';
+import { addMinutes, differenceInMinutes } from 'date-fns';
 import { SESSION_PROVIDER_INSTANCE_EXPIRATION_INCREMENT } from '../const';
 import { env } from '../env';
-import { Response } from '../lib/response';
+import { ConResponse } from '../lib/response';
 import { topics } from '../lib/topic';
 import { wire } from '../lib/wire';
 import { sessionMessagePresenter } from '../presenter/sessionMessage';
 import { toolNotFound } from '../types/error';
 import { ConnectionResponse } from '../types/response';
-import { WireInput } from '../types/wireMessage';
+import { WireInput, WireOutput } from '../types/wireMessage';
 
 let instanceLock = createLock({
   name: 'conn/sess/inst/lock',
@@ -24,13 +26,19 @@ let instanceLock = createLock({
 let sender = wire.createSender();
 
 export class SenderManager {
+  readonly sender = sender;
+
   private constructor(
     readonly session: Session,
     readonly tenant: Tenant,
-    readonly solution: Solution
+    readonly solution: Solution,
+    readonly channelIds: string[]
   ) {}
 
-  static async create(d: { sessionId: string }): Promise<SenderManager> {
+  static async create(d: {
+    sessionId: string;
+    channelIds?: string[];
+  }): Promise<SenderManager> {
     let session = await db.session.findFirst({
       where: {
         id: d.sessionId
@@ -42,7 +50,7 @@ export class SenderManager {
     });
     if (!session) throw new ServiceError(notFoundError('session'));
 
-    return new SenderManager(session, session.tenant, session.solution);
+    return new SenderManager(session, session.tenant, session.solution, d.channelIds ?? []);
   }
 
   async ensureProviderInstance(provider: SessionProvider) {
@@ -130,10 +138,7 @@ export class SenderManager {
     ).then(results => results.flat());
   }
 
-  async callTool(d: {
-    toolId: string;
-    input: Record<string, any>;
-  }): Promise<ConnectionResponse> {
+  async getToolById(d: { toolId: string }) {
     let [providerTag, ...toolKeyParts] = d.toolId.split('_');
     let toolKey = toolKeyParts.join('_');
 
@@ -141,7 +146,7 @@ export class SenderManager {
     let provider = await db.sessionProvider.findFirst({
       where: { sessionOid: this.session.oid, tag: providerTag }
     });
-    if (!provider) return Response.fail(toolNotFound(d.toolId));
+    if (!provider) return ConResponse.fail(toolNotFound(d.toolId));
 
     // Get the current instance for the provider
     let instance = await this.ensureProviderInstance(provider);
@@ -155,7 +160,28 @@ export class SenderManager {
         specificationOid: instance.pairVersion.specificationOid
       }
     });
-    if (!tool) return Response.fail(toolNotFound(d.toolId));
+    if (!tool) return ConResponse.fail(toolNotFound(d.toolId));
+
+    return ConResponse.just({
+      provider,
+      instance,
+      tool: {
+        ...tool,
+        sessionProvider: provider,
+        sessionProviderInstance: instance
+      }
+    });
+  }
+
+  async callTool(d: {
+    toolId: string;
+    input: Record<string, any>;
+    waitForResponse: boolean;
+  }): Promise<ConnectionResponse> {
+    let toolRes = await this.getToolById({ toolId: d.toolId });
+    if (ConResponse.isError(toolRes)) return toolRes;
+
+    let { provider, tool, instance } = toolRes.data!;
 
     let message = await db.sessionMessage.create({
       data: {
@@ -163,25 +189,56 @@ export class SenderManager {
         status: 'waiting_for_response',
         type: 'tool_call',
         input: d.input,
-        toolKey,
+        toolKey: tool.key,
         toolOid: tool.oid,
         sessionOid: provider.sessionOid
       }
     });
 
-    await (async () => {
+    db.sessionEvent
+      .createMany({
+        data: {
+          ...getId('sessionEvent'),
+          type: 'message_processed',
+          sessionOid: this.session.oid,
+          messageOid: message.oid
+        }
+      })
+      .catch(() => {});
+
+    let processingPromise = (async () => {
       try {
-        let res = await sender.send(topics.encode({ instance }), {
+        let res = await sender.send(topics.instance.encode({ instance }), {
           type: 'tool_call',
           sessionInstanceId: instance.id,
           sessionMessageId: message.id,
+          channelIds: this.channelIds,
 
           toolCallableId: tool.callableId,
           toolId: d.toolId,
-          toolKey: toolKey,
+          toolKey: tool.key,
 
           input: d.input
         } satisfies WireInput);
+
+        if (!res.success) {
+          await db.sessionMessage.updateMany({
+            where: { id: message.id },
+            data: {
+              status: 'failed',
+              completedAt: new Date(),
+              output: internalServerError({
+                message: 'Failed to process tool call'
+              }).toResponse()
+            }
+          });
+        } else {
+          let data = res.result as WireOutput;
+
+          message.status = data.status;
+          message.output = data.output;
+          message.completedAt = new Date(data.completedAt);
+        }
 
         console.log('Tool call response:', res);
       } catch (err) {
@@ -189,8 +246,82 @@ export class SenderManager {
       }
     })();
 
-    return Response.just({
-      message: sessionMessagePresenter(message)
+    if (d.waitForResponse) {
+      await processingPromise;
+    }
+
+    return ConResponse.just({
+      message: sessionMessagePresenter(message),
+      output: message.output
     });
+  }
+
+  async setClient(d: {
+    client: {
+      identifier: string;
+      name: string;
+      [key: string]: any;
+    };
+  }) {
+    let hash = await Hash.sha256(canonicalize(d.client));
+
+    let client = await db.sessionClient.upsert({
+      where: {
+        tenantOid_hash: {
+          tenantOid: this.tenant.oid,
+          hash
+        }
+      },
+      create: {
+        ...getId('sessionClient'),
+        hash,
+        identifier: d.client.identifier,
+        name: d.client.name,
+        payload: d.client,
+        tenantOid: this.tenant.oid
+      },
+      update: {}
+    });
+
+    let ses = this.session;
+    if (
+      ses.clientOid != client.oid ||
+      !ses.lastConnectionAt ||
+      Math.abs(differenceInMinutes(new Date(), ses.lastConnectionAt)) > 5
+    ) {
+      let clientConnection = await db.sessionClientConnection.upsert({
+        where: {
+          clientOid_sessionOid: {
+            clientOid: client.oid,
+            sessionOid: this.session.oid
+          }
+        },
+        update: {},
+        create: {
+          ...getId('sessionClientConnection'),
+          clientOid: client.oid,
+          sessionOid: this.session.oid
+        }
+      });
+
+      await db.session.updateMany({
+        where: { oid: this.session.oid },
+        data: {
+          clientOid: client.oid,
+          connectionState: 'connected',
+          lastConnectionAt: new Date(),
+          lastPingAt: new Date()
+        }
+      });
+
+      await db.sessionEvent.createMany({
+        data: {
+          ...getId('sessionEvent'),
+          type: 'client_connected',
+          sessionOid: this.session.oid,
+          clientConnectionOid: clientConnection.oid
+        }
+      });
+    }
   }
 }
