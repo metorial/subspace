@@ -1,4 +1,5 @@
 import { internalServerError } from '@lowerdeck/error';
+import { serialize } from '@lowerdeck/serialize';
 import { db, getId } from '@metorial-subspace/db';
 import { getBackend } from '@metorial-subspace/provider';
 import { addMinutes } from 'date-fns';
@@ -7,7 +8,7 @@ import { broadcastNats } from '../lib/nats';
 import { Store } from '../lib/store';
 import { topics } from '../lib/topic';
 import { wire } from '../lib/wire';
-import { WireInput, WireOutput } from '../types/wireMessage';
+import { BroadcastMessage, WireInput, WireResult } from '../types/wireMessage';
 
 export let startController = () => {
   let receiver = wire.createWireReceiver(async ctx => {
@@ -20,12 +21,17 @@ export let startController = () => {
       return;
     }
 
+    let connection = await db.sessionConnection.findFirst({
+      where: { oid: topic.connectionOid },
+      include: { client: true }
+    });
+
     let instance = await db.sessionProviderInstance.findFirst({
       where: { oid: topic.instanceOid },
       include: {
         sessionProvider: {
           include: {
-            session: { include: { client: true } },
+            session: true,
             tenant: true,
             config: true,
             authConfig: true
@@ -50,26 +56,30 @@ export let startController = () => {
       ctx.close();
       return;
     }
+    if (!connection) {
+      console.warn(`No session client found for topic: ${ctx.topic}`);
+      ctx.close();
+      return;
+    }
+
+    let client = connection.client;
+    if (!client) {
+      console.warn(`No client found for connection id: ${connection.id}`);
+      ctx.close();
+      return;
+    }
 
     let pairVersion = instance.pairVersion;
     let version = pairVersion.version;
     if (!version.slate || !version.slateVersion) {
       console.warn(
-        `Session provider instance ${instance.oid} is missing slate or slate version association`
+        `Session provider instance ${instance.id} is missing slate or slate version association`
       );
       ctx.close();
       return;
     }
 
     let session = instance.sessionProvider.session;
-    let client = session.client;
-    if (!client) {
-      console.warn(
-        `Session provider instance ${instance.oid} has a session with no associated client`
-      );
-      ctx.close();
-      return;
-    }
 
     let providerRun = await db.providerRun.create({
       data: {
@@ -77,7 +87,8 @@ export let startController = () => {
         providerOid: instance.sessionProvider.providerOid,
         providerVersionOid: version.oid,
         sessionOid: instance.sessionProvider.sessionOid,
-        instanceOid: instance.oid
+        instanceOid: instance.oid,
+        connectionOid: connection.oid
       }
     });
 
@@ -130,7 +141,7 @@ export let startController = () => {
         return {
           status,
           output,
-          completedAt: new Date().toISOString(),
+          completedAt: new Date(),
           slateToolCallOid: result.slateToolCall?.oid
         };
       } catch (err) {
@@ -143,7 +154,7 @@ export let startController = () => {
         return {
           output: error,
           status: 'failed' as const,
-          completedAt: new Date().toISOString(),
+          completedAt: new Date(),
           slateToolCallOid: undefined
         };
       }
@@ -154,35 +165,45 @@ export let startController = () => {
 
       let res = await processMessage(data);
 
-      await db.sessionMessage.updateMany({
+      let output =
+        res.status == 'failed'
+          ? { type: 'error' as const, data: res.output as any }
+          : { type: 'tool.result' as const, data: res.output };
+
+      let message = await db.sessionMessage.update({
         where: { id: data.sessionMessageId },
         data: {
           status: res.status,
-          output: res.output,
+          output,
           completedAt: new Date(),
           providerRunOid: providerRun.oid,
           slateToolCallOid: res.slateToolCallOid
         }
       });
 
-      let output = {
+      await db.sessionEvent.updateMany({
+        where: { messageOid: message.oid },
+        data: { providerRunOid: providerRun.oid }
+      });
+
+      let result = {
+        message,
+        output,
         status: res.status,
-        output: res.output,
         completedAt: res.completedAt
-      } satisfies WireOutput;
+      } satisfies WireResult;
 
       await broadcastNats.publish(
-        topics.session.encode({ session }),
-        JSON.stringify({
+        topics.sessionConnection.encode({ session, connection }),
+        serialize.encode({
           type: 'message_processed',
           sessionId: session.id,
-          channelIds: ['all', data.channelIds],
-          data,
-          output
-        })
+          result,
+          channel: 'targeted_response'
+        } satisfies BroadcastMessage)
       );
 
-      return output;
+      return result;
     });
 
     ctx.onClose(async () => {
