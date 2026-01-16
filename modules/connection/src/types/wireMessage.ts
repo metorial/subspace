@@ -1,4 +1,4 @@
-import { SessionMessageStatus } from '@metorial-subspace/db';
+import { SessionMessage, SessionMessageStatus } from '@metorial-subspace/db';
 
 export type WireInput = {
   type: 'tool_call';
@@ -8,13 +8,20 @@ export type WireInput = {
   toolId: string;
   toolKey: string;
   toolCallableId: string;
-  channelIds: string[];
 
   input: any;
 };
 
-export type WireOutput = {
+export type WireResult = {
   status: SessionMessageStatus;
-  output: any;
-  completedAt: string;
+  completedAt: Date | null;
+  message: SessionMessage | null;
+  output: PrismaJson.SessionMessageOutput | null;
+};
+
+export type BroadcastMessage = {
+  type: 'message_processed';
+  sessionId: string;
+  result: WireResult;
+  channel: 'targeted_response' | 'broadcast_response_or_notification';
 };
