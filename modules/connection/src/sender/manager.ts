@@ -1,22 +1,43 @@
 import { canonicalize } from '@lowerdeck/canonicalize';
-import { internalServerError, notFoundError, ServiceError } from '@lowerdeck/error';
+import {
+  badRequestError,
+  goneError,
+  internalServerError,
+  notFoundError,
+  ServiceError
+} from '@lowerdeck/error';
 import { Hash } from '@lowerdeck/hash';
 import { createLock } from '@lowerdeck/lock';
-import { db, getId, Session, SessionProvider, Solution, Tenant } from '@metorial-subspace/db';
+import {
+  db,
+  getId,
+  ID,
+  ProviderTool,
+  Session,
+  SessionConnection,
+  SessionConnectionMcpConnectionTransport,
+  SessionMessageSource,
+  SessionMessageStatus,
+  SessionMessageType,
+  SessionProvider,
+  Solution,
+  Tenant,
+  withTransaction
+} from '@metorial-subspace/db';
 import {
   providerDeploymentConfigPairInternalService,
   providerDeploymentInternalService
 } from '@metorial-subspace/module-provider-internal';
-import { addMinutes, differenceInMinutes } from 'date-fns';
-import { SESSION_PROVIDER_INSTANCE_EXPIRATION_INCREMENT } from '../const';
+import { addDays, addMinutes } from 'date-fns';
+import {
+  DEFAULT_SESSION_EXPIRATION_DAYS,
+  SESSION_PROVIDER_INSTANCE_EXPIRATION_INCREMENT,
+  UNINITIALIZED_SESSION_EXPIRATION_MINUTES
+} from '../const';
 import { env } from '../env';
-import { ConResponse } from '../lib/response';
 import { topics } from '../lib/topic';
 import { wire } from '../lib/wire';
-import { sessionMessagePresenter } from '../presenter/sessionMessage';
-import { toolNotFound } from '../types/error';
-import { ConnectionResponse } from '../types/response';
-import { WireInput, WireOutput } from '../types/wireMessage';
+import { WireInput, WireResult } from '../types/wireMessage';
 
 let instanceLock = createLock({
   name: 'conn/sess/inst/lock',
@@ -25,32 +46,127 @@ let instanceLock = createLock({
 
 let sender = wire.createSender();
 
+export interface InitProps {
+  client: {
+    identifier: string;
+    name: string;
+    [key: string]: any;
+  };
+  mcpCapabilities?: Record<string, any>;
+  mcpProtocolVersion?: string;
+  mcpTransport: SessionConnectionMcpConnectionTransport;
+}
+
+export interface CallToolProps {
+  toolId: string;
+  input: Record<string, any>;
+  waitForResponse: boolean;
+  isViaMcp: boolean;
+  clientMcpId?: PrismaJson.SessionMessageClientMcpId;
+}
+
+export interface SenderMangerProps {
+  sessionId: string;
+  solutionId: string;
+  tenantId: string;
+  connectionToken?: string;
+}
+
+export interface CreateMessageProps {
+  status: SessionMessageStatus;
+  type: SessionMessageType;
+  source: SessionMessageSource;
+
+  input: PrismaJson.SessionMessageInput;
+  output?: PrismaJson.SessionMessageOutput;
+
+  tool?: ProviderTool;
+  methodOrToolKey?: string;
+
+  clientMcpId?: PrismaJson.SessionMessageClientMcpId;
+  isViaMcp: boolean;
+}
+
 export class SenderManager {
   readonly sender = sender;
 
   private constructor(
     readonly session: Session,
+    public connection: SessionConnection | undefined,
     readonly tenant: Tenant,
-    readonly solution: Solution,
-    readonly channelIds: string[]
+    readonly solution: Solution
   ) {}
 
-  static async create(d: {
-    sessionId: string;
-    channelIds?: string[];
-  }): Promise<SenderManager> {
+  static async create(d: SenderMangerProps): Promise<SenderManager> {
     let session = await db.session.findFirst({
       where: {
-        id: d.sessionId
+        id: d.sessionId,
+        tenant: { OR: [{ id: d.tenantId }, { identifier: d.tenantId }] },
+        solution: { OR: [{ id: d.solutionId }, { identifier: d.solutionId }] }
       },
       include: {
         tenant: true,
-        solution: true
+        solution: true,
+        connections: d.connectionToken ? { where: { token: d.connectionToken } } : false
       }
     });
     if (!session) throw new ServiceError(notFoundError('session'));
 
-    return new SenderManager(session, session.tenant, session.solution, d.channelIds ?? []);
+    let connection = session.connections?.[0];
+    if (d.connectionToken && !connection) {
+      throw new ServiceError(notFoundError('connection'));
+    }
+
+    if (connection && connection.isManuallyDisabled) {
+      throw new ServiceError(
+        goneError({
+          message: 'Connection has been disabled'
+        })
+      );
+    }
+
+    if (connection && connection.expiresAt < new Date()) {
+      if (connection.initState == 'pending') {
+        throw new ServiceError(
+          badRequestError({
+            message: 'Connection not initialized in time'
+          })
+        );
+      }
+
+      connection = await withTransaction(async db => {
+        await db.sessionConnection.updateMany({
+          where: { oid: connection!.oid },
+          data: { token: await ID.generateId('sessionConnection_token') }
+        });
+
+        return await db.sessionConnection.create({
+          data: {
+            ...getId('sessionConnection'),
+
+            // We move the token to a new connection after a certain time
+            // to prevent stale connections from being reused
+            token: d.connectionToken!,
+            mcpTransport: connection!.mcpTransport,
+            mcpProtocolVersion: connection!.mcpProtocolVersion,
+
+            state: 'connected' as const,
+            initState: connection!.initState,
+            isManuallyDisabled: false,
+
+            sessionOid: session.oid,
+            clientOid: connection.clientOid,
+
+            mcpData: connection.mcpData,
+
+            expiresAt: addDays(new Date(), DEFAULT_SESSION_EXPIRATION_DAYS),
+            lastPingAt: new Date()
+          }
+        });
+      });
+    }
+
+    return new SenderManager(session, connection, session.tenant, session.solution);
   }
 
   async ensureProviderInstance(provider: SessionProvider) {
@@ -128,25 +244,37 @@ export class SenderManager {
     }));
   }
 
-  async listTools() {
-    let providers = await db.sessionProvider.findMany({
-      where: { sessionOid: this.session.oid }
+  async listProviders() {
+    return await db.sessionProvider.findMany({
+      where: { sessionOid: this.session.oid, status: 'active' },
+      include: { provider: true }
     });
+  }
 
+  async listTools() {
+    let providers = await this.listProviders();
     return await Promise.all(
       providers.map(provider => this.listToolsForProvider(provider))
     ).then(results => results.flat());
+  }
+
+  async getProviderByTag(d: { tag: string }) {
+    let provider = await db.sessionProvider.findFirst({
+      where: {
+        sessionOid: this.session.oid,
+        tag: d.tag,
+        status: 'active'
+      }
+    });
+    if (!provider) throw new ServiceError(notFoundError('provider', d.tag));
+    return provider;
   }
 
   async getToolById(d: { toolId: string }) {
     let [providerTag, ...toolKeyParts] = d.toolId.split('_');
     let toolKey = toolKeyParts.join('_');
 
-    // Find the provider by the tag
-    let provider = await db.sessionProvider.findFirst({
-      where: { sessionOid: this.session.oid, tag: providerTag }
-    });
-    if (!provider) return ConResponse.fail(toolNotFound(d.toolId));
+    let provider = await this.getProviderByTag({ tag: providerTag });
 
     // Get the current instance for the provider
     let instance = await this.ensureProviderInstance(provider);
@@ -160,9 +288,9 @@ export class SenderManager {
         specificationOid: instance.pairVersion.specificationOid
       }
     });
-    if (!tool) return ConResponse.fail(toolNotFound(d.toolId));
+    if (!tool) throw new ServiceError(notFoundError('tool', d.toolId));
 
-    return ConResponse.just({
+    return {
       provider,
       instance,
       tool: {
@@ -170,28 +298,26 @@ export class SenderManager {
         sessionProvider: provider,
         sessionProviderInstance: instance
       }
-    });
+    };
   }
 
-  async callTool(d: {
-    toolId: string;
-    input: Record<string, any>;
-    waitForResponse: boolean;
-  }): Promise<ConnectionResponse> {
-    let toolRes = await this.getToolById({ toolId: d.toolId });
-    if (ConResponse.isError(toolRes)) return toolRes;
-
-    let { provider, tool, instance } = toolRes.data!;
-
+  async createMessage(d: CreateMessageProps) {
     let message = await db.sessionMessage.create({
       data: {
         ...getId('sessionMessage'),
+        toolCallId: await ID.generateId('toolCall'),
+        sessionOid: this.session.oid,
         status: 'waiting_for_response',
         type: 'tool_call',
+        source: d.source,
+
         input: d.input,
-        toolKey: tool.key,
-        toolOid: tool.oid,
-        sessionOid: provider.sessionOid
+        output: d.output,
+
+        methodOrToolKey: d.methodOrToolKey ?? d.tool?.key ?? null,
+        toolOid: d.tool?.oid,
+        clientMcpId: d.clientMcpId ?? null,
+        isViaMcp: d.isViaMcp
       }
     });
 
@@ -201,18 +327,48 @@ export class SenderManager {
           ...getId('sessionEvent'),
           type: 'message_processed',
           sessionOid: this.session.oid,
+          connectionOid: this.connection?.oid,
+          providerRunOid: message.providerRunOid,
           messageOid: message.oid
         }
       })
       .catch(() => {});
 
+    return message;
+  }
+
+  async callTool(d: CallToolProps) {
+    let connection = this.connection;
+    if (!connection) {
+      throw new ServiceError(
+        badRequestError({ message: 'No connection id/token passed to connection' })
+      );
+    }
+    if (!connection.clientOid || connection.initState != 'completed') {
+      throw new ServiceError(badRequestError({ message: 'Connection is not initialized' }));
+    }
+
+    let { provider, tool, instance } = await this.getToolById({ toolId: d.toolId });
+
+    let message = await this.createMessage({
+      status: 'waiting_for_response',
+      type: 'tool_call',
+      source: 'client',
+      input: {
+        type: 'tool.call',
+        data: d.input
+      },
+      clientMcpId: d.clientMcpId,
+      isViaMcp: d.isViaMcp,
+      tool
+    });
+
     let processingPromise = (async () => {
       try {
-        let res = await sender.send(topics.instance.encode({ instance }), {
+        let res = await sender.send(topics.instance.encode({ instance, connection }), {
           type: 'tool_call',
           sessionInstanceId: instance.id,
           sessionMessageId: message.id,
-          channelIds: this.channelIds,
 
           toolCallableId: tool.callableId,
           toolId: d.toolId,
@@ -227,20 +383,21 @@ export class SenderManager {
             data: {
               status: 'failed',
               completedAt: new Date(),
-              output: internalServerError({
-                message: 'Failed to process tool call'
-              }).toResponse()
+              output: {
+                type: 'error',
+                data: internalServerError({
+                  message: 'Failed to process tool call'
+                }).toResponse()
+              }
             }
           });
         } else {
-          let data = res.result as WireOutput;
-
-          message.status = data.status;
-          message.output = data.output;
-          message.completedAt = new Date(data.completedAt);
+          let data = res.result as WireResult;
+          message = Object.assign(message, {
+            ...data.message,
+            output: data.output ?? data.message?.output
+          });
         }
-
-        console.log('Tool call response:', res);
       } catch (err) {
         console.error('Error sending tool call message:', err);
       }
@@ -250,27 +407,58 @@ export class SenderManager {
       await processingPromise;
     }
 
-    return ConResponse.just({
-      message: sessionMessagePresenter(message),
-      output: message.output
-    });
+    return {
+      message,
+      output: message.output,
+      status: message.status,
+      completedAt: message.completedAt
+    } satisfies WireResult;
   }
 
-  async setClient(d: {
-    client: {
-      identifier: string;
-      name: string;
-      [key: string]: any;
-    };
-  }) {
-    let hash = await Hash.sha256(canonicalize(d.client));
+  #createConnectionPromise: Promise<SessionConnection> | null = null;
+  async createConnection() {
+    if (this.connection) return this.connection;
+    if (this.#createConnectionPromise) return await this.#createConnectionPromise;
+
+    let con = db.sessionConnection
+      .create({
+        data: {
+          ...getId('sessionConnection'),
+
+          token: await ID.generateId('sessionConnection_token'),
+
+          state: 'connected' as const,
+          initState: 'pending' as const,
+          isManuallyDisabled: false,
+
+          mcpTransport: 'none',
+          mcpProtocolVersion: null,
+
+          sessionOid: this.session.oid,
+
+          mcpData: {},
+
+          expiresAt: addMinutes(new Date(), UNINITIALIZED_SESSION_EXPIRATION_MINUTES),
+          lastPingAt: new Date()
+        }
+      })
+      .then(c => c); // Force promise to run
+
+    this.#createConnectionPromise = con;
+    this.connection = await con;
+
+    return this.connection;
+  }
+
+  async initialize(d: InitProps) {
+    // Ignore if already initialized
+    if (this.connection?.initState == 'completed') return this.connection;
+
+    let hash = await Hash.sha256(canonicalize([this.tenant.id, d.client]));
 
     let client = await db.sessionClient.upsert({
       where: {
-        tenantOid_hash: {
-          tenantOid: this.tenant.oid,
-          hash
-        }
+        tenantOid_hash: { tenantOid: this.tenant.oid, hash }
       },
       create: {
         ...getId('sessionClient'),
@@ -283,45 +471,60 @@ export class SenderManager {
       update: {}
     });
 
-    let ses = this.session;
-    if (
-      ses.clientOid != client.oid ||
-      !ses.lastConnectionAt ||
-      Math.abs(differenceInMinutes(new Date(), ses.lastConnectionAt)) > 5
-    ) {
-      let clientConnection = await db.sessionClientConnection.upsert({
-        where: {
-          clientOid_sessionOid: {
-            clientOid: client.oid,
-            sessionOid: this.session.oid
-          }
-        },
-        update: {},
-        create: {
-          ...getId('sessionClientConnection'),
-          clientOid: client.oid,
-          sessionOid: this.session.oid
-        }
-      });
+    let connectionData = {
+      state: 'connected' as const,
+      initState: 'completed' as const,
+      isManuallyDisabled: false,
 
-      await db.session.updateMany({
-        where: { oid: this.session.oid },
-        data: {
-          clientOid: client.oid,
-          connectionState: 'connected',
-          lastConnectionAt: new Date(),
-          lastPingAt: new Date()
-        }
-      });
+      sessionOid: this.session.oid,
+      clientOid: client.oid,
 
-      await db.sessionEvent.createMany({
+      mcpData: {
+        capabilities: d.mcpCapabilities,
+        protocolVersion: d.mcpProtocolVersion
+      },
+      mcpProtocolVersion: d.mcpProtocolVersion,
+      mcpTransport: d.mcpTransport,
+
+      expiresAt: addDays(new Date(), DEFAULT_SESSION_EXPIRATION_DAYS),
+      lastPingAt: new Date()
+    };
+
+    let connection: SessionConnection;
+    if (this.connection) {
+      connection = await db.sessionConnection.update({
+        where: { oid: this.connection.oid },
+        data: connectionData
+      });
+    } else {
+      connection = await db.sessionConnection.create({
         data: {
-          ...getId('sessionEvent'),
-          type: 'client_connected',
-          sessionOid: this.session.oid,
-          clientConnectionOid: clientConnection.oid
+          ...getId('sessionConnection'),
+          ...connectionData,
+          token: await ID.generateId('sessionConnection_token')
         }
       });
     }
+
+    await db.session.updateMany({
+      where: { oid: this.session.oid },
+      data: {
+        lastConnectionCreatedAt: new Date(),
+        lastActiveAt: new Date()
+      }
+    });
+
+    await db.sessionEvent.createMany({
+      data: {
+        ...getId('sessionEvent'),
+        type: 'connection_created',
+        sessionOid: this.session.oid,
+        connectionOid: connection.oid
+      }
+    });
+
+    this.connection = connection;
+
+    return connection;
   }
 }
