@@ -3,6 +3,7 @@
   "extends": "@metorial-subspace/tsconfig/base.json",
   "exclude": ["dist"],
   "compilerOptions": {
+    "module": "esnext",
     "jsx": "react",
     "outDir": "dist"
   }

@@ -1,3 +1,5 @@
+import { SessionMessageStatus } from '@metorial-subspace/db';
+
 export type WireInput = {
   type: 'tool_call';
 
@@ -6,8 +8,13 @@ export type WireInput = {
   toolId: string;
   toolKey: string;
   toolCallableId: string;
+  channelIds: string[];
 
   input: any;
 };
 
-export type WireOutput = {};
+export type WireOutput = {
+  status: SessionMessageStatus;
+  output: any;
+  completedAt: string;
+};

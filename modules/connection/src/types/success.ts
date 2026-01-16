@@ -1,1 +1,1 @@
-export type ConnectionSuccess = {};
+export type ConnectionSuccess = any;
