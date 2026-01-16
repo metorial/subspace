@@ -35,8 +35,14 @@ model SessionMessage {
   methodOrToolKey String?
   isViaMcp        Boolean
 
+  isProductive         Boolean @default(true)
+  isFailedDueToTimeout Boolean @default(false)
+
   sessionOid BigInt
   session    Session @relation(fields: [sessionOid], references: [oid])
+
+  sessionProviderOid BigInt?
+  sessionProvider    SessionProvider? @relation(fields: [sessionProviderOid], references: [oid])
 
   connectionOid BigInt?
   connection    SessionConnection? @relation(fields: [connectionOid], references: [oid])

@@ -20,6 +20,9 @@ model SessionConnection {
 
   token String @unique
 
+  totalProductiveClientMessageCount Int @default(0)
+  totalProductiveServerMessageCount Int @default(0)
+
   state              SessionConnectionState
   initState          SessionConnectionInitState
   isManuallyDisabled Boolean
@@ -43,6 +46,7 @@ model SessionConnection {
 
   lastPingAt    DateTime?
   lastMessageAt DateTime?
+  lastActiveAt  DateTime?
 
   sessionEvents   SessionEvent[]
   providerRuns    ProviderRun[]

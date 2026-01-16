@@ -2,6 +2,8 @@ model Session {
   oid BigInt @id
   id  String @unique
 
+  connectionState SessionConnectionState @default(disconnected)
+
   name        String?
   description String?
   metadata    Json?
@@ -18,9 +20,11 @@ model Session {
   totalProductiveClientMessageCount Int @default(0)
   totalProductiveServerMessageCount Int @default(0)
 
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @default(now()) @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
   lastConnectionCreatedAt DateTime?
+  lastMessageAt           DateTime?
   lastActiveAt            DateTime?
 
   providers       SessionProvider[]
