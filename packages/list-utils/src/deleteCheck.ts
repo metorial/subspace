@@ -6,36 +6,48 @@ let actionNameMap = {
   archive: 'archived'
 };
 
-export let checkDeletedEdit = (
-  d: {
-    isEphemeral?: boolean;
-    status?: 'deleted' | 'archived' | string;
-  },
-  action: 'update' | 'delete' | 'archive'
+export interface CheckDeletedRecordOpts {
+  allowEphemeral?: boolean;
+}
+
+export interface DeletableRecord {
+  id: string;
+  isEphemeral?: boolean;
+  status?: 'deleted' | 'archived' | string;
+}
+
+export let isRecordDeleted = (
+  d: DeletableRecord | null | undefined,
+  opts?: CheckDeletedRecordOpts
 ) => {
-  if (d.isEphemeral || d.status == 'deleted' || d.status == 'archived') {
+  if (!d) return false;
+
+  return (
+    d.status == 'deleted' || d.status == 'archived' || (d.isEphemeral && !opts?.allowEphemeral)
+  );
+};
+
+export let checkDeletedEdit = (
+  d: DeletableRecord,
+  action: 'update' | 'delete' | 'archive',
+  opts?: CheckDeletedRecordOpts
+) => {
+  if (isRecordDeleted(d, opts)) {
     throw new ServiceError(
       goneError({
-        message: `Resource eannot be ${actionNameMap[action]}.`
+        message: `Resource cannot be ${actionNameMap[action]}.`
       })
     );
   }
 };
 
 export let checkDeletedRelation = (
-  d:
-    | { id: string; isEphemeral?: boolean; status?: 'deleted' | 'archived' | string }
-    | undefined
-    | null,
-  opts?: { allowEphemeral?: boolean }
+  d: DeletableRecord | undefined | null,
+  opts?: CheckDeletedRecordOpts
 ) => {
   if (!d) return;
 
-  if (
-    d.status == 'deleted' ||
-    d.status == 'archived' ||
-    (d.isEphemeral && !opts?.allowEphemeral)
-  ) {
+  if (isRecordDeleted(d, opts)) {
     throw new ServiceError(
       badRequestError({
         message: `Cannot use resource as it has been deleted or archived.`,

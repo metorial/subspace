@@ -19,6 +19,7 @@ import {
   type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import { isRecordDeleted } from '@metorial-subspace/list-utils';
 import {
   providerDeploymentConfigPairInternalService,
   providerDeploymentInternalService
@@ -219,9 +220,21 @@ export class SenderManager {
         include: {
           deployment: true,
           config: true,
+          authConfig: true,
           provider: { include: { defaultVariant: { include: { currentVersion: true } } } }
         }
       });
+
+      let deploymentDeleted = isRecordDeleted(fullProvider.deployment);
+      let configDeleted = isRecordDeleted(fullProvider.config);
+      let authConfigDeleted = isRecordDeleted(fullProvider.authConfig);
+      if (deploymentDeleted || configDeleted || authConfigDeleted) {
+        await db.sessionProvider.updateMany({
+          where: { oid: provider.oid },
+          data: { status: 'archived' }
+        });
+        return null;
+      }
 
       let version = await providerDeploymentInternalService.getCurrentVersion({
         deployment: fullProvider.deployment,
@@ -250,6 +263,7 @@ export class SenderManager {
 
   async listToolsForProvider(provider: SessionProvider) {
     let instance = await this.ensureProviderInstance(provider);
+    if (!instance) return [];
 
     let tools = await db.providerTool.findMany({
       where: {
@@ -272,7 +286,7 @@ export class SenderManager {
 
   async listProviders() {
     return await db.sessionProvider.findMany({
-      where: { sessionOid: this.session.oid, status: 'active' },
+      where: { sessionOid: this.session.oid, status: 'active', isParentDeleted: false },
       include: { provider: true }
     });
   }
@@ -304,6 +318,8 @@ export class SenderManager {
 
     // Get the current instance for the provider
     let instance = await this.ensureProviderInstance(provider);
+    if (!instance) throw new ServiceError(notFoundError('provider.instance'));
+
     if (!instance.pairVersion.specificationOid)
       throw new Error('Instance pair version missing specification OID');
 
