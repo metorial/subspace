@@ -6,10 +6,20 @@ import {
   db,
   getId,
   Session,
+  SessionStatus,
   Solution,
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import {
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviderAuthConfigs,
+  resolveProviderConfigs,
+  resolveProviderDeployments,
+  resolveProviders,
+  resolveSessionTemplates
+} from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { sessionCreatedQueue, sessionUpdatedQueue } from '../queues/lifecycle/session';
 import { sessionProviderInclude } from './sessionProvider';
@@ -26,23 +36,24 @@ class sessionServiceImpl {
   async listSessions(d: {
     tenant: Tenant;
     solution: Solution;
-    templateIds?: string[];
-    providerIds?: string[];
-    deploymentIds?: string[];
-    configIds?: string[];
-    authConfigIds?: string[];
+
+    status?: SessionStatus[];
+    allowDeleted?: boolean;
+
+    ids?: string[];
     sessionTemplateIds?: string[];
+    sessionProviderIds?: string[];
+    providerIds?: string[];
+    providerDeploymentIds?: string[];
+    providerConfigIds?: string[];
+    providerAuthConfigIds?: string[];
   }) {
-    let templates = d.templateIds
-      ? await db.sessionTemplate.findMany({
-          where: {
-            id: { in: d.templateIds },
-            tenantOid: d.tenant.oid,
-            solutionOid: d.solution.oid
-          },
-          select: { oid: true }
-        })
-      : undefined;
+    let sessionTemplates = await resolveSessionTemplates(d, d.sessionTemplateIds);
+    let sessionProviders = await resolveProviders(d, d.sessionProviderIds);
+    let providers = await resolveProviders(d, d.providerIds);
+    let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
+    let configs = await resolveProviderConfigs(d, d.providerConfigIds);
+    let authConfigs = await resolveProviderAuthConfigs(d, d.providerAuthConfigIds);
 
     return Paginator.create(({ prisma }) =>
       prisma(
@@ -53,13 +64,31 @@ class sessionServiceImpl {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
 
+              ...normalizeStatusForList(d).noParent,
+
               AND: [
-                templates
-                  ? {
-                      providers: {
-                        some: { fromTemplateOid: { in: templates.map(t => t.oid) } }
-                      }
-                    }
+                d.ids ? { id: { in: d.ids } } : undefined!,
+
+                sessionTemplates
+                  ? { providers: { some: { fromTemplateOid: sessionTemplates.in } } }
+                  : undefined!,
+
+                sessionProviders
+                  ? { providers: { some: { oid: sessionProviders.in } } }
+                  : undefined!,
+
+                providers
+                  ? { providers: { some: { providerOid: providers.in } } }
+                  : undefined!,
+
+                deployments
+                  ? { providers: { some: { deploymentOid: deployments.in } } }
+                  : undefined!,
+
+                configs ? { providers: { some: { configOid: configs.in } } } : undefined!,
+
+                authConfigs
+                  ? { providers: { some: { authConfigOid: authConfigs.in } } }
                   : undefined!
               ].filter(Boolean)
             },
@@ -69,12 +98,19 @@ class sessionServiceImpl {
     );
   }
 
-  async getSessionById(d: { tenant: Tenant; solution: Solution; sessionId: string }) {
+  async getSessionById(d: {
+    tenant: Tenant;
+    solution: Solution;
+    sessionId: string;
+    allowDeleted?: boolean;
+  }) {
     let session = await db.session.findFirst({
       where: {
         id: d.sessionId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+
+        ...normalizeStatusForGet(d).noParent
       },
       include
     });
@@ -98,6 +134,7 @@ class sessionServiceImpl {
       let session = await db.session.create({
         data: {
           ...getId('session'),
+          status: 'active',
 
           name: d.input.name?.trim() || undefined,
           description: d.input.description?.trim() || undefined,

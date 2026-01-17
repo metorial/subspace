@@ -8,6 +8,13 @@ import {
   Solution,
   Tenant
 } from '@metorial-subspace/db';
+import {
+  resolveProviderAuthConfigs,
+  resolveProviderConfigs,
+  resolveProviderDeployments,
+  resolveProviders,
+  resolveSessionTemplates
+} from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import {
   SessionProviderInput,
@@ -23,7 +30,23 @@ let include = {
 };
 
 class sessionTemplateProviderServiceImpl {
-  async listSessionTemplateProviders(d: { tenant: Tenant; solution: Solution }) {
+  async listSessionTemplateProviders(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    ids?: string[];
+    sessionTemplateIds?: string[];
+    providerIds?: string[];
+    providerDeploymentIds?: string[];
+    providerConfigIds?: string[];
+    providerAuthConfigIds?: string[];
+  }) {
+    let sessionTemplates = await resolveSessionTemplates(d, d.sessionTemplateIds);
+    let providers = await resolveProviders(d, d.providerIds);
+    let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
+    let configs = await resolveProviderConfigs(d, d.providerConfigIds);
+    let authConfigs = await resolveProviderAuthConfigs(d, d.providerAuthConfigIds);
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -31,7 +54,16 @@ class sessionTemplateProviderServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid
+              solutionOid: d.solution.oid,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                sessionTemplates ? { sessionTemplateOid: sessionTemplates.in } : undefined!,
+                providers ? { providerOid: providers.in } : undefined!,
+                deployments ? { deploymentOid: deployments.in } : undefined!,
+                configs ? { configOid: configs.in } : undefined!,
+                authConfigs ? { authConfigOid: authConfigs.in } : undefined!
+              ]
             },
             include
           })

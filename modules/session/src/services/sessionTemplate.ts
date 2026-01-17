@@ -4,11 +4,20 @@ import { Service } from '@lowerdeck/service';
 import {
   db,
   getId,
+  SessionProviderStatus,
   SessionTemplate,
   Solution,
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import {
+  normalizeStatusForList,
+  resolveProviderAuthConfigs,
+  resolveProviderConfigs,
+  resolveProviderDeployments,
+  resolveProviders,
+  resolveSessions
+} from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { sessionProviderInclude } from './sessionProvider';
 import { SessionProviderInput, sessionProviderInputService } from './sessionProviderInput';
@@ -21,7 +30,28 @@ let include = {
 };
 
 class sessionTemplateServiceImpl {
-  async listSessionTemplates(d: { tenant: Tenant; solution: Solution }) {
+  async listSessionTemplates(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    status?: SessionProviderStatus[];
+    allowDeleted?: boolean;
+
+    ids?: string[];
+    sessionIds?: string[];
+    sessionProviderIds?: string[];
+    providerIds?: string[];
+    providerDeploymentIds?: string[];
+    providerConfigIds?: string[];
+    providerAuthConfigIds?: string[];
+  }) {
+    let sessions = await resolveSessions(d, d.sessionIds);
+    let sessionProviders = await resolveProviders(d, d.sessionProviderIds);
+    let providers = await resolveProviders(d, d.providerIds);
+    let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
+    let configs = await resolveProviderConfigs(d, d.providerConfigIds);
+    let authConfigs = await resolveProviderAuthConfigs(d, d.providerAuthConfigIds);
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -29,7 +59,31 @@ class sessionTemplateServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid
+              solutionOid: d.solution.oid,
+
+              ...normalizeStatusForList(d).noParent,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+
+                sessions
+                  ? { sessionProviders: { some: { sessionOid: sessions.in } } }
+                  : undefined!,
+                sessionProviders
+                  ? { sessionProviders: { some: { providerOid: sessionProviders.in } } }
+                  : undefined!,
+
+                providers
+                  ? { providers: { some: { providerOid: providers.in } } }
+                  : undefined!,
+                deployments
+                  ? { providers: { some: { deploymentOid: deployments.in } } }
+                  : undefined!,
+                configs ? { providers: { some: { configOid: configs.in } } } : undefined!,
+                authConfigs
+                  ? { providers: { some: { authConfigOid: authConfigs.in } } }
+                  : undefined!
+              ].filter(Boolean)
             },
             include
           })
@@ -66,6 +120,7 @@ class sessionTemplateServiceImpl {
       let template = await db.sessionTemplate.create({
         data: {
           ...getId('sessionTemplate'),
+          status: 'active',
 
           name: d.input.name?.trim() || undefined,
           description: d.input.description?.trim() || undefined,

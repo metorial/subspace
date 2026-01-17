@@ -1,7 +1,24 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, Session, SessionProvider, Solution, Tenant } from '@metorial-subspace/db';
+import {
+  db,
+  Session,
+  SessionProvider,
+  SessionProviderStatus,
+  Solution,
+  Tenant
+} from '@metorial-subspace/db';
+import {
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviderAuthConfigs,
+  resolveProviderConfigs,
+  resolveProviderDeployments,
+  resolveProviders,
+  resolveSessions,
+  resolveSessionTemplates
+} from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import {
   SessionProviderInput,
@@ -18,7 +35,28 @@ let include = {
 export let sessionProviderInclude = include;
 
 class sessionProviderServiceImpl {
-  async listSessionProviders(d: { tenant: Tenant; solution: Solution }) {
+  async listSessionProviders(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    status?: SessionProviderStatus[];
+    allowDeleted?: boolean;
+
+    ids?: string[];
+    sessionIds?: string[];
+    sessionTemplateIds?: string[];
+    providerIds?: string[];
+    providerDeploymentIds?: string[];
+    providerConfigIds?: string[];
+    providerAuthConfigIds?: string[];
+  }) {
+    let sessions = await resolveSessions(d, d.sessionIds);
+    let sessionTemplates = await resolveSessionTemplates(d, d.sessionTemplateIds);
+    let providers = await resolveProviders(d, d.providerIds);
+    let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
+    let configs = await resolveProviderConfigs(d, d.providerConfigIds);
+    let authConfigs = await resolveProviderAuthConfigs(d, d.providerAuthConfigIds);
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -26,7 +64,19 @@ class sessionProviderServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid
+              solutionOid: d.solution.oid,
+
+              ...normalizeStatusForList(d).noParent,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                sessions ? { sessionOid: sessions.in } : undefined!,
+                sessionTemplates ? { fromTemplateOid: sessionTemplates.in } : undefined!,
+                providers ? { providerOid: providers.in } : undefined!,
+                deployments ? { deploymentOid: deployments.in } : undefined!,
+                configs ? { configOid: configs.in } : undefined!,
+                authConfigs ? { authConfigOid: authConfigs.in } : undefined!
+              ].filter(Boolean)
             },
             include
           })
@@ -38,12 +88,16 @@ class sessionProviderServiceImpl {
     tenant: Tenant;
     solution: Solution;
     sessionProviderId: string;
+
+    allowDeleted?: boolean;
   }) {
     let sessionProvider = await db.sessionProvider.findFirst({
       where: {
         id: d.sessionProviderId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+
+        ...normalizeStatusForGet(d).hasParent
       },
       include
     });
