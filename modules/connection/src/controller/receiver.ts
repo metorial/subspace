@@ -8,6 +8,7 @@ import { broadcastNats } from '../lib/nats';
 import { Store } from '../lib/store';
 import { topics } from '../lib/topic';
 import { wire } from '../lib/wire';
+import { completeMessage } from '../shared/completeMessage';
 import type { BroadcastMessage, WireInput, WireResult } from '../types/wireMessage';
 
 export let startController = () => {
@@ -139,23 +140,25 @@ export let startController = () => {
         let output = result.output.type == 'error' ? result.output.error : result.output.data;
 
         return {
+          isSystemError: false,
           status,
           output,
           completedAt: new Date(),
-          slateToolCallOid: result.slateToolCall?.oid
+          slateToolCall: result.slateToolCall
         };
       } catch (err) {
         console.error('Error processing tool invocation:', err);
 
         let error = internalServerError({
-          message: 'Error processing tool call'
+          message: 'Failed to process tool call'
         }).toResponse();
 
         return {
+          isSystemError: true,
           output: error,
           status: 'failed' as const,
           completedAt: new Date(),
-          slateToolCallOid: undefined
+          slateToolCall: undefined
         };
       }
     };
@@ -170,22 +173,17 @@ export let startController = () => {
           ? { type: 'error' as const, data: res.output as any }
           : { type: 'tool.result' as const, data: res.output };
 
-      let message = await db.sessionMessage.update({
-        where: { id: data.sessionMessageId },
-        data: {
-          status: res.status,
+      let message = await completeMessage(
+        { messageId: data.sessionMessageId },
+        {
           output,
+          status: res.status,
+          providerRun: providerRun,
           completedAt: res.completedAt,
-          providerRunOid: providerRun.oid,
-          slateToolCallOid: res.slateToolCallOid
+          slateToolCall: res.slateToolCall,
+          failureReason: res.isSystemError ? 'system_error' : undefined
         }
-      });
-      db.sessionEvent
-        .updateMany({
-          where: { messageOid: message.oid },
-          data: { providerRunOid: providerRun.oid }
-        })
-        .catch(() => {});
+      );
 
       let result = {
         message,

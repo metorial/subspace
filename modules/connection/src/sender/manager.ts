@@ -33,6 +33,7 @@ import {
 import { env } from '../env';
 import { topics } from '../lib/topic';
 import { wire } from '../lib/wire';
+import { completeMessage } from '../shared/completeMessage';
 import { createMessage, type CreateMessageProps } from '../shared/createMessage';
 import type { WireInput, WireResult } from '../types/wireMessage';
 
@@ -334,11 +335,12 @@ export class SenderManager {
         } satisfies WireInput);
 
         if (!res.success) {
-          await db.sessionMessage.updateMany({
-            where: { id: message.id },
-            data: {
+          await completeMessage(
+            { messageId: message.id },
+            {
               status: 'failed',
               completedAt: new Date(),
+              failureReason: 'system_error',
               output: {
                 type: 'error',
                 data: internalServerError({
@@ -346,7 +348,7 @@ export class SenderManager {
                 }).toResponse()
               }
             }
-          });
+          );
         } else {
           let data = res.result as WireResult;
           message = Object.assign(message, {

@@ -96,6 +96,7 @@ export class McpSender {
         type: 'unknown',
         source: 'client',
         isProductive: true,
+        failureReason: 'system_error',
 
         input: { type: 'mcp', data: msg },
         output: {
