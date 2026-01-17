@@ -1,6 +1,13 @@
+enum SessionTemplateStatus {
+  active
+  inactive
+}
+
 model SessionTemplate {
   oid BigInt @id
   id  String @unique
+
+  status SessionTemplateStatus
 
   name        String?
   description String?

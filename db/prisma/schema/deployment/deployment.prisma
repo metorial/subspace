@@ -1,3 +1,8 @@
+enum ProviderDeploymentStatus {
+  active
+  inactive
+}
+
 enum ProviderDeploymentSpecificationDiscoveryStatus {
   discovering
   discovered
@@ -7,6 +12,8 @@ enum ProviderDeploymentSpecificationDiscoveryStatus {
 model ProviderDeployment {
   oid BigInt @id
   id  String @unique
+
+  status ProviderDeploymentStatus
 
   isEphemeral Boolean
   isDefault   Boolean

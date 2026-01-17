@@ -4,7 +4,7 @@ enum SessionErrorType {
   message_processing_system_error
 }
 
-model SessionErrorGlobal {
+model SessionErrorGroup {
   oid BigInt @id
   id  String @unique
 
@@ -16,7 +16,7 @@ model SessionErrorGlobal {
   hash String
 
   firstOccurrenceOid BigInt?
-  firstOccurrence    SessionError? @relation(fields: [firstOccurrenceOid], references: [oid], name: "GlobalToOccurrence")
+  firstOccurrence    SessionError? @relation(fields: [firstOccurrenceOid], references: [oid], name: "GroupToOccurrence")
 
   providerOid BigInt?
   provider    Provider? @relation(fields: [providerOid], references: [oid])
@@ -28,13 +28,13 @@ model SessionErrorGlobal {
 
   occurrenceCount Int @default(0)
 
-  instances                           SessionError[]
-  sessionErrorGlobalOccurrencePeriods SessionErrorGlobalOccurrencePeriod[]
+  instances                          SessionError[]
+  sessionErrorGroupOccurrencePeriods SessionErrorGroupOccurrencePeriod[]
 
   @@unique([type, hash, tenantOid])
 }
 
-model SessionErrorGlobalOccurrencePeriod {
+model SessionErrorGroupOccurrencePeriod {
   oid BigInt @id
 
   startsAt DateTime
@@ -42,10 +42,10 @@ model SessionErrorGlobalOccurrencePeriod {
 
   occurrenceCount Int @default(0)
 
-  globalOid BigInt
-  global    SessionErrorGlobal @relation(fields: [globalOid], references: [oid])
+  groupOid BigInt
+  group    SessionErrorGroup @relation(fields: [groupOid], references: [oid])
 
-  @@unique([globalOid, startsAt])
+  @@unique([groupOid, startsAt])
 }
 
 model SessionError {
@@ -54,15 +54,16 @@ model SessionError {
 
   type SessionErrorType
 
-  isProcessing Boolean
+  isParentDeleted Boolean @default(false)
+  isProcessing    Boolean
 
   code    String
   message String
 
   payload Json?
 
-  globalOid BigInt?
-  global    SessionErrorGlobal? @relation(fields: [globalOid], references: [oid])
+  groupOid BigInt?
+  group    SessionErrorGroup? @relation(fields: [groupOid], references: [oid])
 
   connectionOid BigInt?
   connection    SessionConnection? @relation(fields: [connectionOid], references: [oid])
@@ -81,7 +82,7 @@ model SessionError {
 
   createdAt DateTime @default(now())
 
-  instanceForGlobal SessionErrorGlobal[] @relation(name: "GlobalToOccurrence")
-  sessionMessages   SessionMessage[]
-  sessionEvents     SessionEvent[]
+  instanceForGroup SessionErrorGroup[] @relation(name: "GroupToOccurrence")
+  sessionMessages  SessionMessage[]
+  sessionEvents    SessionEvent[]
 }

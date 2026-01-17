@@ -1,6 +1,13 @@
+enum SessionStatus {
+  active
+  inactive
+}
+
 model Session {
   oid BigInt @id
   id  String @unique
+
+  status SessionStatus
 
   connectionState SessionConnectionState @default(disconnected)
   isStarted       Boolean                @default(false)

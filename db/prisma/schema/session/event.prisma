@@ -13,7 +13,8 @@ model SessionEvent {
   oid BigInt @id
   id  String @unique
 
-  type SessionEventType
+  type            SessionEventType
+  isParentDeleted Boolean          @default(false)
 
   sessionOid BigInt
   session    Session @relation(fields: [sessionOid], references: [oid])

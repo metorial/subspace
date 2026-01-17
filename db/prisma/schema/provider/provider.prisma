@@ -80,6 +80,7 @@ model Provider {
   providerSetupSessions     ProviderSetupSession[]
   sessionProviders          SessionProvider[]
   providerRuns              ProviderRun[]
-  sessionErrorGlobals       SessionErrorGlobal[]
   sessionTemplateProviders  SessionTemplateProvider[]
+  sessionParticipants       SessionParticipant[]
+  sessionErrorGroups        SessionErrorGroup[]
 }

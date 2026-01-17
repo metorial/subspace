@@ -4,8 +4,7 @@ enum ProviderSetupSessionStatus {
   failed
   expired
 
-  archived
-  deleted
+  inactive
 }
 
 enum ProviderSetupSessionType {
@@ -23,9 +22,10 @@ model ProviderSetupSession {
   oid BigInt @id
   id  String @unique
 
-  status ProviderSetupSessionStatus
-  type   ProviderSetupSessionType
-  uiMode ProviderSetupSessionUiMode @default(metorial_elements)
+  status          ProviderSetupSessionStatus
+  type            ProviderSetupSessionType
+  uiMode          ProviderSetupSessionUiMode @default(metorial_elements)
+  isParentDeleted Boolean                    @default(false)
 
   clientSecret String
 

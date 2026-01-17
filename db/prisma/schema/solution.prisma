@@ -29,4 +29,5 @@ model Solution {
   sessionErrors                            SessionError[]
   sessionMessages                          SessionMessage[]
   sessionEvents                            SessionEvent[]
+  providerRuns                             ProviderRun[]
 }

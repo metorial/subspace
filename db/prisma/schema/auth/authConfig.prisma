@@ -10,12 +10,20 @@ enum ProviderAuthConfigSource {
   system
 }
 
+enum ProviderAuthConfigStatus {
+  active
+  inactive
+}
+
 model ProviderAuthConfig {
   oid BigInt @id
   id  String @unique
 
   type   ProviderAuthConfigType
   source ProviderAuthConfigSource
+  status ProviderAuthConfigStatus
+
+  isParentDeleted Boolean @default(false)
 
   isEphemeral Boolean
   isDefault   Boolean

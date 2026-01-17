@@ -26,10 +26,11 @@ model SessionMessage {
   id         String @unique
   toolCallId String @unique
 
-  status        SessionMessageStatus
-  type          SessionMessageType
-  source        SessionMessageSource
-  failureReason SessionMessageFailureReason @default(none)
+  status          SessionMessageStatus
+  type            SessionMessageType
+  source          SessionMessageSource
+  failureReason   SessionMessageFailureReason @default(none)
+  isParentDeleted Boolean                     @default(false)
 
   /// [SessionMessageClientMcpId]
   clientMcpId Json
@@ -51,6 +52,12 @@ model SessionMessage {
 
   sessionOid BigInt
   session    Session @relation(fields: [sessionOid], references: [oid])
+
+  senderParticipantOid BigInt
+  senderParticipant    SessionParticipant @relation(fields: [senderParticipantOid], references: [oid], name: "SenderParticipant")
+
+  responderParticipantOid BigInt?
+  responderParticipant    SessionParticipant? @relation(fields: [responderParticipantOid], references: [oid], name: "ResponderParticipant")
 
   sessionProviderOid BigInt?
   sessionProvider    SessionProvider? @relation(fields: [sessionProviderOid], references: [oid])

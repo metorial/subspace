@@ -10,6 +10,8 @@ model Tenant {
 
   createdAt DateTime @default(now())
 
+  logRetentionInDays Int @default(30)
+
   providers                                Provider[]
   tenantProviders                          TenantProvider[]
   providerListingGroups                    ProviderListingGroup[]
@@ -33,6 +35,13 @@ model Tenant {
   providerSetupSessions                    ProviderSetupSession[]
   brand                                    Brand?
   sessionProviders                         SessionProvider[]
-  sessionClients                           SessionClient[]
-  sessionErrorGlobals                      SessionErrorGlobal[]
+  sessionTemplates                         SessionTemplate[]
+  sessionTemplateProviders                 SessionTemplateProvider[]
+  sessionConnections                       SessionConnection[]
+  sessionErrors                            SessionError[]
+  sessionMessages                          SessionMessage[]
+  sessionEvents                            SessionEvent[]
+  sessionParticipants                      SessionParticipant[]
+  providerRuns                             ProviderRun[]
+  sessionErrorGroups                       SessionErrorGroup[]
 }

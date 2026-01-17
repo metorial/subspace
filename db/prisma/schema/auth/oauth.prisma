@@ -13,6 +13,8 @@ model ProviderOAuthSetup {
 
   clientSecret String
 
+  isParentDeleted Boolean @default(false)
+
   isEphemeral Boolean
 
   name        String?

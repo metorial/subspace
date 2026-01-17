@@ -1,6 +1,13 @@
+enum ProviderConfigStatus {
+  active
+  inactive
+}
+
 model ProviderConfig {
   oid BigInt @id
   id  String @unique
+
+  status ProviderConfigStatus
 
   isDefault   Boolean
   isEphemeral Boolean

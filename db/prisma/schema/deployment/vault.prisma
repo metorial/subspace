@@ -1,6 +1,13 @@
+enum ProviderConfigVaultStatus {
+  active
+  inactive
+}
+
 model ProviderConfigVault {
   oid BigInt @id @default(autoincrement())
   id  String @unique
+
+  status ProviderConfigVaultStatus
 
   name        String
   description String?
@@ -24,5 +31,5 @@ model ProviderConfigVault {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  fromOfConfigs ProviderConfig[] @relation("vaultSource")
+  createdConfigs ProviderConfig[] @relation("vaultSource")
 }

@@ -67,5 +67,11 @@ declare global {
       | { type: 'mcp'; data: JSONRPCMessage };
 
     type SessionMessageClientMcpId = string | number | null;
+
+    type SessionParticipantPayload = {
+      identifier: string;
+      name: string;
+      [key: string]: any;
+    };
   }
 }
