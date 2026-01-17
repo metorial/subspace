@@ -4,7 +4,9 @@ import type {
   ProviderConfig,
   ProviderDeployment,
   Session,
-  SessionProvider
+  SessionProvider,
+  SessionTemplate,
+  SessionTemplateProvider
 } from '@metorial-subspace/db';
 import { sessionProviderPresenter } from './sessionProvider';
 
@@ -15,6 +17,8 @@ export let sessionPresenter = (
       deployment: ProviderDeployment;
       config: ProviderConfig;
       authConfig: ProviderAuthConfig | null;
+      fromTemplate: SessionTemplate | null;
+      fromTemplateProvider: SessionTemplateProvider | null;
     })[];
   }
 ) => ({
@@ -26,12 +30,25 @@ export let sessionPresenter = (
   description: session.description,
   metadata: session.metadata,
 
+  connectionState: session.connectionState,
+
   usage: {
     totalProductiveClientMessageCount: session.totalProductiveClientMessageCount,
     totalProductiveServerMessageCount: session.totalProductiveServerMessageCount
   },
 
-  providers: session.providers.filter(p => p.status == 'active').map(sessionProviderPresenter),
+  providers: session.providers
+    .filter(p => p.status == 'active')
+    .map(p =>
+      sessionProviderPresenter({
+        ...p,
+        session
+      })
+    ),
+
+  fromTemplatesIds: [
+    ...new Set(session.providers.map(p => p.fromTemplate?.id!).filter(Boolean))
+  ],
 
   createdAt: session.createdAt,
   updatedAt: session.updatedAt

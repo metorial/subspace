@@ -3,8 +3,6 @@ import type {
   ProviderAuthConfig,
   ProviderConfig,
   ProviderDeployment,
-  Session,
-  SessionProvider,
   SessionTemplate,
   SessionTemplateProvider
 } from '@metorial-subspace/db';
@@ -12,34 +10,24 @@ import { providerAuthConfigPreviewPresenter } from './authConfig';
 import { providerConfigPreviewPresenter } from './config';
 import { providerDeploymentPreviewPresenter } from './deployment';
 
-export let sessionProviderPresenter = (
-  provider: SessionProvider & {
+export let sessionTemplateProviderPresenter = (
+  provider: SessionTemplateProvider & {
     provider: Provider;
     deployment: ProviderDeployment;
     config: ProviderConfig;
     authConfig: ProviderAuthConfig | null;
-    session: Session;
-    fromTemplate: SessionTemplate | null;
-    fromTemplateProvider: SessionTemplateProvider | null;
+    sessionTemplate: SessionTemplate;
   }
 ) => ({
-  object: 'session.provider',
+  object: 'session.template.provider',
 
   id: provider.id,
   status: provider.status,
 
-  usage: {
-    totalProductiveClientMessageCount: provider.totalProductiveClientMessageCount,
-    totalProductiveServerMessageCount: provider.totalProductiveServerMessageCount
-  },
-
   toolFilter: provider.toolFilter,
 
   providerId: provider.provider.id,
-  sessionId: provider.session.id,
-
-  fromTemplateId: provider.fromTemplate?.id || null,
-  fromTemplateProviderId: provider.fromTemplateProvider?.id || null,
+  sessionTemplateId: provider.sessionTemplate.id,
 
   deployment: providerDeploymentPreviewPresenter({
     ...provider.deployment,
