@@ -70,4 +70,5 @@ model SessionConnection {
 
   @@index([lastActiveAt])
   @@index([state])
+  @@index([status])
 }

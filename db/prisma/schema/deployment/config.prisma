@@ -54,4 +54,5 @@ model ProviderConfig {
   sessionTemplateProviders         SessionTemplateProvider[]
 
   @@index([isDefault])
+  @@index([status])
 }

@@ -55,4 +55,5 @@ model SessionProvider {
   providerRuns             ProviderRun[]
 
   @@unique([sessionOid, tag])
+  @@index([status])
 }

@@ -33,4 +33,5 @@ model SessionParticipant {
   sessionMessagesResponder SessionMessage[]    @relation("ResponderParticipant")
 
   @@unique([tenantOid, type, hash])
+  @@index([type])
 }

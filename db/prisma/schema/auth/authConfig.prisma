@@ -72,6 +72,8 @@ model ProviderAuthConfig {
   sessionTemplateProviders         SessionTemplateProvider[]
 
   @@index([isDefault])
+  @@index([status])
+  @@index([type])
 }
 
 model ProviderAuthConfigUpdate {

@@ -89,6 +89,8 @@ model SessionMessage {
   sessionEvents SessionEvent[]
 
   @@index([isOffloadedToStorage])
+  @@index([status])
+  @@index([type])
 }
 
 model SessionMessageStorageBucket {

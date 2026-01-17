@@ -63,4 +63,5 @@ model ProviderDeployment {
   sessionTemplateProviders             SessionTemplateProvider[]
 
   @@index([isDefault])
+  @@index([status])
 }

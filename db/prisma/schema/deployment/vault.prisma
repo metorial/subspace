@@ -32,4 +32,6 @@ model ProviderConfigVault {
   updatedAt DateTime @default(now()) @updatedAt
 
   createdConfigs ProviderConfig[] @relation("vaultSource")
+
+  @@index([status])
 }

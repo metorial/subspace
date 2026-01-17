@@ -32,6 +32,7 @@ model SessionErrorGroup {
   sessionErrorGroupOccurrencePeriods SessionErrorGroupOccurrencePeriod[]
 
   @@unique([type, hash, tenantOid])
+  @@index([type])
 }
 
 model SessionErrorGroupOccurrencePeriod {
@@ -85,4 +86,6 @@ model SessionError {
   instanceForGroup SessionErrorGroup[] @relation(name: "GroupToOccurrence")
   sessionMessages  SessionMessage[]
   sessionEvents    SessionEvent[]
+
+  @@index([type])
 }

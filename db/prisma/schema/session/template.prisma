@@ -24,6 +24,8 @@ model SessionTemplate {
 
   providers        SessionTemplateProvider[]
   sessionProviders SessionProvider[]
+
+  @@index([status])
 }
 
 enum SessionTemplateProviderStatus {
@@ -65,4 +67,6 @@ model SessionTemplateProvider {
   updatedAt DateTime @default(now()) @updatedAt
 
   sessionProviders SessionProvider[]
+
+  @@index([status])
 }

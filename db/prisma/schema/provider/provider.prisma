@@ -83,4 +83,6 @@ model Provider {
   sessionTemplateProviders  SessionTemplateProvider[]
   sessionParticipants       SessionParticipant[]
   sessionErrorGroups        SessionErrorGroup[]
+
+  @@index([status])
 }
