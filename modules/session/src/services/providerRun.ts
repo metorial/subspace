@@ -14,10 +14,9 @@ import {
 
 let include = {
   session: true,
-  providerRun: true,
-  message: true,
-  connection: true,
-  error: true
+  sessionProvider: true,
+  provider: true,
+  connection: true
 };
 
 class providerRunServiceImpl {

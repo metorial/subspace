@@ -8,7 +8,8 @@ import {
   resolveSessions
 } from '@metorial-subspace/list-utils';
 
-let include = {};
+let include = { provider: true };
+export let sessionParticipantInclude = include;
 
 class sessionParticipantServiceImpl {
   async listSessionParticipants(d: {

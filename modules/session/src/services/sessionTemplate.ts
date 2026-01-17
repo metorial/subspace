@@ -11,6 +11,7 @@ import {
   withTransaction
 } from '@metorial-subspace/db';
 import {
+  normalizeStatusForGet,
   normalizeStatusForList,
   resolveProviderAuthConfigs,
   resolveProviderConfigs,
@@ -19,12 +20,12 @@ import {
   resolveSessions
 } from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
-import { sessionProviderInclude } from './sessionProvider';
 import { SessionProviderInput, sessionProviderInputService } from './sessionProviderInput';
+import { sessionTemplateProviderInclude } from './sessionTemplateProvider';
 
 let include = {
   providers: {
-    include: sessionProviderInclude,
+    include: sessionTemplateProviderInclude,
     where: { status: 'active' as const }
   }
 };
@@ -91,16 +92,23 @@ class sessionTemplateServiceImpl {
     );
   }
 
-  async getSessionTemplateById(d: { tenant: Tenant; solution: Solution; sessionId: string }) {
+  async getSessionTemplateById(d: {
+    tenant: Tenant;
+    solution: Solution;
+    sessionTemplateId: string;
+    allowDeleted?: boolean;
+  }) {
     let session = await db.sessionTemplate.findFirst({
       where: {
-        id: d.sessionId,
+        id: d.sessionTemplateId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+        ...normalizeStatusForGet(d).noParent
       },
       include
     });
-    if (!session) throw new ServiceError(notFoundError('session', d.sessionId));
+    if (!session)
+      throw new ServiceError(notFoundError('session.template', d.sessionTemplateId));
 
     return session;
   }
@@ -148,31 +156,31 @@ class sessionTemplateServiceImpl {
   async updateSessionTemplate(d: {
     tenant: Tenant;
     solution: Solution;
-    session: SessionTemplate;
+    template: SessionTemplate;
     input: {
       name?: string;
       description?: string;
       metadata?: Record<string, any>;
     };
   }) {
-    checkTenant(d, d.session);
+    checkTenant(d, d.template);
 
     return withTransaction(async db => {
-      let session = await db.sessionTemplate.update({
+      let template = await db.sessionTemplate.update({
         where: {
-          oid: d.session.oid,
+          oid: d.template.oid,
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid
         },
         data: {
-          name: d.input.name ?? d.session.name,
-          description: d.input.description ?? d.session.description,
-          metadata: d.input.metadata ?? d.session.metadata
+          name: d.input.name,
+          description: d.input.description,
+          metadata: d.input.metadata
         },
         include
       });
 
-      return session;
+      return template;
     });
   }
 }

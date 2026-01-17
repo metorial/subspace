@@ -5,10 +5,13 @@ import {
   db,
   SessionTemplate,
   SessionTemplateProvider,
+  SessionTemplateProviderStatus,
   Solution,
   Tenant
 } from '@metorial-subspace/db';
 import {
+  normalizeStatusForGet,
+  normalizeStatusForList,
   resolveProviderAuthConfigs,
   resolveProviderConfigs,
   resolveProviderDeployments,
@@ -26,13 +29,18 @@ let include = {
   provider: true,
   deployment: true,
   config: true,
-  authConfig: true
+  authConfig: true,
+  sessionTemplate: true
 };
+export let sessionTemplateProviderInclude = include;
 
 class sessionTemplateProviderServiceImpl {
   async listSessionTemplateProviders(d: {
     tenant: Tenant;
     solution: Solution;
+
+    status?: SessionTemplateProviderStatus[];
+    allowDeleted?: boolean;
 
     ids?: string[];
     sessionTemplateIds?: string[];
@@ -56,6 +64,8 @@ class sessionTemplateProviderServiceImpl {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
 
+              ...normalizeStatusForList(d).noParent,
+
               AND: [
                 d.ids ? { id: { in: d.ids } } : undefined!,
                 sessionTemplates ? { sessionTemplateOid: sessionTemplates.in } : undefined!,
@@ -74,18 +84,22 @@ class sessionTemplateProviderServiceImpl {
   async getSessionTemplateProviderById(d: {
     tenant: Tenant;
     solution: Solution;
-    sessionProviderId: string;
+    sessionTemplateProviderId: string;
+    allowDeleted?: boolean;
   }) {
     let sessionProvider = await db.sessionTemplateProvider.findFirst({
       where: {
-        id: d.sessionProviderId,
+        id: d.sessionTemplateProviderId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+        ...normalizeStatusForGet(d).noParent
       },
       include
     });
     if (!sessionProvider)
-      throw new ServiceError(notFoundError('sessionProvider', d.sessionProviderId));
+      throw new ServiceError(
+        notFoundError('session.template.provider', d.sessionTemplateProviderId)
+      );
 
     return sessionProvider;
   }
@@ -111,23 +125,26 @@ class sessionTemplateProviderServiceImpl {
   async updateSessionTemplateProvider(d: {
     tenant: Tenant;
     solution: Solution;
-    sessionProvider: SessionTemplateProvider;
+    sessionTemplateProvider: SessionTemplateProvider;
     input: {
       toolFilters?: SessionProviderInputToolFilters;
     };
   }) {
-    checkTenant(d, d.sessionProvider);
+    checkTenant(d, d.sessionTemplateProvider);
 
     return await db.sessionTemplateProvider.update({
       where: {
-        oid: d.sessionProvider.oid,
+        oid: d.sessionTemplateProvider.oid,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid
       },
       data: {
-        toolFilter: await sessionProviderInputService.mapToolFilters({
-          filters: d.input.toolFilters
-        })
+        toolFilter:
+          d.input.toolFilters !== undefined
+            ? await sessionProviderInputService.mapToolFilters({
+                filters: d.input.toolFilters
+              })
+            : undefined
       },
       include
     });
@@ -136,13 +153,13 @@ class sessionTemplateProviderServiceImpl {
   async deleteSessionTemplateProvider(d: {
     tenant: Tenant;
     solution: Solution;
-    sessionProvider: SessionTemplateProvider;
+    sessionTemplateProvider: SessionTemplateProvider;
   }) {
-    checkTenant(d, d.sessionProvider);
+    checkTenant(d, d.sessionTemplateProvider);
 
     await db.sessionTemplateProvider.update({
       where: {
-        oid: d.sessionProvider.oid
+        oid: d.sessionTemplateProvider.oid
       },
       data: {
         status: 'inactive' as const

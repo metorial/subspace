@@ -1,7 +1,13 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, SessionConnectionStatus, Solution, Tenant } from '@metorial-subspace/db';
+import {
+  db,
+  SessionConnectionState,
+  SessionConnectionStatus,
+  Solution,
+  Tenant
+} from '@metorial-subspace/db';
 import {
   normalizeStatusForGet,
   normalizeStatusForList,
@@ -9,13 +15,11 @@ import {
   resolveSessionProviders,
   resolveSessions
 } from '@metorial-subspace/list-utils';
+import { sessionParticipantInclude } from './sessionParticipant';
 
 let include = {
   session: true,
-  providerRun: true,
-  message: true,
-  connection: true,
-  error: true
+  participant: { include: sessionParticipantInclude }
 };
 
 class sessionConnectionServiceImpl {
@@ -24,6 +28,7 @@ class sessionConnectionServiceImpl {
     solution: Solution;
 
     status?: SessionConnectionStatus[];
+    connectionState?: SessionConnectionState[];
     allowDeleted?: boolean;
 
     ids?: string[];
@@ -45,6 +50,8 @@ class sessionConnectionServiceImpl {
               solutionOid: d.solution.oid,
 
               ...normalizeStatusForList(d).hasParent,
+
+              state: d.connectionState ? { in: d.connectionState } : undefined,
 
               AND: [
                 d.ids ? { id: { in: d.ids } } : undefined!,

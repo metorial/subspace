@@ -5,8 +5,8 @@ import { db, SessionErrorType, Solution, Tenant } from '@metorial-subspace/db';
 import { resolveProviders, resolveSessions } from '@metorial-subspace/list-utils';
 
 let include = {
-  firstOccurrence: true,
-  provider: true
+  provider: true,
+  firstOccurrence: true
 };
 
 class sessionErrorGroupServiceImpl {
@@ -59,7 +59,7 @@ class sessionErrorGroupServiceImpl {
       include
     });
     if (!sessionErrorGroup)
-      throw new ServiceError(notFoundError('session.event', d.sessionErrorGroupId));
+      throw new ServiceError(notFoundError('session.error_group', d.sessionErrorGroupId));
 
     return sessionErrorGroup;
   }

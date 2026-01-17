@@ -30,7 +30,10 @@ let include = {
   provider: true,
   deployment: true,
   config: true,
-  authConfig: true
+  authConfig: true,
+  session: true,
+  fromTemplate: true,
+  fromTemplateProvider: true
 };
 export let sessionProviderInclude = include;
 
@@ -96,8 +99,7 @@ class sessionProviderServiceImpl {
         id: d.sessionProviderId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
-
-        ...normalizeStatusForGet(d).hasParent
+        ...normalizeStatusForGet(d).noParent
       },
       include
     });
@@ -142,9 +144,12 @@ class sessionProviderServiceImpl {
         solutionOid: d.solution.oid
       },
       data: {
-        toolFilter: await sessionProviderInputService.mapToolFilters({
-          filters: d.input.toolFilters
-        })
+        toolFilter:
+          d.input.toolFilters !== undefined
+            ? await sessionProviderInputService.mapToolFilters({
+                filters: d.input.toolFilters
+              })
+            : undefined
       },
       include
     });

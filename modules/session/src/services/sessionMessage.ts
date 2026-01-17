@@ -12,13 +12,16 @@ import {
   resolveSessionProviders,
   resolveSessions
 } from '@metorial-subspace/list-utils';
+import { sessionErrorInclude } from './sessionError';
 
 let include = {
   session: true,
-  providerRun: true,
-  message: true,
+  senderParticipant: true,
+  sessionProvider: true,
+  responderParticipant: true,
   connection: true,
-  error: true
+  providerRun: true,
+  error: { include: sessionErrorInclude }
 };
 
 class sessionMessageServiceImpl {
@@ -52,9 +55,11 @@ class sessionMessageServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
-              ...normalizeStatusForList(d).onlyParent,
 
               AND: [
+                normalizeStatusForList(d).onlyParent,
+                { status: { not: 'waiting_for_response' as const } },
+
                 d.ids ? { id: { in: d.ids } } : undefined!,
                 d.types ? { type: { in: d.types } } : undefined!,
 
@@ -92,7 +97,8 @@ class sessionMessageServiceImpl {
         id: d.sessionMessageId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
-        ...normalizeStatusForGet(d).onlyParent
+
+        AND: [normalizeStatusForGet(d).onlyParent, { status: { not: 'waiting_for_response' } }]
       },
       include
     });

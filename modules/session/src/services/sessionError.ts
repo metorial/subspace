@@ -16,11 +16,11 @@ import {
 
 let include = {
   session: true,
+  group: true,
   providerRun: true,
-  message: true,
-  connection: true,
-  error: true
+  connection: true
 };
+export let sessionErrorInclude = include;
 
 class sessionErrorServiceImpl {
   async listSessionErrors(d: {
@@ -95,7 +95,7 @@ class sessionErrorServiceImpl {
       include
     });
     if (!sessionError)
-      throw new ServiceError(notFoundError('session.event', d.sessionErrorId));
+      throw new ServiceError(notFoundError('session.error', d.sessionErrorId));
 
     return sessionError;
   }

@@ -19,6 +19,7 @@ import {
 } from '@metorial-subspace/module-deployment';
 import { providerDeploymentInternalService } from '@metorial-subspace/module-provider-internal';
 import { sessionProviderInclude } from './sessionProvider';
+import { sessionTemplateProviderInclude } from './sessionTemplateProvider';
 
 export type SessionProviderInputToolFilters = { toolKeys?: string[] } | null;
 
@@ -385,7 +386,7 @@ class sessionProviderInputServiceImpl {
             toolFilter: await this.mapToolFilters({ filters: ps.toolFilters })
           }))
         ),
-        include: sessionProviderInclude
+        include: sessionTemplateProviderInclude
       });
     });
   }
