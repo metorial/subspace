@@ -150,7 +150,7 @@ class sessionTemplateProviderServiceImpl {
     });
   }
 
-  async deleteSessionTemplateProvider(d: {
+  async archiveSessionTemplateProvider(d: {
     tenant: Tenant;
     solution: Solution;
     sessionTemplateProvider: SessionTemplateProvider;

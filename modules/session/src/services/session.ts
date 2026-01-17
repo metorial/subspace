@@ -221,7 +221,7 @@ class sessionServiceImpl {
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid
         },
-        data: { status: 'inactive' },
+        data: { status: 'archived' },
         include
       });
 

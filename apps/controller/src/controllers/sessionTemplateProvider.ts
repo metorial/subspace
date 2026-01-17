@@ -150,7 +150,7 @@ export let sessionTemplateProviderController = app.controller({
       })
     )
     .do(async ctx => {
-      await sessionTemplateProviderService.deleteSessionTemplateProvider({
+      await sessionTemplateProviderService.archiveSessionTemplateProvider({
         sessionTemplateProvider: ctx.sessionTemplateProvider,
         tenant: ctx.tenant,
         solution: ctx.solution

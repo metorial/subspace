@@ -155,7 +155,7 @@ class sessionProviderServiceImpl {
     });
   }
 
-  async deleteSessionProvider(d: {
+  async archiveSessionProvider(d: {
     tenant: Tenant;
     solution: Solution;
     sessionProvider: SessionProvider;
