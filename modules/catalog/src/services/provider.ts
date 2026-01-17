@@ -16,27 +16,29 @@ let include = {
 
 export let providerInclude = include;
 
+export let getProviderTenantFilter = (d: { tenant: Tenant; solution: Solution }) => ({
+  OR: [
+    { access: 'public' as const },
+    {
+      access: 'tenant' as const,
+      ownerTenantOid: d.tenant.oid,
+      ownerSolutionOid: d.solution.oid
+    }
+  ]
+});
+
 class providerServiceImpl {
   async getProviderById(d: { providerId: string; tenant: Tenant; solution: Solution }) {
     let provider = await db.provider.findFirst({
       where: {
         AND: [
+          getProviderTenantFilter(d),
+
           {
             OR: [
               { id: d.providerId },
               { listing: { id: d.providerId } },
               { listing: { slug: d.providerId } }
-            ]
-          },
-
-          {
-            OR: [
-              { access: 'public' },
-              {
-                access: 'tenant',
-                ownerTenantOid: d.tenant.oid,
-                ownerSolutionOid: d.solution.oid
-              }
             ]
           }
         ]
@@ -56,16 +58,7 @@ class providerServiceImpl {
         async opts =>
           await db.provider.findMany({
             ...opts,
-            where: {
-              OR: [
-                { access: 'public' },
-                {
-                  access: 'tenant',
-                  ownerTenantOid: d.tenant.oid,
-                  ownerSolutionOid: d.solution.oid
-                }
-              ]
-            },
+            where: getProviderTenantFilter(d),
             include
           })
       )

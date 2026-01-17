@@ -43,7 +43,13 @@ class publisherServiceImpl {
         async opts =>
           await db.publisher.findMany({
             ...opts,
-            where: {},
+            where: {
+              OR: [
+                { type: 'metorial' as const },
+                { type: 'external' as const },
+                { type: 'tenant' as const, tenantOid: d.tenant.oid }
+              ]
+            },
             include
           })
       )
