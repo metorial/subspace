@@ -34,9 +34,10 @@ model ProviderRun {
   solutionOid BigInt
   solution    Solution @relation(fields: [solutionOid], references: [oid])
 
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @default(now()) @updatedAt
-  lastPingAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+  completedAt DateTime?
+  lastPingAt  DateTime?
 
   sessionMessages SessionMessage[]
   sessionEvents   SessionEvent[]
