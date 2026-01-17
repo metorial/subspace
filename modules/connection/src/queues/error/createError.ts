@@ -28,7 +28,7 @@ export let createErrorQueueProcessor = createErrorQueue.process(async data => {
     ])
   );
 
-  let global = await db.sessionErrorGlobal.findUnique({
+  let group = await db.sessionErrorGroup.findUnique({
     where: {
       type_hash_tenantOid: {
         type: error.type,
@@ -38,8 +38,8 @@ export let createErrorQueueProcessor = createErrorQueue.process(async data => {
     }
   });
 
-  if (!global) {
-    global = await db.sessionErrorGlobal.upsert({
+  if (!group) {
+    group = await db.sessionErrorGroup.upsert({
       where: {
         type_hash_tenantOid: {
           type: error.type,
@@ -48,7 +48,7 @@ export let createErrorQueueProcessor = createErrorQueue.process(async data => {
         }
       },
       create: {
-        ...getId('sessionErrorGlobal'),
+        ...getId('sessionErrorGroup'),
         type: error.type,
         hash,
         code: error.code,
@@ -63,25 +63,25 @@ export let createErrorQueueProcessor = createErrorQueue.process(async data => {
 
   let dayStart = startOfDay(new Date());
 
-  await db.sessionErrorGlobalOccurrencePeriod.upsert({
+  await db.sessionErrorGroupOccurrencePeriod.upsert({
     where: {
-      globalOid_startsAt: {
-        globalOid: global.oid,
+      groupOid_startsAt: {
+        groupOid: group.oid,
         startsAt: dayStart
       }
     },
     update: { occurrenceCount: { increment: 1 } },
     create: {
       oid: snowflake.nextId(),
-      globalOid: global.oid,
+      groupOid: group.oid,
       startsAt: dayStart,
       endsAt: endOfDay(dayStart),
       occurrenceCount: 1
     }
   });
 
-  await db.sessionErrorGlobal.updateMany({
-    where: { oid: global.oid },
+  await db.sessionErrorGroup.updateMany({
+    where: { oid: group.oid },
     data: { occurrenceCount: { increment: 1 } }
   });
 
@@ -92,7 +92,9 @@ export let createErrorQueueProcessor = createErrorQueue.process(async data => {
       sessionOid: error.sessionOid,
       connectionOid: error.connectionOid,
       providerRunOid: error.providerRunOid,
-      errorOid: error.oid
+      errorOid: error.oid,
+      tenantOid: error.tenantOid,
+      solutionOid: error.solutionOid
     }
   });
 });

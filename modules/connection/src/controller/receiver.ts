@@ -92,7 +92,9 @@ export let startController = () => {
         sessionOid: instance.sessionProvider.sessionOid,
         instanceOid: instance.oid,
         connectionOid: connection.oid,
-        sessionProviderOid: instance.sessionProvider.oid
+        sessionProviderOid: instance.sessionProvider.oid,
+        tenantOid: session.tenantOid,
+        solutionOid: session.solutionOid
       }
     });
 

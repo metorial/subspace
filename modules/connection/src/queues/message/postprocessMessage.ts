@@ -2,6 +2,8 @@ import { createQueue, QueueRetryError } from '@lowerdeck/queue';
 import { db } from '@metorial-subspace/db';
 import { differenceInMinutes } from 'date-fns';
 import { env } from '../../env';
+import { completeMessage } from '../../shared/completeMessage';
+import { upsertParticipant } from '../../shared/upsertParticipant';
 
 export let postprocessMessageQueue = createQueue<{ messageId: string }>({
   name: 'con/msg/post',
@@ -11,7 +13,8 @@ export let postprocessMessageQueue = createQueue<{ messageId: string }>({
 
 export let postprocessMessageQueueProcessor = postprocessMessageQueue.process(async data => {
   let message = await db.sessionMessage.findFirst({
-    where: { id: data.messageId }
+    where: { id: data.messageId },
+    include: { session: true }
   });
   if (!message) throw new QueueRetryError();
 
@@ -19,9 +22,15 @@ export let postprocessMessageQueueProcessor = postprocessMessageQueue.process(as
     let createdAgo = Math.abs(differenceInMinutes(new Date(), message.createdAt));
 
     if (createdAgo >= 5) {
-      await db.sessionMessage.update({
-        where: { id: message.id },
-        data: {
+      let responderParticipant = await upsertParticipant({
+        session: message.session,
+        from: { type: 'system' }
+      });
+
+      await completeMessage(
+        { messageId: message.id },
+        {
+          responderParticipant,
           failureReason: 'timeout',
           status: 'failed',
           completedAt: new Date(),
@@ -33,7 +42,7 @@ export let postprocessMessageQueueProcessor = postprocessMessageQueue.process(as
             }
           }
         }
-      });
+      );
 
       return;
     }
