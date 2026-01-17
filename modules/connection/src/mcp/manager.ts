@@ -18,8 +18,8 @@ export class McpManager {
     return this._connection.connection;
   }
 
-  senderListener(d: { selectedChannels: 'all' | 'broadcast' }) {
-    let listener = this._connection.listener();
+  senderListener(d: { selectedChannels: 'all' | 'broadcast'; replayFromMessageId?: string }) {
+    let listener = this._connection.listener(d);
 
     return {
       close: () => listener.close(),
@@ -65,6 +65,10 @@ export class McpManager {
 
   createConnection() {
     return this._connection.createConnection();
+  }
+
+  disableConnection() {
+    return this._connection.disableConnection();
   }
 
   createMessage(d: CreateMessageProps) {

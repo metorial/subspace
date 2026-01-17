@@ -111,8 +111,13 @@ export let mcpRouter = createHono().all(`/:key?`, async c => {
         c.res.headers.set('Metorial-Connection-Token', con.connection.token);
       }
 
+      let lastMessageId = c.req.header('Last-Event-ID');
+
       return streamSSE(c, async stream => {
-        let listenerStream = await con.listener({ selectedChannels: 'broadcast' });
+        let listenerStream = await con.listener({
+          selectedChannels: 'broadcast',
+          replayFromMessageId: lastMessageId
+        });
 
         stream.onAbort(async () => {
           await listenerStream.close();
@@ -161,7 +166,9 @@ export let mcpRouter = createHono().all(`/:key?`, async c => {
     }
 
     if (c.req.method == 'DELETE') {
-      // TODO: disable connection
+      let con = await McpConnection.create(baseParams);
+      await con.disableConnection();
+      return c.text('OK', 200);
     }
 
     return c.text('Method Not Allowed', 405);

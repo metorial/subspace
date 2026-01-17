@@ -93,7 +93,10 @@ export class SenderManager {
         tenant: true,
         solution: true,
         connections: d.connectionToken
-          ? { where: { token: d.connectionToken }, include: { participant: true } }
+          ? {
+              where: { token: d.connectionToken, status: { not: 'deleted' } },
+              include: { participant: true }
+            }
           : false
       }
     });
@@ -104,60 +107,86 @@ export class SenderManager {
       throw new ServiceError(notFoundError('connection'));
     }
 
-    if (connection && connection.isManuallyDisabled) {
-      throw new ServiceError(
-        goneError({
-          message: 'Connection has been disabled'
-        })
-      );
-    }
-
-    if (connection && connection.expiresAt < new Date()) {
-      if (connection.initState == 'pending') {
-        throw new ServiceError(
-          badRequestError({
-            message: 'Connection not initialized in time'
-          })
-        );
+    if (connection) {
+      if (connection.isManuallyDisabled) {
+        throw new ServiceError(goneError({ message: 'Connection has been disabled' }));
+      }
+      if (connection.status == 'archived') {
+        throw new ServiceError(goneError({ message: 'Connection has been archived' }));
       }
 
-      connection = await withTransaction(async db => {
-        await db.sessionConnection.updateMany({
-          where: { oid: connection!.oid },
-          data: {
-            token: await ID.generateId('sessionConnection_token'),
-            isReplaced: true
-          }
+      if (connection.expiresAt < new Date()) {
+        if (connection.initState == 'pending') {
+          throw new ServiceError(
+            badRequestError({
+              message: 'Connection not initialized in time'
+            })
+          );
+        }
+
+        connection = await withTransaction(async db => {
+          await db.sessionConnection.updateMany({
+            where: { oid: connection!.oid },
+            data: {
+              token: await ID.generateId('sessionConnection_token'),
+              isReplaced: true
+            }
+          });
+
+          return await db.sessionConnection.create({
+            data: {
+              ...getId('sessionConnection'),
+
+              // We move the token to a new connection after a certain time
+              // to prevent stale connections from being reused
+              token: d.connectionToken!,
+              mcpTransport: connection!.mcpTransport,
+              mcpProtocolVersion: connection!.mcpProtocolVersion,
+
+              status: 'active',
+              state: 'disconnected' as const, // We want to reuse the connection logic below
+              initState: connection!.initState,
+              isManuallyDisabled: false,
+              isReplaced: false,
+
+              sessionOid: session.oid,
+              participantOid: connection!.participantOid,
+              tenantOid: session.tenantOid,
+              solutionOid: session.solutionOid,
+
+              mcpData: connection!.mcpData,
+
+              expiresAt: addDays(new Date(), DEFAULT_SESSION_EXPIRATION_DAYS),
+              lastPingAt: new Date()
+            }
+          });
         });
+      }
 
-        return await db.sessionConnection.create({
-          data: {
-            ...getId('sessionConnection'),
+      if (connection.state == 'disconnected') {
+        (async () => {
+          await db.sessionConnection.updateMany({
+            where: { oid: connection.oid },
+            data: {
+              state: 'connected',
+              lastActiveAt: new Date(),
+              lastPingAt: new Date(),
+              disconnectedAt: null
+            }
+          });
 
-            // We move the token to a new connection after a certain time
-            // to prevent stale connections from being reused
-            token: d.connectionToken!,
-            mcpTransport: connection!.mcpTransport,
-            mcpProtocolVersion: connection!.mcpProtocolVersion,
-
-            status: 'active',
-            state: 'connected' as const,
-            initState: connection!.initState,
-            isManuallyDisabled: false,
-            isReplaced: false,
-
-            sessionOid: session.oid,
-            participantOid: connection!.participantOid,
-            tenantOid: session.tenantOid,
-            solutionOid: session.solutionOid,
-
-            mcpData: connection!.mcpData,
-
-            expiresAt: addDays(new Date(), DEFAULT_SESSION_EXPIRATION_DAYS),
-            lastPingAt: new Date()
-          }
-        });
-      });
+          await db.sessionEvent.createMany({
+            data: {
+              ...getId('sessionEvent'),
+              type: 'connection_connected',
+              sessionOid: session.oid,
+              connectionOid: connection.oid,
+              tenantOid: session.tenantOid,
+              solutionOid: session.solutionOid
+            }
+          });
+        })().catch(() => {});
+      }
     }
 
     return new SenderManager(session, connection, session.tenant, session.solution);
@@ -207,6 +236,7 @@ export class SenderManager {
         data: {
           ...getId('sessionProviderInstance'),
           sessionProviderOid: provider.oid,
+          sessionOid: provider.sessionOid,
           pairOid: pair.pair.oid,
           pairVersionOid: pair.version.oid,
           expiresAt: addMinutes(new Date(), SESSION_PROVIDER_INSTANCE_EXPIRATION_INCREMENT)
@@ -430,6 +460,33 @@ export class SenderManager {
     return this.connection;
   }
 
+  async disableConnection() {
+    if (!this.connection) {
+      throw new ServiceError(badRequestError({ message: 'No connection to disable' }));
+    }
+
+    this.connection = await db.sessionConnection.update({
+      where: { oid: this.connection.oid },
+      data: {
+        isManuallyDisabled: true,
+        state: 'disconnected',
+        disconnectedAt: new Date()
+      },
+      include: { participant: true }
+    });
+
+    await db.sessionEvent.createMany({
+      data: {
+        ...getId('sessionEvent'),
+        type: 'connection_disabled',
+        sessionOid: this.session.oid,
+        connectionOid: this.connection.oid,
+        tenantOid: this.session.tenantOid,
+        solutionOid: this.session.solutionOid
+      }
+    });
+  }
+
   async initialize(d: InitProps) {
     // Ignore if already initialized
     if (this.connection?.initState == 'completed') return this.connection;
@@ -459,7 +516,9 @@ export class SenderManager {
       mcpTransport: d.mcpTransport,
 
       expiresAt: addDays(new Date(), DEFAULT_SESSION_EXPIRATION_DAYS),
-      lastPingAt: new Date()
+      lastPingAt: new Date(),
+      lastActiveAt: new Date(),
+      disconnectedAt: null
     };
 
     let connection: SessionConnection;
@@ -494,6 +553,17 @@ export class SenderManager {
       data: {
         ...getId('sessionEvent'),
         type: 'connection_created',
+        sessionOid: this.session.oid,
+        connectionOid: connection.oid,
+        tenantOid: this.session.tenantOid,
+        solutionOid: this.session.solutionOid
+      }
+    });
+
+    await db.sessionEvent.createMany({
+      data: {
+        ...getId('sessionEvent'),
+        type: 'connection_connected',
         sessionOid: this.session.oid,
         connectionOid: connection.oid,
         tenantOid: this.session.tenantOid,
