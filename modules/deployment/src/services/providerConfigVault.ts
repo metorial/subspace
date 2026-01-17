@@ -16,6 +16,8 @@ import {
   withTransaction
 } from '@metorial-subspace/db';
 import {
+  checkDeletedEdit,
+  checkDeletedRelation,
   normalizeStatusForGet,
   normalizeStatusForList,
   resolveProviderConfigs,
@@ -119,6 +121,7 @@ class providerConfigVaultServiceImpl {
       lockedVersion: ProviderVersion | null;
     };
     input: {
+      isEphemeral: boolean | undefined;
       name: string;
       description?: string;
       metadata?: Record<string, any>;
@@ -129,6 +132,9 @@ class providerConfigVaultServiceImpl {
     };
   }) {
     checkTenant(d, d.providerDeployment);
+
+    checkDeletedRelation(d.provider);
+    checkDeletedRelation(d.providerDeployment);
 
     return await withTransaction(async db => {
       let config = await providerConfigService.createProviderConfig({
@@ -180,6 +186,7 @@ class providerConfigVaultServiceImpl {
     };
   }) {
     checkTenant(d, d.providerConfigVault);
+    checkDeletedEdit(d.providerConfigVault, 'update');
 
     return withTransaction(async db => {
       let vault = await db.providerConfigVault.update({

@@ -14,11 +14,13 @@ import {
   withTransaction
 } from '@metorial-subspace/db';
 import {
+  checkDeletedEdit,
   normalizeStatusForGet,
   normalizeStatusForList,
   resolveProviders
 } from '@metorial-subspace/list-utils';
 import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
+import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
 import {
   providerAuthCredentialsCreatedQueue,
@@ -193,6 +195,9 @@ class providerAuthCredentialsServiceImpl {
       metadata?: Record<string, any>;
     };
   }) {
+    checkTenant(d, d.providerAuthCredentials);
+    checkDeletedEdit(d.providerAuthCredentials, 'update');
+
     return withTransaction(async db => {
       let config = await db.providerAuthCredentials.update({
         where: {

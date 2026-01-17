@@ -17,7 +17,11 @@ import {
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
-import { normalizeStatusForGet, normalizeStatusForList } from '@metorial-subspace/list-utils';
+import {
+  checkDeletedRelation,
+  normalizeStatusForGet,
+  normalizeStatusForList
+} from '@metorial-subspace/list-utils';
 import { providerDeploymentInternalService } from '@metorial-subspace/module-provider-internal';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
@@ -106,6 +110,8 @@ class providerOAuthSetupServiceImpl {
   }) {
     checkTenant(d, d.providerDeployment);
     checkTenant(d, d.credentials);
+
+    checkDeletedRelation(d.providerDeployment, { allowEphemeral: d.input.isEphemeral });
 
     if (d.providerDeployment && d.providerDeployment.providerOid != d.provider.oid) {
       throw new ServiceError(

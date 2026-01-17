@@ -18,6 +18,8 @@ import {
   withTransaction
 } from '@metorial-subspace/db';
 import {
+  checkDeletedEdit,
+  checkDeletedRelation,
   normalizeStatusForGet,
   normalizeStatusForList,
   resolveProviderAuthCredentials,
@@ -209,6 +211,7 @@ class providerAuthConfigServiceImpl {
     };
   }) {
     checkTenant(d, d.providerDeployment);
+    checkDeletedRelation(d.providerDeployment, { allowEphemeral: d.input.isEphemeral });
 
     if (d.providerDeployment && d.providerDeployment.providerOid != d.provider.oid) {
       throw new ServiceError(
@@ -292,6 +295,7 @@ class providerAuthConfigServiceImpl {
     };
   }) {
     checkTenant(d, d.providerAuthConfig);
+    checkDeletedEdit(d.providerAuthConfig, 'update');
 
     if (d.providerAuthConfig.type == 'oauth_automated') {
       throw new ServiceError(

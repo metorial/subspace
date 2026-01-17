@@ -23,6 +23,8 @@ import {
   withTransaction
 } from '@metorial-subspace/db';
 import {
+  checkDeletedEdit,
+  checkDeletedRelation,
   normalizeStatusForGet,
   normalizeStatusForList,
   resolveProviderConfigs,
@@ -211,7 +213,13 @@ class providerConfigServiceImpl {
     };
   }) {
     checkTenant(d, d.providerDeployment);
-    if (d.input.config.type == 'vault') checkTenant(d, d.input.config.vault);
+    checkDeletedRelation(d.provider, { allowEphemeral: d.input.isEphemeral });
+    checkDeletedRelation(d.providerDeployment, { allowEphemeral: d.input.isEphemeral });
+
+    if (d.input.config.type == 'vault') {
+      checkTenant(d, d.input.config.vault);
+      checkDeletedRelation(d.input.config.vault, { allowEphemeral: d.input.isEphemeral });
+    }
 
     if (d.input.isDefault && !d.providerDeployment) {
       throw new ServiceError(
@@ -419,6 +427,7 @@ class providerConfigServiceImpl {
     };
   }) {
     checkTenant(d, d.providerConfig);
+    checkDeletedEdit(d.providerConfig, 'update');
 
     return withTransaction(async db => {
       let config = await db.providerConfig.update({

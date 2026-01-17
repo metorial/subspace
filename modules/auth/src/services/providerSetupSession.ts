@@ -21,6 +21,8 @@ import {
   withTransaction
 } from '@metorial-subspace/db';
 import {
+  checkDeletedEdit,
+  checkDeletedRelation,
   normalizeStatusForGet,
   normalizeStatusForList,
   resolveProviderAuthConfigs,
@@ -160,6 +162,9 @@ class providerSetupSessionServiceImpl {
     };
   }) {
     checkTenant(d, d.providerDeployment);
+
+    checkDeletedRelation(d.providerDeployment);
+    checkDeletedRelation(d.credentials);
 
     if (d.providerDeployment && d.providerDeployment.providerOid != d.provider.oid) {
       throw new ServiceError(
@@ -339,6 +344,8 @@ class providerSetupSessionServiceImpl {
       metadata?: Record<string, any>;
     };
   }) {
+    checkDeletedEdit(d.providerSetupSession, 'update');
+
     return withTransaction(async db => {
       let config = await db.providerSetupSession.update({
         where: {

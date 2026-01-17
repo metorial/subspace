@@ -3,6 +3,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import { db, getId, ProviderAuthConfig, Solution, Tenant } from '@metorial-subspace/db';
 import {
+  checkDeletedRelation,
   normalizeStatusForGet,
   normalizeStatusForList,
   resolveProviderAuthConfigs,
@@ -97,6 +98,7 @@ class providerAuthExportServiceImpl {
     };
   }) {
     checkTenant(d, d.authConfig);
+    checkDeletedRelation(d.authConfig);
 
     let backend = await getBackend({ entity: d.authConfig });
 

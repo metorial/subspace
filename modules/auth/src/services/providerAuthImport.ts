@@ -12,6 +12,7 @@ import {
   Tenant
 } from '@metorial-subspace/db';
 import {
+  checkDeletedRelation,
   normalizeStatusForGet,
   normalizeStatusForList,
   resolveProviderAuthConfigs,
@@ -115,6 +116,12 @@ class providerAuthImportServiceImpl {
       input: { authMethodId?: string };
     }
   ) {
+    checkTenant(d, d.providerAuthConfig);
+    checkTenant(d, d.providerDeployment);
+
+    checkDeletedRelation(d.providerAuthConfig);
+    checkDeletedRelation(d.providerDeployment);
+
     let checkRes = await this.check(d);
 
     let { authMethod } = await providerAuthConfigInternalService.getVersionAndAuthMethod({

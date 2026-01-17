@@ -19,6 +19,8 @@ import {
   withTransaction
 } from '@metorial-subspace/db';
 import {
+  checkDeletedEdit,
+  checkDeletedRelation,
   normalizeStatusForGet,
   normalizeStatusForList,
   resolveProviders,
@@ -145,7 +147,12 @@ class providerDeploymentServiceImpl {
           };
     };
   }) {
-    if (d.input.config.type == 'vault') checkTenant(d, d.input.config.vault);
+    checkDeletedRelation(d.provider, { allowEphemeral: d.input.isEphemeral });
+
+    if (d.input.config.type == 'vault') {
+      checkTenant(d, d.input.config.vault);
+      checkDeletedRelation(d.input.config.vault, { allowEphemeral: d.input.isEphemeral });
+    }
 
     return withTransaction(async db => {
       if (!d.provider.defaultVariant) {
@@ -290,6 +297,8 @@ class providerDeploymentServiceImpl {
       metadata?: Record<string, any>;
     };
   }) {
+    checkDeletedEdit(d.providerDeployment, 'update');
+
     return withTransaction(async db => {
       let providerDeployment = await db.providerDeployment.update({
         where: {
