@@ -49,6 +49,8 @@ class sessionConnectionServiceImpl {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
 
+              isEphemeral: false,
+
               ...normalizeStatusForList(d).hasParent,
 
               state: d.connectionState ? { in: d.connectionState } : undefined,

@@ -319,6 +319,7 @@ class sessionProviderInputServiceImpl {
 
             tag: generateCode(3),
             status: 'active' as const,
+            isEphemeral: d.session.isEphemeral,
 
             tenantOid: d.tenant.oid,
             solutionOid: d.solution.oid,

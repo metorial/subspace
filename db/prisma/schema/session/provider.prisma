@@ -9,6 +9,7 @@ model SessionProvider {
   id  String @unique
 
   status          SessionProviderStatus
+  isEphemeral     Boolean
   isParentDeleted Boolean               @default(false)
 
   totalProductiveClientMessageCount Int @default(0)

@@ -69,6 +69,8 @@ class sessionServiceImpl {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
 
+              isEphemeral: false,
+
               ...normalizeStatusForList(d).noParent,
 
               AND: [
@@ -140,6 +142,8 @@ class sessionServiceImpl {
         data: {
           ...getId('session'),
           status: 'active',
+
+          isEphemeral: false,
 
           name: d.input.name?.trim() || undefined,
           description: d.input.description?.trim() || undefined,

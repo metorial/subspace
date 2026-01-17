@@ -26,6 +26,8 @@ model SessionConnection {
 
   token String @unique
 
+  isEphemeral Boolean
+
   status          SessionConnectionStatus
   isParentDeleted Boolean                 @default(false)
 

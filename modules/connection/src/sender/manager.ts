@@ -137,6 +137,8 @@ export class SenderManager {
             data: {
               ...getId('sessionConnection'),
 
+              isEphemeral: connection!.isEphemeral,
+
               // We move the token to a new connection after a certain time
               // to prevent stale connections from being reused
               token: d.connectionToken!,
@@ -433,6 +435,8 @@ export class SenderManager {
 
           token: await ID.generateId('sessionConnection_token'),
 
+          isEphemeral: this.session.isEphemeral,
+
           status: 'active',
           state: 'connected',
           initState: 'pending',
@@ -533,6 +537,7 @@ export class SenderManager {
           ...getId('sessionConnection'),
           ...connectionData,
           isReplaced: false,
+          isEphemeral: this.session.isEphemeral,
           status: 'active',
           tenantOid: this.tenant.oid,
           solutionOid: this.solution.oid,

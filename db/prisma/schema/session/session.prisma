@@ -10,6 +10,8 @@ model Session {
 
   status SessionStatus
 
+  isEphemeral Boolean
+
   connectionState SessionConnectionState @default(disconnected)
   isStarted       Boolean                @default(false)
 
