@@ -24,14 +24,26 @@ export let providerSpecificationController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+
+          ids: v.optional(v.array(v.string())),
+          providerIds: v.optional(v.array(v.string())),
+          providerVersionIds: v.optional(v.array(v.string())),
+          providerDeploymentIds: v.optional(v.array(v.string())),
+          providerConfigIds: v.optional(v.array(v.string()))
         })
       )
     )
     .do(async ctx => {
       let paginator = await providerSpecificationService.listProviderSpecifications({
         tenant: ctx.tenant,
-        solution: ctx.solution
+        solution: ctx.solution,
+
+        ids: ctx.input.ids,
+        providerIds: ctx.input.providerIds,
+        providerVersionIds: ctx.input.providerVersionIds,
+        providerDeploymentIds: ctx.input.providerDeploymentIds,
+        providerConfigIds: ctx.input.providerConfigIds
       });
 
       let list = await paginator.run(ctx.input);

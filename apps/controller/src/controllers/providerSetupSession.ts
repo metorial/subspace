@@ -18,7 +18,8 @@ export let providerSetupSessionApp = tenantApp.use(async ctx => {
   let providerSetupSession = await providerSetupSessionService.getProviderSetupSessionById({
     providerSetupSessionId,
     tenant: ctx.tenant,
-    solution: ctx.solution
+    solution: ctx.solution,
+    allowDeleted: ctx.body.allowDeleted
   });
 
   return { providerSetupSession };
@@ -30,14 +31,36 @@ export let providerSetupSessionController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+
+          status: v.optional(
+            v.array(v.enumOf(['inactive', 'failed', 'completed', 'expired', 'pending']))
+          ),
+          allowDeleted: v.optional(v.boolean()),
+
+          ids: v.optional(v.array(v.string())),
+          providerIds: v.optional(v.array(v.string())),
+          providerAuthMethodIds: v.optional(v.array(v.string())),
+          providerDeploymentIds: v.optional(v.array(v.string())),
+          providerAuthConfigIds: v.optional(v.array(v.string())),
+          providerAuthCredentialsIds: v.optional(v.array(v.string()))
         })
       )
     )
     .do(async ctx => {
       let paginator = await providerSetupSessionService.listProviderSetupSessions({
         tenant: ctx.tenant,
-        solution: ctx.solution
+        solution: ctx.solution,
+
+        status: ctx.input.status,
+        allowDeleted: ctx.input.allowDeleted,
+
+        ids: ctx.input.ids,
+        providerIds: ctx.input.providerIds,
+        providerAuthMethodIds: ctx.input.providerAuthMethodIds,
+        providerDeploymentIds: ctx.input.providerDeploymentIds,
+        providerAuthConfigIds: ctx.input.providerAuthConfigIds,
+        providerAuthCredentialsIds: ctx.input.providerAuthCredentialsIds
       });
 
       let list = await paginator.run(ctx.input);
@@ -50,7 +73,8 @@ export let providerSetupSessionController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
-        providerSetupSessionId: v.string()
+        providerSetupSessionId: v.string(),
+        allowDeleted: v.optional(v.boolean())
       })
     )
     .do(async ctx => providerSetupSessionPresenter(ctx.providerSetupSession)),
@@ -148,6 +172,7 @@ export let providerSetupSessionController = app.controller({
       v.object({
         tenantId: v.string(),
         providerSetupSessionId: v.string(),
+        allowDeleted: v.optional(v.boolean()),
 
         name: v.optional(v.string()),
         description: v.optional(v.string()),

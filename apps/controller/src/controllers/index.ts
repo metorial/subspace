@@ -15,6 +15,7 @@ import { providerDeploymentController } from './providerDeployment';
 import { providerListingGroupController } from './providerGroup';
 import { providerListingController } from './providerListing';
 import { providerOAuthSetupController } from './providerOAuthSetup';
+import { providerRunController } from './providerRun';
 import { providerSetupSessionController } from './providerSetupSession';
 import { providerSpecificationController } from './providerSpecification';
 import { providerToolController } from './providerTool';
@@ -22,7 +23,14 @@ import { providerVariantController } from './providerVariant';
 import { providerVersionController } from './providerVersion';
 import { publisherController } from './publisher';
 import { sessionController } from './session';
+import { sessionConnectionController } from './sessionConnection';
+import { sessionErrorController } from './sessionError';
+import { sessionErrorGroupController } from './sessionErrorGlobal';
+import { sessionMessageController } from './sessionMessage';
+import { sessionParticipantController } from './sessionParticipant';
 import { sessionProviderController } from './sessionProvider';
+import { sessionTemplateController } from './sessionTemplate';
+import { sessionTemplateProviderController } from './sessionTemplateProvider';
 import { solutionController } from './solution';
 import { tenantController } from './tenant';
 
@@ -50,6 +58,14 @@ export let rootController = app.controller({
   solution: solutionController,
   session: sessionController,
   sessionProvider: sessionProviderController,
+  sessionConnection: sessionConnectionController,
+  sessionError: sessionErrorController,
+  sessionErrorGroup: sessionErrorGroupController,
+  sessionMessage: sessionMessageController,
+  sessionParticipant: sessionParticipantController,
+  sessionTemplate: sessionTemplateController,
+  sessionTemplateProvider: sessionTemplateProviderController,
+  providerRun: providerRunController,
   tenant: tenantController
 });
 

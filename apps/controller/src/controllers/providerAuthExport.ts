@@ -15,7 +15,8 @@ export let providerAuthExportApp = tenantApp.use(async ctx => {
   let providerAuthExport = await providerAuthExportService.getProviderAuthExportById({
     providerAuthExportId,
     tenant: ctx.tenant,
-    solution: ctx.solution
+    solution: ctx.solution,
+    allowDeleted: ctx.body.allowDeleted
   });
 
   return { providerAuthExport };
@@ -27,14 +28,28 @@ export let providerAuthExportController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+
+          allowDeleted: v.optional(v.boolean()),
+
+          ids: v.optional(v.array(v.string())),
+          providerIds: v.optional(v.array(v.string())),
+          providerAuthCredentialsIds: v.optional(v.array(v.string())),
+          providerAuthConfigIds: v.optional(v.array(v.string()))
         })
       )
     )
     .do(async ctx => {
       let paginator = await providerAuthExportService.listProviderAuthExports({
         tenant: ctx.tenant,
-        solution: ctx.solution
+        solution: ctx.solution,
+
+        allowDeleted: ctx.input.allowDeleted,
+
+        ids: ctx.input.ids,
+        providerIds: ctx.input.providerIds,
+        providerAuthCredentialsIds: ctx.input.providerAuthCredentialsIds,
+        providerAuthConfigIds: ctx.input.providerAuthConfigIds
       });
 
       let list = await paginator.run(ctx.input);
@@ -47,7 +62,8 @@ export let providerAuthExportController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
-        providerAuthExportId: v.string()
+        providerAuthExportId: v.string(),
+        allowDeleted: v.optional(v.boolean())
       })
     )
     .do(async ctx => providerAuthExportPresenter(ctx.providerAuthExport)),

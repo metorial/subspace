@@ -28,12 +28,13 @@ export let providerListingController = app.controller({
 
           search: v.optional(v.string()),
 
-          collectionIds: v.optional(v.array(v.string())),
-          categoryIds: v.optional(v.array(v.string())),
+          providerCollectionIds: v.optional(v.array(v.string())),
+          providerCategoryIds: v.optional(v.array(v.string())),
+          providerGroupIds: v.optional(v.array(v.string())),
           publisherIds: v.optional(v.array(v.string())),
 
           isPublic: v.optional(v.boolean()),
-          onlyFormTenant: v.optional(v.boolean()),
+          onlyFromTenant: v.optional(v.boolean()),
 
           isVerified: v.optional(v.boolean()),
           isOfficial: v.optional(v.boolean()),
@@ -50,12 +51,13 @@ export let providerListingController = app.controller({
 
         search: ctx.input.search,
 
-        collectionIds: ctx.input.collectionIds,
-        categoryIds: ctx.input.categoryIds,
+        providerCollectionIds: ctx.input.providerCollectionIds,
+        providerCategoryIds: ctx.input.providerCategoryIds,
+        providerGroupIds: ctx.input.providerGroupIds,
         publisherIds: ctx.input.publisherIds,
 
         isPublic: ctx.input.isPublic,
-        onlyFromTenant: ctx.input.onlyFormTenant,
+        onlyFromTenant: ctx.input.onlyFromTenant,
 
         isVerified: ctx.input.isVerified,
         isOfficial: ctx.input.isOfficial,

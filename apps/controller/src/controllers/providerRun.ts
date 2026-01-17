@@ -1,0 +1,73 @@
+import { Paginator } from '@lowerdeck/pagination';
+import { v } from '@lowerdeck/validation';
+import { providerRunService } from '@metorial-subspace/module-session';
+import { providerRunPresenter } from '@metorial-subspace/presenters';
+import { app } from './_app';
+import { tenantApp } from './tenant';
+
+export let providerRunApp = tenantApp.use(async ctx => {
+  let providerRunId = ctx.body.providerRunId;
+  if (!providerRunId) throw new Error('ProviderRun ID is required');
+
+  let providerRun = await providerRunService.getProviderRunById({
+    providerRunId,
+    tenant: ctx.tenant,
+    solution: ctx.solution,
+    allowDeleted: ctx.body.allowDeleted
+  });
+
+  return { providerRun };
+});
+
+export let providerRunController = app.controller({
+  list: tenantApp
+    .handler()
+    .input(
+      Paginator.validate(
+        v.object({
+          tenantId: v.string(),
+
+          status: v.optional(v.array(v.enumOf(['running', 'stopped']))),
+          allowDeleted: v.optional(v.boolean()),
+
+          ids: v.optional(v.array(v.string())),
+          sessionIds: v.optional(v.array(v.string())),
+          sessionProviderIds: v.optional(v.array(v.string())),
+          sessionConnectionIds: v.optional(v.array(v.string())),
+          providerIds: v.optional(v.array(v.string())),
+          providerVersionIds: v.optional(v.array(v.string()))
+        })
+      )
+    )
+    .do(async ctx => {
+      let paginator = await providerRunService.listProviderRuns({
+        tenant: ctx.tenant,
+        solution: ctx.solution,
+
+        status: ctx.input.status,
+        allowDeleted: ctx.input.allowDeleted,
+
+        ids: ctx.input.ids,
+        sessionIds: ctx.input.sessionIds,
+        sessionProviderIds: ctx.input.sessionProviderIds,
+        sessionConnectionIds: ctx.input.sessionConnectionIds,
+        providerIds: ctx.input.providerIds,
+        providerVersionIds: ctx.input.providerVersionIds
+      });
+
+      let list = await paginator.run(ctx.input);
+
+      return Paginator.presentLight(list, providerRunPresenter);
+    }),
+
+  get: providerRunApp
+    .handler()
+    .input(
+      v.object({
+        tenantId: v.string(),
+        providerRunId: v.string(),
+        allowDeleted: v.optional(v.boolean())
+      })
+    )
+    .do(async ctx => providerRunPresenter(ctx.providerRun))
+});

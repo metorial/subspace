@@ -14,7 +14,8 @@ export let providerAuthCredentialsApp = tenantApp.use(async ctx => {
     await providerAuthCredentialsService.getProviderAuthCredentialsById({
       providerAuthCredentialsId,
       tenant: ctx.tenant,
-      solution: ctx.solution
+      solution: ctx.solution,
+      allowDeleted: ctx.body.allowDeleted
     });
 
   return { providerAuthCredentials };
@@ -26,14 +27,26 @@ export let providerAuthCredentialsController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+
+          status: v.optional(v.array(v.enumOf(['active', 'inactive']))),
+          allowDeleted: v.optional(v.boolean()),
+
+          ids: v.optional(v.array(v.string())),
+          providerIds: v.optional(v.array(v.string()))
         })
       )
     )
     .do(async ctx => {
       let paginator = await providerAuthCredentialsService.listProviderAuthCredentials({
         tenant: ctx.tenant,
-        solution: ctx.solution
+        solution: ctx.solution,
+
+        status: ctx.input.status,
+        allowDeleted: ctx.input.allowDeleted,
+
+        ids: ctx.input.ids,
+        providerIds: ctx.input.providerIds
       });
 
       let list = await paginator.run(ctx.input);
@@ -46,7 +59,8 @@ export let providerAuthCredentialsController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
-        providerAuthCredentialsId: v.string()
+        providerAuthCredentialsId: v.string(),
+        allowDeleted: v.optional(v.boolean())
       })
     )
     .do(async ctx => providerAuthCredentialsPresenter(ctx.providerAuthCredentials)),
@@ -104,6 +118,7 @@ export let providerAuthCredentialsController = app.controller({
       v.object({
         tenantId: v.string(),
         providerAuthCredentialsId: v.string(),
+        allowDeleted: v.optional(v.boolean()),
 
         name: v.optional(v.string()),
         description: v.optional(v.string()),

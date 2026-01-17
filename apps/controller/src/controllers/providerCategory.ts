@@ -25,14 +25,22 @@ export let providerListingCategoryController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+
+          ids: v.optional(v.array(v.string())),
+          providerIds: v.optional(v.array(v.string())),
+          providerListingIds: v.optional(v.array(v.string()))
         })
       )
     )
     .do(async ctx => {
       let paginator = await providerListingCategoryService.listProviderListingCategories({
         tenant: ctx.tenant,
-        solution: ctx.solution
+        solution: ctx.solution,
+
+        ids: ctx.input.ids,
+        providerIds: ctx.input.providerIds,
+        providerListingIds: ctx.input.providerListingIds
       });
 
       let list = await paginator.run(ctx.input);
