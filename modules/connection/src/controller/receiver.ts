@@ -175,7 +175,7 @@ export let startController = () => {
         data: {
           status: res.status,
           output,
-          completedAt: new Date(),
+          completedAt: res.completedAt,
           providerRunOid: providerRun.oid,
           slateToolCallOid: res.slateToolCallOid
         }

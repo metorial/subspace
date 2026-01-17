@@ -24,6 +24,7 @@ export let postprocessMessageQueueProcessor = postprocessMessageQueue.process(as
         data: {
           isFailedDueToTimeout: true,
           status: 'failed',
+          completedAt: new Date(),
           output: {
             type: 'error',
             data: {

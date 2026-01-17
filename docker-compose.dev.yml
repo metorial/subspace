@@ -226,6 +226,8 @@ services:
       PUBLIC_SERVICE_URL: http://localhost:52071
       SLATES_HUB_URL: http://slates-hub:52046/slates-hub
       VOYAGER_URL: http://voyager:52060/metorial-voyager
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      MESSAGE_BUCKET_NAME: messages
 
     volumes:
       - ./apps/controller:/app/apps/controller:ro
@@ -265,6 +267,8 @@ services:
       PUBLIC_SERVICE_URL: http://localhost:52071
       SLATES_HUB_URL: http://slates-hub:52046/slates-hub
       VOYAGER_URL: http://voyager:52060/metorial-voyager
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      MESSAGE_BUCKET_NAME: messages
 
     volumes:
       - ./apps/public:/app/apps/public:ro
@@ -302,6 +306,8 @@ services:
       PUBLIC_SERVICE_URL: http://localhost:52071
       SLATES_HUB_URL: http://slates-hub:52046/slates-hub
       VOYAGER_URL: http://voyager:52060/metorial-voyager
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      MESSAGE_BUCKET_NAME: messages
 
     volumes:
       - ./apps/worker:/app/apps/worker:ro
@@ -339,6 +345,8 @@ services:
       PUBLIC_SERVICE_URL: http://localhost:52071
       SLATES_HUB_URL: http://slates-hub:52046/slates-hub
       VOYAGER_URL: http://voyager:52060/metorial-voyager
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      MESSAGE_BUCKET_NAME: messages
 
     volumes:
       - ./apps/connection-manager:/app/apps/connection-manager:ro
@@ -378,6 +386,8 @@ services:
       PUBLIC_SERVICE_URL: http://localhost:52071
       SLATES_HUB_URL: http://slates-hub:52046/slates-hub
       VOYAGER_URL: http://voyager:52060/metorial-voyager
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      MESSAGE_BUCKET_NAME: messages
 
     volumes:
       - ./apps/connection-endpoint:/app/apps/connection-endpoint:ro

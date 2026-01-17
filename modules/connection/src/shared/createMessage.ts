@@ -11,6 +11,7 @@ import {
   type SessionProvider
 } from '@metorial-subspace/db';
 import { postprocessMessageQueue } from '../queues/postprocessMessage';
+import { sessionMessageBucketRecord } from '../storage';
 
 export interface CreateMessageProps {
   status: SessionMessageStatus;
@@ -48,6 +49,7 @@ export let createMessage = async (d: CreateMessagePropsFull) => {
       isProductive: d.isProductive,
       connectionOid: d.connection?.oid,
       sessionProviderOid: d.provider?.oid,
+      bucketOid: sessionMessageBucketRecord.oid,
 
       input: d.input,
       output: d.output,

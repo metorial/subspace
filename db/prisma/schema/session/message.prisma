@@ -27,7 +27,7 @@ model SessionMessage {
   clientMcpId Json
 
   /// [SessionMessageInput]
-  input Json
+  input Json?
 
   /// [SessionMessageOutput]
   output Json?
@@ -37,6 +37,10 @@ model SessionMessage {
 
   isProductive         Boolean @default(true)
   isFailedDueToTimeout Boolean @default(false)
+
+  isOffloadedToStorage Boolean                     @default(false)
+  bucketOid            Int
+  bucket               SessionMessageStorageBucket @relation(fields: [bucketOid], references: [oid])
 
   sessionOid BigInt
   session    Session @relation(fields: [sessionOid], references: [oid])
@@ -60,4 +64,14 @@ model SessionMessage {
   completedAt DateTime?
 
   sessionEvents SessionEvent[]
+
+  @@index([isOffloadedToStorage])
+}
+
+model SessionMessageStorageBucket {
+  oid       Int      @id
+  bucket    String   @unique
+  createdAt DateTime @default(now())
+
+  sessionMessages SessionMessage[]
 }
