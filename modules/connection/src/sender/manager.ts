@@ -1,4 +1,3 @@
-import { canonicalize } from '@lowerdeck/canonicalize';
 import {
   badRequestError,
   goneError,
@@ -6,7 +5,6 @@ import {
   notFoundError,
   ServiceError
 } from '@lowerdeck/error';
-import { Hash } from '@lowerdeck/hash';
 import { createLock } from '@lowerdeck/lock';
 import {
   db,
@@ -15,6 +13,7 @@ import {
   type Session,
   type SessionConnection,
   SessionConnectionMcpConnectionTransport,
+  type SessionParticipant,
   type SessionProvider,
   type Solution,
   type Tenant,
@@ -35,6 +34,7 @@ import { topics } from '../lib/topic';
 import { wire } from '../lib/wire';
 import { completeMessage } from '../shared/completeMessage';
 import { createMessage, type CreateMessageProps } from '../shared/createMessage';
+import { upsertParticipant } from '../shared/upsertParticipant';
 import type { WireInput, WireResult } from '../types/wireMessage';
 
 let instanceLock = createLock({
@@ -75,7 +75,9 @@ export class SenderManager {
 
   private constructor(
     readonly session: Session,
-    public connection: SessionConnection | undefined,
+    public connection:
+      | (SessionConnection & { participant?: SessionParticipant | null })
+      | undefined,
     readonly tenant: Tenant,
     readonly solution: Solution
   ) {}
@@ -90,7 +92,9 @@ export class SenderManager {
       include: {
         tenant: true,
         solution: true,
-        connections: d.connectionToken ? { where: { token: d.connectionToken } } : false
+        connections: d.connectionToken
+          ? { where: { token: d.connectionToken }, include: { participant: true } }
+          : false
       }
     });
     if (!session) throw new ServiceError(notFoundError('session'));
@@ -120,7 +124,10 @@ export class SenderManager {
       connection = await withTransaction(async db => {
         await db.sessionConnection.updateMany({
           where: { oid: connection!.oid },
-          data: { token: await ID.generateId('sessionConnection_token') }
+          data: {
+            token: await ID.generateId('sessionConnection_token'),
+            isReplaced: true
+          }
         });
 
         return await db.sessionConnection.create({
@@ -133,12 +140,14 @@ export class SenderManager {
             mcpTransport: connection!.mcpTransport,
             mcpProtocolVersion: connection!.mcpProtocolVersion,
 
+            status: 'active',
             state: 'connected' as const,
             initState: connection!.initState,
             isManuallyDisabled: false,
+            isReplaced: false,
 
             sessionOid: session.oid,
-            clientOid: connection!.clientOid,
+            participantOid: connection!.participantOid,
             tenantOid: session.tenantOid,
             solutionOid: session.solutionOid,
 
@@ -301,7 +310,7 @@ export class SenderManager {
         badRequestError({ message: 'No connection id/token passed to connection' })
       );
     }
-    if (!connection.clientOid || connection.initState != 'completed') {
+    if (!connection.participant || connection.initState != 'completed') {
       throw new ServiceError(badRequestError({ message: 'Connection is not initialized' }));
     }
 
@@ -315,6 +324,7 @@ export class SenderManager {
         type: 'tool.call',
         data: d.input
       },
+      senderParticipant: connection.participant,
       clientMcpId: d.clientMcpId,
       isViaMcp: d.isViaMcp,
       tool,
@@ -337,12 +347,18 @@ export class SenderManager {
         } satisfies WireInput);
 
         if (!res.success) {
+          let system = await upsertParticipant({
+            session: this.session,
+            from: { type: 'system' }
+          });
+
           await completeMessage(
             { messageId: message.id },
             {
               status: 'failed',
               completedAt: new Date(),
               failureReason: 'system_error',
+              responderParticipant: system,
               output: {
                 type: 'error',
                 data: internalServerError({
@@ -387,9 +403,11 @@ export class SenderManager {
 
           token: await ID.generateId('sessionConnection_token'),
 
-          state: 'connected' as const,
-          initState: 'pending' as const,
+          status: 'active',
+          state: 'connected',
+          initState: 'pending',
           isManuallyDisabled: false,
+          isReplaced: false,
 
           mcpTransport: 'none',
           mcpProtocolVersion: null,
@@ -416,21 +434,13 @@ export class SenderManager {
     // Ignore if already initialized
     if (this.connection?.initState == 'completed') return this.connection;
 
-    let hash = await Hash.sha256(canonicalize([this.tenant.id, d.client]));
-
-    let client = await db.sessionClient.upsert({
-      where: {
-        tenantOid_hash: { tenantOid: this.tenant.oid, hash }
-      },
-      create: {
-        ...getId('sessionClient'),
-        hash,
-        identifier: d.client.identifier,
-        name: d.client.name,
-        payload: d.client,
-        tenantOid: this.tenant.oid
-      },
-      update: {}
+    let participant = await upsertParticipant({
+      session: this.session,
+      from: {
+        type: 'connection_client',
+        transport: d.mcpTransport == 'none' ? 'metorial' : 'mcp',
+        participant: d.client
+      }
     });
 
     let connectionData = {
@@ -439,7 +449,7 @@ export class SenderManager {
       isManuallyDisabled: false,
 
       sessionOid: this.session.oid,
-      clientOid: client.oid,
+      clientOid: participant.oid,
 
       mcpData: {
         capabilities: d.mcpCapabilities,
@@ -463,6 +473,8 @@ export class SenderManager {
         data: {
           ...getId('sessionConnection'),
           ...connectionData,
+          isReplaced: false,
+          status: 'active',
           tenantOid: this.tenant.oid,
           solutionOid: this.solution.oid,
           token: await ID.generateId('sessionConnection_token')

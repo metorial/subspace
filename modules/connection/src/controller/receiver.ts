@@ -9,6 +9,7 @@ import { Store } from '../lib/store';
 import { topics } from '../lib/topic';
 import { wire } from '../lib/wire';
 import { completeMessage } from '../shared/completeMessage';
+import { upsertParticipant } from '../shared/upsertParticipant';
 import type { BroadcastMessage, WireInput, WireResult } from '../types/wireMessage';
 
 export let startController = () => {
@@ -24,7 +25,7 @@ export let startController = () => {
 
     let connection = await db.sessionConnection.findFirst({
       where: { oid: topic.connectionOid },
-      include: { client: true }
+      include: { participant: true }
     });
 
     let instance = await db.sessionProviderInstance.findFirst({
@@ -35,7 +36,8 @@ export let startController = () => {
             session: true,
             tenant: true,
             config: true,
-            authConfig: true
+            authConfig: true,
+            provider: true
           }
         },
         pairVersion: {
@@ -63,9 +65,9 @@ export let startController = () => {
       return;
     }
 
-    let client = connection.client;
-    if (!client) {
-      console.warn(`No client found for connection id: ${connection.id}`);
+    let participant = connection.participant;
+    if (!participant) {
+      console.warn(`No participant found for connection id: ${connection.id}`);
       ctx.close();
       return;
     }
@@ -89,7 +91,8 @@ export let startController = () => {
         providerVersionOid: version.oid,
         sessionOid: instance.sessionProvider.sessionOid,
         instanceOid: instance.oid,
-        connectionOid: connection.oid
+        connectionOid: connection.oid,
+        sessionProviderOid: instance.sessionProvider.oid
       }
     });
 
@@ -100,7 +103,9 @@ export let startController = () => {
           type: 'provider_run_started',
           sessionOid: session.oid,
           connectionOid: connection.oid,
-          providerRunOid: providerRun.oid
+          providerRunOid: providerRun.oid,
+          tenantOid: session.tenantOid,
+          solutionOid: session.solutionOid
         }
       })
       .catch(() => {});
@@ -149,7 +154,7 @@ export let startController = () => {
           runState: backendProviderRun.runState,
           providerAuthConfig: instance.sessionProvider.authConfig,
           input: data.input,
-          client
+          client: participant
         });
 
         let status =
@@ -190,6 +195,14 @@ export let startController = () => {
           ? { type: 'error' as const, data: res.output as any }
           : { type: 'tool.result' as const, data: res.output };
 
+      let participant = await upsertParticipant({
+        session,
+        from: {
+          type: 'provider',
+          provider: instance.sessionProvider.provider
+        }
+      });
+
       let message = await completeMessage(
         { messageId: data.sessionMessageId },
         {
@@ -198,6 +211,7 @@ export let startController = () => {
           providerRun: providerRun,
           completedAt: res.completedAt,
           slateToolCall: res.slateToolCall,
+          responderParticipant: participant,
           failureReason: res.isSystemError ? 'system_error' : undefined
         }
       );
@@ -233,7 +247,9 @@ export let startController = () => {
           type: 'provider_run_stopped',
           sessionOid: session.oid,
           connectionOid: connection.oid,
-          providerRunOid: providerRun.oid
+          providerRunOid: providerRun.oid,
+          tenantOid: session.tenantOid,
+          solutionOid: session.solutionOid
         }
       });
 

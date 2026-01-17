@@ -10,6 +10,7 @@ import {
   type Session,
   type SessionConnection,
   type SessionError,
+  type SessionParticipant,
   type SessionProvider
 } from '@metorial-subspace/db';
 import { messageCreatedQueue } from '../queues/message/messageCreated';
@@ -20,10 +21,12 @@ export interface CreateMessageProps {
   status: SessionMessageStatus;
   type: SessionMessageType;
   source: SessionMessageSource;
+  senderParticipant: SessionParticipant;
   failureReason?: SessionMessageFailureReason;
 
   input: PrismaJson.SessionMessageInput;
   output?: PrismaJson.SessionMessageOutput;
+  responderParticipant?: SessionParticipant;
 
   provider?: SessionProvider;
 
@@ -44,6 +47,10 @@ export interface CreateMessagePropsFull extends CreateMessageProps {
 }
 
 export let createMessage = async (data: CreateMessagePropsFull) => {
+  if (data.output && !data.responderParticipant) {
+    throw new Error('responderParticipant is required when output is provided');
+  }
+
   if (data.output?.type == 'error') {
     data.status = 'failed';
   }
@@ -83,6 +90,8 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
       sessionProviderOid: data.provider?.oid,
       tenantOid: data.session.tenantOid,
       solutionOid: data.session.solutionOid,
+      senderParticipantOid: data.senderParticipant.oid,
+      responderParticipantOid: data.responderParticipant?.oid,
 
       bucketOid: sessionMessageBucketRecord.oid,
       errorOid: error?.oid,

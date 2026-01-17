@@ -1,3 +1,8 @@
+enum SessionConnectionStatus {
+  active
+  inactive
+}
+
 enum SessionConnectionState {
   connected
   disconnected
@@ -20,18 +25,22 @@ model SessionConnection {
 
   token String @unique
 
-  totalProductiveClientMessageCount Int @default(0)
-  totalProductiveServerMessageCount Int @default(0)
+  status          SessionConnectionStatus
+  isParentDeleted Boolean                 @default(false)
 
   state              SessionConnectionState
   initState          SessionConnectionInitState
   isManuallyDisabled Boolean
+  isReplaced         Boolean
+
+  totalProductiveClientMessageCount Int @default(0)
+  totalProductiveServerMessageCount Int @default(0)
 
   sessionOid BigInt
   session    Session @relation(fields: [sessionOid], references: [oid])
 
-  clientOid BigInt?
-  client    SessionClient? @relation(fields: [clientOid], references: [oid])
+  participantOid BigInt?
+  participant    SessionParticipant? @relation(fields: [participantOid], references: [oid])
 
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])

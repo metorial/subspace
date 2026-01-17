@@ -3,7 +3,8 @@ import {
   getId,
   SessionMessageFailureReason,
   type ProviderRun,
-  type SessionError
+  type SessionError,
+  type SessionParticipant
 } from '@metorial-subspace/db';
 import { createError, messageFailureReasonToErrorType } from './createError';
 
@@ -11,6 +12,7 @@ export interface UpdateMessageData {
   status: 'failed' | 'succeeded';
   output: PrismaJson.SessionMessageOutput;
   failureReason?: SessionMessageFailureReason;
+  responderParticipant: SessionParticipant;
   completedAt?: Date;
 
   providerRun?: ProviderRun;
@@ -58,9 +60,10 @@ export let completeMessage = async (
       completedAt: data.completedAt,
       failureReason: data.failureReason,
 
+      errorOid: error?.oid,
       providerRunOid: data.providerRun?.oid,
       slateToolCallOid: data.slateToolCall?.oid,
-      errorOid: error?.oid
+      responderParticipantOid: data.responderParticipant.oid
     }
   });
 

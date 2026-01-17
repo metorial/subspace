@@ -15,6 +15,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { PING_MESSAGE_ID_PREFIX } from '../const';
 import { providerToolPresenter } from '../presenter';
+import { upsertParticipant } from '../shared/upsertParticipant';
 import { McpControlMessageHandler } from './control';
 import { markdownList } from './lib/markdownList';
 import { mcpValidate } from './lib/mcpValidate';
@@ -52,11 +53,25 @@ export class McpSender {
       let isBroadcastBySender = !!message;
 
       if (res.store && !message) {
+        let senderParticipant =
+          this.connection?.participant ??
+          (await upsertParticipant({
+            session: this.session,
+            from: { type: 'unknown' }
+          }));
+        let responderParticipant = await upsertParticipant({
+          session: this.session,
+          from: { type: 'system' }
+        });
+
         message = await this.manager.createMessage({
           status: 'error' in res.mcp ? 'failed' : 'succeeded',
           type: 'mcp_control',
           source: 'client',
           isProductive: true,
+
+          senderParticipant,
+          responderParticipant,
 
           input: { type: 'mcp', data: msg },
           output: { type: 'mcp', data: res.mcp },
@@ -91,12 +106,26 @@ export class McpSender {
         ? e
         : internalServerError({ message: 'Internal server error processing MCP message' });
 
+      let senderParticipant =
+        this.connection?.participant ??
+        (await upsertParticipant({
+          session: this.session,
+          from: { type: 'unknown' }
+        }));
+      let responderParticipant = await upsertParticipant({
+        session: this.session,
+        from: { type: 'system' }
+      });
+
       let message = await this.manager.createMessage({
         status: 'failed',
         type: 'unknown',
         source: 'client',
         isProductive: true,
         failureReason: 'system_error',
+
+        senderParticipant,
+        responderParticipant,
 
         input: { type: 'mcp', data: msg },
         output: {
