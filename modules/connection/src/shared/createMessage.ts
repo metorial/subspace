@@ -2,21 +2,25 @@ import {
   db,
   getId,
   ID,
+  SessionMessageFailureReason,
   SessionMessageSource,
   SessionMessageStatus,
   SessionMessageType,
   type ProviderTool,
   type Session,
   type SessionConnection,
+  type SessionError,
   type SessionProvider
 } from '@metorial-subspace/db';
-import { postprocessMessageQueue } from '../queues/postprocessMessage';
+import { messageCreatedQueue } from '../queues/message/messageCreated';
 import { sessionMessageBucketRecord } from '../storage';
+import { createError, messageFailureReasonToErrorType } from './createError';
 
 export interface CreateMessageProps {
   status: SessionMessageStatus;
   type: SessionMessageType;
   source: SessionMessageSource;
+  failureReason?: SessionMessageFailureReason;
 
   input: PrismaJson.SessionMessageInput;
   output?: PrismaJson.SessionMessageOutput;
@@ -30,6 +34,8 @@ export interface CreateMessageProps {
 
   clientMcpId?: PrismaJson.SessionMessageClientMcpId;
   isViaMcp: boolean;
+
+  completedAt?: Date;
 }
 
 export interface CreateMessagePropsFull extends CreateMessageProps {
@@ -37,75 +43,82 @@ export interface CreateMessagePropsFull extends CreateMessageProps {
   connection: SessionConnection | null;
 }
 
-export let createMessage = async (d: CreateMessagePropsFull) => {
+export let createMessage = async (data: CreateMessagePropsFull) => {
+  if (data.output?.type == 'error') {
+    data.status = 'failed';
+  }
+
+  if (data.status && data.status != 'waiting_for_response') {
+    data.completedAt = data.completedAt ?? new Date();
+  }
+
+  if (data.status == 'failed' && !data.failureReason) {
+    data.failureReason = 'provider_error';
+  }
+
+  let error: SessionError | undefined;
+  if (data.status == 'failed') {
+    error = await createError({
+      type: messageFailureReasonToErrorType(data.failureReason ?? 'provider_error'),
+      session: data.session,
+      connection: data.connection,
+      output: data.output!
+    });
+  }
+
   let message = await db.sessionMessage.create({
     data: {
       ...getId('sessionMessage'),
       toolCallId: await ID.generateId('toolCall'),
-      sessionOid: d.session.oid,
       status: 'waiting_for_response',
       type: 'tool_call',
-      source: d.source,
-      isProductive: d.isProductive,
-      connectionOid: d.connection?.oid,
-      sessionProviderOid: d.provider?.oid,
+      source: data.source,
+
+      isProductive: data.isProductive,
+      failureReason: data.failureReason,
+      completedAt: data.completedAt,
+
+      sessionOid: data.session.oid,
+      connectionOid: data.connection?.oid,
+      sessionProviderOid: data.provider?.oid,
       bucketOid: sessionMessageBucketRecord.oid,
+      errorOid: error?.oid,
 
-      input: d.input,
-      output: d.output,
+      input: data.input,
+      output: data.output,
 
-      methodOrToolKey: d.methodOrToolKey ?? d.tool?.key ?? null,
-      toolOid: d.tool?.oid,
-      clientMcpId: d.clientMcpId ?? null,
-      isViaMcp: d.isViaMcp
+      methodOrToolKey: data.methodOrToolKey ?? data.tool?.key ?? null,
+      toolOid: data.tool?.oid,
+      clientMcpId: data.clientMcpId ?? null,
+      isViaMcp: data.isViaMcp
     }
   });
-  await postprocessMessageQueue.add({ messageId: message.id });
 
-  (async () => {
+  await db.sessionEvent.createMany({
+    data: {
+      ...getId('sessionEvent'),
+      type: 'message_created',
+      sessionOid: message.sessionOid,
+      connectionOid: message.connectionOid,
+      providerRunOid: message.providerRunOid,
+      messageOid: message.oid
+    }
+  });
+
+  if (message.status != 'waiting_for_response') {
     await db.sessionEvent.createMany({
       data: {
         ...getId('sessionEvent'),
         type: 'message_processed',
-        sessionOid: d.session.oid,
-        connectionOid: d.connection?.oid,
+        sessionOid: message.sessionOid,
+        connectionOid: message.connectionOid,
         providerRunOid: message.providerRunOid,
         messageOid: message.oid
       }
     });
+  }
 
-    if (message.connectionOid) {
-      await db.sessionConnection.updateMany({
-        where: { oid: message.connectionOid },
-        data: {
-          lastActiveAt: new Date(),
-          lastMessageAt: new Date(),
-          totalProductiveClientMessageCount:
-            d.isProductive && d.source == 'client' ? { increment: 1 } : undefined
-        }
-      });
-    }
-
-    if (message.sessionProviderOid) {
-      await db.sessionProvider.updateMany({
-        where: { oid: message.sessionProviderOid },
-        data: {
-          lastMessageAt: new Date(),
-          totalProductiveClientMessageCount:
-            d.isProductive && d.source == 'client' ? { increment: 1 } : undefined
-        }
-      });
-    }
-
-    await db.session.updateMany({
-      where: { oid: message.sessionOid },
-      data: {
-        lastMessageAt: new Date(),
-        totalProductiveClientMessageCount:
-          d.isProductive && d.source == 'client' ? { increment: 1 } : undefined
-      }
-    });
-  })().catch(() => {});
+  await messageCreatedQueue.add({ messageId: message.id });
 
   return message;
 };

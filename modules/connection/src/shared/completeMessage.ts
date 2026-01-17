@@ -1,0 +1,91 @@
+import {
+  db,
+  getId,
+  SessionMessageFailureReason,
+  type ProviderRun,
+  type SessionError
+} from '@metorial-subspace/db';
+import { createError, messageFailureReasonToErrorType } from './createError';
+
+export interface UpdateMessageData {
+  status: 'failed' | 'succeeded';
+  output: PrismaJson.SessionMessageOutput;
+  failureReason?: SessionMessageFailureReason;
+  completedAt?: Date;
+
+  providerRun?: ProviderRun;
+  slateToolCall?: { oid: bigint };
+}
+
+export let completeMessage = async (
+  filter: { messageId: string } | { messageOid: bigint },
+  data: UpdateMessageData
+) => {
+  data.completedAt = data.completedAt ?? new Date();
+
+  if (data.output?.type == 'error') {
+    data.status = 'failed';
+  }
+
+  if (data.status == 'failed' && !data.failureReason) {
+    data.failureReason = 'provider_error';
+  }
+
+  let error: SessionError | undefined;
+  if (data.status == 'failed') {
+    let message = await db.sessionMessage.findFirstOrThrow({
+      where: 'messageId' in filter ? { id: filter.messageId } : { oid: filter.messageOid },
+      include: { connection: true, session: true }
+    });
+
+    error = await createError({
+      type: messageFailureReasonToErrorType(data.failureReason ?? 'provider_error'),
+      session: message.session,
+      connection: message.connection,
+      output: data.output!,
+      providerRun: data.providerRun
+    });
+  }
+
+  let message = await db.sessionMessage.update({
+    where: {
+      ...('messageId' in filter ? { id: filter.messageId } : { oid: filter.messageOid }),
+      status: 'waiting_for_response'
+    },
+    data: {
+      output: data.output,
+      status: data.status,
+      completedAt: data.completedAt,
+      failureReason: data.failureReason,
+
+      providerRunOid: data.providerRun?.oid,
+      slateToolCallOid: data.slateToolCall?.oid,
+      errorOid: error?.oid
+    }
+  });
+
+  (async () => {
+    await db.sessionEvent.updateMany({
+      where: { messageOid: message.oid },
+      data: {
+        providerRunOid: message.providerRunOid,
+        connectionOid: message.connectionOid,
+        sessionOid: message.sessionOid,
+        errorOid: message.errorOid
+      }
+    });
+
+    await db.sessionEvent.createMany({
+      data: {
+        ...getId('sessionEvent'),
+        type: 'message_processed',
+        sessionOid: message.sessionOid,
+        connectionOid: message.connectionOid,
+        providerRunOid: message.providerRunOid,
+        messageOid: message.oid
+      }
+    });
+  })().catch(() => {});
+
+  return message;
+};
