@@ -34,6 +34,7 @@ import {
   providerDeploymentConfigPairInternalService,
   providerDeploymentInternalService
 } from '@metorial-subspace/module-provider-internal';
+import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
 import { env } from '../env';
@@ -63,6 +64,8 @@ class providerConfigServiceImpl {
     tenant: Tenant;
     solution: Solution;
 
+    search?: string;
+
     status?: ProviderConfigStatus[];
     allowDeleted?: boolean;
 
@@ -76,6 +79,15 @@ class providerConfigServiceImpl {
     let specifications = await resolveProviderSpecifications(d, d.providerSpecificationIds);
     let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
     let vaults = await resolveProviderConfigs(d, d.providerConfigVaultIds);
+
+    let search = d.search
+      ? await voyager.record.search({
+          tenantId: d.tenant.id,
+          sourceId: voyagerSource.id,
+          indexId: voyagerIndex.providerConfig.id,
+          query: d.search
+        })
+      : null;
 
     return Paginator.create(({ prisma }) =>
       prisma(
@@ -92,11 +104,12 @@ class providerConfigServiceImpl {
 
               AND: [
                 d.ids ? { id: { in: d.ids } } : undefined!,
+                search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
                 providers ? { providerOid: providers.in } : undefined!,
                 specifications ? { specificationOid: specifications.in } : undefined!,
                 deployments ? { deploymentOid: deployments.in } : undefined!,
                 vaults ? { fromVaultOid: vaults.in } : undefined!
-              ]
+              ].filter(Boolean)
             },
             include
           })

@@ -41,7 +41,7 @@ class providerServiceImpl {
               { listing: { slug: d.providerId } }
             ]
           }
-        ]
+        ].filter(Boolean)
       },
       include
     });
@@ -52,7 +52,7 @@ class providerServiceImpl {
     return provider;
   }
 
-  async listProviders(d: { tenant: Tenant; solution: Solution }) {
+  async listProviders(d: { tenant: Tenant; solution: Solution; search?: string }) {
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>

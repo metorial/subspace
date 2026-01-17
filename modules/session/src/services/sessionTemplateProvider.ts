@@ -73,7 +73,7 @@ class sessionTemplateProviderServiceImpl {
                 deployments ? { deploymentOid: deployments.in } : undefined!,
                 configs ? { configOid: configs.in } : undefined!,
                 authConfigs ? { authConfigOid: authConfigs.in } : undefined!
-              ]
+              ].filter(Boolean)
             },
             include
           })

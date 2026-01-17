@@ -25,6 +25,7 @@ import {
   resolveProviderDeployments,
   resolveProviders
 } from '@metorial-subspace/list-utils';
+import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { providerAuthConfigUpdatedQueue } from '../queues/lifecycle/providerAuthConfig';
 import { providerAuthConfigInternalService } from './providerAuthConfigInternal';
@@ -46,6 +47,8 @@ class providerAuthConfigServiceImpl {
     status?: ProviderAuthConfigStatus[];
     allowDeleted?: boolean;
 
+    search?: string;
+
     ids?: string[];
     providerIds?: string[];
     providerDeploymentIds?: string[];
@@ -56,6 +59,15 @@ class providerAuthConfigServiceImpl {
     let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
     let credentials = await resolveProviderAuthCredentials(d, d.providerAuthCredentialsIds);
     let authMethods = await resolveProviderAuthMethods(d, d.providerAuthMethodIds);
+
+    let search = d.search
+      ? await voyager.record.search({
+          tenantId: d.tenant.id,
+          sourceId: voyagerSource.id,
+          indexId: voyagerIndex.providerAuthConfig.id,
+          query: d.search
+        })
+      : null;
 
     return Paginator.create(({ prisma }) =>
       prisma(
@@ -71,11 +83,12 @@ class providerAuthConfigServiceImpl {
 
               AND: [
                 d.ids ? { id: { in: d.ids } } : undefined!,
+                search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
                 providers ? { providerOid: providers.in } : undefined!,
                 deployments ? { deploymentOid: deployments.in } : undefined!,
                 credentials ? { authCredentialsOid: credentials.in } : undefined!,
                 authMethods ? { authMethodOid: authMethods.in } : undefined!
-              ]
+              ].filter(Boolean)
             },
             include
           })

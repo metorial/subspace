@@ -98,7 +98,7 @@ class providerSetupSessionServiceImpl {
                 authConfigs ? { authConfigOid: authConfigs.in } : undefined!,
                 authCredentials ? { authCredentialsOid: authCredentials.in } : undefined!,
                 authMethods ? { authMethodOid: authMethods.in } : undefined!
-              ]
+              ].filter(Boolean)
             },
             include
           })

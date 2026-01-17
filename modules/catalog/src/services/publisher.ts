@@ -2,6 +2,7 @@ import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import { db, Tenant } from '@metorial-subspace/db';
+import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 
 let include = {};
 
@@ -37,7 +38,16 @@ class publisherServiceImpl {
     return publisher;
   }
 
-  async listPublishers(d: { tenant: Tenant }) {
+  async listPublishers(d: { tenant: Tenant; search?: string }) {
+    let search = d.search
+      ? await voyager.record.search({
+          tenantId: d.tenant.id,
+          sourceId: voyagerSource.id,
+          indexId: voyagerIndex.publisher.id,
+          query: d.search
+        })
+      : null;
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -48,7 +58,9 @@ class publisherServiceImpl {
                 { type: 'metorial' as const },
                 { type: 'external' as const },
                 { type: 'tenant' as const, tenantOid: d.tenant.oid }
-              ]
+              ],
+
+              id: search ? { in: search.map(r => r.documentId) } : undefined!
             },
             include
           })

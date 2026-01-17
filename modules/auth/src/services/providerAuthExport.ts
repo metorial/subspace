@@ -55,7 +55,7 @@ class providerAuthExportServiceImpl {
                 authCredentials
                   ? { authConfig: { authCredentialsOid: authCredentials.in } }
                   : undefined!
-              ]
+              ].filter(Boolean)
             },
             include
           })

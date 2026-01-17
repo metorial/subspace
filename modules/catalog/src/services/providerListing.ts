@@ -8,6 +8,7 @@ import {
   resolveProviderGroups,
   resolvePublishers
 } from '@metorial-subspace/list-utils';
+import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { providerInclude } from './provider';
 
 let getInclude = (tenant: Tenant, solution: Solution) => ({
@@ -89,15 +90,14 @@ class ProviderListingService {
 
     return Paginator.create(({ prisma }) =>
       prisma(async opts => {
-        // let search = d.search
-        //   ? await searchService.search<{ id: string }>({
-        //       index: 'provider_listing',
-        //       query: d.search,
-        //       options: {
-        //         limit: opts.take * 2
-        //       }
-        //     })
-        //   : undefined;
+        let search = d.search
+          ? await voyager.record.search({
+              tenantId: d.tenant.id,
+              sourceId: voyagerSource.id,
+              indexId: voyagerIndex.providerListing.id,
+              query: d.search
+            })
+          : null;
 
         return await db.providerListing.findMany({
           ...opts,
@@ -109,6 +109,8 @@ class ProviderListingService {
 
             AND: [
               d.ids ? { id: { in: d.ids } } : undefined!,
+
+              search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
 
               {
                 OR: [

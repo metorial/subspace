@@ -81,7 +81,7 @@ class providerAuthImportServiceImpl {
                   ? { authConfig: { authCredentialsOid: authCredentials.in } }
                   : undefined!,
                 deployments ? { authConfig: { deploymentOid: deployments.in } } : undefined!
-              ]
+              ].filter(Boolean)
             },
             include
           })

@@ -18,6 +18,7 @@ import {
   normalizeStatusForList,
   resolveProviders
 } from '@metorial-subspace/list-utils';
+import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { getBackend } from '@metorial-subspace/provider';
 import {
   providerAuthCredentialsCreatedQueue,
@@ -36,10 +37,21 @@ class providerAuthCredentialsServiceImpl {
     status?: ProviderAuthCredentialsStatus[];
     allowDeleted?: boolean;
 
+    search?: string;
+
     ids?: string[];
     providerIds?: string[];
   }) {
     let providers = await resolveProviders(d, d.providerIds);
+
+    let search = d.search
+      ? await voyager.record.search({
+          tenantId: d.tenant.id,
+          sourceId: voyagerSource.id,
+          indexId: voyagerIndex.providerAuthCredentials.id,
+          query: d.search
+        })
+      : null;
 
     return Paginator.create(({ prisma }) =>
       prisma(
@@ -55,8 +67,9 @@ class providerAuthCredentialsServiceImpl {
 
               AND: [
                 d.ids ? { id: { in: d.ids } } : undefined!,
+                search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
                 providers ? { providerOid: providers.in } : undefined!
-              ]
+              ].filter(Boolean)
             },
             include
           })

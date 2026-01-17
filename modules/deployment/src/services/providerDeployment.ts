@@ -24,6 +24,7 @@ import {
   resolveProviders,
   resolveProviderVersions
 } from '@metorial-subspace/list-utils';
+import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
 import { env } from '../env';
@@ -50,6 +51,8 @@ class providerDeploymentServiceImpl {
     tenant: Tenant;
     solution: Solution;
 
+    search?: string;
+
     status?: ProviderDeploymentStatus[];
     allowDeleted?: boolean;
 
@@ -59,6 +62,15 @@ class providerDeploymentServiceImpl {
   }) {
     let providers = await resolveProviders(d, d.providerIds);
     let versions = await resolveProviderVersions(d, d.providerVersionIds);
+
+    let search = d.search
+      ? await voyager.record.search({
+          tenantId: d.tenant.id,
+          sourceId: voyagerSource.id,
+          indexId: voyagerIndex.providerDeployment.id,
+          query: d.search
+        })
+      : null;
 
     return Paginator.create(({ prisma }) =>
       prisma(
@@ -74,9 +86,10 @@ class providerDeploymentServiceImpl {
 
               AND: [
                 d.ids ? { id: { in: d.ids } } : undefined!,
+                search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
                 providers ? { providerOid: providers.in } : undefined!,
                 versions ? { lockedVersionOid: versions.in } : undefined!
-              ]
+              ].filter(Boolean)
             },
             include
           })

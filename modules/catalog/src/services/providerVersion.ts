@@ -35,7 +35,7 @@ class providerVersionServiceImpl {
               AND: [
                 d.ids ? { id: { in: d.ids } } : undefined!,
                 providers ? { providerOid: providers.in } : undefined!
-              ]
+              ].filter(Boolean)
             },
             include
           })
