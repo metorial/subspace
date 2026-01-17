@@ -1,6 +1,7 @@
 enum SessionProviderStatus {
   active
   inactive
+  deleted
 }
 
 model SessionProvider {

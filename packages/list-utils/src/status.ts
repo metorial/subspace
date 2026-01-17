@@ -1,4 +1,18 @@
-export let normalizeStatusForList = <T extends 'inactive' | string>(d: {
+/**
+ * ## Deletion behavior:
+ *
+ * # Lists:
+ * By default we exclude deleted and inactive items from lists.
+ * If allowDeleted is true, we include deleted items as well.
+ * If allowDeleted is false, inactive is allowed, but deleted is excluded.
+ *
+ * # Gets:
+ * If allowDeleted is true, we include deleted items as well.
+ * If allowDeleted is false, deleted items are excluded.
+ * Inactive items are always allowed in gets.
+ */
+
+export let normalizeStatusForList = <T extends 'inactive' | 'deleted' | string>(d: {
   allowDeleted?: boolean;
   status?: T[];
 }) => {
@@ -18,7 +32,7 @@ export let normalizeStatusForList = <T extends 'inactive' | string>(d: {
       };
     }
 
-    let normalized = d.status.filter(s => s !== 'inactive');
+    let normalized = d.status.filter(s => s != 'deleted');
 
     return {
       hasParent: {
@@ -34,28 +48,13 @@ export let normalizeStatusForList = <T extends 'inactive' | string>(d: {
     };
   }
 
-  if (d.allowDeleted) {
-    return {
-      hasParent: {
-        status: { not: 'inactive' as const },
-        isParentDeleted: undefined
-      },
-      noParent: {
-        status: { not: 'inactive' as const }
-      },
-      onlyParent: {
-        isParentDeleted: undefined
-      }
-    };
-  }
-
   return {
     hasParent: {
-      status: { not: 'inactive' as const },
+      status: { notIn: ['inactive' as const, 'deleted' as const] },
       isParentDeleted: false
     },
     noParent: {
-      status: { not: 'inactive' as const }
+      status: { notIn: ['inactive' as const, 'deleted' as const] }
     },
     onlyParent: {
       isParentDeleted: false
@@ -81,11 +80,11 @@ export let normalizeStatusForGet = (d: { allowDeleted?: boolean }) => {
 
   return {
     hasParent: {
-      status: { not: 'inactive' as const },
+      status: { not: 'deleted' as const },
       isParentDeleted: false
     },
     noParent: {
-      status: { not: 'inactive' as const }
+      status: { not: 'deleted' as const }
     },
     onlyParent: {
       isParentDeleted: false

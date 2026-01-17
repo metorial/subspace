@@ -13,6 +13,7 @@ enum ProviderAuthConfigSource {
 enum ProviderAuthConfigStatus {
   active
   inactive
+  deleted
 }
 
 model ProviderAuthConfig {

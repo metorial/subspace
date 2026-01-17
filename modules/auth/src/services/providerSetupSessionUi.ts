@@ -27,7 +27,7 @@ class providerSetupSessionUiServiceImpl {
       where: {
         id: d.sessionId,
         clientSecret: d.clientSecret,
-        status: { notIn: ['inactive'] }
+        status: { notIn: ['inactive', 'deleted'] }
       },
       include: {
         ...providerSetupSessionInclude,

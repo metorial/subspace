@@ -1,6 +1,7 @@
 enum SessionConnectionStatus {
   active
   inactive
+  deleted
 }
 
 enum SessionConnectionState {

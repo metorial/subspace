@@ -1,6 +1,7 @@
 enum SessionTemplateStatus {
   active
   inactive
+  deleted
 }
 
 model SessionTemplate {
@@ -31,6 +32,7 @@ model SessionTemplate {
 enum SessionTemplateProviderStatus {
   active
   inactive
+  deleted
 }
 
 model SessionTemplateProvider {

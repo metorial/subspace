@@ -5,6 +5,7 @@ enum ProviderSetupSessionStatus {
   expired
 
   inactive
+  deleted
 }
 
 enum ProviderSetupSessionType {

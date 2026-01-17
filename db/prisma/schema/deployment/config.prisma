@@ -1,6 +1,7 @@
 enum ProviderConfigStatus {
   active
   inactive
+  deleted
 }
 
 model ProviderConfig {

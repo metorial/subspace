@@ -1,6 +1,7 @@
 enum ProviderConfigVaultStatus {
   active
   inactive
+  deleted
 }
 
 model ProviderConfigVault {

@@ -25,6 +25,7 @@ enum ProviderAccess {
 enum ProviderStatus {
   active
   inactive
+  deleted
 }
 
 model Provider {

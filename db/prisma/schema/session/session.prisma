@@ -1,6 +1,7 @@
 enum SessionStatus {
   active
   inactive
+  deleted
 }
 
 model Session {

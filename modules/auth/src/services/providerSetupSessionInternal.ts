@@ -149,6 +149,7 @@ class providerSetupSessionInternalServiceImpl {
       if (
         d.session.status == 'completed' ||
         d.session.status == 'inactive' ||
+        d.session.status == 'deleted' ||
         d.session.status == 'expired'
       )
         return d.setup;
@@ -226,6 +227,7 @@ class providerSetupSessionInternalServiceImpl {
     if (
       d.session.status == 'completed' ||
       d.session.status == 'inactive' ||
+      d.session.status == 'deleted' ||
       d.session.status == 'expired'
     )
       return d.session;
