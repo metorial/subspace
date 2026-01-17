@@ -8,6 +8,7 @@ import {
   Provider,
   ProviderAuthConfig,
   ProviderAuthConfigSource,
+  ProviderAuthConfigStatus,
   ProviderAuthImport,
   ProviderDeployment,
   ProviderVariant,
@@ -16,6 +17,14 @@ import {
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import {
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviderAuthCredentials,
+  resolveProviderAuthMethods,
+  resolveProviderDeployments,
+  resolveProviders
+} from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { providerAuthConfigUpdatedQueue } from '../queues/lifecycle/providerAuthConfig';
 import { providerAuthConfigInternalService } from './providerAuthConfigInternal';
@@ -30,7 +39,24 @@ let include = {
 export let providerAuthConfigInclude = include;
 
 class providerAuthConfigServiceImpl {
-  async listProviderAuthConfigs(d: { tenant: Tenant; solution: Solution }) {
+  async listProviderAuthConfigs(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    status?: ProviderAuthConfigStatus[];
+    allowDeleted?: boolean;
+
+    ids?: string[];
+    providerIds?: string[];
+    providerDeploymentIds?: string[];
+    providerAuthCredentialsIds?: string[];
+    providerAuthMethodIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+    let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
+    let credentials = await resolveProviderAuthCredentials(d, d.providerAuthCredentialsIds);
+    let authMethods = await resolveProviderAuthMethods(d, d.providerAuthMethodIds);
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -39,7 +65,17 @@ class providerAuthConfigServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
-              isEphemeral: false
+              isEphemeral: false,
+
+              ...normalizeStatusForList(d).hasParent,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                providers ? { providerOid: providers.in } : undefined!,
+                deployments ? { deploymentOid: deployments.in } : undefined!,
+                credentials ? { authCredentialsOid: credentials.in } : undefined!,
+                authMethods ? { authMethodOid: authMethods.in } : undefined!
+              ]
             },
             include
           })
@@ -51,6 +87,7 @@ class providerAuthConfigServiceImpl {
     tenant: Tenant;
     solution: Solution;
     providerAuthConfigId: string;
+    allowDeleted?: boolean;
   }) {
     let providerAuthConfig = await db.providerAuthConfig.findFirst({
       where: {
@@ -60,7 +97,9 @@ class providerAuthConfigServiceImpl {
         OR: [
           { id: d.providerAuthConfigId },
           { providerSetupSession: { id: d.providerAuthConfigId } }
-        ]
+        ],
+
+        ...normalizeStatusForGet(d).hasParent
       },
       include
     });

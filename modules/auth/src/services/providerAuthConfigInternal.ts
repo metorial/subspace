@@ -205,6 +205,7 @@ class providerAuthConfigInternalServiceImpl {
         data: {
           ...getId('providerAuthConfig'),
 
+          status: 'active',
           backendOid: d.backend.oid,
 
           type: d.type,

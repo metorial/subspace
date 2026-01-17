@@ -2,6 +2,13 @@ import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import { db, getId, ProviderAuthConfig, Solution, Tenant } from '@metorial-subspace/db';
+import {
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviderAuthConfigs,
+  resolveProviderAuthCredentials,
+  resolveProviders
+} from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
 import { providerAuthConfigInclude } from './providerAuthConfig';
@@ -13,7 +20,23 @@ let include = {
 };
 
 class providerAuthExportServiceImpl {
-  async listProviderAuthExports(d: { tenant: Tenant; solution: Solution }) {
+  async listProviderAuthExports(d: {
+    tenant: Tenant;
+    solution: Solution;
+    allowDeleted?: boolean;
+
+    ids?: string[];
+    providerIds?: string[];
+    providerAuthCredentialsIds?: string[];
+    providerAuthConfigIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+    let authConfigs = await resolveProviderAuthConfigs(d, d.providerAuthConfigIds);
+    let authCredentials = await resolveProviderAuthCredentials(
+      d,
+      d.providerAuthCredentialsIds
+    );
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -21,7 +44,18 @@ class providerAuthExportServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid
+              solutionOid: d.solution.oid,
+
+              ...normalizeStatusForList(d).onlyParent,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                providers ? { authConfig: { providerOid: providers.in } } : undefined!,
+                authConfigs ? { authConfigOid: authConfigs.in } : undefined!,
+                authCredentials
+                  ? { authConfig: { authCredentialsOid: authCredentials.in } }
+                  : undefined!
+              ]
             },
             include
           })
@@ -33,12 +67,14 @@ class providerAuthExportServiceImpl {
     tenant: Tenant;
     solution: Solution;
     providerAuthExportId: string;
+    allowDeleted?: boolean;
   }) {
     let providerAuthExport = await db.providerAuthExport.findFirst({
       where: {
         id: d.providerAuthExportId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+        ...normalizeStatusForGet(d).onlyParent
       },
       include
     });

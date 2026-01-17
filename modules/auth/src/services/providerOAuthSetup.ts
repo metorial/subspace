@@ -17,6 +17,7 @@ import {
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import { normalizeStatusForGet, normalizeStatusForList } from '@metorial-subspace/list-utils';
 import { providerDeploymentInternalService } from '@metorial-subspace/module-provider-internal';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
@@ -38,7 +39,11 @@ let include = {
 export let providerOAuthSetupInclude = include;
 
 class providerOAuthSetupServiceImpl {
-  async listProviderOAuthSetups(d: { tenant: Tenant; solution: Solution }) {
+  async listProviderOAuthSetups(d: {
+    tenant: Tenant;
+    solution: Solution;
+    allowDeleted?: boolean;
+  }) {
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -47,7 +52,8 @@ class providerOAuthSetupServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
-              isEphemeral: false
+              isEphemeral: false,
+              ...normalizeStatusForList(d).onlyParent
             },
             include
           })
@@ -59,12 +65,14 @@ class providerOAuthSetupServiceImpl {
     tenant: Tenant;
     solution: Solution;
     providerOAuthSetupId: string;
+    allowDeleted?: boolean;
   }) {
     let providerOAuthSetup = await db.providerOAuthSetup.findFirst({
       where: {
         id: d.providerOAuthSetupId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+        ...normalizeStatusForGet(d).onlyParent
       },
       include
     });

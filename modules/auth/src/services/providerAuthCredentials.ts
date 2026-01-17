@@ -7,11 +7,17 @@ import {
   getId,
   Provider,
   ProviderAuthCredentials,
+  ProviderAuthCredentialsStatus,
   ProviderVariant,
   Solution,
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import {
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviders
+} from '@metorial-subspace/list-utils';
 import { getBackend } from '@metorial-subspace/provider';
 import {
   providerAuthCredentialsCreatedQueue,
@@ -23,7 +29,18 @@ let include = {
 };
 
 class providerAuthCredentialsServiceImpl {
-  async listProviderAuthCredentials(d: { tenant: Tenant; solution: Solution }) {
+  async listProviderAuthCredentials(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    status?: ProviderAuthCredentialsStatus[];
+    allowDeleted?: boolean;
+
+    ids?: string[];
+    providerIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -32,7 +49,14 @@ class providerAuthCredentialsServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
-              isEphemeral: false
+              isEphemeral: false,
+
+              ...normalizeStatusForList(d).noParent,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                providers ? { providerOid: providers.in } : undefined!
+              ]
             },
             include
           })
@@ -44,12 +68,15 @@ class providerAuthCredentialsServiceImpl {
     tenant: Tenant;
     solution: Solution;
     providerAuthCredentialsId: string;
+    allowDeleted?: boolean;
   }) {
     let providerAuthCredentials = await db.providerAuthCredentials.findFirst({
       where: {
         id: d.providerAuthCredentialsId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+
+        ...normalizeStatusForGet(d).noParent
       },
       include
     });
@@ -98,6 +125,7 @@ class providerAuthCredentialsServiceImpl {
           ...getId('providerAuthCredentials'),
 
           type: backendProviderAuthCredentials.type,
+          status: 'active',
 
           backendOid: backend.backend.oid,
 

@@ -11,6 +11,14 @@ import {
   Solution,
   Tenant
 } from '@metorial-subspace/db';
+import {
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviderAuthConfigs,
+  resolveProviderAuthCredentials,
+  resolveProviderDeployments,
+  resolveProviders
+} from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { providerAuthConfigInclude, providerAuthConfigService } from './providerAuthConfig';
 import { providerAuthConfigInternalService } from './providerAuthConfigInternal';
@@ -35,7 +43,25 @@ export interface ProviderAuthImportParams {
 }
 
 class providerAuthImportServiceImpl {
-  async listProviderAuthImports(d: { tenant: Tenant; solution: Solution }) {
+  async listProviderAuthImports(d: {
+    tenant: Tenant;
+    solution: Solution;
+    allowDeleted?: boolean;
+
+    ids?: string[];
+    providerIds?: string[];
+    providerAuthCredentialsIds?: string[];
+    providerAuthConfigIds?: string[];
+    providerDeploymentIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+    let authConfigs = await resolveProviderAuthConfigs(d, d.providerAuthConfigIds);
+    let authCredentials = await resolveProviderAuthCredentials(
+      d,
+      d.providerAuthCredentialsIds
+    );
+    let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -43,7 +69,19 @@ class providerAuthImportServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid
+              solutionOid: d.solution.oid,
+
+              ...normalizeStatusForList(d).onlyParent,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                providers ? { authConfig: { providerOid: providers.in } } : undefined!,
+                authConfigs ? { authConfigOid: authConfigs.in } : undefined!,
+                authCredentials
+                  ? { authConfig: { authCredentialsOid: authCredentials.in } }
+                  : undefined!,
+                deployments ? { authConfig: { deploymentOid: deployments.in } } : undefined!
+              ]
             },
             include
           })
@@ -55,12 +93,14 @@ class providerAuthImportServiceImpl {
     tenant: Tenant;
     solution: Solution;
     providerAuthImportId: string;
+    allowDeleted?: boolean;
   }) {
     let providerAuthImport = await db.providerAuthImport.findFirst({
       where: {
         id: d.providerAuthImportId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+        ...normalizeStatusForGet(d).onlyParent
       },
       include
     });
