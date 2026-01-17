@@ -56,6 +56,8 @@ export let ID = createIdGenerator({
   providerAuthConfigUsedForDeployment: idType.sorted('pacufd'),
 
   session: idType.sorted('ses'),
+  sessionTemplate: idType.sorted('set'),
+  sessionTemplateProvider: idType.sorted('stp'),
   providerRun: idType.sorted('prun'),
   sessionProvider: idType.sorted('spv'),
   sessionProviderInstance: idType.sorted('spi'),

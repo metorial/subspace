@@ -1,24 +1,40 @@
-enum SessionProviderStatus {
+model SessionTemplate {
+  oid BigInt @id
+  id  String @unique
+
+  name        String?
+  description String?
+  metadata    Json?
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid BigInt
+  solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  providers        SessionTemplateProvider[]
+  sessionProviders SessionProvider[]
+}
+
+enum SessionTemplateProviderStatus {
   active
   inactive
 }
 
-model SessionProvider {
+model SessionTemplateProvider {
   oid BigInt @id
   id  String @unique
 
-  status SessionProviderStatus
-
-  totalProductiveClientMessageCount Int @default(0)
-  totalProductiveServerMessageCount Int @default(0)
-
-  tag String
+  status SessionTemplateProviderStatus
 
   /// [ToolFilter]
   toolFilter Json
 
-  sessionOid BigInt
-  session    Session @relation(fields: [sessionOid], references: [oid])
+  sessionTemplateOid BigInt
+  sessionTemplate    SessionTemplate @relation(fields: [sessionTemplateOid], references: [oid])
 
   providerOid BigInt
   provider    Provider @relation(fields: [providerOid], references: [oid])
@@ -38,19 +54,8 @@ model SessionProvider {
   solutionOid BigInt
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
-  fromTemplateOid BigInt?
-  fromTemplate    SessionTemplate? @relation(fields: [fromTemplateOid], references: [oid])
-
-  fromTemplateProviderOid BigInt?
-  fromTemplateProvider    SessionTemplateProvider? @relation(fields: [fromTemplateProviderOid], references: [oid])
-
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  lastMessageAt DateTime?
-
-  sessionProviderInstances SessionProviderInstance[]
-  sessionMessages          SessionMessage[]
-
-  @@unique([sessionOid, tag])
+  sessionProviders SessionProvider[]
 }

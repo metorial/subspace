@@ -17,12 +17,33 @@ import { SessionProviderInput, sessionProviderInputService } from './sessionProv
 
 let include = {
   providers: {
-    include: sessionProviderInclude
+    include: sessionProviderInclude,
+    where: { status: 'active' as const }
   }
 };
 
 class sessionServiceImpl {
-  async listSessions(d: { tenant: Tenant; solution: Solution }) {
+  async listSessions(d: {
+    tenant: Tenant;
+    solution: Solution;
+    templateIds?: string[];
+    providerIds?: string[];
+    deploymentIds?: string[];
+    configIds?: string[];
+    authConfigIds?: string[];
+    sessionTemplateIds?: string[];
+  }) {
+    let templates = d.templateIds
+      ? await db.sessionTemplate.findMany({
+          where: {
+            id: { in: d.templateIds },
+            tenantOid: d.tenant.oid,
+            solutionOid: d.solution.oid
+          },
+          select: { oid: true }
+        })
+      : undefined;
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -30,7 +51,17 @@ class sessionServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid
+              solutionOid: d.solution.oid,
+
+              AND: [
+                templates
+                  ? {
+                      providers: {
+                        some: { fromTemplateOid: { in: templates.map(t => t.oid) } }
+                      }
+                    }
+                  : undefined!
+              ].filter(Boolean)
             },
             include
           })
@@ -78,14 +109,16 @@ class sessionServiceImpl {
           sessionEvents: {
             create: {
               ...getId('sessionEvent'),
-              type: 'session_created'
+              type: 'session_created',
+              tenantOid: d.tenant.oid,
+              solutionOid: d.solution.oid
             }
           }
         },
         include
       });
 
-      session.providers = await sessionProviderInputService.createProviderSessionsForInput({
+      session.providers = await sessionProviderInputService.createSessionProvidersForInput({
         tenant: d.tenant,
         solution: d.solution,
         session,

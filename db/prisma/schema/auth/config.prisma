@@ -61,6 +61,7 @@ model ProviderAuthConfig {
   providerAuthImports              ProviderAuthImport[]
   providerAuthConfigUpdates        ProviderAuthConfigUpdate[]
   sessionProviders                 SessionProvider[]
+  sessionTemplateProviders         SessionTemplateProvider[]
 
   @@index([isDefault])
 }

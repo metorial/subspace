@@ -44,6 +44,7 @@ model ProviderConfig {
   providerAuthConfigUsedForConfigs ProviderAuthConfigUsedForConfig[]
   providerSetupSession             ProviderSetupSession?
   sessionProviders                 SessionProvider[]
+  sessionTemplateProviders         SessionTemplateProvider[]
 
   @@index([isDefault])
 }

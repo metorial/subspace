@@ -8,6 +8,7 @@ import {
   ProviderVariant,
   ProviderVersion,
   Session,
+  SessionTemplate,
   Solution,
   Tenant,
   withTransaction
@@ -22,6 +23,8 @@ import { sessionProviderInclude } from './sessionProvider';
 export type SessionProviderInputToolFilters = { toolKeys?: string[] } | null;
 
 export type SessionProviderInput = {
+  sessionTemplateId?: string;
+
   deploymentId?: string;
   configId?: string;
   authConfigId?: string;
@@ -57,7 +60,7 @@ class sessionProviderInputServiceImpl {
     };
 
     for (let s of d.providers) {
-      if (!s.configId && !s.deploymentId && !s.authConfigId) {
+      if (!s.sessionTemplateId && !s.configId && !s.deploymentId && !s.authConfigId) {
         throw new ServiceError(
           badRequestError({
             message: 'Please provide at least a provider config, auth config, or deployment'
@@ -66,8 +69,50 @@ class sessionProviderInputServiceImpl {
       }
     }
 
-    return await Promise.all(
-      d.providers.map(async s => {
+    let normalizedProviders = (
+      await Promise.all(
+        d.providers.map(async s => {
+          if (s.sessionTemplateId) {
+            let template = await db.sessionTemplate.findFirstOrThrow({
+              where: { ...ts, id: s.sessionTemplateId },
+              include: {
+                providers: {
+                  include: {
+                    deployment: true,
+                    config: true,
+                    authConfig: true
+                  }
+                }
+              }
+            });
+
+            return template.providers.map(tp => ({
+              deploymentId: tp.deployment.id,
+              configId: tp.config?.id,
+              authConfigId: tp.authConfig?.id,
+              toolFilters: s.toolFilters,
+              template,
+              templateProvider: tp
+            }));
+          }
+
+          return {
+            ...s,
+            template: null,
+            templateProvider: null
+          };
+        })
+      )
+    ).flat();
+
+    if (normalizedProviders.length > 100) {
+      throw new ServiceError(
+        badRequestError({ message: 'Cannot associate more than 100 providers to a session' })
+      );
+    }
+
+    let res = await Promise.all(
+      normalizedProviders.map(async s => {
         let config = s.configId
           ? await db.providerConfig.findFirst({ where: { ...ts, id: s.configId } })
           : null;
@@ -214,13 +259,16 @@ class sessionProviderInputServiceImpl {
         return {
           deployment,
           provider,
-          version,
           config,
           authConfig,
+          template: s.template,
+          templateProvider: s.templateProvider,
           toolFilters: s.toolFilters
         };
       })
     );
+
+    return res;
   }
 
   async mapToolFilters(d: { filters: SessionProviderInputToolFilters | undefined }) {
@@ -237,7 +285,7 @@ class sessionProviderInputServiceImpl {
     } satisfies PrismaJson.ToolFilter;
   }
 
-  async createProviderSessionsForInput(d: {
+  async createSessionProvidersForInput(d: {
     tenant: Tenant;
     solution: Solution;
 
@@ -251,6 +299,18 @@ class sessionProviderInputServiceImpl {
     });
 
     return withTransaction(async db => {
+      let existingProviderCount = await db.sessionProvider.count({
+        where: {
+          sessionOid: d.session.oid,
+          status: 'active' as const
+        }
+      });
+      if (providerSessions.length + existingProviderCount > 100) {
+        throw new ServiceError(
+          badRequestError({ message: 'Cannot associate more than 100 providers to a session' })
+        );
+      }
+
       return db.sessionProvider.createManyAndReturn({
         data: await Promise.all(
           providerSessions.map(async ps => ({
@@ -263,6 +323,60 @@ class sessionProviderInputServiceImpl {
             solutionOid: d.solution.oid,
 
             sessionOid: d.session.oid,
+            providerOid: ps.provider.oid,
+            deploymentOid: ps.deployment.oid,
+            configOid: ps.config.oid,
+            authConfigOid: ps.authConfig?.oid,
+
+            fromTemplateOid: ps.template?.oid,
+            fromTemplateProviderOid: ps.templateProvider?.oid,
+
+            toolFilter: await this.mapToolFilters({ filters: ps.toolFilters })
+          }))
+        ),
+        include: sessionProviderInclude
+      });
+    });
+  }
+
+  async createSessionTemplateProvidersForInput(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    providers: SessionProviderInput[];
+    template: SessionTemplate;
+  }) {
+    let providerSessions = await this.createProviderSessionInput({
+      tenant: d.tenant,
+      solution: d.solution,
+      providers: d.providers
+    });
+
+    return withTransaction(async db => {
+      let existingProviderCount = await db.sessionTemplateProvider.count({
+        where: {
+          sessionTemplateOid: d.template.oid,
+          status: 'active' as const
+        }
+      });
+      if (providerSessions.length + existingProviderCount > 100) {
+        throw new ServiceError(
+          badRequestError({ message: 'Cannot associate more than 100 providers to a session' })
+        );
+      }
+
+      return db.sessionTemplateProvider.createManyAndReturn({
+        data: await Promise.all(
+          providerSessions.map(async ps => ({
+            ...getId('sessionTemplateProvider'),
+
+            tag: generateCode(3),
+            status: 'active' as const,
+
+            tenantOid: d.tenant.oid,
+            solutionOid: d.solution.oid,
+
+            sessionTemplateOid: d.template.oid,
             providerOid: ps.provider.oid,
             deploymentOid: ps.deployment.oid,
             configOid: ps.config.oid,

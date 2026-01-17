@@ -53,6 +53,7 @@ model ProviderDeployment {
   providerAuthImports                  ProviderAuthImport[]
   providerSetupSessions                ProviderSetupSession[]
   sessionProviders                     SessionProvider[]
+  sessionTemplateProviders             SessionTemplateProvider[]
 
   @@index([isDefault])
 }

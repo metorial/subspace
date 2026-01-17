@@ -23,4 +23,10 @@ model Solution {
   providerAuthImports                      ProviderAuthImport[]
   providerSetupSessions                    ProviderSetupSession[]
   sessionProviders                         SessionProvider[]
+  sessionTemplates                         SessionTemplate[]
+  sessionTemplateProviders                 SessionTemplateProvider[]
+  sessionConnections                       SessionConnection[]
+  sessionErrors                            SessionError[]
+  sessionMessages                          SessionMessage[]
+  sessionEvents                            SessionEvent[]
 }

@@ -32,6 +32,9 @@ model ProviderRun {
   sessionEvents   SessionEvent[]
   slateSessions   SlateSession[]
   sessionErrors   SessionError[]
+
+  @@index([status])
+  @@index([lastPingAt])
 }
 
 model SessionProviderInstance {

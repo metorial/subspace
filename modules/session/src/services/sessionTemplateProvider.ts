@@ -1,7 +1,13 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, Session, SessionProvider, Solution, Tenant } from '@metorial-subspace/db';
+import {
+  db,
+  SessionTemplate,
+  SessionTemplateProvider,
+  Solution,
+  Tenant
+} from '@metorial-subspace/db';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import {
   SessionProviderInput,
@@ -15,14 +21,13 @@ let include = {
   config: true,
   authConfig: true
 };
-export let sessionProviderInclude = include;
 
-class sessionProviderServiceImpl {
-  async listSessionProviders(d: { tenant: Tenant; solution: Solution }) {
+class sessionTemplateProviderServiceImpl {
+  async listSessionTemplateProviders(d: { tenant: Tenant; solution: Solution }) {
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
-          await db.sessionProvider.findMany({
+          await db.sessionTemplateProvider.findMany({
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
@@ -34,12 +39,12 @@ class sessionProviderServiceImpl {
     );
   }
 
-  async getSessionProviderById(d: {
+  async getSessionTemplateProviderById(d: {
     tenant: Tenant;
     solution: Solution;
     sessionProviderId: string;
   }) {
-    let sessionProvider = await db.sessionProvider.findFirst({
+    let sessionProvider = await db.sessionTemplateProvider.findFirst({
       where: {
         id: d.sessionProviderId,
         tenantOid: d.tenant.oid,
@@ -53,35 +58,35 @@ class sessionProviderServiceImpl {
     return sessionProvider;
   }
 
-  async createSessionProvider(d: {
+  async createSessionTemplateProvider(d: {
     tenant: Tenant;
     solution: Solution;
 
-    session: Session;
+    template: SessionTemplate;
     input: SessionProviderInput;
   }) {
-    let [res] = await sessionProviderInputService.createSessionProvidersForInput({
+    let [res] = await sessionProviderInputService.createSessionTemplateProvidersForInput({
       tenant: d.tenant,
       solution: d.solution,
 
-      session: d.session,
+      template: d.template,
       providers: [d.input]
     });
 
     return res!;
   }
 
-  async updateSessionProvider(d: {
+  async updateSessionTemplateProvider(d: {
     tenant: Tenant;
     solution: Solution;
-    sessionProvider: SessionProvider;
+    sessionProvider: SessionTemplateProvider;
     input: {
       toolFilters?: SessionProviderInputToolFilters;
     };
   }) {
     checkTenant(d, d.sessionProvider);
 
-    return await db.sessionProvider.update({
+    return await db.sessionTemplateProvider.update({
       where: {
         oid: d.sessionProvider.oid,
         tenantOid: d.tenant.oid,
@@ -96,14 +101,14 @@ class sessionProviderServiceImpl {
     });
   }
 
-  async deleteSessionProvider(d: {
+  async deleteSessionTemplateProvider(d: {
     tenant: Tenant;
     solution: Solution;
-    sessionProvider: SessionProvider;
+    sessionProvider: SessionTemplateProvider;
   }) {
     checkTenant(d, d.sessionProvider);
 
-    await db.sessionProvider.update({
+    await db.sessionTemplateProvider.update({
       where: {
         oid: d.sessionProvider.oid
       },
@@ -115,7 +120,7 @@ class sessionProviderServiceImpl {
   }
 }
 
-export let sessionProviderService = Service.create(
+export let sessionTemplateProviderService = Service.create(
   'sessionProvider',
-  () => new sessionProviderServiceImpl()
+  () => new sessionTemplateProviderServiceImpl()
 ).build();
