@@ -27,7 +27,7 @@ export let sessionConnectionController = app.controller({
         v.object({
           tenantId: v.string(),
 
-          status: v.optional(v.array(v.enumOf(['active', 'inactive']))),
+          status: v.optional(v.array(v.enumOf(['active', 'archived']))),
           connectionState: v.optional(v.array(v.enumOf(['connected', 'disconnected']))),
           allowDeleted: v.optional(v.boolean()),
 

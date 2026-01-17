@@ -1,6 +1,6 @@
 enum SessionProviderStatus {
   active
-  inactive
+  archived
   deleted
 }
 

@@ -1,6 +1,6 @@
 enum ProviderDeploymentStatus {
   active
-  inactive
+  archived
   deleted
 }
 

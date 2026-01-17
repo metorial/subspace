@@ -34,7 +34,7 @@ export let providerSetupSessionController = app.controller({
           tenantId: v.string(),
 
           status: v.optional(
-            v.array(v.enumOf(['inactive', 'failed', 'completed', 'expired', 'pending']))
+            v.array(v.enumOf(['archived', 'failed', 'completed', 'expired', 'pending']))
           ),
           allowDeleted: v.optional(v.boolean()),
 

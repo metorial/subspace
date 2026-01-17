@@ -1,6 +1,6 @@
 enum ProviderConfigStatus {
   active
-  inactive
+  archived
   deleted
 }
 

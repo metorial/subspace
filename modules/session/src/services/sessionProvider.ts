@@ -167,7 +167,7 @@ class sessionProviderServiceImpl {
         oid: d.sessionProvider.oid
       },
       data: {
-        status: 'inactive' as const
+        status: 'archived' as const
       },
       include
     });

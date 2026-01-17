@@ -40,7 +40,7 @@ export let sessionTemplateProviderController = app.controller({
           tenantId: v.string(),
 
           allowDeleted: v.optional(v.boolean()),
-          status: v.optional(v.array(v.enumOf(['active', 'inactive']))),
+          status: v.optional(v.array(v.enumOf(['active', 'archived']))),
 
           ids: v.optional(v.array(v.string())),
           sessionTemplateIds: v.optional(v.array(v.string())),

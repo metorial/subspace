@@ -55,6 +55,9 @@ model SessionProviderInstance {
   totalProductiveClientMessageCount Int @default(0)
   totalProductiveServerMessageCount Int @default(0)
 
+  sessionOid BigInt
+  session    Session @relation(fields: [sessionOid], references: [oid])
+
   sessionProviderOid BigInt
   sessionProvider    SessionProvider @relation(fields: [sessionProviderOid], references: [oid])
 

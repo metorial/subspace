@@ -1,6 +1,6 @@
 enum SessionStatus {
   active
-  inactive
+  archived
   deleted
 }
 
@@ -36,12 +36,13 @@ model Session {
   lastMessageAt           DateTime?
   lastActiveAt            DateTime?
 
-  providers       SessionProvider[]
-  providerRuns    ProviderRun[]
-  sessionMessages SessionMessage[]
-  sessionEvents   SessionEvent[]
-  connections     SessionConnection[]
-  sessionErrors   SessionError[]
+  providers                SessionProvider[]
+  providerRuns             ProviderRun[]
+  sessionMessages          SessionMessage[]
+  sessionEvents            SessionEvent[]
+  connections              SessionConnection[]
+  sessionErrors            SessionError[]
+  sessionProviderInstances SessionProviderInstance[]
 
   @@index([lastActiveAt])
   @@index([connectionState])

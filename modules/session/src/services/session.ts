@@ -21,7 +21,12 @@ import {
   resolveSessionTemplates
 } from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
-import { sessionCreatedQueue, sessionUpdatedQueue } from '../queues/lifecycle/session';
+import {
+  sessionArchivedQueue,
+  sessionCreatedQueue,
+  sessionDeletedQueue,
+  sessionUpdatedQueue
+} from '../queues/lifecycle/session';
 import { sessionProviderInclude } from './sessionProvider';
 import { SessionProviderInput, sessionProviderInputService } from './sessionProviderInput';
 
@@ -200,6 +205,60 @@ class sessionServiceImpl {
 
       await addAfterTransactionHook(async () =>
         sessionUpdatedQueue.add({ sessionId: session.id })
+      );
+
+      return session;
+    });
+  }
+
+  async archiveSession(d: { tenant: Tenant; solution: Solution; session: Session }) {
+    checkTenant(d, d.session);
+
+    return withTransaction(async db => {
+      let session = await db.session.update({
+        where: {
+          oid: d.session.oid,
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid
+        },
+        data: { status: 'inactive' },
+        include
+      });
+
+      await addAfterTransactionHook(async () =>
+        sessionArchivedQueue.add({ sessionId: session.id })
+      );
+
+      return session;
+    });
+  }
+
+  async deleteSession(d: { tenant: Tenant; solution: Solution; session: Session }) {
+    checkTenant(d, d.session);
+
+    return withTransaction(async db => {
+      let where = { sessionOid: d.session.oid };
+      let data = { isParentDeleted: true };
+
+      await db.sessionProvider.updateMany({ where, data });
+      await db.sessionConnection.updateMany({ where, data });
+      await db.sessionError.updateMany({ where, data });
+      await db.sessionEvent.updateMany({ where, data });
+      await db.sessionMessage.updateMany({ where, data });
+      await db.providerRun.updateMany({ where, data });
+
+      let session = await db.session.update({
+        where: {
+          oid: d.session.oid,
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid
+        },
+        data: { status: 'deleted' },
+        include
+      });
+
+      await addAfterTransactionHook(async () =>
+        sessionDeletedQueue.add({ sessionId: session.id })
       );
 
       return session;

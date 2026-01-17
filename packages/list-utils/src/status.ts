@@ -2,17 +2,17 @@
  * ## Deletion behavior:
  *
  * # Lists:
- * By default we exclude deleted and inactive items from lists.
+ * By default we exclude deleted and archived items from lists.
  * If allowDeleted is true, we include deleted items as well.
- * If allowDeleted is false, inactive is allowed, but deleted is excluded.
+ * If allowDeleted is false, archived is allowed, but deleted is excluded.
  *
  * # Gets:
  * If allowDeleted is true, we include deleted items as well.
  * If allowDeleted is false, deleted items are excluded.
- * Inactive items are always allowed in gets.
+ * archived items are always allowed in gets.
  */
 
-export let normalizeStatusForList = <T extends 'inactive' | 'deleted' | string>(d: {
+export let normalizeStatusForList = <T extends 'archived' | 'deleted' | string>(d: {
   allowDeleted?: boolean;
   status?: T[];
 }) => {
@@ -50,11 +50,11 @@ export let normalizeStatusForList = <T extends 'inactive' | 'deleted' | string>(
 
   return {
     hasParent: {
-      status: { notIn: ['inactive' as const, 'deleted' as const] },
+      status: { notIn: ['archived' as const, 'deleted' as const] },
       isParentDeleted: false
     },
     noParent: {
-      status: { notIn: ['inactive' as const, 'deleted' as const] }
+      status: { notIn: ['archived' as const, 'deleted' as const] }
     },
     onlyParent: {
       isParentDeleted: false

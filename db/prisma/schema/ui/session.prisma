@@ -4,7 +4,7 @@ enum ProviderSetupSessionStatus {
   failed
   expired
 
-  inactive
+  archived
   deleted
 }
 

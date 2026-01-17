@@ -1,7 +1,14 @@
 import { combineQueueProcessors } from '@lowerdeck/queue';
-import { sessionCreatedQueueProcessor, sessionUpdatedQueueProcessor } from './session';
+import {
+  sessionArchivedQueueProcessor,
+  sessionCreatedQueueProcessor,
+  sessionDeletedQueueProcessor,
+  sessionUpdatedQueueProcessor
+} from './session';
 
 export let lifecycleQueues = combineQueueProcessors([
   sessionCreatedQueueProcessor,
-  sessionUpdatedQueueProcessor
+  sessionUpdatedQueueProcessor,
+  sessionArchivedQueueProcessor,
+  sessionDeletedQueueProcessor
 ]);

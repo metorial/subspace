@@ -14,3 +14,17 @@ export let sessionUpdatedQueue = createQueue<{ sessionId: string }>({
 });
 
 export let sessionUpdatedQueueProcessor = sessionUpdatedQueue.process(async data => {});
+
+export let sessionArchivedQueue = createQueue<{ sessionId: string }>({
+  name: 'ses/lc/session/archived',
+  redisUrl: env.service.REDIS_URL
+});
+
+export let sessionArchivedQueueProcessor = sessionArchivedQueue.process(async data => {});
+
+export let sessionDeletedQueue = createQueue<{ sessionId: string }>({
+  name: 'ses/lc/session/deleted',
+  redisUrl: env.service.REDIS_URL
+});
+
+export let sessionDeletedQueueProcessor = sessionDeletedQueue.process(async data => {});

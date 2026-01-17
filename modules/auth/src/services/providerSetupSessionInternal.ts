@@ -148,7 +148,7 @@ class providerSetupSessionInternalServiceImpl {
     return withTransaction(async db => {
       if (
         d.session.status == 'completed' ||
-        d.session.status == 'inactive' ||
+        d.session.status == 'archived' ||
         d.session.status == 'deleted' ||
         d.session.status == 'expired'
       )
@@ -226,7 +226,7 @@ class providerSetupSessionInternalServiceImpl {
   async evaluate(d: { session: ProviderSetupSession; context: { ip: string; ua: string } }) {
     if (
       d.session.status == 'completed' ||
-      d.session.status == 'inactive' ||
+      d.session.status == 'archived' ||
       d.session.status == 'deleted' ||
       d.session.status == 'expired'
     )

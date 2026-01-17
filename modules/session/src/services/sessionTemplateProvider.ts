@@ -162,7 +162,7 @@ class sessionTemplateProviderServiceImpl {
         oid: d.sessionTemplateProvider.oid
       },
       data: {
-        status: 'inactive' as const
+        status: 'archived' as const
       },
       include
     });

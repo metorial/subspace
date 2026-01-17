@@ -12,7 +12,7 @@ enum ProviderAuthConfigSource {
 
 enum ProviderAuthConfigStatus {
   active
-  inactive
+  archived
   deleted
 }
 

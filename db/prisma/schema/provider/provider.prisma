@@ -24,7 +24,7 @@ enum ProviderAccess {
 
 enum ProviderStatus {
   active
-  inactive
+  archived
   deleted
 }
 

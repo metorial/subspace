@@ -1,6 +1,6 @@
 enum ProviderConfigVaultStatus {
   active
-  inactive
+  archived
   deleted
 }
 
