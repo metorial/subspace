@@ -93,6 +93,18 @@ export let startController = () => {
       }
     });
 
+    db.sessionEvent
+      .createMany({
+        data: {
+          ...getId('sessionEvent'),
+          type: 'provider_run_started',
+          sessionOid: session.oid,
+          connectionOid: connection.oid,
+          providerRunOid: providerRun.oid
+        }
+      })
+      .catch(() => {});
+
     let backend = await getBackend({ entity: version });
     let backendProviderRun = await backend.toolInvocation.createProviderRun({
       tenant: instance.sessionProvider.tenant,
@@ -116,6 +128,11 @@ export let startController = () => {
           lastRenewedAt: new Date(),
           expiresAt: addMinutes(new Date(), SESSION_PROVIDER_INSTANCE_EXPIRATION_INCREMENT)
         }
+      });
+
+      await db.providerRun.updateMany({
+        where: { oid: providerRun.oid },
+        data: { lastPingAt: new Date() }
       });
 
       lastMessageAt.set(null);
@@ -206,7 +223,24 @@ export let startController = () => {
     });
 
     ctx.onClose(async () => {
+      console.log(`Closing provider instance receiver for instance id: ${instance.id}`);
+
       clearInterval(instanceExtensionIv);
+
+      await db.sessionEvent.createMany({
+        data: {
+          ...getId('sessionEvent'),
+          type: 'provider_run_stopped',
+          sessionOid: session.oid,
+          connectionOid: connection.oid,
+          providerRunOid: providerRun.oid
+        }
+      });
+
+      await db.providerRun.updateMany({
+        where: { oid: providerRun.oid },
+        data: { status: 'stopped' }
+      });
     });
   });
 
