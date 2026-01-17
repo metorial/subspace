@@ -6,6 +6,9 @@ enum SessionEventType {
   message_created
   message_processed
   connection_created
+  connection_connected
+  connection_disconnected
+  connection_disabled
   error_occurred
 }
 

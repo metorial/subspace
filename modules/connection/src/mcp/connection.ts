@@ -55,7 +55,7 @@ export class McpConnection {
     return this.manager.connection;
   }
 
-  async listener(d: { selectedChannels: 'all' | 'broadcast' }) {
+  async listener(d: { selectedChannels: 'all' | 'broadcast'; replayFromMessageId?: string }) {
     let controlListener = await this.#control.controlListener(d);
     let senderListener = this.manager.senderListener(d);
 
@@ -79,12 +79,16 @@ export class McpConnection {
     };
   }
 
-  async handleMessage(msg: JSONRPCMessage, opts: HandleResponseOpts) {
+  handleMessage(msg: JSONRPCMessage, opts: HandleResponseOpts) {
     return this.#sender.handleMessage(msg, opts);
   }
 
-  async createConnection() {
+  createConnection() {
     return this.manager.createConnection();
+  }
+
+  disableConnection() {
+    return this.manager.disableConnection();
   }
 
   async sendPing() {
