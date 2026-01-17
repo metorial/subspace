@@ -257,7 +257,10 @@ export let startController = () => {
 
       await db.providerRun.updateMany({
         where: { oid: providerRun.oid },
-        data: { status: 'stopped' }
+        data: {
+          status: 'stopped',
+          completedAt: new Date()
+        }
       });
     });
   });

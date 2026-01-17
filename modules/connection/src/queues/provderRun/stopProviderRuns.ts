@@ -21,7 +21,8 @@ export let stopProviderRunsCron = createCron(
         lastPingAt: { lt: twoMinutesAgo }
       },
       data: {
-        status: 'stopped'
+        status: 'stopped',
+        completedAt: new Date()
       }
     });
   }
