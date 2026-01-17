@@ -16,7 +16,7 @@ model SessionTemplate {
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
 
-  solutionOid BigInt
+  solutionOid Int
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
   createdAt DateTime @default(now())
@@ -60,7 +60,7 @@ model SessionTemplateProvider {
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
 
-  solutionOid BigInt
+  solutionOid Int
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
   createdAt DateTime @default(now())

@@ -11,7 +11,7 @@ export let createResolver =
   <R extends { oid: bigint }>(
     cb: (d: {
       selector: TenantSelector;
-      ts: { tenantOid: bigint; solutionOid: bigint };
+      ts: { tenantOid: bigint; solutionOid: number };
       onlyLogsAfter: Date;
       ids: string[];
     }) => Promise<R[]>

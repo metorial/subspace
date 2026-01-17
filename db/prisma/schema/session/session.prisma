@@ -22,7 +22,7 @@ model Session {
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
 
-  solutionOid BigInt
+  solutionOid Int
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
   totalProductiveClientMessageCount Int @default(0)

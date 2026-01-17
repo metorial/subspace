@@ -41,7 +41,7 @@ model ProviderAuthConfig {
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid], onDelete: Cascade)
 
-  solutionOid BigInt
+  solutionOid Int
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
   backendOid BigInt

@@ -1,5 +1,5 @@
 model Solution {
-  oid BigInt @id
+  oid Int    @id
   id  String @unique
 
   identifier String @unique

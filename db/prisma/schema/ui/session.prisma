@@ -38,7 +38,7 @@ model ProviderSetupSession {
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
 
-  solutionOid BigInt
+  solutionOid Int
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
   providerOid BigInt
