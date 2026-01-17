@@ -150,10 +150,13 @@ export let sessionTemplateProviderController = app.controller({
       })
     )
     .do(async ctx => {
-      await sessionTemplateProviderService.archiveSessionTemplateProvider({
-        sessionTemplateProvider: ctx.sessionTemplateProvider,
-        tenant: ctx.tenant,
-        solution: ctx.solution
-      });
+      let sessionTemplateProvider =
+        await sessionTemplateProviderService.archiveSessionTemplateProvider({
+          sessionTemplateProvider: ctx.sessionTemplateProvider,
+          tenant: ctx.tenant,
+          solution: ctx.solution
+        });
+
+      return sessionTemplateProviderPresenter(sessionTemplateProvider);
     })
 });

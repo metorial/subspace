@@ -144,10 +144,12 @@ export let sessionProviderController = app.controller({
       })
     )
     .do(async ctx => {
-      await sessionProviderService.archiveSessionProvider({
+      let sessionProvider = await sessionProviderService.archiveSessionProvider({
         sessionProvider: ctx.sessionProvider,
         tenant: ctx.tenant,
         solution: ctx.solution
       });
+
+      return sessionProviderPresenter(sessionProvider);
     })
 });

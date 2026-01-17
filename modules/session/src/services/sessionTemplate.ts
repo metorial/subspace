@@ -11,6 +11,7 @@ import {
   withTransaction
 } from '@metorial-subspace/db';
 import {
+  checkDeletedEdit,
   normalizeStatusForGet,
   normalizeStatusForList,
   resolveProviderAuthConfigs,
@@ -164,6 +165,7 @@ class sessionTemplateServiceImpl {
     };
   }) {
     checkTenant(d, d.template);
+    checkDeletedEdit(d.template, 'update');
 
     return withTransaction(async db => {
       let template = await db.sessionTemplate.update({
@@ -181,6 +183,36 @@ class sessionTemplateServiceImpl {
       });
 
       return template;
+    });
+  }
+
+  async archiveSessionTemplate(d: {
+    tenant: Tenant;
+    solution: Solution;
+    sessionTemplate: SessionTemplate;
+  }) {
+    checkTenant(d, d.sessionTemplate);
+    checkDeletedEdit(d.sessionTemplate, 'archive');
+
+    return withTransaction(async db => {
+      await db.sessionTemplateProvider.updateMany({
+        where: {
+          sessionTemplateOid: d.sessionTemplate.oid
+        },
+        data: {
+          status: 'archived' as const
+        }
+      });
+
+      return await db.sessionTemplate.update({
+        where: {
+          oid: d.sessionTemplate.oid
+        },
+        data: {
+          status: 'archived' as const
+        },
+        include
+      });
     });
   }
 }

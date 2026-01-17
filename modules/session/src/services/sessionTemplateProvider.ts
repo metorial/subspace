@@ -10,6 +10,8 @@ import {
   Tenant
 } from '@metorial-subspace/db';
 import {
+  checkDeletedEdit,
+  checkDeletedRelation,
   normalizeStatusForGet,
   normalizeStatusForList,
   resolveProviderAuthConfigs,
@@ -111,6 +113,8 @@ class sessionTemplateProviderServiceImpl {
     template: SessionTemplate;
     input: SessionProviderInput;
   }) {
+    checkDeletedRelation(d.template);
+
     let [res] = await sessionProviderInputService.createSessionTemplateProvidersForInput({
       tenant: d.tenant,
       solution: d.solution,
@@ -131,6 +135,7 @@ class sessionTemplateProviderServiceImpl {
     };
   }) {
     checkTenant(d, d.sessionTemplateProvider);
+    checkDeletedEdit(d.sessionTemplateProvider, 'update');
 
     return await db.sessionTemplateProvider.update({
       where: {
@@ -156,8 +161,9 @@ class sessionTemplateProviderServiceImpl {
     sessionTemplateProvider: SessionTemplateProvider;
   }) {
     checkTenant(d, d.sessionTemplateProvider);
+    checkDeletedEdit(d.sessionTemplateProvider, 'archive');
 
-    await db.sessionTemplateProvider.update({
+    return await db.sessionTemplateProvider.update({
       where: {
         oid: d.sessionTemplateProvider.oid
       },

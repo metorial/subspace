@@ -2,7 +2,6 @@ import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { generateCode } from '@lowerdeck/id';
 import { Service } from '@lowerdeck/service';
 import {
-  db,
   getId,
   Provider,
   ProviderVariant,
@@ -13,6 +12,7 @@ import {
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import { checkDeletedRelation } from '@metorial-subspace/list-utils';
 import {
   providerConfigService,
   providerDeploymentService
@@ -54,222 +54,246 @@ class sessionProviderInputServiceImpl {
     solution: Solution;
 
     providers: SessionProviderInput[];
+
+    allowEphemeral?: boolean;
   }) {
-    let ts = {
-      solutionOid: d.solution.oid,
-      tenantOid: d.tenant.oid
-    };
+    return withTransaction(
+      async db => {
+        let ts = {
+          solutionOid: d.solution.oid,
+          tenantOid: d.tenant.oid
+        };
 
-    for (let s of d.providers) {
-      if (!s.sessionTemplateId && !s.configId && !s.deploymentId && !s.authConfigId) {
-        throw new ServiceError(
-          badRequestError({
-            message: 'Please provide at least a provider config, auth config, or deployment'
-          })
-        );
-      }
-    }
-
-    let normalizedProviders = (
-      await Promise.all(
-        d.providers.map(async s => {
-          if (s.sessionTemplateId) {
-            let template = await db.sessionTemplate.findFirstOrThrow({
-              where: { ...ts, id: s.sessionTemplateId },
-              include: {
-                providers: {
-                  include: {
-                    deployment: true,
-                    config: true,
-                    authConfig: true
-                  }
-                }
-              }
-            });
-
-            return template.providers.map(tp => ({
-              deploymentId: tp.deployment.id,
-              configId: tp.config?.id,
-              authConfigId: tp.authConfig?.id,
-              toolFilters: s.toolFilters,
-              template,
-              templateProvider: tp
-            }));
-          }
-
-          return {
-            ...s,
-            template: null,
-            templateProvider: null
-          };
-        })
-      )
-    ).flat();
-
-    if (normalizedProviders.length > 100) {
-      throw new ServiceError(
-        badRequestError({ message: 'Cannot associate more than 100 providers to a session' })
-      );
-    }
-
-    let res = await Promise.all(
-      normalizedProviders.map(async s => {
-        let config = s.configId
-          ? await db.providerConfig.findFirst({ where: { ...ts, id: s.configId } })
-          : null;
-        let deployment = s.deploymentId
-          ? await db.providerDeployment.findFirst({ where: { ...ts, id: s.deploymentId } })
-          : null;
-        let authConfig = s.authConfigId
-          ? await db.providerAuthConfig.findFirst({ where: { ...ts, id: s.authConfigId } })
-          : null;
-
-        let providerOid =
-          config?.providerOid ?? authConfig?.providerOid ?? deployment?.providerOid;
-
-        checkProviderMatch(config, deployment);
-        checkProviderMatch(authConfig, deployment);
-        checkProviderMatch(config, authConfig);
-
-        let provider:
-          | (Provider & {
-              defaultVariant:
-                | (ProviderVariant & { currentVersion: ProviderVersion | null })
-                | null;
-            })
-          | null = null;
-
-        // Try to infer deployment from config or auth config
-        if (!deployment) {
-          let deploymentOid = config?.deploymentOid ?? authConfig?.deploymentOid;
-
-          if (deploymentOid) {
-            let fetchedDeployment = await db.providerDeployment.findFirstOrThrow({
-              where: { ...ts, oid: deploymentOid },
-              include: {
-                provider: {
-                  include: { defaultVariant: { include: { currentVersion: true } } }
-                }
-              }
-            });
-
-            provider = fetchedDeployment.provider;
-            deployment = fetchedDeployment;
-          }
-        }
-
-        // Get default deployment if still not set
-        if (!provider && providerOid) {
-          provider = await db.provider.findFirstOrThrow({
-            where: { oid: providerOid },
-            include: { defaultVariant: { include: { currentVersion: true } } }
-          });
-
-          deployment = await providerDeploymentService.ensureDefaultProviderDeployment({
-            tenant: d.tenant,
-            solution: d.solution,
-            provider
-          });
-        }
-
-        if (!provider || !deployment) {
-          throw new ServiceError(
-            badRequestError({
-              message: 'Please provide at least a provider config, auth config, or deployment'
-            })
-          );
-        }
-
-        if (config?.deploymentOid && config.deploymentOid !== deployment.oid)
-          throw new ServiceError(deploymentMismatchError);
-        if (authConfig?.deploymentOid && authConfig.deploymentOid !== deployment.oid)
-          throw new ServiceError(deploymentMismatchError);
-
-        let version = await providerDeploymentInternalService.getCurrentVersion({
-          deployment,
-          provider
-        });
-        if (!version.specificationOid) {
-          throw new ServiceError(badRequestError({ message: 'Provider cannot be run' }));
-        }
-
-        let spec = await db.providerSpecification.findFirstOrThrow({
-          where: { oid: version.specificationOid }
-        });
-
-        if (!config) {
-          if (deployment.defaultConfigOid) {
-            config = await db.providerConfig.findFirstOrThrow({
-              where: { ...ts, oid: deployment.defaultConfigOid }
-            });
-          } else {
-            let schema = spec.value.specification.configJsonSchema;
-            let hasRequired = true;
-
-            try {
-              if (schema.type == 'object' && schema.properties) {
-                let required = schema.required || [];
-                if (!required.length) hasRequired = false;
-              }
-            } catch {}
-
-            if (hasRequired) {
-              throw new ServiceError(
-                badRequestError({
-                  message: 'Provider requires a config to be provided',
-                  code: 'config_required'
-                })
-              );
-            }
-
-            config = await providerConfigService.ensureDefaultEmptyProviderConfig({
-              tenant: d.tenant,
-              solution: d.solution,
-              provider,
-              providerDeployment: deployment
-            });
-          }
-        }
-
-        if (!authConfig && spec.value.authMethods.length > 0) {
-          if (deployment.defaultAuthConfigOid) {
-            authConfig = await db.providerAuthConfig.findFirstOrThrow({
-              where: { ...ts, oid: deployment.defaultAuthConfigOid }
-            });
-          } else {
+        for (let s of d.providers) {
+          if (!s.sessionTemplateId && !s.configId && !s.deploymentId && !s.authConfigId) {
             throw new ServiceError(
               badRequestError({
-                message: 'Provider requires an auth config to be provided',
-                code: 'auth_config_required'
+                message:
+                  'Please provide at least a provider config, auth config, or deployment'
               })
             );
           }
         }
 
-        if (spec.value.authMethods.length > 0 && !authConfig) {
+        let normalizedProviders = (
+          await Promise.all(
+            d.providers.map(async s => {
+              if (s.sessionTemplateId) {
+                let template = await db.sessionTemplate.findFirstOrThrow({
+                  where: { ...ts, id: s.sessionTemplateId },
+                  include: {
+                    providers: {
+                      include: {
+                        deployment: true,
+                        config: true,
+                        authConfig: true
+                      }
+                    }
+                  }
+                });
+
+                return template.providers.map(tp => ({
+                  deploymentId: tp.deployment.id,
+                  configId: tp.config?.id,
+                  authConfigId: tp.authConfig?.id,
+                  toolFilters: s.toolFilters,
+                  template,
+                  templateProvider: tp
+                }));
+              }
+
+              return {
+                ...s,
+                template: null,
+                templateProvider: null
+              };
+            })
+          )
+        ).flat();
+
+        if (normalizedProviders.length > 100) {
           throw new ServiceError(
-            badRequestError({ message: 'Provider requires an auth config to be provided' })
-          );
-        }
-        if (spec.value.authMethods.length == 0 && authConfig) {
-          throw new ServiceError(
-            badRequestError({ message: 'Provider does not support auth configs' })
+            badRequestError({
+              message: 'Cannot associate more than 100 providers to a session'
+            })
           );
         }
 
-        return {
-          deployment,
-          provider,
-          config,
-          authConfig,
-          template: s.template,
-          templateProvider: s.templateProvider,
-          toolFilters: s.toolFilters
-        };
-      })
+        let res = await Promise.all(
+          normalizedProviders.map(async s => {
+            let config = s.configId
+              ? await db.providerConfig.findFirst({ where: { ...ts, id: s.configId } })
+              : null;
+            let deployment = s.deploymentId
+              ? await db.providerDeployment.findFirst({ where: { ...ts, id: s.deploymentId } })
+              : null;
+            let authConfig = s.authConfigId
+              ? await db.providerAuthConfig.findFirst({ where: { ...ts, id: s.authConfigId } })
+              : null;
+
+            checkDeletedRelation(config, d);
+            checkDeletedRelation(deployment, d);
+            checkDeletedRelation(authConfig, d);
+
+            let providerOid =
+              config?.providerOid ?? authConfig?.providerOid ?? deployment?.providerOid;
+
+            checkProviderMatch(config, deployment);
+            checkProviderMatch(authConfig, deployment);
+            checkProviderMatch(config, authConfig);
+
+            let provider:
+              | (Provider & {
+                  defaultVariant:
+                    | (ProviderVariant & { currentVersion: ProviderVersion | null })
+                    | null;
+                })
+              | null = null;
+
+            // Try to infer deployment from config or auth config
+            if (!deployment) {
+              let deploymentOid = config?.deploymentOid ?? authConfig?.deploymentOid;
+
+              if (deploymentOid) {
+                let fetchedDeployment = await db.providerDeployment.findFirstOrThrow({
+                  where: { ...ts, oid: deploymentOid },
+                  include: {
+                    provider: {
+                      include: { defaultVariant: { include: { currentVersion: true } } }
+                    }
+                  }
+                });
+                checkDeletedRelation(fetchedDeployment, d);
+
+                provider = fetchedDeployment.provider;
+                deployment = fetchedDeployment;
+              }
+            }
+
+            // Get default deployment if still not set
+            if (!provider && providerOid) {
+              provider = await db.provider.findFirstOrThrow({
+                where: { oid: providerOid },
+                include: { defaultVariant: { include: { currentVersion: true } } }
+              });
+              checkDeletedRelation(provider, d);
+
+              deployment = await providerDeploymentService.ensureDefaultProviderDeployment({
+                tenant: d.tenant,
+                solution: d.solution,
+                provider
+              });
+            }
+
+            if (!provider || !deployment) {
+              throw new ServiceError(
+                badRequestError({
+                  message:
+                    'Please provide at least a provider config, auth config, or deployment'
+                })
+              );
+            }
+
+            if (config?.deploymentOid && config.deploymentOid !== deployment.oid)
+              throw new ServiceError(deploymentMismatchError);
+            if (authConfig?.deploymentOid && authConfig.deploymentOid !== deployment.oid)
+              throw new ServiceError(deploymentMismatchError);
+
+            let version = await providerDeploymentInternalService.getCurrentVersion({
+              deployment,
+              provider
+            });
+            if (!version.specificationOid) {
+              throw new ServiceError(badRequestError({ message: 'Provider cannot be run' }));
+            }
+
+            let spec = await db.providerSpecification.findFirstOrThrow({
+              where: { oid: version.specificationOid }
+            });
+
+            if (!config) {
+              if (deployment.defaultConfigOid) {
+                config = await db.providerConfig.findFirstOrThrow({
+                  where: { ...ts, oid: deployment.defaultConfigOid }
+                });
+                checkDeletedRelation(config, d);
+              } else {
+                let schema = spec.value.specification.configJsonSchema;
+                let hasRequired = true;
+
+                try {
+                  if (schema.type == 'object' && schema.properties) {
+                    let required = schema.required || [];
+                    if (!required.length) hasRequired = false;
+                  }
+                } catch {}
+
+                if (hasRequired) {
+                  throw new ServiceError(
+                    badRequestError({
+                      message: 'Provider requires a config to be provided',
+                      code: 'config_required'
+                    })
+                  );
+                }
+
+                config = await providerConfigService.ensureDefaultEmptyProviderConfig({
+                  tenant: d.tenant,
+                  solution: d.solution,
+                  provider,
+                  providerDeployment: deployment
+                });
+                checkDeletedRelation(config, d);
+              }
+            }
+
+            if (!authConfig && spec.value.authMethods.length > 0) {
+              if (deployment.defaultAuthConfigOid) {
+                authConfig = await db.providerAuthConfig.findFirstOrThrow({
+                  where: { ...ts, oid: deployment.defaultAuthConfigOid }
+                });
+                checkDeletedRelation(authConfig, d);
+              } else {
+                throw new ServiceError(
+                  badRequestError({
+                    message: 'Provider requires an auth config to be provided',
+                    code: 'auth_config_required'
+                  })
+                );
+              }
+            }
+
+            if (spec.value.authMethods.length > 0 && !authConfig) {
+              throw new ServiceError(
+                badRequestError({ message: 'Provider requires an auth config to be provided' })
+              );
+            }
+            if (spec.value.authMethods.length == 0 && authConfig) {
+              throw new ServiceError(
+                badRequestError({ message: 'Provider does not support auth configs' })
+              );
+            }
+
+            checkDeletedRelation(config, d);
+            checkDeletedRelation(deployment, d);
+            checkDeletedRelation(authConfig, d);
+
+            return {
+              deployment,
+              provider,
+              config,
+              authConfig,
+              template: s.template,
+              templateProvider: s.templateProvider,
+              toolFilters: s.toolFilters
+            };
+          })
+        );
+
+        return res;
+      },
+      { ifExists: true }
     );
-
-    return res;
   }
 
   async mapToolFilters(d: { filters: SessionProviderInputToolFilters | undefined }) {
@@ -363,7 +387,9 @@ class sessionProviderInputServiceImpl {
       });
       if (providerSessions.length + existingProviderCount > 100) {
         throw new ServiceError(
-          badRequestError({ message: 'Cannot associate more than 100 providers to a session' })
+          badRequestError({
+            message: 'Cannot associate more than 100 providers to a session template'
+          })
         );
       }
 
