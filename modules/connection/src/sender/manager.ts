@@ -481,6 +481,22 @@ export class SenderManager {
       }
     });
 
+    (async () => {
+      let res = await db.session.updateMany({
+        where: { oid: this.session.oid, isStarted: false },
+        data: { isStarted: true }
+      });
+      if (res.count > 0) {
+        await db.sessionEvent.createMany({
+          data: {
+            ...getId('sessionEvent'),
+            type: 'session_started',
+            sessionOid: this.session.oid
+          }
+        });
+      }
+    })().catch(() => {});
+
     this.connection = connection;
 
     return connection;

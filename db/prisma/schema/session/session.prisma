@@ -3,6 +3,7 @@ model Session {
   id  String @unique
 
   connectionState SessionConnectionState @default(disconnected)
+  isStarted       Boolean                @default(false)
 
   name        String?
   description String?

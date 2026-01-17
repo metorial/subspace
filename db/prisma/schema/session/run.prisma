@@ -1,6 +1,13 @@
+enum ProviderRunStatus {
+  running
+  stopped
+}
+
 model ProviderRun {
   oid BigInt @id
   id  String @unique
+
+  status ProviderRunStatus @default(running)
 
   providerOid BigInt
   provider    Provider @relation(fields: [providerOid], references: [oid])
@@ -17,8 +24,9 @@ model ProviderRun {
   connectionOid BigInt
   connection    SessionConnection @relation(fields: [connectionOid], references: [oid])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now()) @updatedAt
+  lastPingAt DateTime?
 
   sessionMessages SessionMessage[]
   sessionEvents   SessionEvent[]

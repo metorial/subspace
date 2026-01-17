@@ -1,4 +1,5 @@
 enum SessionEventType {
+  session_created
   session_started
   provider_run_started
   provider_run_stopped

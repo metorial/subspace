@@ -73,7 +73,14 @@ class sessionServiceImpl {
           metadata: d.input.metadata,
 
           tenantOid: d.tenant.oid,
-          solutionOid: d.solution.oid
+          solutionOid: d.solution.oid,
+
+          sessionEvents: {
+            create: {
+              ...getId('sessionEvent'),
+              type: 'session_created'
+            }
+          }
         },
         include
       });
