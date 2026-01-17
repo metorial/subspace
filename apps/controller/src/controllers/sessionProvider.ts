@@ -12,7 +12,8 @@ export let sessionProviderApp = tenantApp.use(async ctx => {
   let sessionProvider = await sessionProviderService.getSessionProviderById({
     sessionProviderId,
     tenant: ctx.tenant,
-    solution: ctx.solution
+    solution: ctx.solution,
+    allowDeleted: ctx.body.allowDeleted
   });
 
   return { sessionProvider };
@@ -32,7 +33,18 @@ export let sessionProviderController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+
+          allowDeleted: v.optional(v.boolean()),
+          status: v.optional(v.array(v.enumOf(['active', 'inactive']))),
+
+          ids: v.optional(v.array(v.string())),
+          sessionIds: v.optional(v.array(v.string())),
+          sessionTemplateIds: v.optional(v.array(v.string())),
+          providerIds: v.optional(v.array(v.string())),
+          providerDeploymentIds: v.optional(v.array(v.string())),
+          providerConfigIds: v.optional(v.array(v.string())),
+          providerAuthConfigIds: v.optional(v.array(v.string()))
         })
       )
     )
@@ -52,7 +64,8 @@ export let sessionProviderController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
-        sessionProviderId: v.string()
+        sessionProviderId: v.string(),
+        allowDeleted: v.optional(v.boolean())
       })
     )
     .do(async ctx => sessionProviderPresenter(ctx.sessionProvider)),
@@ -102,6 +115,7 @@ export let sessionProviderController = app.controller({
       v.object({
         tenantId: v.string(),
         sessionProviderId: v.string(),
+        allowDeleted: v.optional(v.boolean()),
 
         toolFilters: toolFiltersValidator
       })
@@ -125,7 +139,8 @@ export let sessionProviderController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
-        sessionProviderId: v.string()
+        sessionProviderId: v.string(),
+        allowDeleted: v.optional(v.boolean())
       })
     )
     .do(async ctx => {

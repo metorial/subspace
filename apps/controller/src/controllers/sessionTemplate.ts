@@ -1,26 +1,26 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { sessionService } from '@metorial-subspace/module-session';
-import { sessionPresenter } from '@metorial-subspace/presenters';
+import { sessionTemplateService } from '@metorial-subspace/module-session';
+import { sessionTemplatePresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { toolFiltersValidator } from './sessionProvider';
 import { tenantApp } from './tenant';
 
-export let sessionApp = tenantApp.use(async ctx => {
-  let sessionId = ctx.body.sessionId;
-  if (!sessionId) throw new Error('Session ID is required');
+export let sessionTemplateApp = tenantApp.use(async ctx => {
+  let sessionTemplateId = ctx.body.sessionTemplateId;
+  if (!sessionTemplateId) throw new Error('SessionTemplate ID is required');
 
-  let session = await sessionService.getSessionById({
-    sessionId,
+  let sessionTemplate = await sessionTemplateService.getSessionTemplateById({
+    sessionTemplateId,
     tenant: ctx.tenant,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
 
-  return { session };
+  return { sessionTemplate };
 });
 
-export let sessionController = app.controller({
+export let sessionTemplateController = app.controller({
   list: tenantApp
     .handler()
     .input(
@@ -32,7 +32,7 @@ export let sessionController = app.controller({
           allowDeleted: v.optional(v.boolean()),
 
           ids: v.optional(v.array(v.string())),
-          sessionTemplateIds: v.optional(v.array(v.string())),
+          sessionIds: v.optional(v.array(v.string())),
           sessionProviderIds: v.optional(v.array(v.string())),
           providerIds: v.optional(v.array(v.string())),
           providerDeploymentIds: v.optional(v.array(v.string())),
@@ -42,7 +42,7 @@ export let sessionController = app.controller({
       )
     )
     .do(async ctx => {
-      let paginator = await sessionService.listSessions({
+      let paginator = await sessionTemplateService.listSessionTemplates({
         tenant: ctx.tenant,
         solution: ctx.solution,
 
@@ -50,7 +50,7 @@ export let sessionController = app.controller({
         allowDeleted: ctx.input.allowDeleted,
 
         ids: ctx.input.ids,
-        sessionTemplateIds: ctx.input.sessionTemplateIds,
+        sessionIds: ctx.input.sessionIds,
         sessionProviderIds: ctx.input.sessionProviderIds,
         providerIds: ctx.input.providerIds,
         providerDeploymentIds: ctx.input.providerDeploymentIds,
@@ -60,19 +60,19 @@ export let sessionController = app.controller({
 
       let list = await paginator.run(ctx.input);
 
-      return Paginator.presentLight(list, sessionPresenter);
+      return Paginator.presentLight(list, sessionTemplatePresenter);
     }),
 
-  get: sessionApp
+  get: sessionTemplateApp
     .handler()
     .input(
       v.object({
         tenantId: v.string(),
-        sessionId: v.string(),
+        sessionTemplateId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })
     )
-    .do(async ctx => sessionPresenter(ctx.session)),
+    .do(async ctx => sessionTemplatePresenter(ctx.sessionTemplate)),
 
   create: tenantApp
     .handler()
@@ -88,7 +88,6 @@ export let sessionController = app.controller({
             providerDeploymentId: v.optional(v.string()),
             providerConfigId: v.optional(v.string()),
             providerAuthConfigId: v.optional(v.string()),
-            sessionTemplateId: v.optional(v.string()),
 
             toolFilters: toolFiltersValidator
           })
@@ -96,7 +95,7 @@ export let sessionController = app.controller({
       })
     )
     .do(async ctx => {
-      let session = await sessionService.createSession({
+      let sessionTemplate = await sessionTemplateService.createSessionTemplate({
         tenant: ctx.tenant,
         solution: ctx.solution,
 
@@ -109,21 +108,20 @@ export let sessionController = app.controller({
             deploymentId: p.providerDeploymentId,
             configId: p.providerConfigId,
             authConfigId: p.providerAuthConfigId,
-            toolFilters: p.toolFilters,
-            sessionTemplateId: p.sessionTemplateId
+            toolFilters: p.toolFilters
           }))
         }
       });
 
-      return sessionPresenter(session);
+      return sessionTemplatePresenter(sessionTemplate);
     }),
 
-  update: sessionApp
+  update: sessionTemplateApp
     .handler()
     .input(
       v.object({
         tenantId: v.string(),
-        sessionId: v.string(),
+        sessionTemplateId: v.string(),
 
         allowDeleted: v.optional(v.boolean()),
 
@@ -133,10 +131,10 @@ export let sessionController = app.controller({
       })
     )
     .do(async ctx => {
-      let session = await sessionService.updateSession({
-        session: ctx.session,
+      let sessionTemplate = await sessionTemplateService.updateSessionTemplate({
         tenant: ctx.tenant,
         solution: ctx.solution,
+        template: ctx.sessionTemplate,
 
         input: {
           name: ctx.input.name,
@@ -145,6 +143,6 @@ export let sessionController = app.controller({
         }
       });
 
-      return sessionPresenter(session);
+      return sessionTemplatePresenter(sessionTemplate);
     })
 });
