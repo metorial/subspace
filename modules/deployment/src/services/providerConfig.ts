@@ -13,6 +13,7 @@ import {
   getId,
   Provider,
   ProviderConfig,
+  ProviderConfigStatus,
   ProviderConfigVault,
   ProviderDeployment,
   ProviderVariant,
@@ -21,6 +22,14 @@ import {
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import {
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviderConfigs,
+  resolveProviderDeployments,
+  resolveProviders,
+  resolveProviderSpecifications
+} from '@metorial-subspace/list-utils';
 import {
   providerDeploymentConfigPairInternalService,
   providerDeploymentInternalService
@@ -50,7 +59,24 @@ let defaultLock = createLock({
 });
 
 class providerConfigServiceImpl {
-  async listProviderConfigs(d: { tenant: Tenant; solution: Solution }) {
+  async listProviderConfigs(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    status?: ProviderConfigStatus[];
+    allowDeleted?: boolean;
+
+    ids?: string[];
+    providerIds?: string[];
+    providerSpecificationIds?: string[];
+    providerDeploymentIds?: string[];
+    providerConfigVaultIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+    let specifications = await resolveProviderSpecifications(d, d.providerSpecificationIds);
+    let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
+    let vaults = await resolveProviderConfigs(d, d.providerConfigVaultIds);
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -60,7 +86,17 @@ class providerConfigServiceImpl {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
               isForVault: false,
-              isEphemeral: false
+              isEphemeral: false,
+
+              ...normalizeStatusForList(d).noParent,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                providers ? { providerOid: providers.in } : undefined!,
+                specifications ? { specificationOid: specifications.in } : undefined!,
+                deployments ? { deploymentOid: deployments.in } : undefined!,
+                vaults ? { fromVaultOid: vaults.in } : undefined!
+              ]
             },
             include
           })
@@ -72,12 +108,14 @@ class providerConfigServiceImpl {
     tenant: Tenant;
     solution: Solution;
     providerConfigId: string;
+    allowDeleted?: boolean;
   }) {
     let providerConfig = await db.providerConfig.findFirst({
       where: {
         id: d.providerConfigId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+        ...normalizeStatusForGet(d).noParent
       },
       include
     });
@@ -225,6 +263,8 @@ class providerConfigServiceImpl {
               ...ids,
               ...data,
 
+              status: 'active',
+
               parentConfigOid: parentConfig.oid,
               fromVaultOid: d.input.config.vault.oid,
 
@@ -262,6 +302,8 @@ class providerConfigServiceImpl {
           data: {
             ...ids,
             ...data,
+
+            status: 'active',
 
             deploymentOid: d.providerDeployment?.oid,
             slateInstanceOid: inner.slateInstance?.oid,

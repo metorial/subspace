@@ -10,6 +10,7 @@ import {
   Provider,
   ProviderConfigVault,
   ProviderDeployment,
+  ProviderDeploymentStatus,
   ProviderVariant,
   ProviderVersion,
   snowflake,
@@ -17,6 +18,12 @@ import {
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import {
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviders,
+  resolveProviderVersions
+} from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
 import { env } from '../env';
@@ -39,7 +46,20 @@ let defaultLock = createLock({
 });
 
 class providerDeploymentServiceImpl {
-  async listProviderDeployments(d: { tenant: Tenant; solution: Solution }) {
+  async listProviderDeployments(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    status?: ProviderDeploymentStatus[];
+    allowDeleted?: boolean;
+
+    ids?: string[];
+    providerIds?: string[];
+    providerVersionIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+    let versions = await resolveProviderVersions(d, d.providerVersionIds);
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -48,7 +68,15 @@ class providerDeploymentServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
-              isEphemeral: false
+              isEphemeral: false,
+
+              ...normalizeStatusForList(d).noParent,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                providers ? { providerOid: providers.in } : undefined!,
+                versions ? { lockedVersionOid: versions.in } : undefined!
+              ]
             },
             include
           })
@@ -60,12 +88,15 @@ class providerDeploymentServiceImpl {
     tenant: Tenant;
     solution: Solution;
     providerDeploymentId: string;
+    allowDeleted?: boolean;
   }) {
     let providerDeployment = await db.providerDeployment.findFirst({
       where: {
         id: d.providerDeploymentId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+
+        ...normalizeStatusForGet(d).noParent
       },
       include
     });
@@ -145,6 +176,8 @@ class providerDeploymentServiceImpl {
       let providerDeployment = await db.providerDeployment.create({
         data: {
           ...ids,
+
+          status: 'active',
 
           isEphemeral: !!d.input.isEphemeral,
           isDefault: !!d.input.isDefault,

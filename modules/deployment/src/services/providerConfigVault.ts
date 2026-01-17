@@ -7,6 +7,7 @@ import {
   getId,
   Provider,
   ProviderConfigVault,
+  ProviderConfigVaultStatus,
   ProviderDeployment,
   ProviderVariant,
   ProviderVersion,
@@ -14,6 +15,13 @@ import {
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import {
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviderConfigs,
+  resolveProviderDeployments,
+  resolveProviders
+} from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import {
   providerConfigVaultCreatedQueue,
@@ -27,7 +35,22 @@ let include = {
 };
 
 class providerConfigVaultServiceImpl {
-  async listProviderConfigVaults(d: { tenant: Tenant; solution: Solution }) {
+  async listProviderConfigVaults(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    status?: ProviderConfigVaultStatus[];
+    allowDeleted?: boolean;
+
+    ids?: string[];
+    providerIds?: string[];
+    providerDeploymentIds?: string[];
+    providerConfigIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+    let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
+    let configs = await resolveProviderConfigs(d, d.providerConfigIds);
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -35,7 +58,16 @@ class providerConfigVaultServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid
+              solutionOid: d.solution.oid,
+
+              ...normalizeStatusForList(d).noParent,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                providers ? { providerOid: providers.in } : undefined!,
+                deployments ? { deploymentOid: deployments.in } : undefined!,
+                configs ? { configOid: configs.in } : undefined!
+              ]
             },
             include
           })
@@ -47,12 +79,14 @@ class providerConfigVaultServiceImpl {
     tenant: Tenant;
     solution: Solution;
     providerConfigVaultId: string;
+    allowDeleted?: boolean;
   }) {
     let providerConfigVault = await db.providerConfigVault.findFirst({
       where: {
         id: d.providerConfigVaultId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+        ...normalizeStatusForGet(d).noParent
       },
       include
     });
@@ -101,6 +135,7 @@ class providerConfigVaultServiceImpl {
       let vault = await db.providerConfigVault.create({
         data: {
           ...getId('providerConfigVault'),
+          status: 'active',
           name: d.input.name,
           description: d.input.description?.trim() || undefined,
           metadata: d.input.metadata,
