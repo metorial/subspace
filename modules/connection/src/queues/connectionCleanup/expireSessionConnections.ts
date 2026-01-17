@@ -1,9 +1,9 @@
 import { createCron } from '@lowerdeck/cron';
 import { db } from '@metorial-subspace/db';
 import { subMinutes } from 'date-fns';
-import { env } from '../env';
+import { env } from '../../env';
 
-export let expireSessionsCron = createCron(
+export let expireSessionConnectionsCron = createCron(
   {
     name: 'con/conn/expire',
     cron: '* * * * *',
@@ -12,13 +12,13 @@ export let expireSessionsCron = createCron(
   async () => {
     let twoMinutesAgo = subMinutes(new Date(), 2);
 
-    await db.session.updateMany({
+    await db.sessionConnection.updateMany({
       where: {
-        connectionState: 'connected',
+        state: 'connected',
         lastActiveAt: { lt: twoMinutesAgo }
       },
       data: {
-        connectionState: 'disconnected'
+        state: 'disconnected'
       }
     });
   }
