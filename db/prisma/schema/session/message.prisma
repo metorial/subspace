@@ -14,14 +14,22 @@ enum SessionMessageSource {
   client
 }
 
+enum SessionMessageFailureReason {
+  timeout
+  provider_error
+  system_error
+  none
+}
+
 model SessionMessage {
   oid        BigInt @id
   id         String @unique
   toolCallId String @unique
 
-  status SessionMessageStatus
-  type   SessionMessageType
-  source SessionMessageSource
+  status        SessionMessageStatus
+  type          SessionMessageType
+  source        SessionMessageSource
+  failureReason SessionMessageFailureReason @default(none)
 
   /// [SessionMessageClientMcpId]
   clientMcpId Json
@@ -35,8 +43,7 @@ model SessionMessage {
   methodOrToolKey String?
   isViaMcp        Boolean
 
-  isProductive         Boolean @default(true)
-  isFailedDueToTimeout Boolean @default(false)
+  isProductive Boolean @default(true)
 
   isOffloadedToStorage Boolean                     @default(false)
   bucketOid            Int
@@ -59,6 +66,9 @@ model SessionMessage {
 
   slateToolCallOid BigInt?
   slateToolCall    SlateToolCall? @relation(fields: [slateToolCallOid], references: [oid])
+
+  errorOid BigInt?
+  error    SessionError? @relation(fields: [errorOid], references: [oid])
 
   createdAt   DateTime  @default(now())
   completedAt DateTime?

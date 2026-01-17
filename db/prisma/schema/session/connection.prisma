@@ -51,6 +51,7 @@ model SessionConnection {
   sessionEvents   SessionEvent[]
   providerRuns    ProviderRun[]
   sessionMessages SessionMessage[]
+  sessionErrors   SessionError[]
 
   @@index([lastActiveAt])
   @@index([state])

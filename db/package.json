@@ -22,6 +22,7 @@
     "@modelcontextprotocol/sdk": "^1.25.2",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
+    "date-fns": "^4.1.0",
     "prisma": "^7.2.0",
     "prisma-json-types-generator": "^4.0.1",
     "snowflake-uuid": "^1.0.0"

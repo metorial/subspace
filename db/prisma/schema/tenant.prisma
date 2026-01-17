@@ -34,4 +34,5 @@ model Tenant {
   brand                                    Brand?
   sessionProviders                         SessionProvider[]
   sessionClients                           SessionClient[]
+  sessionErrorGlobals                      SessionErrorGlobal[]
 }

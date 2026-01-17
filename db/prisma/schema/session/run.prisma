@@ -23,6 +23,7 @@ model ProviderRun {
   sessionMessages SessionMessage[]
   sessionEvents   SessionEvent[]
   slateSessions   SlateSession[]
+  sessionErrors   SessionError[]
 }
 
 model SessionProviderInstance {

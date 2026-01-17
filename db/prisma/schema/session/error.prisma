@@ -1,0 +1,81 @@
+enum SessionErrorType {
+  message_processing_timeout
+  message_processing_provider_error
+  message_processing_system_error
+}
+
+model SessionErrorGlobal {
+  oid BigInt @id
+  id  String @unique
+
+  type SessionErrorType
+
+  code    String
+  message String
+
+  hash String
+
+  firstOccurrenceOid BigInt?
+  firstOccurrence    SessionError? @relation(fields: [firstOccurrenceOid], references: [oid], name: "GlobalToOccurrence")
+
+  providerOid BigInt?
+  provider    Provider? @relation(fields: [providerOid], references: [oid])
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  createdAt DateTime @default(now())
+
+  occurrenceCount Int @default(0)
+
+  instances                           SessionError[]
+  sessionErrorGlobalOccurrencePeriods SessionErrorGlobalOccurrencePeriod[]
+
+  @@unique([type, hash, tenantOid])
+}
+
+model SessionErrorGlobalOccurrencePeriod {
+  oid BigInt @id
+
+  startsAt DateTime
+  endsAt   DateTime
+
+  occurrenceCount Int @default(0)
+
+  globalOid BigInt
+  global    SessionErrorGlobal @relation(fields: [globalOid], references: [oid])
+
+  @@unique([globalOid, startsAt])
+}
+
+model SessionError {
+  oid BigInt @id
+  id  String @unique
+
+  type SessionErrorType
+
+  isProcessing Boolean
+
+  code    String
+  message String
+
+  payload Json?
+
+  globalOid BigInt?
+  global    SessionErrorGlobal? @relation(fields: [globalOid], references: [oid])
+
+  connectionOid BigInt?
+  connection    SessionConnection? @relation(fields: [connectionOid], references: [oid])
+
+  sessionOid BigInt
+  session    Session @relation(fields: [sessionOid], references: [oid])
+
+  providerRunOid BigInt?
+  providerRun    ProviderRun? @relation(fields: [providerRunOid], references: [oid])
+
+  createdAt DateTime @default(now())
+
+  instanceForGlobal SessionErrorGlobal[] @relation(name: "GlobalToOccurrence")
+  sessionMessages   SessionMessage[]
+  sessionEvents     SessionEvent[]
+}
