@@ -1,6 +1,6 @@
 import { v } from '@lowerdeck/validation';
-import { brandPresenter } from '@metorial-subspace/db';
 import { brandService, tenantService } from '@metorial-subspace/module-tenant';
+import { brandPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 
 export let brandApp = app.use(async ctx => {

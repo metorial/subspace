@@ -6,7 +6,7 @@ import type {
   ProviderAuthMethod,
   ProviderDeployment,
   ProviderSpecification
-} from '../../prisma/generated/client';
+} from '@metorial-subspace/db';
 import { providerAuthConfigPresenter } from './authConfig';
 
 export let providerAuthImportPresenter = (

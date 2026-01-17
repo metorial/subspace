@@ -1,9 +1,9 @@
-import type { ProviderAuthMethod } from '../../prisma/generated/browser';
 import type {
   Provider,
+  ProviderAuthMethod,
   ProviderSpecification,
   ProviderTool
-} from '../../prisma/generated/client';
+} from '@metorial-subspace/db';
 import { providerAuthMethodPresenter } from './providerAuthMethod';
 import { providerToolPresenter } from './providerTool';
 

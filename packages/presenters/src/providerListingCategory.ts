@@ -1,4 +1,4 @@
-import type { ProviderListingCategory } from '../../prisma/generated/client';
+import type { ProviderListingCategory } from '@metorial-subspace/db';
 
 export let providerListingCategoryPresenter = (
   providerListingCategory: ProviderListingCategory

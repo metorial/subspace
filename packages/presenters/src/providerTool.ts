@@ -1,8 +1,4 @@
-import type {
-  Provider,
-  ProviderSpecification,
-  ProviderTool
-} from '../../prisma/generated/client';
+import type { Provider, ProviderSpecification, ProviderTool } from '@metorial-subspace/db';
 
 export let providerToolPresenter = (
   providerTool: ProviderTool & {

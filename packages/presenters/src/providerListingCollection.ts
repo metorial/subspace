@@ -1,4 +1,4 @@
-import type { ProviderListingCollection } from '../../prisma/generated/client';
+import type { ProviderListingCollection } from '@metorial-subspace/db';
 
 export let providerListingCollectionPresenter = (
   providerListingCollection: ProviderListingCollection

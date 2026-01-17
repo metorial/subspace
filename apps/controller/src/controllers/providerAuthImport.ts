@@ -1,16 +1,13 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import {
-  providerAuthImportPresenter,
-  type Solution,
-  type Tenant
-} from '@metorial-subspace/db';
+import { type Solution, type Tenant } from '@metorial-subspace/db';
 import {
   providerAuthConfigService,
   providerAuthImportService
 } from '@metorial-subspace/module-auth';
 import { providerService } from '@metorial-subspace/module-catalog';
 import { providerDeploymentService } from '@metorial-subspace/module-deployment';
+import { providerAuthImportPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 

@@ -1,4 +1,4 @@
-import type { Publisher } from '../../prisma/generated/client';
+import type { Publisher } from '@metorial-subspace/db';
 
 export let publisherPresenter = (publisher: Publisher) => ({
   object: 'publisher',

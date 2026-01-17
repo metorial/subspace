@@ -1,4 +1,4 @@
-import type { Tenant } from '../../prisma/generated/client';
+import type { Tenant } from '@metorial-subspace/db';
 
 export let tenantPresenter = (tenant: Tenant) => ({
   object: 'tenant',

@@ -3,7 +3,7 @@ import type {
   ProviderSpecification,
   ProviderVariant,
   ProviderVersion
-} from '../../prisma/generated/client';
+} from '@metorial-subspace/db';
 import { providerVersionPresenter } from './providerVersion';
 
 export let providerVariantPresenter = (

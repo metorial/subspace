@@ -1,5 +1,4 @@
-import type { ProviderVersion } from '../../prisma/generated/browser';
-import type { Provider, ProviderSpecification } from '../../prisma/generated/client';
+import type { Provider, ProviderSpecification, ProviderVersion } from '@metorial-subspace/db';
 
 export let providerVersionPresenter = (
   providerVersion: ProviderVersion & {

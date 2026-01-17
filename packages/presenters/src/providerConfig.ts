@@ -1,4 +1,4 @@
-import type { Provider, ProviderSpecification } from '../../prisma/generated/client';
+import type { Provider, ProviderSpecification } from '@metorial-subspace/db';
 
 export let providerConfigSchemaPresenter = (
   providerSpecification: ProviderSpecification & {

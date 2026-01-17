@@ -1,6 +1,5 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { providerSetupSessionPresenter } from '@metorial-subspace/db';
 import {
   providerAuthCredentialsService,
   providerSetupSessionService
@@ -8,6 +7,7 @@ import {
 import { providerService } from '@metorial-subspace/module-catalog';
 import { providerDeploymentService } from '@metorial-subspace/module-deployment';
 import { brandService } from '@metorial-subspace/module-tenant';
+import { providerSetupSessionPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 

@@ -10,7 +10,7 @@ import type {
   ProviderVersion,
   Publisher,
   Tenant
-} from '../../prisma/generated/client';
+} from '@metorial-subspace/db';
 import { providerPresenter } from './provider';
 import { providerListingCategoryPresenter } from './providerListingCategory';
 import { providerListingCollectionPresenter } from './providerListingCollection';

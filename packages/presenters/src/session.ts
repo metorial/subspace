@@ -5,7 +5,7 @@ import type {
   ProviderDeployment,
   Session,
   SessionProvider
-} from '../../prisma/generated/client';
+} from '@metorial-subspace/db';
 import { sessionProviderPresenter } from './sessionProvider';
 
 export let sessionPresenter = (

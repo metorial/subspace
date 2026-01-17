@@ -5,7 +5,7 @@ import type {
   ProviderSpecification,
   ProviderVariant,
   ProviderVersion
-} from '../../prisma/generated/client';
+} from '@metorial-subspace/db';
 import { providerConfigPreviewPresenter } from './config';
 import { providerVersionPresenter } from './providerVersion';
 

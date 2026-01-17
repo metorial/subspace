@@ -1,14 +1,12 @@
 import type {
+  Provider,
+  ProviderEntry,
+  ProviderSpecification,
   ProviderVariant,
   ProviderVersion,
   Publisher,
   Tenant
-} from '../../prisma/generated/browser';
-import type {
-  Provider,
-  ProviderEntry,
-  ProviderSpecification
-} from '../../prisma/generated/client';
+} from '@metorial-subspace/db';
 import { providerEntryPresenter } from './providerEntry';
 import { providerVariantPresenter } from './providerVariant';
 import { providerVersionPresenter } from './providerVersion';

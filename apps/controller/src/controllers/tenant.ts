@@ -1,6 +1,6 @@
 import { v } from '@lowerdeck/validation';
-import { tenantPresenter } from '@metorial-subspace/db';
 import { tenantService } from '@metorial-subspace/module-tenant';
+import { tenantPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 
 export let tenantApp = app.use(async ctx => {

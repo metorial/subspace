@@ -5,7 +5,7 @@ import type {
   ProviderAuthMethod,
   ProviderDeployment,
   ProviderSpecification
-} from '../../prisma/generated/client';
+} from '@metorial-subspace/db';
 import { providerAuthCredentialsPresenter } from './authCredentials';
 import { providerAuthMethodPresenter } from './providerAuthMethod';
 

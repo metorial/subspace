@@ -1,11 +1,11 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { providerConfigVaultPresenter } from '@metorial-subspace/db';
 import { providerService } from '@metorial-subspace/module-catalog';
 import {
   providerConfigVaultService,
   providerDeploymentService
 } from '@metorial-subspace/module-deployment';
+import { providerConfigVaultPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 

@@ -1,8 +1,8 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { providerAuthCredentialsPresenter } from '@metorial-subspace/db';
 import { providerAuthCredentialsService } from '@metorial-subspace/module-auth';
 import { providerService } from '@metorial-subspace/module-catalog';
+import { providerAuthCredentialsPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 

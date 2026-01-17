@@ -4,7 +4,7 @@ import type {
   ProviderConfig,
   ProviderDeployment,
   SessionProvider
-} from '../../prisma/generated/client';
+} from '@metorial-subspace/db';
 import { providerAuthConfigPreviewPresenter } from './authConfig';
 import { providerConfigPreviewPresenter } from './config';
 import { providerDeploymentPreviewPresenter } from './deployment';

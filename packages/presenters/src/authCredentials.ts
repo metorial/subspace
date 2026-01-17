@@ -1,4 +1,4 @@
-import type { Provider, ProviderAuthCredentials } from '../../prisma/generated/client';
+import type { Provider, ProviderAuthCredentials } from '@metorial-subspace/db';
 
 export let providerAuthCredentialsPresenter = (
   providerAuthCredentials: ProviderAuthCredentials & {

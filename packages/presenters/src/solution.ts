@@ -1,4 +1,4 @@
-import type { Solution } from '../../prisma/generated/client';
+import type { Solution } from '@metorial-subspace/db';
 
 export let solutionPresenter = (solution: Solution) => ({
   object: 'solution',

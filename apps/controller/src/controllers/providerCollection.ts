@@ -1,7 +1,7 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { providerListingCollectionPresenter } from '@metorial-subspace/db';
 import { providerListingCollectionService } from '@metorial-subspace/module-catalog';
+import { providerListingCollectionPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 

@@ -1,7 +1,7 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { sessionProviderPresenter } from '@metorial-subspace/db';
 import { sessionProviderService, sessionService } from '@metorial-subspace/module-session';
+import { sessionProviderPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 

@@ -1,8 +1,4 @@
-import type {
-  Provider,
-  ProviderConfigVault,
-  ProviderDeployment
-} from '../../prisma/generated/client';
+import type { Provider, ProviderConfigVault, ProviderDeployment } from '@metorial-subspace/db';
 import { providerDeploymentPreviewPresenter } from './deployment';
 
 export let providerConfigVaultPresenter = (

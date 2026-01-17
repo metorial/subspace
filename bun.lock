@@ -154,6 +154,7 @@
         "@metorial-subspace/module-catalog": "^1.0.0",
         "@metorial-subspace/module-deployment": "^1.0.0",
         "@metorial-subspace/module-tenant": "^1.0.0",
+        "@metorial-subspace/presenters": "^1.0.0",
         "@prisma/adapter-pg": "^7.2.0",
         "@prisma/client": "^7.2.0",
         "@types/semver": "^7.7.1",
@@ -504,6 +505,31 @@
         "@metorial-subspace/tsconfig": "^1.0.0",
         "typescript": "5.8.2",
         "vitest": "^3.1.2",
+      },
+    },
+    "packages/presenters": {
+      "name": "@metorial-subspace/presenters",
+      "version": "1.0.0",
+      "dependencies": {
+        "@lowerdeck/env": "^1.0.4",
+        "@lowerdeck/error": "^1.0.10",
+        "@lowerdeck/id": "^1.0.5",
+        "@lowerdeck/shadow-id": "^1.0.4",
+        "@lowerdeck/slugify": "^1.0.4",
+        "@lowerdeck/validation": "^1.0.4",
+        "@metorial-subspace/db": "^1.0.0",
+        "@modelcontextprotocol/sdk": "^1.25.2",
+        "@prisma/adapter-pg": "^7.2.0",
+        "@prisma/client": "^7.2.0",
+        "prisma": "^7.2.0",
+        "prisma-json-types-generator": "^4.0.1",
+        "snowflake-uuid": "^1.0.0",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
       },
     },
     "packages/tsconfig": {
@@ -951,6 +977,8 @@
     "@metorial-subspace/module-session": ["@metorial-subspace/module-session@workspace:modules/session"],
 
     "@metorial-subspace/module-tenant": ["@metorial-subspace/module-tenant@workspace:modules/tenant"],
+
+    "@metorial-subspace/presenters": ["@metorial-subspace/presenters@workspace:packages/presenters"],
 
     "@metorial-subspace/provider": ["@metorial-subspace/provider@workspace:provider-backends/provider-manager"],
 
@@ -2266,8 +2294,6 @@
 
     "@lowerdeck/slugify/@lowerdeck/id": ["@lowerdeck/id@1.0.5", "", { "dependencies": { "@lowerdeck/error": "^1.0.8", "@lowerdeck/hash": "^1.0.4", "nanoid": "^5.0.7", "short-uuid": "^5.2.0", "snowflake-uuid": "^1.0.0" } }, "sha512-8Xik3NbqE7mkfYTliMG+zxWjn+my1wK09BIHiKdxylvkdtAKaxBzls+XoALFO2JZ+VSZIdLG2DvtndXjFSwPQg=="],
 
-    "@metorial-subspace/app-controller/@types/bun": ["@types/bun@1.3.5", "", { "dependencies": { "bun-types": "1.3.5" } }, "sha512-RnygCqNrd3srIPEWBd5LFeUYG7plCoH2Yw9WaZGyNmdTEei+gWaHqydbaIRkIkcbXwhBT94q78QljxN0Sk838w=="],
-
     "@metorial-subspace/app-public/@types/bun": ["@types/bun@1.3.5", "", { "dependencies": { "bun-types": "1.3.5" } }, "sha512-RnygCqNrd3srIPEWBd5LFeUYG7plCoH2Yw9WaZGyNmdTEei+gWaHqydbaIRkIkcbXwhBT94q78QljxN0Sk838w=="],
 
     "@metorial-subspace/provider-slates/@metorial-services/slates-hub-client": ["@metorial-services/slates-hub-client@1.0.13", "", { "dependencies": { "@lowerdeck/rpc-client": "^1.0.2" } }, "sha512-hh0v12K4EQJtPvgdtjrlOGakThNyaHqAmjDvCLd6aB5FIlzJfi/R1YiHTjq2mJzHTE73fvoNZU1NWy2zqMaQ8w=="],
@@ -2341,8 +2367,6 @@
     "@aws-crypto/util/@smithy/util-utf8/@smithy/util-buffer-from": ["@smithy/util-buffer-from@2.2.0", "", { "dependencies": { "@smithy/is-array-buffer": "^2.2.0", "tslib": "^2.6.2" } }, "sha512-IJdWBbTcMQ6DA0gdNhh/BwrLkDR+ADW5Kr1aZmd4k3DIF6ezMV4R2NIAmT08wQJ3yUK82thHWmC/TnK/wpMMIA=="],
 
     "@lowerdeck/lock/@types/bun/bun-types": ["bun-types@1.3.5", "", { "dependencies": { "@types/node": "*" } }, "sha512-inmAYe2PFLs0SUbFOWSVD24sg1jFlMPxOjOSSCYqUgn4Hsc3rDc7dFvfVYjFPNHtov6kgUeulV4SxbuIV/stPw=="],
-
-    "@metorial-subspace/app-controller/@types/bun/bun-types": ["bun-types@1.3.5", "", { "dependencies": { "@types/node": "*" } }, "sha512-inmAYe2PFLs0SUbFOWSVD24sg1jFlMPxOjOSSCYqUgn4Hsc3rDc7dFvfVYjFPNHtov6kgUeulV4SxbuIV/stPw=="],
 
     "@metorial-subspace/app-public/@types/bun/bun-types": ["bun-types@1.3.5", "", { "dependencies": { "@types/node": "*" } }, "sha512-inmAYe2PFLs0SUbFOWSVD24sg1jFlMPxOjOSSCYqUgn4Hsc3rDc7dFvfVYjFPNHtov6kgUeulV4SxbuIV/stPw=="],
 

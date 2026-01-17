@@ -1,12 +1,15 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { providerConfigPresenter, providerConfigSchemaPresenter } from '@metorial-subspace/db';
 import { providerService, providerVersionService } from '@metorial-subspace/module-catalog';
 import {
   providerConfigService,
   providerConfigVaultService,
   providerDeploymentService
 } from '@metorial-subspace/module-deployment';
+import {
+  providerConfigPresenter,
+  providerConfigSchemaPresenter
+} from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 

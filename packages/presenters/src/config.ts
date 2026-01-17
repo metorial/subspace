@@ -4,7 +4,7 @@ import type {
   ProviderConfigVault,
   ProviderDeployment,
   ProviderSpecification
-} from '../../prisma/generated/client';
+} from '@metorial-subspace/db';
 import { providerDeploymentPreviewPresenter } from './deployment';
 import { providerConfigVaultPresenter } from './vault';
 

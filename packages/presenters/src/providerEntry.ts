@@ -1,4 +1,4 @@
-import type { ProviderEntry } from '../../prisma/generated/client';
+import type { ProviderEntry } from '@metorial-subspace/db';
 
 export let providerEntryPresenter = (providerEntry: ProviderEntry) => ({
   object: 'provider.entry',
