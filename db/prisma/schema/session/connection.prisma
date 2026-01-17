@@ -33,6 +33,12 @@ model SessionConnection {
   clientOid BigInt?
   client    SessionClient? @relation(fields: [clientOid], references: [oid])
 
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid BigInt
+  solution    Solution @relation(fields: [solutionOid], references: [oid])
+
   /// [SessionConnectionMcpData]
   mcpData            Json
   mcpTransport       SessionConnectionMcpConnectionTransport

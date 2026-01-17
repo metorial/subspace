@@ -70,6 +70,12 @@ model SessionMessage {
   errorOid BigInt?
   error    SessionError? @relation(fields: [errorOid], references: [oid])
 
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid BigInt
+  solution    Solution @relation(fields: [solutionOid], references: [oid])
+
   createdAt   DateTime  @default(now())
   completedAt DateTime?
 

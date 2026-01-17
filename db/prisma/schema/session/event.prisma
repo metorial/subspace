@@ -27,6 +27,12 @@ model SessionEvent {
   connectionOid BigInt?
   connection    SessionConnection? @relation(fields: [connectionOid], references: [oid])
 
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid BigInt
+  solution    Solution @relation(fields: [solutionOid], references: [oid])
+
   errorOid BigInt?
   error    SessionError? @relation(fields: [errorOid], references: [oid])
 

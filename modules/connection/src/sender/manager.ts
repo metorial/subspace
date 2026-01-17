@@ -139,6 +139,8 @@ export class SenderManager {
 
             sessionOid: session.oid,
             clientOid: connection!.clientOid,
+            tenantOid: session.tenantOid,
+            solutionOid: session.solutionOid,
 
             mcpData: connection!.mcpData,
 
@@ -393,6 +395,8 @@ export class SenderManager {
           mcpProtocolVersion: null,
 
           sessionOid: this.session.oid,
+          tenantOid: this.session.tenantOid,
+          solutionOid: this.session.solutionOid,
 
           mcpData: {},
 
@@ -459,6 +463,8 @@ export class SenderManager {
         data: {
           ...getId('sessionConnection'),
           ...connectionData,
+          tenantOid: this.tenant.oid,
+          solutionOid: this.solution.oid,
           token: await ID.generateId('sessionConnection_token')
         }
       });
@@ -477,7 +483,9 @@ export class SenderManager {
         ...getId('sessionEvent'),
         type: 'connection_created',
         sessionOid: this.session.oid,
-        connectionOid: connection.oid
+        connectionOid: connection.oid,
+        tenantOid: this.session.tenantOid,
+        solutionOid: this.session.solutionOid
       }
     });
 
@@ -491,7 +499,9 @@ export class SenderManager {
           data: {
             ...getId('sessionEvent'),
             type: 'session_started',
-            sessionOid: this.session.oid
+            sessionOid: this.session.oid,
+            tenantOid: this.session.tenantOid,
+            solutionOid: this.session.solutionOid
           }
         });
       }

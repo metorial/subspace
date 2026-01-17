@@ -73,6 +73,12 @@ model SessionError {
   providerRunOid BigInt?
   providerRun    ProviderRun? @relation(fields: [providerRunOid], references: [oid])
 
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid BigInt
+  solution    Solution @relation(fields: [solutionOid], references: [oid])
+
   createdAt DateTime @default(now())
 
   instanceForGlobal SessionErrorGlobal[] @relation(name: "GlobalToOccurrence")

@@ -81,6 +81,9 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
       sessionOid: data.session.oid,
       connectionOid: data.connection?.oid,
       sessionProviderOid: data.provider?.oid,
+      tenantOid: data.session.tenantOid,
+      solutionOid: data.session.solutionOid,
+
       bucketOid: sessionMessageBucketRecord.oid,
       errorOid: error?.oid,
 
@@ -101,7 +104,9 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
       sessionOid: message.sessionOid,
       connectionOid: message.connectionOid,
       providerRunOid: message.providerRunOid,
-      messageOid: message.oid
+      messageOid: message.oid,
+      tenantOid: message.tenantOid,
+      solutionOid: message.solutionOid
     }
   });
 
@@ -113,7 +118,9 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
         sessionOid: message.sessionOid,
         connectionOid: message.connectionOid,
         providerRunOid: message.providerRunOid,
-        messageOid: message.oid
+        messageOid: message.oid,
+        tenantOid: message.tenantOid,
+        solutionOid: message.solutionOid
       }
     });
   }

@@ -82,7 +82,9 @@ export let completeMessage = async (
         sessionOid: message.sessionOid,
         connectionOid: message.connectionOid,
         providerRunOid: message.providerRunOid,
-        messageOid: message.oid
+        messageOid: message.oid,
+        tenantOid: message.tenantOid,
+        solutionOid: message.solutionOid
       }
     });
   })().catch(() => {});
