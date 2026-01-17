@@ -11,7 +11,9 @@ let offloadCron = createCron(
     cron: '30 4 * * *',
     redisUrl: env.service.REDIS_URL
   },
-  async () => {}
+  async () => {
+    await offloadMessagesQueue.add({});
+  }
 );
 
 let offloadMessagesQueue = createQueue<{ cursor?: string }>({
