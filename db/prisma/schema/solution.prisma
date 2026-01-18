@@ -30,4 +30,5 @@ model Solution {
   sessionMessages                          SessionMessage[]
   sessionEvents                            SessionEvent[]
   providerRuns                             ProviderRun[]
+  toolCalls                                ToolCall[]
 }

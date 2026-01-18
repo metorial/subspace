@@ -55,6 +55,7 @@ model SessionProvider {
   sessionProviderInstances SessionProviderInstance[]
   sessionMessages          SessionMessage[]
   providerRuns             ProviderRun[]
+  toolCalls                ToolCall[]
 
   @@unique([sessionOid, tag])
   @@index([status])

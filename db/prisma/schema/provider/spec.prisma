@@ -49,6 +49,7 @@ model ProviderTool {
 
   currentInGlobal ProviderToolGlobal[] @relation("currentToolInstance")
   sessionMessages SessionMessage[]
+  toolCalls       ToolCall[]
 
   @@unique([providerOid, specificationOid, hash])
   @@unique([specificationOid, key])

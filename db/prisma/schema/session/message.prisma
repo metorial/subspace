@@ -22,9 +22,8 @@ enum SessionMessageFailureReason {
 }
 
 model SessionMessage {
-  oid        BigInt @id
-  id         String @unique
-  toolCallId String @unique
+  oid BigInt @id
+  id  String @unique
 
   status          SessionMessageStatus
   type            SessionMessageType
@@ -68,9 +67,6 @@ model SessionMessage {
   providerRunOid BigInt?
   providerRun    ProviderRun? @relation(fields: [providerRunOid], references: [oid])
 
-  toolOid BigInt?
-  tool    ProviderTool? @relation(fields: [toolOid], references: [oid])
-
   slateToolCallOid BigInt?
   slateToolCall    SlateToolCall? @relation(fields: [slateToolCallOid], references: [oid])
 
@@ -86,7 +82,10 @@ model SessionMessage {
   createdAt   DateTime  @default(now())
   completedAt DateTime?
 
-  sessionEvents SessionEvent[]
+  sessionEvents   SessionEvent[]
+  providerTool    ProviderTool?  @relation(fields: [providerToolOid], references: [oid])
+  providerToolOid BigInt?
+  toolCall        ToolCall?
 
   @@index([isOffloadedToStorage])
   @@index([status])
@@ -99,4 +98,35 @@ model SessionMessageStorageBucket {
   createdAt DateTime @default(now())
 
   sessionMessages SessionMessage[]
+}
+
+model ToolCall {
+  oid BigInt @id
+  id  String @unique
+
+  toolKey String?
+
+  messageId String         @unique
+  message   SessionMessage @relation(fields: [messageId], references: [id])
+
+  sessionOid BigInt
+  session    Session @relation(fields: [sessionOid], references: [oid])
+
+  sessionProviderOid BigInt?
+  sessionProvider    SessionProvider? @relation(fields: [sessionProviderOid], references: [oid])
+
+  providerRunOid BigInt?
+  providerRun    ProviderRun? @relation(fields: [providerRunOid], references: [oid])
+
+  toolOid BigInt?
+  tool    ProviderTool? @relation(fields: [toolOid], references: [oid])
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid Int
+  solution    Solution @relation(fields: [solutionOid], references: [oid])
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
 }

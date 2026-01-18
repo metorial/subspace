@@ -43,6 +43,7 @@ model ProviderRun {
   sessionEvents   SessionEvent[]
   slateSessions   SlateSession[]
   sessionErrors   SessionError[]
+  toolCalls       ToolCall[]
 
   @@index([status])
   @@index([lastPingAt])

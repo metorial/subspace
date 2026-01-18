@@ -45,6 +45,7 @@ model Session {
   connections              SessionConnection[]
   sessionErrors            SessionError[]
   sessionProviderInstances SessionProviderInstance[]
+  toolCalls                ToolCall[]
 
   @@index([lastActiveAt])
   @@index([connectionState])

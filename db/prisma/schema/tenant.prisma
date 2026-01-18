@@ -44,4 +44,5 @@ model Tenant {
   sessionParticipants                      SessionParticipant[]
   providerRuns                             ProviderRun[]
   sessionErrorGroups                       SessionErrorGroup[]
+  toolCalls                                ToolCall[]
 }
