@@ -58,7 +58,6 @@ export let ID = createIdGenerator({
   session: idType.sorted('ses'),
   sessionTemplate: idType.sorted('set'),
   sessionTemplateProvider: idType.sorted('stp'),
-  providerRun: idType.sorted('prun'),
   sessionProvider: idType.sorted('spv'),
   sessionProviderInstance: idType.sorted('spi'),
   sessionMessage: idType.sorted('smg'),
@@ -67,9 +66,12 @@ export let ID = createIdGenerator({
   sessionClientConnection: idType.sorted('scc'),
   sessionConnection: idType.sorted('scon'),
   sessionConnection_token: idType.unsorted('scon_tok', 30),
-  toolCall: idType.sorted('tcl'),
   sessionError: idType.sorted('serr'),
-  sessionErrorGroup: idType.sorted('serg')
+  sessionErrorGroup: idType.sorted('serg'),
+
+  providerRun: idType.sorted('prun'),
+
+  toolCall: idType.sorted('tcl')
 });
 
 let workerIdBits = 12;
