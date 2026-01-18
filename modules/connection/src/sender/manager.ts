@@ -31,6 +31,7 @@ import {
   UNINITIALIZED_SESSION_EXPIRATION_MINUTES
 } from '../const';
 import { env } from '../env';
+import { checkToolAccess } from '../lib/checkToolAccess';
 import { topics } from '../lib/topic';
 import { wire } from '../lib/wire';
 import { completeMessage } from '../shared/completeMessage';
@@ -225,10 +226,11 @@ export class SenderManager {
         }
       });
 
-      let deploymentDeleted = isRecordDeleted(fullProvider.deployment);
-      let configDeleted = isRecordDeleted(fullProvider.config);
-      let authConfigDeleted = isRecordDeleted(fullProvider.authConfig);
-      if (deploymentDeleted || configDeleted || authConfigDeleted) {
+      let dependencyIsDeleted =
+        isRecordDeleted(fullProvider.deployment) ||
+        isRecordDeleted(fullProvider.config) ||
+        isRecordDeleted(fullProvider.authConfig);
+      if (dependencyIsDeleted) {
         await db.sessionProvider.updateMany({
           where: { oid: provider.oid },
           data: { status: 'archived' }
@@ -277,11 +279,13 @@ export class SenderManager {
       }
     });
 
-    return tools.map(t => ({
-      ...t,
-      sessionProvider: provider,
-      sessionProviderInstance: instance
-    }));
+    return tools
+      .filter(tool => checkToolAccess(tool, provider, 'list').allowed)
+      .map(t => ({
+        ...t,
+        sessionProvider: provider,
+        sessionProviderInstance: instance
+      }));
   }
 
   async listProviders() {
@@ -332,6 +336,11 @@ export class SenderManager {
     });
     if (!tool) throw new ServiceError(notFoundError('tool', d.toolId));
 
+    let { allowed } = checkToolAccess(tool, provider, 'call');
+    if (!allowed) {
+      throw new ServiceError(badRequestError({ message: 'Tool access not allowed' }));
+    }
+
     return {
       provider,
       instance,
@@ -363,6 +372,11 @@ export class SenderManager {
     }
 
     let { provider, tool, instance } = await this.getToolById({ toolId: d.toolId });
+
+    let { allowed } = checkToolAccess(tool, provider, 'call');
+    if (!allowed) {
+      throw new ServiceError(badRequestError({ message: 'Tool access not allowed' }));
+    }
 
     let message = await this.createMessage({
       status: 'waiting_for_response',

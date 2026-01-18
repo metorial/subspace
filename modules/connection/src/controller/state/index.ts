@@ -51,7 +51,7 @@ export class ConnectionState {
 
       this.baseState = baseRes;
       this.providerRun = updatedProviderRun;
-    });
+    }, 1000 * 60);
   }
 
   static async create(d: { instanceOid: bigint; connectionOid: bigint }, onError: () => void) {
@@ -64,8 +64,13 @@ export class ConnectionState {
   }
 
   get messageTTLExtensionMs() {
-    // TODO: @herber make this dynamic for other provider types
-    return 1000 * 60 * 2;
+    if (this.session.isEphemeral || this.connection.isEphemeral) {
+      return 1000 * 15;
+    }
+
+    // TODO: @herber add handling for non-slates providers
+
+    return 1000 * 30;
   }
 
   get connection() {

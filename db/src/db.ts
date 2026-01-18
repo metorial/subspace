@@ -42,7 +42,7 @@ declare global {
       | {
           type: 'v1.whitelist';
           filters: {
-            type: 'tools';
+            type: 'tool_keys';
             keys: string[];
           }[];
 

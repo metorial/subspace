@@ -303,7 +303,7 @@ class sessionProviderInputServiceImpl {
       type: 'v1.whitelist',
       filters: [
         {
-          type: 'tools',
+          type: 'tool_keys',
           keys: d.filters.toolKeys || []
         }
       ]
