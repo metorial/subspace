@@ -64,8 +64,16 @@ export let completeMessage = async (
       providerRunOid: data.providerRun?.oid,
       slateToolCallOid: data.slateToolCall?.oid,
       responderParticipantOid: data.responderParticipant.oid
-    }
+    },
+    include: { toolCall: true }
   });
+
+  if (message.toolCall) {
+    await db.toolCall.updateMany({
+      where: { oid: message.toolCall.oid },
+      data: { providerRunOid: message.providerRunOid }
+    });
+  }
 
   (async () => {
     await db.sessionEvent.updateMany({

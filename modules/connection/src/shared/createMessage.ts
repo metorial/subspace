@@ -1,7 +1,6 @@
 import {
   db,
   getId,
-  ID,
   SessionMessageFailureReason,
   SessionMessageSource,
   SessionMessageStatus,
@@ -76,7 +75,6 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
   let message = await db.sessionMessage.create({
     data: {
       ...getId('sessionMessage'),
-      toolCallId: await ID.generateId('toolCall'),
       status: 'waiting_for_response',
       type: 'tool_call',
       source: data.source,
@@ -99,10 +97,22 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
       input: data.input,
       output: data.output,
 
-      methodOrToolKey: data.methodOrToolKey ?? data.tool?.key ?? null,
-      toolOid: data.tool?.oid,
+      methodOrToolKey: data.tool?.key ?? data.methodOrToolKey ?? null,
       clientMcpId: data.clientMcpId ?? null,
-      isViaMcp: data.isViaMcp
+      isViaMcp: data.isViaMcp,
+
+      toolCall: data.tool
+        ? {
+            create: {
+              ...getId('toolCall'),
+              toolOid: data.tool.oid,
+              toolKey: data.tool.key,
+              sessionOid: data.session.oid,
+              tenantOid: data.session.tenantOid,
+              solutionOid: data.session.solutionOid
+            }
+          }
+        : undefined
     }
   });
 
