@@ -9,11 +9,9 @@ COPY package.json bun.lock* ./
 COPY apps/controller/package.json ./apps/controller/package.json
 COPY apps/public/package.json ./apps/public/package.json
 
-COPY packages/db/package.json ./packages/db/package.json
-COPY packages/provider-slates/package.json ./packages/provider-slates/package.json
-COPY packages/provider-utils/package.json ./packages/provider-utils/package.json
-COPY packages/provider/package.json ./packages/provider/package.json
+COPY db/package.json ./db/package.json
 COPY packages/tsconfig/package.json ./packages/tsconfig/package.json
+COPY packages/wire/package.json ./packages/wire/package.json
 
 COPY modules/auth/package.json ./modules/auth/package.json
 COPY modules/catalog/package.json ./modules/catalog/package.json
@@ -27,7 +25,10 @@ RUN bun install
 COPY . .
 
 # In case we forgot to copy some package.json files
-RUN bun install 
+RUN bun install
+
+# Build frontend
+RUN cd apps/public && bun run build
 
 # Run in dev mode with hot reloading
-CMD ["sh", "-c", "cd packages/db && bun prisma db push --accept-data-loss && cd ../../apps/public && bun run start:dev"]
+CMD ["sh", "-c", "cd db && bun prisma db push --accept-data-loss && cd ../apps/public && bun run start:dev"]

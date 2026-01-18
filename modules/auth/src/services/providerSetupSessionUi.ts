@@ -65,9 +65,22 @@ class providerSetupSessionUiServiceImpl {
       providerDeployment: fullSession.deployment ?? undefined
     });
 
+    let configSchema = schema.value.specification.configJsonSchema;
+    let hasProperties =
+      configSchema &&
+      typeof configSchema === 'object' &&
+      'properties' in configSchema &&
+      Object.keys(configSchema.properties || {}).length > 0;
+
+    if (!hasProperties) {
+      return {
+        type: 'none' as const
+      };
+    }
+
     return {
       type: 'required' as const,
-      schema: schema.value.specification.configJsonSchema
+      schema: configSchema
     };
   }
 
@@ -88,7 +101,7 @@ class providerSetupSessionUiServiceImpl {
       }
     });
 
-    if (d.providerSetupSession.type == 'auth_only') {
+    if (d.providerSetupSession.type == 'config_only') {
       return {
         type: 'none' as const
       };
@@ -99,7 +112,8 @@ class providerSetupSessionUiServiceImpl {
       solution: fullSession.solution,
 
       provider: fullSession.provider,
-      providerDeployment: fullSession.deployment ?? undefined
+      providerDeployment: fullSession.deployment ?? undefined,
+      authMethodId: d.providerSetupSession.authMethodOid ?? undefined
     });
 
     return {
@@ -271,10 +285,10 @@ class providerSetupSessionUiServiceImpl {
             }
           }
         });
-        if (currentSession.status == 'completed' || currentSession.authConfigOid) {
+        if (currentSession.status == 'completed' || currentSession.configOid) {
           throw new ServiceError(
             badRequestError({
-              message: 'Cannot update a completed provider auth session'
+              message: 'Cannot update a completed provider setup session'
             })
           );
         }

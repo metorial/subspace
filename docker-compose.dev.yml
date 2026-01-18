@@ -253,7 +253,8 @@ services:
       VOYAGER_URL: http://voyager:52060/metorial-voyager
 
     volumes:
-      - ./apps/public:/app/apps/public:ro
+      - ./apps/public/src:/app/apps/public/src:ro
+      - ./apps/public/frontend/src:/app/apps/public/frontend/src:ro
       - ./apps/public/package.json:/app/apps/public/package.json:ro
       - ./modules:/app/modules:ro
       - ./packages:/app/packages:ro
@@ -277,7 +278,7 @@ services:
     container_name: subspace-worker-service
     restart: unless-stopped
     ports:
-      - "52071:52071"
+      - "52072:52072"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0

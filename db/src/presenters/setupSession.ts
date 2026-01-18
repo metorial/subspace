@@ -98,6 +98,9 @@ export let providerSetupSessionPresenter = (
         })
       : null,
 
+    uiMode: providerSetupSession.uiMode,
+    redirectUrl: providerSetupSession.redirectUrl,
+
     createdAt: providerSetupSession.createdAt,
     updatedAt: providerSetupSession.updatedAt,
     expiresAt: providerSetupSession.expiresAt

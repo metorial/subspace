@@ -24,6 +24,26 @@ export let setupSessionState = createLoader({
   mutators: {}
 });
 
+export let authConfigSchemaState = createLoader({
+  name: 'authConfigSchema',
+  fetch: (d: { sessionId: string; clientSecret: string }) =>
+    client.setupSession.getAuthConfigSchema({
+      sessionId: d.sessionId,
+      clientSecret: d.clientSecret
+    }),
+  mutators: {}
+});
+
+export let configSchemaState = createLoader({
+  name: 'configSchema',
+  fetch: (d: { sessionId: string; clientSecret: string }) =>
+    client.setupSession.getConfigSchema({
+      sessionId: d.sessionId,
+      clientSecret: d.clientSecret
+    }),
+  mutators: {}
+});
+
 export let useSetupSession = () => {
   let data = setupSessionState.use(
     PRELOAD.type === 'error'
