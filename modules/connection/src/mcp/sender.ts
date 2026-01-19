@@ -80,7 +80,7 @@ export class McpSender {
 
           methodOrToolKey: method,
           clientMcpId: id ?? null,
-          isViaMcp: true
+          transport: 'mcp'
         });
       }
 
@@ -137,7 +137,7 @@ export class McpSender {
 
         methodOrToolKey: method,
         clientMcpId: id,
-        isViaMcp: true
+        transport: 'mcp'
       });
 
       await this.control.sendControlMessage({
@@ -251,7 +251,7 @@ export class McpSender {
       toolId: msg.params.name,
       input: msg.params.arguments ?? {},
       waitForResponse: opts.waitForResponse,
-      isViaMcp: true
+      transport: 'mcp'
     });
 
     if (!opts.waitForResponse) return { message: result.message };

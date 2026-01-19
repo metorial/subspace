@@ -57,7 +57,7 @@ export let completeMessage = async (
     data: {
       output: data.output,
       status: data.status,
-      completedAt: data.completedAt,
+      completedAt: data.completedAt ?? new Date(),
       failureReason: data.failureReason,
 
       errorOid: error?.oid,

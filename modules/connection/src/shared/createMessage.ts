@@ -5,6 +5,7 @@ import {
   SessionMessageFailureReason,
   SessionMessageSource,
   SessionMessageStatus,
+  SessionMessageTransport,
   SessionMessageType,
   type ProviderTool,
   type Session,
@@ -21,6 +22,7 @@ export interface CreateMessageProps {
   type: SessionMessageType;
   source: SessionMessageSource;
   senderParticipant: SessionParticipant;
+  transport: SessionMessageTransport;
   failureReason?: SessionMessageFailureReason;
 
   input: PrismaJson.SessionMessageInput;
@@ -35,7 +37,6 @@ export interface CreateMessageProps {
   isProductive: boolean;
 
   clientMcpId?: PrismaJson.SessionMessageClientMcpId;
-  isViaMcp: boolean;
 
   completedAt?: Date;
 }
@@ -58,7 +59,7 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
     data.completedAt = data.completedAt ?? new Date();
   }
 
-  if (data.status == 'failed' && !data.failureReason) {
+  if (data.status == 'failed' && (!data.failureReason || data.failureReason == 'none')) {
     data.failureReason = 'provider_error';
   }
 
@@ -78,9 +79,10 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
       status: 'waiting_for_response',
       type: 'tool_call',
       source: data.source,
+      transport: data.transport,
 
       isProductive: data.isProductive,
-      failureReason: data.failureReason,
+      failureReason: data.failureReason ?? 'none',
       completedAt: data.completedAt,
 
       sessionOid: data.session.oid,
@@ -99,7 +101,6 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
 
       methodOrToolKey: data.tool?.key ?? data.methodOrToolKey ?? null,
       clientMcpId: data.clientMcpId ?? null,
-      isViaMcp: data.isViaMcp,
 
       toolCall: data.tool
         ? {

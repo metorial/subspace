@@ -15,6 +15,7 @@ import {
   type Session,
   type SessionConnection,
   SessionConnectionMcpConnectionTransport,
+  SessionMessageTransport,
   type SessionParticipant,
   type SessionProvider,
   type Solution,
@@ -60,7 +61,7 @@ export interface CallToolProps {
   toolId: string;
   input: Record<string, any>;
   waitForResponse: boolean;
-  isViaMcp: boolean;
+  transport: SessionMessageTransport;
   clientMcpId?: PrismaJson.SessionMessageClientMcpId;
 }
 
@@ -354,7 +355,7 @@ export class SenderManager {
       },
       senderParticipant: connection.participant,
       clientMcpId: d.clientMcpId,
-      isViaMcp: d.isViaMcp,
+      transport: d.transport,
       tool,
       isProductive: true,
       provider

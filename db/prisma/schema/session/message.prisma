@@ -21,15 +21,25 @@ enum SessionMessageFailureReason {
   none
 }
 
+enum SessionMessageTransport {
+  mcp
+  tool_call
+  metorial_protocol
+}
+
 model SessionMessage {
   oid BigInt @id
   id  String @unique
 
-  status          SessionMessageStatus
-  type            SessionMessageType
-  source          SessionMessageSource
-  failureReason   SessionMessageFailureReason @default(none)
-  isParentDeleted Boolean                     @default(false)
+  status        SessionMessageStatus
+  type          SessionMessageType
+  source        SessionMessageSource
+  transport     SessionMessageTransport
+  failureReason SessionMessageFailureReason
+
+  isParentDeleted Boolean @default(false)
+
+  methodOrToolKey String?
 
   /// [SessionMessageClientMcpId]
   clientMcpId Json
@@ -39,9 +49,6 @@ model SessionMessage {
 
   /// [SessionMessageOutput]
   output Json?
-
-  methodOrToolKey String?
-  isViaMcp        Boolean
 
   isProductive Boolean @default(true)
 
@@ -104,7 +111,7 @@ model ToolCall {
   oid BigInt @id
   id  String @unique
 
-  toolKey String?
+  toolKey String
 
   messageId String         @unique
   message   SessionMessage @relation(fields: [messageId], references: [id])
@@ -118,8 +125,8 @@ model ToolCall {
   providerRunOid BigInt?
   providerRun    ProviderRun? @relation(fields: [providerRunOid], references: [oid])
 
-  toolOid BigInt?
-  tool    ProviderTool? @relation(fields: [toolOid], references: [oid])
+  toolOid BigInt
+  tool    ProviderTool @relation(fields: [toolOid], references: [oid])
 
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
@@ -127,6 +134,5 @@ model ToolCall {
   solutionOid Int
   solution    Solution @relation(fields: [solutionOid], references: [oid])
 
-  createdAt   DateTime  @default(now())
-  completedAt DateTime?
+  createdAt DateTime @default(now())
 }

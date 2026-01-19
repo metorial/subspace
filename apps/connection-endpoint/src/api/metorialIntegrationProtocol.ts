@@ -113,7 +113,7 @@ export let metorialIntegrationProtocolRouter = createHono()
         toolId: body.toolId,
         input: body.input,
         waitForResponse: !!body.waitForResponse,
-        isViaMcp: false
+        transport: 'tool_call'
       });
 
       return c.json({

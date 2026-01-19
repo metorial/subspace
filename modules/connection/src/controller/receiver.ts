@@ -55,7 +55,7 @@ export let startController = () => {
           runState: backendProviderRun.runState,
           providerAuthConfig: state.instance.sessionProvider.authConfig,
           input: data.input,
-          client: state.participant
+          sender: state.participant
         });
 
         let status =
