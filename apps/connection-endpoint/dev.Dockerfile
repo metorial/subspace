@@ -9,7 +9,6 @@ COPY package.json bun.lock* ./
 COPY apps/controller/package.json ./apps/controller/package.json
 COPY apps/public/package.json ./apps/public/package.json
 COPY apps/worker/package.json ./apps/worker/package.json
-COPY apps/connection-manager/package.json ./apps/connection-manager/package.json
 COPY apps/connection-endpoint/package.json ./apps/connection-endpoint/package.json
 
 COPY db/package.json ./db/package.json
