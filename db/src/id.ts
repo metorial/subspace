@@ -24,6 +24,8 @@ export let ID = createIdGenerator({
 
   providerDeployment: idType.sorted('pde'),
   providerConfig: idType.sorted('pcf'),
+  providerConfigVersion: idType.sorted('pcv'),
+  providerConfigUpdate: idType.sorted('pcu'),
   providerConfigVault: idType.sorted('pcv'),
   providerDeploymentConfigPair: idType.sorted('pdcp'),
   providerDeploymentConfigPairProviderVersion: idType.sorted('pdcpv'),
@@ -40,8 +42,9 @@ export let ID = createIdGenerator({
   providerAuthMethod: idType.sorted('pam'),
   providerAuthMethodGlobal: idType.sorted('pamg'),
 
-  providerAuthCredentials: idType.sorted('pac'),
-  providerAuthConfig: idType.sorted('pacf'),
+  providerAuthCredentials: idType.sorted('par'),
+  providerAuthConfig: idType.sorted('pac'),
+  providerAuthConfigVersion: idType.sorted('pacv'),
   providerOAuthSetup: idType.sorted('poas'),
   providerOAuthSetup_clientSecret: idType.key('poas_secret'),
   providerAuthConfigUpdate: idType.sorted('pacu'),

@@ -110,9 +110,15 @@ class providerAuthExportServiceImpl {
 
     let newId = getId('providerAuthExport');
 
+    if (!d.authConfig.currentVersionOid) throw new Error('Auth config has no current version');
+    let currentVersion = await db.providerAuthConfigVersion.findUniqueOrThrow({
+      where: { oid: d.authConfig.currentVersionOid }
+    });
+
     let data = await backend.auth.getDecryptedAuthConfig({
       tenant: d.tenant,
       authConfig: d.authConfig,
+      authConfigVersion: currentVersion,
       note: `SUBSPACE/export ${d.input.ip}`
     });
 

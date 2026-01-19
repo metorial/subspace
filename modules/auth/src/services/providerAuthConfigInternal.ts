@@ -6,13 +6,12 @@ import {
   db,
   getId,
   type Provider,
-  type ProviderAuthConfig,
   type ProviderAuthConfigSource,
   type ProviderAuthConfigType,
+  ProviderAuthCredentials,
   type ProviderAuthImport,
   type ProviderAuthMethod,
   ProviderAuthMethodType,
-  type ProviderConfig,
   type ProviderDeployment,
   type ProviderVariant,
   type ProviderVersion,
@@ -28,41 +27,6 @@ import { providerAuthConfigCreatedQueue } from '../queues/lifecycle/providerAuth
 import { providerAuthConfigInclude } from './providerAuthConfig';
 
 class providerAuthConfigInternalServiceImpl {
-  async useProviderAuthConfigForDeploymentSession(d: {
-    tenant: Tenant;
-    provider: Provider;
-    providerDeployment: ProviderDeployment;
-    providerVersion: ProviderVersion;
-    providerConfig: ProviderConfig;
-    authConfig: ProviderAuthConfig;
-  }) {
-    checkTenant(d, d.providerDeployment);
-    checkTenant(d, d.providerConfig);
-    checkTenant(d, d.authConfig);
-
-    return await withTransaction(async db => {
-      await db.providerAuthConfigUsedForConfig.createMany({
-        skipDuplicates: true,
-        data: {
-          ...getId('providerAuthConfigUsedForConfig'),
-          authConfigOid: d.authConfig.oid,
-          configOid: d.providerConfig.oid
-        }
-      });
-
-      await db.providerAuthConfigUsedForDeployment.createMany({
-        skipDuplicates: true,
-        data: {
-          ...getId('providerAuthConfigUsedForDeployment'),
-          authConfigOid: d.authConfig.oid,
-          deploymentOid: d.providerDeployment.oid
-        }
-      });
-
-      return d.authConfig;
-    });
-  }
-
   async getVersionAndAuthMethod(d: {
     tenant: Tenant;
     solution: Solution;
@@ -147,6 +111,7 @@ class providerAuthConfigInternalServiceImpl {
     backend: Backend;
     type: ProviderAuthConfigType;
     source: ProviderAuthConfigSource;
+    credentials?: ProviderAuthCredentials;
     input: {
       name?: string;
       description?: string;
@@ -222,18 +187,29 @@ class providerAuthConfigInternalServiceImpl {
           solutionOid: d.solution.oid,
           providerOid: d.provider.oid,
           authMethodOid: d.authMethod.oid,
-          deploymentOid: d.providerDeployment?.oid,
-
-          slateAuthConfigOid: d.backendProviderAuthConfig.slateAuthConfig?.oid
+          deploymentOid: d.providerDeployment?.oid
         },
         include: providerAuthConfigInclude
+      });
+
+      let currentVersion = await db.providerAuthConfigVersion.create({
+        data: {
+          ...getId('providerAuthConfigVersion'),
+          authConfigOid: providerAuthConfig.oid,
+          slateAuthConfigOid: d.backendProviderAuthConfig.slateAuthConfig?.oid
+        }
+      });
+
+      await db.providerAuthConfig.update({
+        where: { oid: providerAuthConfig.oid },
+        data: { currentVersionOid: currentVersion.oid }
       });
 
       let update = await db.providerAuthConfigUpdate.create({
         data: {
           ...getId('providerAuthConfigUpdate'),
           authConfigOid: providerAuthConfig.oid,
-          slateAuthConfigOid: providerAuthConfig.slateAuthConfigOid
+          toVersionOid: currentVersion.oid
         }
       });
 
@@ -287,7 +263,8 @@ class providerAuthConfigInternalServiceImpl {
 
       return {
         ...providerAuthConfig,
-        authImport
+        authImport,
+        currentVersion
       };
     });
   }

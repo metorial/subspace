@@ -9,6 +9,7 @@ import {
   type ProviderAuthConfig,
   type ProviderAuthConfigSource,
   type ProviderAuthConfigStatus,
+  ProviderAuthCredentials,
   type ProviderAuthImport,
   type ProviderDeployment,
   type ProviderVariant,
@@ -194,6 +195,7 @@ class providerAuthConfigServiceImpl {
       lockedVersion: ProviderVersion | null;
     };
     source: ProviderAuthConfigSource;
+    credentials?: ProviderAuthCredentials;
     input: {
       name?: string;
       description?: string;
@@ -266,6 +268,7 @@ class providerAuthConfigServiceImpl {
         input: d.input,
         import: d.import,
         authMethod,
+        credentials: d.credentials,
         backend: backendRes.backend,
         backendProviderAuthConfig: backendRes.backendProviderAuthConfig,
         type: authMethod.type === 'oauth' ? 'oauth_manual' : 'manual'
@@ -347,18 +350,25 @@ class providerAuthConfigServiceImpl {
           })
         : undefined;
 
+      let newConfigVersion = await db.providerAuthConfigVersion.create({
+        data: {
+          ...getId('providerAuthConfigVersion'),
+          authConfigOid: d.providerAuthConfig.oid,
+          slateAuthConfigOid: backendRes?.backendProviderAuthConfig.slateAuthConfig?.oid
+        }
+      });
+      let fromVersionOid = d.providerAuthConfig.currentVersionOid;
+
       let config = await db.providerAuthConfig.update({
         where: {
-          oid: d.providerAuthConfig.oid,
-          tenantOid: d.tenant.oid,
-          solutionOid: d.solution.oid
+          oid: d.providerAuthConfig.oid
         },
         data: {
           name: d.input.name?.trim() || d.providerAuthConfig.name,
           description: d.input.description?.trim() || d.providerAuthConfig.description,
           metadata: d.input.metadata ?? d.providerAuthConfig.metadata,
 
-          slateAuthConfigOid: backendRes?.backendProviderAuthConfig?.slateAuthConfig?.oid
+          currentVersionOid: newConfigVersion.oid
         },
         include
       });
@@ -370,7 +380,8 @@ class providerAuthConfigServiceImpl {
           data: {
             ...getId('providerAuthConfigUpdate'),
             authConfigOid: config.oid,
-            slateAuthConfigOid: config.slateAuthConfigOid
+            fromVersionOid: fromVersionOid,
+            toVersionOid: newConfigVersion.oid
           }
         });
 

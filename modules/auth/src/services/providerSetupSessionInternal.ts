@@ -99,7 +99,7 @@ class providerSetupSessionInternalServiceImpl {
         authConfigOid: config.oid,
         deploymentOid: config.deploymentOid,
         authMethodOid: config.authMethodOid,
-        authCredentialsOid: config.authCredentialsOid
+        authCredentialsOid: config.currentVersion.authCredentialsOid
       };
     }
   }
