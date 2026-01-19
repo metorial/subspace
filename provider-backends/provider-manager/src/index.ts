@@ -14,7 +14,7 @@ let getBackendRecord = createLocallyCachedFunction({
 export let getBackend = async ({ entity }: { entity: { backendOid: bigint } }) => {
   let backend = await getBackendRecord(entity.backendOid);
 
-  if (backend.type == 'slates') return slatesProvider.create({ backend });
+  if (backend.type === 'slates') return slatesProvider.create({ backend });
 
   throw new Error(`Unsupported backend type: ${backend.type}`);
 };

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { OwnershipManager } from '../../src/core/ownershipManager';
 import type { ICoordinationAdapter } from '../../src/adapters/coordination/coordinationAdapter';
+import { OwnershipManager } from '../../src/core/ownershipManager';
 
 describe('OwnershipManager', () => {
   let manager: OwnershipManager;
@@ -101,11 +101,9 @@ describe('OwnershipManager', () => {
     manager.addTopic('topic-2');
 
     // Mock renewal to fail for topic-1
-    (mockCoordination.renewTopicOwnership as any).mockImplementation(
-      (topic: string) => {
-        return Promise.resolve(topic !== 'topic-1');
-      }
-    );
+    (mockCoordination.renewTopicOwnership as any).mockImplementation((topic: string) => {
+      return Promise.resolve(topic !== 'topic-1');
+    });
 
     manager.start();
     await new Promise(resolve => setTimeout(resolve, 1200));
@@ -154,14 +152,12 @@ describe('OwnershipManager', () => {
     manager.addTopic('topic-2');
 
     // Mock release to fail for topic-1
-    (mockCoordination.releaseTopicOwnership as any).mockImplementation(
-      (topic: string) => {
-        if (topic === 'topic-1') {
-          return Promise.reject(new Error('Release failed'));
-        }
-        return Promise.resolve();
+    (mockCoordination.releaseTopicOwnership as any).mockImplementation((topic: string) => {
+      if (topic === 'topic-1') {
+        return Promise.reject(new Error('Release failed'));
       }
-    );
+      return Promise.resolve();
+    });
 
     await manager.releaseAll();
 
@@ -172,7 +168,9 @@ describe('OwnershipManager', () => {
   test('should handle concurrent topic additions', () => {
     const topics = Array.from({ length: 100 }, (_, i) => `topic-${i}`);
 
-    topics.forEach(topic => manager.addTopic(topic));
+    topics.forEach(topic => {
+      manager.addTopic(topic);
+    });
 
     expect(manager.getOwnedCount()).toBe(100);
     topics.forEach(topic => {
@@ -182,7 +180,9 @@ describe('OwnershipManager', () => {
 
   test('should renew multiple topics in parallel', async () => {
     const topics = ['topic-1', 'topic-2', 'topic-3', 'topic-4', 'topic-5'];
-    topics.forEach(topic => manager.addTopic(topic));
+    topics.forEach(topic => {
+      manager.addTopic(topic);
+    });
 
     manager.start();
     await new Promise(resolve => setTimeout(resolve, 1200));

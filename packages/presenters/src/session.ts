@@ -38,7 +38,7 @@ export let sessionPresenter = (
   },
 
   providers: session.providers
-    .filter(p => p.status == 'active')
+    .filter(p => p.status === 'active')
     .map(p =>
       sessionProviderPresenter({
         ...p,

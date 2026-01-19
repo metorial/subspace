@@ -10,10 +10,10 @@ export type TransactionDB = Parameters<Parameters<typeof db.$transaction>[0]>[0]
 
 let tdbStorage = new AsyncLocalStorage<{
   tdb: TransactionDB;
-  afterHooks: Array<() => Promise<void | any>>;
+  afterHooks: Array<() => Promise<undefined | any>>;
 }>();
 
-let afterQueue = new PQueue({ concurrency: Infinity });
+let afterQueue = new PQueue({ concurrency: Number.POSITIVE_INFINITY });
 
 export let withTransaction = async <T>(
   cb: (tdb: TransactionDB) => Promise<T>,
@@ -24,7 +24,7 @@ export let withTransaction = async <T>(
   if (tdb || opts?.ifExists) {
     return await cb(tdb?.tdb ?? db);
   } else {
-    let afterHooks: Array<() => Promise<void | any>> = [];
+    let afterHooks: Array<() => Promise<undefined | any>> = [];
 
     let res = await db.$transaction(async tdb => {
       return await tdbStorage.run(

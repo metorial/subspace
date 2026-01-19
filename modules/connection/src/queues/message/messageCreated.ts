@@ -22,7 +22,7 @@ export let messageCreatedQueueProcessor = messageCreatedQueue.process(async data
         lastActiveAt: new Date(),
         lastMessageAt: new Date(),
         totalProductiveClientMessageCount:
-          message.isProductive && message.source == 'client' ? { increment: 1 } : undefined
+          message.isProductive && message.source === 'client' ? { increment: 1 } : undefined
       }
     });
   }
@@ -33,7 +33,7 @@ export let messageCreatedQueueProcessor = messageCreatedQueue.process(async data
       data: {
         lastMessageAt: new Date(),
         totalProductiveClientMessageCount:
-          message.isProductive && message.source == 'client' ? { increment: 1 } : undefined
+          message.isProductive && message.source === 'client' ? { increment: 1 } : undefined
       }
     });
   }
@@ -44,7 +44,7 @@ export let messageCreatedQueueProcessor = messageCreatedQueue.process(async data
       lastActiveAt: new Date(),
       lastMessageAt: new Date(),
       totalProductiveClientMessageCount:
-        message.isProductive && message.source == 'client' ? { increment: 1 } : undefined
+        message.isProductive && message.source === 'client' ? { increment: 1 } : undefined
     }
   });
 

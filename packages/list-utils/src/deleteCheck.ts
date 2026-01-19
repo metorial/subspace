@@ -1,4 +1,4 @@
-import { ServiceError, badRequestError, goneError } from '@lowerdeck/error';
+import { badRequestError, goneError, ServiceError } from '@lowerdeck/error';
 
 let actionNameMap = {
   update: 'updated',
@@ -23,7 +23,9 @@ export let isRecordDeleted = (
   if (!d) return false;
 
   return (
-    d.status == 'deleted' || d.status == 'archived' || (d.isEphemeral && !opts?.allowEphemeral)
+    d.status === 'deleted' ||
+    d.status === 'archived' ||
+    (d.isEphemeral && !opts?.allowEphemeral)
   );
 };
 

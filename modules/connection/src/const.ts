@@ -1,4 +1,4 @@
-let isProd = process.env.NODE_ENV == 'production';
+let isProd = process.env.NODE_ENV === 'production';
 
 export const SESSION_PROVIDER_INSTANCE_EXPIRATION_INCREMENT = 1000 * 60 * 15;
 

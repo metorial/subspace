@@ -23,7 +23,7 @@ export let providerOAuthSetupPresenter = (
   }
 ) => {
   let status =
-    (providerOAuthSetup.status == 'opened' || providerOAuthSetup.status == 'unused') &&
+    (providerOAuthSetup.status === 'opened' || providerOAuthSetup.status === 'unused') &&
     providerOAuthSetup.expiresAt <= new Date()
       ? ('expired' as const)
       : providerOAuthSetup.status;
@@ -45,7 +45,7 @@ export let providerOAuthSetupPresenter = (
     redirectUrl: providerOAuthSetup.redirectUrl,
 
     url:
-      status != 'expired' && status != 'completed'
+      status !== 'expired' && status !== 'completed'
         ? `${env.service.PUBLIC_SERVICE_URL}/oauth-setup/${providerOAuthSetup.id}?client_secret=${providerOAuthSetup.clientSecret}`
         : null,
 

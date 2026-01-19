@@ -1,7 +1,7 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, SessionErrorType, Solution, Tenant } from '@metorial-subspace/db';
+import { db, type SessionErrorType, type Solution, type Tenant } from '@metorial-subspace/db';
 import { resolveProviders, resolveSessions } from '@metorial-subspace/list-utils';
 
 let include = {

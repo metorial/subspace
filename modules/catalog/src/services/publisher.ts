@@ -1,7 +1,7 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, Tenant } from '@metorial-subspace/db';
+import { db, type Tenant } from '@metorial-subspace/db';
 import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 
 let include = {};

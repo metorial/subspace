@@ -30,7 +30,7 @@ describe('Retry Flow Integration', () => {
     // Start receiver after a delay
     const receiverPromise = (async () => {
       await new Promise(resolve => setTimeout(resolve, 150));
-      const receiver = wire.createReceiver(async (topic, payload) => {
+      const receiver = wire.createReceiver(async (_topic, payload) => {
         return { received: payload };
       });
       await receiver.start();
@@ -53,7 +53,7 @@ describe('Retry Flow Integration', () => {
     const sender = wire.createSender();
 
     let processCount = 0;
-    const receiver = wire.createReceiver(async (topic, payload) => {
+    const receiver = wire.createReceiver(async (_topic, payload) => {
       processCount++;
       return { count: processCount, payload };
     });

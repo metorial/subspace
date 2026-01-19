@@ -4,9 +4,9 @@ import {
   addAfterTransactionHook,
   db,
   getId,
-  ProviderConfig,
-  ProviderDeployment,
-  ProviderVersion,
+  type ProviderConfig,
+  type ProviderDeployment,
+  type ProviderVersion,
   withTransaction
 } from '@metorial-subspace/db';
 import {
@@ -60,7 +60,7 @@ class providerDeploymentConfigPairInternalServiceImpl {
         }
       });
 
-      let created = pair.id == newId.id;
+      let created = pair.id === newId.id;
 
       if (created) {
         await addAfterTransactionHook(async () =>
@@ -117,7 +117,7 @@ class providerDeploymentConfigPairInternalServiceImpl {
         update: {}
       });
 
-      if (version.id == newId.id) {
+      if (version.id === newId.id) {
         await addAfterTransactionHook(async () =>
           providerDeploymentConfigPairVersionCreatedQueue.add({
             providerDeploymentConfigPairVersionId: version.id
@@ -144,13 +144,13 @@ class providerDeploymentConfigPairInternalServiceImpl {
       throw new Error('Failed to create deployment config pair version');
     }
 
-    if (res.version.specificationDiscoveryStatus == 'discovering') {
+    if (res.version.specificationDiscoveryStatus === 'discovering') {
       for (let i = 1; i < 75; i++) {
         await delay(Math.min(100, 25 * i));
         res.version = await db.providerDeploymentConfigPairProviderVersion.findFirstOrThrow({
           where: { oid: res.version.oid }
         });
-        if (res.version.specificationDiscoveryStatus != 'discovering') break;
+        if (res.version.specificationDiscoveryStatus !== 'discovering') break;
       }
     }
 

@@ -3,7 +3,6 @@ import type {
   ProviderVariant,
   ProviderVersion
 } from '@metorial-subspace/db/prisma/generated/client';
-import type { ProviderFunctionalityCtorParams } from '@metorial-subspace/provider-utils';
 import {
   IProviderCatalog,
   type ProviderVariantResult,
@@ -12,10 +11,6 @@ import {
 import { slates } from '../client';
 
 export class ProviderCatalog extends IProviderCatalog {
-  constructor(params: ProviderFunctionalityCtorParams) {
-    super(params);
-  }
-
   override async getManyVariants(items: ProviderVariant[]): Promise<ProviderVariantResult[]> {
     let slateIds = await db.slate.findMany({
       where: {

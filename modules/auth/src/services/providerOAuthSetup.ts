@@ -6,15 +6,15 @@ import {
   db,
   getId,
   ID,
-  Provider,
-  ProviderAuthCredentials,
+  type Provider,
+  type ProviderAuthCredentials,
   ProviderAuthMethodType,
-  ProviderDeployment,
-  ProviderOAuthSetup,
-  ProviderVariant,
-  ProviderVersion,
-  Solution,
-  Tenant,
+  type ProviderDeployment,
+  type ProviderOAuthSetup,
+  type ProviderVariant,
+  type ProviderVersion,
+  type Solution,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
 import {
@@ -113,7 +113,7 @@ class providerOAuthSetupServiceImpl {
 
     checkDeletedRelation(d.providerDeployment, { allowEphemeral: d.input.isEphemeral });
 
-    if (d.providerDeployment && d.providerDeployment.providerOid != d.provider.oid) {
+    if (d.providerDeployment && d.providerDeployment.providerOid !== d.provider.oid) {
       throw new ServiceError(
         badRequestError({
           message: 'Provider deployment does not belong to provider',
@@ -121,7 +121,7 @@ class providerOAuthSetupServiceImpl {
         })
       );
     }
-    if (d.credentials.providerOid != d.provider.oid) {
+    if (d.credentials.providerOid !== d.provider.oid) {
       throw new ServiceError(
         badRequestError({
           message: 'Auth credentials do not belong to provider',

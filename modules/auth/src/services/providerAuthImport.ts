@@ -3,13 +3,13 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
-  Provider,
-  ProviderAuthConfig,
-  ProviderDeployment,
-  ProviderVariant,
-  ProviderVersion,
-  Solution,
-  Tenant
+  type Provider,
+  type ProviderAuthConfig,
+  type ProviderDeployment,
+  type ProviderVariant,
+  type ProviderVersion,
+  type Solution,
+  type Tenant
 } from '@metorial-subspace/db';
 import {
   checkDeletedRelation,
@@ -132,7 +132,7 @@ class providerAuthImportServiceImpl {
       authMethodId: d.input.authMethodId
     });
 
-    return authMethod.type == 'oauth'
+    return authMethod.type === 'oauth'
       ? authMethod.value.outputJsonSchema
       : authMethod.value.inputJsonSchema;
   }
@@ -154,7 +154,7 @@ class providerAuthImportServiceImpl {
 
     let importOid: bigint;
 
-    if (checkRes.type == 'update_config') {
+    if (checkRes.type === 'update_config') {
       let authConfigRes = await providerAuthConfigService.updateProviderAuthConfig({
         tenant: d.tenant,
         solution: d.solution,
@@ -213,7 +213,7 @@ class providerAuthImportServiceImpl {
     if (
       d.providerDeployment &&
       d.provider &&
-      d.providerDeployment.providerOid != d.provider.oid
+      d.providerDeployment.providerOid !== d.provider.oid
     ) {
       throw new ServiceError(
         badRequestError({
@@ -255,7 +255,7 @@ class providerAuthImportServiceImpl {
 
       if (
         d.providerDeployment &&
-        d.providerAuthConfig.deploymentOid != d.providerDeployment.oid
+        d.providerAuthConfig.deploymentOid !== d.providerDeployment.oid
       ) {
         throw new ServiceError(
           badRequestError({

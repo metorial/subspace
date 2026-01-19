@@ -1,8 +1,4 @@
-import {
-  type Provider,
-  type SessionError,
-  type SessionErrorGroup
-} from '@metorial-subspace/db';
+import type { Provider, SessionError, SessionErrorGroup } from '@metorial-subspace/db';
 
 export let sessionErrorGroupPresenter = async (
   error: SessionErrorGroup & {

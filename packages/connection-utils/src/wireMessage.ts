@@ -1,4 +1,4 @@
-import { type SessionMessage, SessionMessageStatus } from '@metorial-subspace/db';
+import type { SessionMessage, SessionMessageStatus } from '@metorial-subspace/db';
 
 export type WireInput = {
   type: 'tool_call';

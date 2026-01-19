@@ -5,16 +5,16 @@ import {
   addAfterTransactionHook,
   db,
   getId,
-  Provider,
-  ProviderAuthConfig,
-  ProviderAuthConfigSource,
-  ProviderAuthConfigStatus,
-  ProviderAuthImport,
-  ProviderDeployment,
-  ProviderVariant,
-  ProviderVersion,
-  Solution,
-  Tenant,
+  type Provider,
+  type ProviderAuthConfig,
+  type ProviderAuthConfigSource,
+  type ProviderAuthConfigStatus,
+  type ProviderAuthImport,
+  type ProviderDeployment,
+  type ProviderVariant,
+  type ProviderVersion,
+  type Solution,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
 import {
@@ -147,8 +147,7 @@ class providerAuthConfigServiceImpl {
       return authMethod.value;
     }
 
-    let provider: (Provider & { defaultVariant: ProviderVariant | null }) | undefined =
-      undefined;
+    let provider: (Provider & { defaultVariant: ProviderVariant | null }) | undefined;
     if (d.provider) {
       provider = d.provider;
     } else if (d.providerDeployment) {
@@ -213,7 +212,7 @@ class providerAuthConfigServiceImpl {
     checkTenant(d, d.providerDeployment);
     checkDeletedRelation(d.providerDeployment, { allowEphemeral: d.input.isEphemeral });
 
-    if (d.providerDeployment && d.providerDeployment.providerOid != d.provider.oid) {
+    if (d.providerDeployment && d.providerDeployment.providerOid !== d.provider.oid) {
       throw new ServiceError(
         badRequestError({
           message: 'Provider deployment does not belong to provider',
@@ -269,7 +268,7 @@ class providerAuthConfigServiceImpl {
         authMethod,
         backend: backendRes.backend,
         backendProviderAuthConfig: backendRes.backendProviderAuthConfig,
-        type: authMethod.type == 'oauth' ? 'oauth_manual' : 'manual'
+        type: authMethod.type === 'oauth' ? 'oauth_manual' : 'manual'
       });
     });
   }
@@ -297,7 +296,7 @@ class providerAuthConfigServiceImpl {
     checkTenant(d, d.providerAuthConfig);
     checkDeletedEdit(d.providerAuthConfig, 'update');
 
-    if (d.providerAuthConfig.type == 'oauth_automated') {
+    if (d.providerAuthConfig.type === 'oauth_automated') {
       throw new ServiceError(
         badRequestError({
           message: 'Cannot update automated OAuth provider auth configs',
@@ -326,7 +325,7 @@ class providerAuthConfigServiceImpl {
           providerDeployment,
           authMethodId: d.providerAuthConfig.authMethodOid
         });
-      if (d.input.authMethodId && d.input.authMethodId != authMethod.id) {
+      if (d.input.authMethodId && d.input.authMethodId !== authMethod.id) {
         throw new ServiceError(
           badRequestError({
             message: 'Cannot change auth method of existing auth config',
@@ -364,7 +363,7 @@ class providerAuthConfigServiceImpl {
         include
       });
 
-      let authImport: ProviderAuthImport | undefined = undefined;
+      let authImport: ProviderAuthImport | undefined;
 
       if (backendRes) {
         let update = await db.providerAuthConfigUpdate.create({

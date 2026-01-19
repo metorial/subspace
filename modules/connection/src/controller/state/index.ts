@@ -3,7 +3,7 @@ import { isRecordDeleted } from '@metorial-subspace/list-utils';
 import { Store } from '@metorial-subspace/store';
 import { addMinutes } from 'date-fns';
 import { SESSION_PROVIDER_INSTANCE_EXPIRATION_INCREMENT } from '../../const';
-import { getConnectionBaseState, type ConnectionBaseState } from './base';
+import { type ConnectionBaseState, getConnectionBaseState } from './base';
 import { createProviderRun } from './providerRun';
 
 export class ConnectionState {
@@ -68,7 +68,7 @@ export class ConnectionState {
       return 1000 * 15;
     }
 
-    if (this.backend.type == 'slates') {
+    if (this.backend.type === 'slates') {
       return 1000 * 30;
     }
 

@@ -1,4 +1,4 @@
-import { Solution, Tenant } from '@metorial-subspace/db';
+import type { Solution, Tenant } from '@metorial-subspace/db';
 
 export let checkTenant = <
   T extends { tenantOid?: bigint | null; solutionOid?: number | null } | null | undefined

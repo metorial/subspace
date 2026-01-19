@@ -3,7 +3,7 @@ import type { WireResult } from '@metorial-subspace/connection-utils';
 import { wireResultToMcpMessage } from '@metorial-subspace/connection-utils';
 import { broadcastNats } from '../lib/nats';
 import { topics } from '../lib/topic';
-import { McpManager } from './manager';
+import type { McpManager } from './manager';
 
 export type McpControlMessage =
   | {
@@ -63,11 +63,11 @@ export class McpControlMessageHandler {
 
           self.#lastInteractionAt = Date.now();
 
-          if (data.type == 'mcp_control_message') {
+          if (data.type === 'mcp_control_message') {
             let wireRes = await wireResultToMcpMessage(data.wire);
 
             // Ignore targeted messages if we only want broadcasts
-            if (d.selectedChannels == 'broadcast' && data.channel == 'targeted_response') {
+            if (d.selectedChannels === 'broadcast' && data.channel === 'targeted_response') {
               continue;
             }
 

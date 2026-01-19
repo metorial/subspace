@@ -31,7 +31,7 @@ export class RetryManager {
   }
 
   calculateBackoff(attempt: number): number {
-    return this.initialBackoffMs * Math.pow(this.backoffMultiplier, attempt);
+    return this.initialBackoffMs * this.backoffMultiplier ** attempt;
   }
 
   private sleep(ms: number): Promise<void> {

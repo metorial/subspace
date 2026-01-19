@@ -1,7 +1,7 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, Solution, Tenant } from '@metorial-subspace/db';
+import { db, type Solution, type Tenant } from '@metorial-subspace/db';
 import { resolveProviders } from '@metorial-subspace/list-utils';
 
 class providerSpecificationServiceImpl {

@@ -7,48 +7,28 @@
       "persistent": true
     },
     "build": {
-      "dependsOn": [
-        "^build"
-      ]
+      "dependsOn": ["^build"]
     },
     "prisma:generate": {
-      "dependsOn": [
-        "^prisma:generate"
-      ]
+      "dependsOn": ["^prisma:generate"]
     },
     "generate:client": {
-      "dependsOn": [
-        "^generate:client"
-      ],
+      "dependsOn": ["^generate:client"],
       "cache": false
     },
     "generate:client:dashboard": {
-      "dependsOn": [
-        "^generate:client:dashboard"
-      ],
+      "dependsOn": ["^generate:client:dashboard"],
       "cache": false
     },
     "prisma:push": {
       "cache": false,
-      "dependsOn": [
-        "^prisma:push"
-      ],
-      "env": [
-        "DATABASE_URL",
-        "PAYMENT_DATABASE_URL",
-        "FEDERATION_CORE_DATABASE_URL"
-      ]
+      "dependsOn": ["^prisma:push"],
+      "env": ["DATABASE_URL", "PAYMENT_DATABASE_URL", "FEDERATION_CORE_DATABASE_URL"]
     },
     "frontend:build": {
       "cache": false,
-      "dependsOn": [
-        "^frontend:build"
-      ],
-      "env": [
-        "SENTRY_AUTH_TOKEN",
-        "METORIAL_ENV",
-        "VITE_*"
-      ]
+      "dependsOn": ["^frontend:build"],
+      "env": ["SENTRY_AUTH_TOKEN", "METORIAL_ENV", "VITE_*"]
     },
     "deploy:only": {
       "env": [
@@ -69,24 +49,15 @@
       ]
     },
     "server:build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "env": [
-        "SENTRY_AUTH_TOKEN",
-        "METORIAL_ENV"
-      ]
+      "dependsOn": ["^build"],
+      "env": ["SENTRY_AUTH_TOKEN", "METORIAL_ENV"]
     },
     "test": {
       "cache": false,
-      "dependsOn": [
-        "^test"
-      ]
+      "dependsOn": ["^test"]
     },
     "check-types": {
-      "dependsOn": [
-        "^check-types"
-      ]
+      "dependsOn": ["^check-types"]
     },
     "dev": {
       "cache": false,

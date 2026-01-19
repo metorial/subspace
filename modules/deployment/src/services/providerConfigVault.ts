@@ -5,14 +5,14 @@ import {
   addAfterTransactionHook,
   db,
   getId,
-  Provider,
-  ProviderConfigVault,
-  ProviderConfigVaultStatus,
-  ProviderDeployment,
-  ProviderVariant,
-  ProviderVersion,
-  Solution,
-  Tenant,
+  type Provider,
+  type ProviderConfigVault,
+  type ProviderConfigVaultStatus,
+  type ProviderDeployment,
+  type ProviderVariant,
+  type ProviderVersion,
+  type Solution,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
 import {

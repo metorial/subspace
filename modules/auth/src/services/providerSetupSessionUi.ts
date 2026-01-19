@@ -5,7 +5,7 @@ import {
   addAfterTransactionHook,
   db,
   getId,
-  ProviderSetupSession,
+  type ProviderSetupSession,
   withTransaction
 } from '@metorial-subspace/db';
 import { providerConfigService } from '@metorial-subspace/module-deployment';
@@ -51,7 +51,7 @@ class providerSetupSessionUiServiceImpl {
       }
     });
 
-    if (d.providerSetupSession.type == 'auth_only') {
+    if (d.providerSetupSession.type === 'auth_only') {
       return {
         type: 'none' as const
       };
@@ -88,7 +88,7 @@ class providerSetupSessionUiServiceImpl {
       }
     });
 
-    if (d.providerSetupSession.type == 'auth_only') {
+    if (d.providerSetupSession.type === 'auth_only') {
       return {
         type: 'none' as const
       };
@@ -165,7 +165,7 @@ class providerSetupSessionUiServiceImpl {
             }
           }
         });
-        if (currentSession.status == 'completed' || currentSession.authConfigOid) {
+        if (currentSession.status === 'completed' || currentSession.authConfigOid) {
           throw new ServiceError(
             badRequestError({
               message: 'Cannot update a completed provider auth session'
@@ -271,7 +271,7 @@ class providerSetupSessionUiServiceImpl {
             }
           }
         });
-        if (currentSession.status == 'completed' || currentSession.authConfigOid) {
+        if (currentSession.status === 'completed' || currentSession.authConfigOid) {
           throw new ServiceError(
             badRequestError({
               message: 'Cannot update a completed provider auth session'
@@ -322,7 +322,7 @@ class providerSetupSessionUiServiceImpl {
   }
 
   private async checkEditable(d: { providerSetupSession: ProviderSetupSession }) {
-    if (d.providerSetupSession.status == 'completed') {
+    if (d.providerSetupSession.status === 'completed') {
       throw new ServiceError(
         badRequestError({
           message: 'Cannot update a completed provider auth session'

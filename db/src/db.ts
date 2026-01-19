@@ -1,9 +1,9 @@
 import type { ErrorData } from '@lowerdeck/error';
-import {
-  type Specification,
-  type SpecificationAuthMethod,
-  type SpecificationFeatures,
-  type SpecificationTool
+import type {
+  Specification,
+  SpecificationAuthMethod,
+  SpecificationFeatures,
+  SpecificationTool
 } from '@metorial-subspace/provider-utils';
 import type { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
 import { PrismaPg } from '@prisma/adapter-pg';

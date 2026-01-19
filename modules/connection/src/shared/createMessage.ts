@@ -2,15 +2,15 @@ import { sessionMessageBucketRecord } from '@metorial-subspace/connection-utils'
 import {
   db,
   getId,
-  SessionConnectionTransport,
-  SessionMessageFailureReason,
-  SessionMessageSource,
-  SessionMessageStatus,
-  SessionMessageType,
   type ProviderTool,
   type Session,
   type SessionConnection,
+  type SessionConnectionTransport,
   type SessionError,
+  type SessionMessageFailureReason,
+  type SessionMessageSource,
+  type SessionMessageStatus,
+  type SessionMessageType,
   type SessionParticipant,
   type SessionProvider
 } from '@metorial-subspace/db';
@@ -51,20 +51,20 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
     throw new Error('responderParticipant is required when output is provided');
   }
 
-  if (data.output?.type == 'error') {
+  if (data.output?.type === 'error') {
     data.status = 'failed';
   }
 
-  if (data.status && data.status != 'waiting_for_response') {
+  if (data.status && data.status !== 'waiting_for_response') {
     data.completedAt = data.completedAt ?? new Date();
   }
 
-  if (data.status == 'failed' && (!data.failureReason || data.failureReason == 'none')) {
+  if (data.status === 'failed' && (!data.failureReason || data.failureReason === 'none')) {
     data.failureReason = 'provider_error';
   }
 
   let error: SessionError | undefined;
-  if (data.status == 'failed') {
+  if (data.status === 'failed') {
     error = await createError({
       type: messageFailureReasonToErrorType(data.failureReason ?? 'provider_error'),
       session: data.session,
@@ -130,7 +130,7 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
     }
   });
 
-  if (message.status != 'waiting_for_response') {
+  if (message.status !== 'waiting_for_response') {
     await db.sessionEvent.createMany({
       data: {
         ...getId('sessionEvent'),

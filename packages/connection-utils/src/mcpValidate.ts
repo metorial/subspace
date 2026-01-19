@@ -1,5 +1,5 @@
 import type { JSONRPCErrorResponse } from '@modelcontextprotocol/sdk/types.js';
-import { z } from 'zod';
+import type { z } from 'zod';
 
 export let mcpValidate = <S extends z.ZodSchema>(
   id: string | number | null | undefined,
@@ -22,7 +22,7 @@ export let mcpValidate = <S extends z.ZodSchema>(
     };
   }
 
-  if (typeof res.data != 'object' || res.data === null) {
+  if (typeof res.data !== 'object' || res.data === null) {
     throw new Error('mcpValidate: Parsed data is not an object');
   }
 

@@ -18,7 +18,9 @@
       "!**/*.config.js",
       "!**/.turbo",
       "!**/.cache",
-      "!**/prisma/migrations"
+      "!**/prisma/migrations",
+      "!**/public",
+      "!**/frontend"
     ]
   },
   "formatter": {
@@ -69,6 +71,7 @@
         "noCommaOperator": "error"
       },
       "correctness": {
+        "noUnusedVariables": "off",
         "noConstAssign": "error",
         "noConstantCondition": "error",
         "noEmptyCharacterClassInRegex": "error",
@@ -87,7 +90,6 @@
         "noUnsafeOptionalChaining": "error",
         "noUnusedLabels": "error",
         "noUnusedPrivateClassMembers": "warn",
-        "noUnusedVariables": "warn",
         "useExhaustiveDependencies": "warn",
         "useHookAtTopLevel": "off",
         "useIsNan": "error",
@@ -122,9 +124,15 @@
         "useNumberNamespace": "warn",
         "useTemplate": "warn",
         "useArrayLiterals": "warn",
-        "useConsistentArrayType": { "level": "warn", "options": { "syntax": "shorthand" } }
+        "useConsistentArrayType": {
+          "level": "warn",
+          "options": {
+            "syntax": "shorthand"
+          }
+        }
       },
       "suspicious": {
+        "noEmptyInterface": "off",
         "noArrayIndexKey": "warn",
         "noAssignInExpressions": "off",
         "noAsyncPromiseExecutor": "error",
@@ -163,7 +171,12 @@
         "noDuplicateElseIf": "error",
         "noEvolvingTypes": "warn",
         "noVar": "error",
-        "noConsole": { "level": "off", "options": { "allow": ["log"] } },
+        "noConsole": {
+          "level": "off",
+          "options": {
+            "allow": ["log"]
+          }
+        },
         "noNonNullAssertedOptionalChain": "off"
       }
     }

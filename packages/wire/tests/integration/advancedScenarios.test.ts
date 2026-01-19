@@ -74,7 +74,7 @@ describe('Advanced Scenarios Integration', () => {
       const wire = createWire();
 
       let processedCount = 0;
-      const receiver = wire.createReceiver(async (topic, payload) => {
+      const receiver = wire.createReceiver(async (_topic, _payload) => {
         processedCount++;
         await new Promise(resolve => setTimeout(resolve, 10));
         return { processed: processedCount };
@@ -109,7 +109,7 @@ describe('Advanced Scenarios Integration', () => {
 
       // Create receiver with very short ownership TTL
       const receiver = wire.createReceiver(
-        async (topic, payload) => {
+        async (_topic, payload) => {
           // Simulate long processing that outlasts ownership
           await new Promise(resolve => setTimeout(resolve, 200));
           return { processed: true, payload };
@@ -142,7 +142,7 @@ describe('Advanced Scenarios Integration', () => {
     test('should transfer ownership after receiver stops processing', async () => {
       const wire = createWire();
 
-      const receiver1 = wire.createReceiver(async (topic, payload) => ({
+      const receiver1 = wire.createReceiver(async (_topic, payload) => ({
         receiver: 1,
         payload
       }));
@@ -158,7 +158,7 @@ describe('Advanced Scenarios Integration', () => {
       await receiver1.stop();
 
       // Create receiver2
-      const receiver2 = wire.createReceiver(async (topic, payload) => ({
+      const receiver2 = wire.createReceiver(async (_topic, payload) => ({
         receiver: 2,
         payload
       }));
@@ -181,7 +181,7 @@ describe('Advanced Scenarios Integration', () => {
     test('should handle high message throughput', async () => {
       const wire = createWire();
 
-      const receiver = wire.createReceiver(async (topic, payload) => ({
+      const receiver = wire.createReceiver(async (_topic, payload) => ({
         processed: true,
         payload
       }));
@@ -212,7 +212,7 @@ describe('Advanced Scenarios Integration', () => {
     test('should handle many concurrent senders', async () => {
       const wire = createWire();
 
-      const receiver = wire.createReceiver(async (topic, payload) => ({
+      const receiver = wire.createReceiver(async (_topic, payload) => ({
         processed: true,
         payload
       }));
@@ -250,7 +250,7 @@ describe('Advanced Scenarios Integration', () => {
       // Create 10 receivers
       const receivers = await Promise.all(
         Array.from({ length: 10 }, async (_, i) => {
-          const r = wire.createReceiver(async (topic, payload) => ({
+          const r = wire.createReceiver(async (_topic, payload) => ({
             receiver: i,
             payload
           }));
@@ -296,7 +296,7 @@ describe('Advanced Scenarios Integration', () => {
 
       // Create receiver 1 that will "crash" after seeing message
       const receiver1 = wire.createReceiver(
-        async (topic, payload: any) => {
+        async (_topic, payload: any) => {
           processLog.push({ receiver: 1, messageId: payload.messageId });
           // Don't return - simulate hanging/crash
           await new Promise(() => {}); // Never resolves
@@ -321,7 +321,7 @@ describe('Advanced Scenarios Integration', () => {
       await new Promise(resolve => setTimeout(resolve, 250));
       await receiver1.stop();
 
-      const receiver2 = wire.createReceiver(async (topic, payload: any) => {
+      const receiver2 = wire.createReceiver(async (_topic, payload: any) => {
         processLog.push({ receiver: 2, messageId: payload.messageId });
         return { processed: true, receiver: 2 };
       });
@@ -345,7 +345,7 @@ describe('Advanced Scenarios Integration', () => {
       const wire = createWire();
 
       let processCount = 0;
-      const receiver = wire.createReceiver(async (topic, payload) => {
+      const receiver = wire.createReceiver(async (_topic, payload) => {
         processCount++;
         return {
           count: processCount,
@@ -384,9 +384,9 @@ describe('Advanced Scenarios Integration', () => {
       });
 
       // Create receiver that will timeout (not respond)
-      const createHangingReceiver = (id: number) => {
+      const createHangingReceiver = (_id: number) => {
         return wire.createReceiver(
-          async (topic, payload) => {
+          async (_topic, _payload) => {
             // Hang forever (timeout will occur)
             await new Promise(() => {});
           },
@@ -409,7 +409,7 @@ describe('Advanced Scenarios Integration', () => {
         // Stop r2 and start r3 after another timeout
         setTimeout(async () => {
           await r2.stop();
-          const r3 = wire.createReceiver(async (topic, payload) => ({
+          const r3 = wire.createReceiver(async (_topic, payload) => ({
             receiver: 3,
             payload
           }));
@@ -435,11 +435,11 @@ describe('Advanced Scenarios Integration', () => {
       const wire = createWire();
 
       // Start with 2 receivers
-      const r1 = wire.createReceiver(async (topic, payload) => ({
+      const r1 = wire.createReceiver(async (_topic, payload) => ({
         receiver: 1,
         payload
       }));
-      const r2 = wire.createReceiver(async (topic, payload) => ({
+      const r2 = wire.createReceiver(async (_topic, payload) => ({
         receiver: 2,
         payload
       }));
@@ -466,7 +466,7 @@ describe('Advanced Scenarios Integration', () => {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Start r3
-      const r3 = wire.createReceiver(async (topic, payload) => ({
+      const r3 = wire.createReceiver(async (_topic, payload) => ({
         receiver: 3,
         payload
       }));
@@ -492,7 +492,7 @@ describe('Advanced Scenarios Integration', () => {
       const wire = createWire();
       let failureCount = 0;
 
-      const receiver = wire.createReceiver(async (topic, payload: any) => {
+      const receiver = wire.createReceiver(async (_topic, payload: any) => {
         if (payload.shouldFail && failureCount < 1) {
           failureCount++;
           throw new Error('Simulated processing error');
@@ -537,7 +537,7 @@ describe('Advanced Scenarios Integration', () => {
 
       // Simulate receiver that becomes available after a few attempts
       setTimeout(async () => {
-        const receiver = wire.createReceiver(async (topic, payload) => ({
+        const receiver = wire.createReceiver(async (_topic, payload) => ({
           processed: true,
           attempt: ++attemptCount,
           payload

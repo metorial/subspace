@@ -23,12 +23,12 @@ describe('Multi-Wire Integration', () => {
     const wire2Messages: string[] = [];
 
     // Create receivers on both wires for the same topic
-    const receiver1 = wire1.createReceiver(async (topic, payload) => {
+    const receiver1 = wire1.createReceiver(async (_topic, payload) => {
       wire1Messages.push(payload as string);
       return { wire: 'wire1', payload };
     });
 
-    const receiver2 = wire2.createReceiver(async (topic, payload) => {
+    const receiver2 = wire2.createReceiver(async (_topic, payload) => {
       wire2Messages.push(payload as string);
       return { wire: 'wire2', payload };
     });

@@ -35,7 +35,7 @@ export async function* interleave<T extends readonly AsyncIterable<any>[]>(
 
       if (result.done) {
         nextPromises[index] = never;
-        // @ts-ignore
+        // @ts-expect-error
         results[index] = result.value;
         remaining--;
       } else {

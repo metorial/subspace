@@ -3,13 +3,13 @@ import { generateCode } from '@lowerdeck/id';
 import { Service } from '@lowerdeck/service';
 import {
   getId,
-  Provider,
-  ProviderVariant,
-  ProviderVersion,
-  Session,
-  SessionTemplate,
-  Solution,
-  Tenant,
+  type Provider,
+  type ProviderVariant,
+  type ProviderVersion,
+  type Session,
+  type SessionTemplate,
+  type Solution,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
 import { checkDeletedRelation } from '@metorial-subspace/list-utils';
@@ -222,7 +222,7 @@ class sessionProviderInputServiceImpl {
                 let hasRequired = true;
 
                 try {
-                  if (schema.type == 'object' && schema.properties) {
+                  if (schema.type === 'object' && schema.properties) {
                     let required = schema.required || [];
                     if (!required.length) hasRequired = false;
                   }
@@ -268,7 +268,7 @@ class sessionProviderInputServiceImpl {
                 badRequestError({ message: 'Provider requires an auth config to be provided' })
               );
             }
-            if (spec.value.authMethods.length == 0 && authConfig) {
+            if (spec.value.authMethods.length === 0 && authConfig) {
               throw new ServiceError(
                 badRequestError({ message: 'Provider does not support auth configs' })
               );

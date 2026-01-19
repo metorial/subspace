@@ -184,7 +184,7 @@ export let providerConfigController = app.controller({
           isEphemeral: ctx.input.isEphemeral,
 
           config:
-            ctx.input.config.type == 'vault'
+            ctx.input.config.type === 'vault'
               ? {
                   type: 'vault',
                   vault: await providerConfigVaultService.getProviderConfigVaultById({

@@ -1,7 +1,13 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, getId, ProviderAuthConfig, Solution, Tenant } from '@metorial-subspace/db';
+import {
+  db,
+  getId,
+  type ProviderAuthConfig,
+  type Solution,
+  type Tenant
+} from '@metorial-subspace/db';
 import {
   checkDeletedRelation,
   normalizeStatusForGet,

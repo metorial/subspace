@@ -26,7 +26,7 @@ export let providerAuthMethodPresenter = (
   outputJsonSchema: providerAuthMethod.value.outputJsonSchema,
 
   scopes:
-    providerAuthMethod.type == 'oauth'
+    providerAuthMethod.type === 'oauth'
       ? (providerAuthMethod.value.scopes ?? []).map(s => ({
           object: 'provider.capabilities.auth_method.scope',
           ...s,

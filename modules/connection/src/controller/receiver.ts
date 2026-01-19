@@ -65,8 +65,8 @@ export let startController = () => {
         });
 
         let status =
-          result.output.type == 'success' ? ('succeeded' as const) : ('failed' as const);
-        let output = result.output.type == 'error' ? result.output.error : result.output.data;
+          result.output.type === 'success' ? ('succeeded' as const) : ('failed' as const);
+        let output = result.output.type === 'error' ? result.output.error : result.output.data;
 
         return {
           isSystemError: false,
@@ -98,7 +98,7 @@ export let startController = () => {
       let res = await processMessage(data);
 
       let output =
-        res.status == 'failed'
+        res.status === 'failed'
           ? { type: 'error' as const, data: res.output as any }
           : { type: 'tool.result' as const, data: res.output };
 

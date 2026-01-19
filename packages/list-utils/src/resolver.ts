@@ -20,7 +20,7 @@ export let createResolver =
     if (!ids) return undefined;
 
     // Short circuit empty ids
-    if (ids.length == 0) return getSelectors([]);
+    if (ids.length === 0) return getSelectors([]);
 
     let res = await cb({
       ids,

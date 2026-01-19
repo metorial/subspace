@@ -1,6 +1,5 @@
 import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { db } from '@metorial-subspace/db';
-import type { ProviderFunctionalityCtorParams } from '@metorial-subspace/provider-utils';
 import {
   IProviderCapabilities,
   type ProviderSpecificationGetForDeploymentParam,
@@ -10,12 +9,8 @@ import {
 import { slates } from '../client';
 
 export class ProviderCapabilities extends IProviderCapabilities {
-  constructor(params: ProviderFunctionalityCtorParams) {
-    super(params);
-  }
-
   override async isSpecificationForProviderDeploymentVersionSameAsForVersion(
-    data: ProviderSpecificationGetForDeploymentParam
+    _data: ProviderSpecificationGetForDeploymentParam
   ): Promise<boolean> {
     return true;
   }

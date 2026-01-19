@@ -7,7 +7,7 @@ describe('Cache Edge Cases Integration', () => {
 
     let processCount = 0;
     const receiver = wire.createReceiver(
-      async (topic, payload: any) => {
+      async (_topic, payload: any) => {
         processCount++;
         return { count: processCount, id: payload.id };
       },
@@ -47,7 +47,7 @@ describe('Cache Edge Cases Integration', () => {
     let processCount = 0;
     const processedIds: number[] = [];
     const receiver = wire.createReceiver(
-      async (topic, payload: any) => {
+      async (_topic, payload: any) => {
         processCount++;
         processedIds.push(payload.id);
         return { count: processCount, id: payload.id };
@@ -85,7 +85,7 @@ describe('Cache Edge Cases Integration', () => {
 
     let processCount = 0;
     const receiver = wire.createReceiver(
-      async (topic, payload: any) => {
+      async (_topic, _payload: any) => {
         processCount++;
         return { count: processCount };
       },
@@ -124,7 +124,7 @@ describe('Cache Edge Cases Integration', () => {
 
     let processCount = 0;
     const receiver = wire.createReceiver(
-      async (topic, payload: any) => {
+      async (_topic, payload: any) => {
         processCount++;
         return { count: processCount, payload };
       },
@@ -145,7 +145,7 @@ describe('Cache Edge Cases Integration', () => {
     // Simulate a slow receiver that will cause timeout on first attempt
     let firstAttempt = true;
     const slowReceiver = wire.createReceiver(
-      async (topic, payload) => {
+      async (_topic, _payload) => {
         if (firstAttempt) {
           firstAttempt = false;
           // Take longer than timeout
@@ -179,7 +179,7 @@ describe('Cache Edge Cases Integration', () => {
 
     let processCount = 0;
     const receiver1 = wire.createReceiver(
-      async (topic, payload: any) => {
+      async (_topic, _payload: any) => {
         processCount++;
         return { receiver: 1, count: processCount };
       },
@@ -201,7 +201,7 @@ describe('Cache Edge Cases Integration', () => {
 
     // Start new receiver (new cache)
     const receiver2 = wire.createReceiver(
-      async (topic, payload: any) => {
+      async (_topic, _payload: any) => {
         processCount++;
         return { receiver: 2, count: processCount };
       },
@@ -227,7 +227,7 @@ describe('Cache Edge Cases Integration', () => {
 
     const processedMessages: string[] = [];
     const receiver = wire.createReceiver(
-      async (topic, payload: any) => {
+      async (_topic, payload: any) => {
         // Small delay to ensure concurrency
         await new Promise(resolve => setTimeout(resolve, 10));
         processedMessages.push(payload.id);
@@ -273,7 +273,7 @@ describe('Cache Edge Cases Integration', () => {
 
     let attemptCount = 0;
     const receiver = wire.createReceiver(
-      async (topic, payload: any) => {
+      async (_topic, payload: any) => {
         attemptCount++;
         if (payload.shouldFail) {
           throw new Error('Processing failed');
@@ -311,7 +311,7 @@ describe('Cache Edge Cases Integration', () => {
 
     let processCount = 0;
     const receiver = wire.createReceiver(
-      async (topic, payload) => {
+      async (_topic, _payload) => {
         processCount++;
         return { count: processCount };
       },
@@ -344,7 +344,7 @@ describe('Cache Edge Cases Integration', () => {
 
     let r1ProcessCount = 0;
     const receiver1 = wire.createReceiver(
-      async (topic, payload: any) => {
+      async (_topic, _payload: any) => {
         r1ProcessCount++;
         return { receiver: 1, count: r1ProcessCount };
       },
@@ -370,7 +370,7 @@ describe('Cache Edge Cases Integration', () => {
     // Start receiver2
     let r2ProcessCount = 0;
     const receiver2 = wire.createReceiver(
-      async (topic, payload: any) => {
+      async (_topic, _payload: any) => {
         r2ProcessCount++;
         return { receiver: 2, count: r2ProcessCount };
       },

@@ -3,9 +3,9 @@ import { Hash } from '@lowerdeck/hash';
 import {
   db,
   getId,
-  SessionParticipantType,
   type Provider,
-  type Session
+  type Session,
+  type SessionParticipantType
 } from '@metorial-subspace/db';
 
 export let upsertParticipant = async (d: {

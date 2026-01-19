@@ -49,7 +49,7 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
     slateId: data.slateId,
     slateVersionId: data.slateVersionId
   });
-  if (version.status != 'active') return;
+  if (version.status !== 'active') return;
 
   let slate = await slates.slate.get({
     slateId: data.slateId
@@ -122,7 +122,7 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
       }
     });
     if (!provider?.defaultVariant) {
-      throw new Error('No default variant after upserting provider for slate ' + slate.id);
+      throw new Error(`No default variant after upserting provider for slate ${slate.id}`);
     }
 
     let providerVersion = await providerVersionInternalService.upsertVersion({

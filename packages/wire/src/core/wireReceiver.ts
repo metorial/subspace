@@ -125,7 +125,7 @@ export class WireReceiver {
         pendingMessages: [],
         isProcessingQueue: false,
         onMessagePromise: null,
-        ttlExpiresAt: Infinity // By default, never expire (until extendTtl is called)
+        ttlExpiresAt: Number.POSITIVE_INFINITY // By default, never expire (until extendTtl is called)
       };
       this.topicStates.set(topic, state);
 

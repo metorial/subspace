@@ -7,7 +7,7 @@ describe('Ownership Transfer Integration', () => {
     const sender = wire.createSender();
 
     // Create first receiver
-    const receiver1 = wire.createReceiver(async (topic, payload) => {
+    const receiver1 = wire.createReceiver(async (_topic, payload) => {
       return { receiver: 1, payload };
     });
     await receiver1.start();
@@ -24,7 +24,7 @@ describe('Ownership Transfer Integration', () => {
     await receiver1.stop();
 
     // Create second receiver
-    const receiver2 = wire.createReceiver(async (topic, payload) => {
+    const receiver2 = wire.createReceiver(async (_topic, payload) => {
       return { receiver: 2, payload };
     });
     await receiver2.start();
@@ -49,7 +49,7 @@ describe('Ownership Transfer Integration', () => {
     const wire = createWire();
     const sender = wire.createSender();
 
-    const receiver = wire.createReceiver(async (topic, payload) => {
+    const receiver = wire.createReceiver(async (_topic, payload) => {
       return { processed: payload };
     });
     await receiver.start();
@@ -72,7 +72,7 @@ describe('Ownership Transfer Integration', () => {
     const wire = createWire();
     const sender = wire.createSender();
 
-    const receiver1 = wire.createReceiver(async (topic, payload) => {
+    const receiver1 = wire.createReceiver(async (_topic, _payload) => {
       return { receiver: 1 };
     });
     await receiver1.start();
@@ -82,7 +82,7 @@ describe('Ownership Transfer Integration', () => {
     expect(receiver1.getOwnedTopics()).toContain('release-topic');
 
     // Create second receiver before stopping first
-    const receiver2 = wire.createReceiver(async (topic, payload) => {
+    const receiver2 = wire.createReceiver(async (_topic, _payload) => {
       return { receiver: 2 };
     });
     await receiver2.start();
@@ -107,17 +107,17 @@ describe('Ownership Transfer Integration', () => {
     // Create 3 receivers
     const receivers = await Promise.all([
       (async () => {
-        const r = wire.createReceiver(async (topic, payload) => ({ r: 1 }));
+        const r = wire.createReceiver(async (_topic, _payload) => ({ r: 1 }));
         await r.start();
         return r;
       })(),
       (async () => {
-        const r = wire.createReceiver(async (topic, payload) => ({ r: 2 }));
+        const r = wire.createReceiver(async (_topic, _payload) => ({ r: 2 }));
         await r.start();
         return r;
       })(),
       (async () => {
-        const r = wire.createReceiver(async (topic, payload) => ({ r: 3 }));
+        const r = wire.createReceiver(async (_topic, _payload) => ({ r: 3 }));
         await r.start();
         return r;
       })()

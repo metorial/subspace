@@ -32,7 +32,7 @@ export let normalizeStatusForList = <T extends 'archived' | 'deleted' | string>(
       };
     }
 
-    let normalized = d.status.filter(s => s != 'deleted');
+    let normalized = d.status.filter(s => s !== 'deleted');
 
     return {
       hasParent: {

@@ -1,8 +1,8 @@
-import { ServiceError } from '@lowerdeck/error';
+import type { ServiceError } from '@lowerdeck/error';
 import type { JSONRPCErrorResponse } from '@modelcontextprotocol/sdk/types.js';
 
 export let serviceErrorToMcpError = ({ data: error }: ServiceError<any>) => {
-  if (error.status == 404 && error.entity == 'tool') {
+  if (error.status === 404 && error.entity === 'tool') {
     return {
       jsonrpc: '2.0',
       error: {
@@ -13,7 +13,7 @@ export let serviceErrorToMcpError = ({ data: error }: ServiceError<any>) => {
     } satisfies JSONRPCErrorResponse;
   }
 
-  if (error.status == 400 || error.status == 406) {
+  if (error.status === 400 || error.status === 406) {
     return {
       jsonrpc: '2.0',
       error: {
@@ -24,7 +24,7 @@ export let serviceErrorToMcpError = ({ data: error }: ServiceError<any>) => {
     } satisfies JSONRPCErrorResponse;
   }
 
-  if (error.status == 500) {
+  if (error.status === 500) {
     return {
       jsonrpc: '2.0',
       error: {

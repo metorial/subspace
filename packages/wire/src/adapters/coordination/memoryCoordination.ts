@@ -15,7 +15,7 @@ export class MemoryCoordination implements ICoordinationAdapter {
   private topicOwners: Map<string, TopicOwnership> = new Map();
   private cleanupInterval: Timer;
 
-  constructor(wireId: string = 'default') {
+  constructor(_wireId: string = 'default') {
     // Cleanup expired entries every second
     this.cleanupInterval = setInterval(() => this.cleanup(), 1000);
   }

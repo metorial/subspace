@@ -3,10 +3,10 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
-  SessionConnectionState,
-  SessionConnectionStatus,
-  Solution,
-  Tenant
+  type SessionConnectionState,
+  type SessionConnectionStatus,
+  type Solution,
+  type Tenant
 } from '@metorial-subspace/db';
 import {
   normalizeStatusForGet,

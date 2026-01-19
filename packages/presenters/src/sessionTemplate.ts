@@ -27,7 +27,7 @@ export let sessionTemplatePresenter = (
   metadata: sessionTemplate.metadata,
 
   providers: sessionTemplate.providers
-    .filter(p => p.status == 'active')
+    .filter(p => p.status === 'active')
     .map(p =>
       sessionTemplateProviderPresenter({
         ...p,

@@ -7,7 +7,7 @@ describe('Unlimited Timeout Extensions', () => {
 
     let extensionsReceived = 0;
     const receiver = wire.createReceiver(
-      async (topic, payload) => {
+      async (_topic, _payload) => {
         // Process for 15 seconds (long enough to require multiple extensions)
         await new Promise(resolve => setTimeout(resolve, 15000));
         return { processed: true };
@@ -38,7 +38,7 @@ describe('Unlimited Timeout Extensions', () => {
     const wire = createWire();
 
     const receiver = wire.createReceiver(
-      async (topic, payload) => {
+      async (_topic, _payload) => {
         // Process in chunks to simulate long-running work
         for (let i = 0; i < 20; i++) {
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -71,7 +71,7 @@ describe('Unlimited Timeout Extensions', () => {
     const wire = createWire();
 
     const receiver = wire.createReceiver(
-      async (topic, payload) => {
+      async (_topic, _payload) => {
         // Process for 8 seconds
         await new Promise(resolve => setTimeout(resolve, 8000));
         return { processed: true };
@@ -102,7 +102,7 @@ describe('Unlimited Timeout Extensions', () => {
 
     let processingComplete = false;
     const receiver = wire.createReceiver(
-      async (topic, payload) => {
+      async (_topic, _payload) => {
         await new Promise(resolve => setTimeout(resolve, 3000));
         processingComplete = true;
         return { processed: true };
@@ -138,7 +138,7 @@ describe('Unlimited Timeout Extensions', () => {
     const wire = createWire();
 
     const receiver = wire.createReceiver(
-      async (topic, payload: any) => {
+      async (_topic, payload: any) => {
         // Variable processing time
         const delay = payload.slow ? 8000 : 500;
         await new Promise(resolve => setTimeout(resolve, delay));

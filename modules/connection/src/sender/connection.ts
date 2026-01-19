@@ -82,7 +82,7 @@ export class SenderConnection {
               } satisfies WireResult & { channel: 'targeted_response' };
             }
 
-            cursor = messages.length == count ? messages[messages.length - 1]?.id : undefined;
+            cursor = messages.length === count ? messages[messages.length - 1]?.id : undefined;
           }
         }
 

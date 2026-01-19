@@ -1,6 +1,6 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { type Solution, type Tenant } from '@metorial-subspace/db';
+import type { Solution, Tenant } from '@metorial-subspace/db';
 import {
   providerAuthConfigService,
   providerAuthImportService

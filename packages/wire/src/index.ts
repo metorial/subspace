@@ -1,39 +1,36 @@
 // Core components
-export { MessageCache } from './core/messageCache';
-export { OwnershipManager } from './core/ownershipManager';
-export type { OwnershipLossCallback } from './core/ownershipManager';
-export { Receiver } from './core/receiver';
-export type { MessageHandler } from './core/receiver';
-export { RetryManager } from './core/retryManager';
-export { Sender } from './core/sender';
-export { createWireReceiver, WireReceiver } from './core/wireReceiver';
-export type { TopicContext, TopicHandler, WireReceiverConfig } from './core/wireReceiver';
 
 // Adapters - Interfaces
 export type { ICoordinationAdapter } from './adapters/coordination/coordinationAdapter';
-export type {
-  ITransportAdapter,
-  MessageHandler as TransportMessageHandler
-} from './adapters/transport/transportAdapter';
-
 // Adapters - Implementations
 export { MemoryCoordination } from './adapters/coordination/memoryCoordination';
 export { RedisCoordination } from './adapters/coordination/redisCoordination';
 export { MemoryTransport } from './adapters/transport/memoryTransport';
 export { NatsTransport } from './adapters/transport/natsTransport';
+export type {
+  ITransportAdapter,
+  MessageHandler as TransportMessageHandler
+} from './adapters/transport/transportAdapter';
+export { MessageCache } from './core/messageCache';
+export type { OwnershipLossCallback } from './core/ownershipManager';
+export { OwnershipManager } from './core/ownershipManager';
+export type { MessageHandler } from './core/receiver';
+export { Receiver } from './core/receiver';
+export { RetryManager } from './core/retryManager';
+export { Sender } from './core/sender';
+export type { TopicContext, TopicHandler, WireReceiverConfig } from './core/wireReceiver';
+export { createWireReceiver, WireReceiver } from './core/wireReceiver';
 
 // Imports for factory function
 import { MemoryCoordination } from './adapters/coordination/memoryCoordination';
 import { RedisCoordination } from './adapters/coordination/redisCoordination';
 import { MemoryTransport } from './adapters/transport/memoryTransport';
 import { NatsTransport } from './adapters/transport/natsTransport';
-import { Receiver, type MessageHandler } from './core/receiver';
+import { type MessageHandler, Receiver } from './core/receiver';
 import { Sender } from './core/sender';
 import { createWireReceiver, type TopicHandler } from './core/wireReceiver';
 import type { NatsConfig, ReceiverConfig, RedisConfig, SenderConfig } from './types/config';
 
-// Types
-export { DEFAULT_CONFIG, mergeConfig } from './types/config';
 export type {
   CoordinationConfig,
   NatsConfig,
@@ -43,10 +40,12 @@ export type {
   TransportConfig,
   WireConfig
 } from './types/config';
-export { isTimeoutExtension } from './types/message';
+// Types
+export { DEFAULT_CONFIG, mergeConfig } from './types/config';
 export type { TimeoutExtension, WireMessage } from './types/message';
-export { WireProcessError, WireSendError } from './types/response';
+export { isTimeoutExtension } from './types/message';
 export type { WireResponse } from './types/response';
+export { WireProcessError, WireSendError } from './types/response';
 export type {
   TopicListener,
   TopicResponseBroadcast,

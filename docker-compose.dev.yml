@@ -6,7 +6,7 @@ services:
     container_name: subspace-postgres
     restart: unless-stopped
     ports:
-      - "45432:5432"
+      - '45432:5432'
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -25,15 +25,15 @@ services:
 
   nats-1:
     image: nats
-    command: "--cluster_name NATS --cluster nats://0.0.0.0:6222 --http_port 8222 "
+    command: '--cluster_name NATS --cluster nats://0.0.0.0:6222 --http_port 8222 '
     networks:
       - subspace-network
   nats-2:
     image: nats
-    command: "--cluster_name NATS --cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats-1:6222"
-    depends_on: ["nats-1"]
+    command: '--cluster_name NATS --cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats-1:6222'
+    depends_on: ['nats-1']
     networks:
-    - subspace-network
+      - subspace-network
 
   object-storage:
     image: ghcr.io/metorial/object-storage:latest
@@ -44,7 +44,7 @@ services:
       AWS_ACCESS_KEY_ID: ${OBJECT_STORAGE_AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${OBJECT_STORAGE_AWS_SECRET_ACCESS_KEY}
       AWS_REGION: ${OBJECT_STORAGE_AWS_REGION}
-      
+
       OBJECT_STORE__SERVER__HOST: 0.0.0.0
       OBJECT_STORE__SERVER__PORT: 52010
       OBJECT_STORE__BACKEND__TYPE: s3
@@ -56,15 +56,14 @@ services:
     networks:
       - subspace-network
 
-
-  forge:  
+  forge:
     image: ghcr.io/metorial/forge:latest
     container_name: subspace-forge
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/forge
       REDIS_URL: redis://redis:6379/0
-      
+
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       DEFAULT_PROVIDER: aws.code-build
 
@@ -84,14 +83,14 @@ services:
     networks:
       - subspace-network
 
-  function-bay:  
+  function-bay:
     image: ghcr.io/metorial/function-bay:latest
     container_name: subspace-function-bay
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/function-bay
       REDIS_URL: redis://redis:6379/0
-      
+
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       DEFAULT_PROVIDER: ${DEFAULT_PROVIDER}
 
@@ -112,12 +111,12 @@ services:
     networks:
       - subspace-network
 
-  signal:  
+  signal:
     image: ghcr.io/metorial/signal:latest
     container_name: subspace-signal
     restart: unless-stopped
     ports:
-      - "52050:52050"
+      - '52050:52050'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/signal
       REDIS_URL: redis://redis:6379/0
@@ -136,7 +135,7 @@ services:
     container_name: subspace-voyager
     restart: unless-stopped
     ports:
-      - "52060:52060"
+      - '52060:52060'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/voyager
       SEARCH_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/voyager-search
@@ -147,13 +146,13 @@ services:
     networks:
       - subspace-network
 
-  slates-registry:  
+  slates-registry:
     image: ghcr.io/metorial/slates-registry:latest
     container_name: subspace-slates-registry
     restart: unless-stopped
     ports:
-      - "52040:52040"
-      - "52041:52041"
+      - '52040:52040'
+      - '52041:52041'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/slates-registry
       REDIS_URL: redis://redis:6379/0
@@ -175,8 +174,8 @@ services:
     container_name: subspace-slates-hub
     restart: unless-stopped
     ports:
-      - "52045:52045"
-      - "52046:52046"
+      - '52045:52045'
+      - '52046:52046'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/slates-hub
       REDIS_URL: redis://redis:6379/0
@@ -192,7 +191,7 @@ services:
       OBJECT_STORAGE_URL: http://object-storage:52010
       INVOCATIONS_BUCKET_NAME: subspace-invocations
 
-      INITIAL_REGISTRIES: "http://slates-registry:52040"
+      INITIAL_REGISTRIES: 'http://slates-registry:52040'
 
       SIGNAL_API_URL: http://signal:52050/metorial-signal
       SIGNAL_SENDER_IDENTIFIER: dev-subspace
@@ -217,7 +216,7 @@ services:
     container_name: subspace-controller-service
     restart: unless-stopped
     ports:
-      - "52070:52070"
+      - '52070:52070'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0
@@ -258,7 +257,7 @@ services:
     container_name: subspace-public-service
     restart: unless-stopped
     ports:
-      - "52071:52071"
+      - '52071:52071'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0
@@ -338,7 +337,7 @@ services:
     container_name: subspace-connection-endpoint-service
     restart: unless-stopped
     ports:
-      - "52072:52072"
+      - '52072:52072'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0

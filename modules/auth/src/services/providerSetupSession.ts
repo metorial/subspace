@@ -3,21 +3,21 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
-  Brand,
+  type Brand,
   db,
   getId,
   ID,
-  Provider,
-  ProviderAuthCredentials,
-  ProviderDeployment,
-  ProviderSetupSession,
-  ProviderSetupSessionStatus,
-  ProviderSetupSessionType,
-  ProviderSetupSessionUiMode,
-  ProviderVariant,
-  ProviderVersion,
-  Solution,
-  Tenant,
+  type Provider,
+  type ProviderAuthCredentials,
+  type ProviderDeployment,
+  type ProviderSetupSession,
+  type ProviderSetupSessionStatus,
+  type ProviderSetupSessionType,
+  type ProviderSetupSessionUiMode,
+  type ProviderVariant,
+  type ProviderVersion,
+  type Solution,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
 import {
@@ -166,7 +166,7 @@ class providerSetupSessionServiceImpl {
     checkDeletedRelation(d.providerDeployment);
     checkDeletedRelation(d.credentials);
 
-    if (d.providerDeployment && d.providerDeployment.providerOid != d.provider.oid) {
+    if (d.providerDeployment && d.providerDeployment.providerOid !== d.provider.oid) {
       throw new ServiceError(
         badRequestError({
           message: 'Provider deployment does not belong to provider',
@@ -204,8 +204,8 @@ class providerSetupSessionServiceImpl {
           authMethodId: d.input.authMethodId ?? (d.credentials ? 'oauth' : undefined)
         });
 
-      if (d.credentials && authMethod.type != 'oauth') d.credentials = undefined;
-      if (authMethod.type == 'oauth' && !d.credentials) {
+      if (d.credentials && authMethod.type !== 'oauth') d.credentials = undefined;
+      if (authMethod.type === 'oauth' && !d.credentials) {
         let defaultCredentials = await db.providerAuthCredentials.findFirst({
           where: {
             providerOid: d.provider.oid,
@@ -233,7 +233,7 @@ class providerSetupSessionServiceImpl {
         authMethodOid: authMethod.oid
       };
 
-      if (d.input.authConfigInput && d.input.type != 'config_only') {
+      if (d.input.authConfigInput && d.input.type !== 'config_only') {
         let authConfigInner =
           await providerSetupSessionInternalService.createProviderAuthConfig({
             tenant: d.tenant,
@@ -258,7 +258,7 @@ class providerSetupSessionServiceImpl {
         inner = { ...inner, ...authConfigInner };
       }
 
-      if (d.input.configInput && d.input.type != 'auth_only') {
+      if (d.input.configInput && d.input.type !== 'auth_only') {
         let configInner = await providerSetupSessionInternalService.createProviderConfig({
           tenant: d.tenant,
           solution: d.solution,

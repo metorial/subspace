@@ -3,14 +3,14 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
-  Provider,
-  ProviderAuthConfig,
-  ProviderConfig,
-  ProviderDeployment,
-  ProviderSpecification,
-  ProviderVersion,
-  Solution,
-  Tenant
+  type Provider,
+  type ProviderAuthConfig,
+  type ProviderConfig,
+  type ProviderDeployment,
+  type ProviderSpecification,
+  type ProviderVersion,
+  type Solution,
+  type Tenant
 } from '@metorial-subspace/db';
 import { getProviderTenantFilter } from './provider';
 

@@ -60,7 +60,7 @@ describe('WireReceiver Basic Tests', () => {
     let closeCalled = false;
 
     const receiver = wire.createWireReceiver(async (ctx: TopicContext) => {
-      ctx.onMessage(async (data: any) => {
+      ctx.onMessage(async (_data: any) => {
         return { processed: true };
       });
 
@@ -85,7 +85,7 @@ describe('WireReceiver Basic Tests', () => {
     const receiver = wire.createWireReceiver(async (ctx: TopicContext) => {
       ctx.extendTtl(60000);
 
-      ctx.onMessage(async (data: any) => {
+      ctx.onMessage(async (_data: any) => {
         ctx.extendTtl(30000);
         return { processed: true };
       });

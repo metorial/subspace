@@ -1,6 +1,5 @@
 import { db, messageInputToToolCall, snowflake } from '@metorial-subspace/db';
 import type {
-  ProviderFunctionalityCtorParams,
   ProviderRunCreateParam,
   ProviderRunCreateRes,
   ToolInvocationCreateParam,
@@ -10,10 +9,6 @@ import { IProviderToolInvocation } from '@metorial-subspace/provider-utils';
 import { getTenantForSlates, slates } from '../client';
 
 export class ProviderToolInvocation extends IProviderToolInvocation {
-  constructor(params: ProviderFunctionalityCtorParams) {
-    super(params);
-  }
-
   override async createProviderRun(
     data: ProviderRunCreateParam
   ): Promise<ProviderRunCreateRes> {
@@ -104,7 +99,7 @@ export class ProviderToolInvocation extends IProviderToolInvocation {
     return {
       slateToolCall,
       output:
-        res.status == 'error'
+        res.status === 'error'
           ? { type: 'error', error: res.error }
           : { type: 'success', data: res.output }
     };

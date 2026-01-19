@@ -6,10 +6,10 @@ import { slugify } from '@lowerdeck/slugify';
 import {
   db,
   getId,
-  ProviderListing,
-  ProviderListingGroup,
-  Solution,
-  Tenant
+  type ProviderListing,
+  type ProviderListingGroup,
+  type Solution,
+  type Tenant
 } from '@metorial-subspace/db';
 import { resolveProviderListings, resolveProviders } from '@metorial-subspace/list-utils';
 

@@ -1,9 +1,9 @@
 import {
   db,
   getId,
-  SessionMessageFailureReason,
   type ProviderRun,
   type SessionError,
+  type SessionMessageFailureReason,
   type SessionParticipant
 } from '@metorial-subspace/db';
 import { createError, messageFailureReasonToErrorType } from './createError';
@@ -25,16 +25,16 @@ export let completeMessage = async (
 ) => {
   data.completedAt = data.completedAt ?? new Date();
 
-  if (data.output?.type == 'error') {
+  if (data.output?.type === 'error') {
     data.status = 'failed';
   }
 
-  if (data.status == 'failed' && !data.failureReason) {
+  if (data.status === 'failed' && !data.failureReason) {
     data.failureReason = 'provider_error';
   }
 
   let error: SessionError | undefined;
-  if (data.status == 'failed') {
+  if (data.status === 'failed') {
     let message = await db.sessionMessage.findFirstOrThrow({
       where: 'messageId' in filter ? { id: filter.messageId } : { oid: filter.messageOid },
       include: { connection: true, session: true }

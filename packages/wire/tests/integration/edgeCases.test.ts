@@ -6,7 +6,7 @@ describe('Edge Cases Integration', () => {
     const wire = createWire();
 
     const processedOrder: number[] = [];
-    const receiver = wire.createReceiver(async (topic, payload: any) => {
+    const receiver = wire.createReceiver(async (_topic, payload: any) => {
       processedOrder.push(payload.order);
       return { order: payload.order };
     });
@@ -33,7 +33,7 @@ describe('Edge Cases Integration', () => {
 
     let extensionCount = 0;
     const receiver = wire.createReceiver(
-      async (topic, payload) => {
+      async (_topic, _payload) => {
         // Process for longer than timeout but not too long
         await new Promise(resolve => setTimeout(resolve, 2500));
         return { processed: true };
@@ -61,7 +61,7 @@ describe('Edge Cases Integration', () => {
   test('should handle ownership expiry at exact boundary', async () => {
     const wire = createWire();
 
-    const receiver1 = wire.createReceiver(async (topic, payload) => ({ receiver: 1 }), {
+    const receiver1 = wire.createReceiver(async (_topic, _payload) => ({ receiver: 1 }), {
       topicOwnershipTtl: 200,
       ownershipRenewalInterval: 10000 // Don't renew
     });
@@ -81,7 +81,7 @@ describe('Edge Cases Integration', () => {
     await new Promise(resolve => setTimeout(resolve, 200));
 
     // Create new receiver
-    const receiver2 = wire.createReceiver(async (topic, payload) => ({
+    const receiver2 = wire.createReceiver(async (_topic, _payload) => ({
       receiver: 2
     }));
     await receiver2.start();
@@ -99,7 +99,7 @@ describe('Edge Cases Integration', () => {
   test('should handle empty payload', async () => {
     const wire = createWire();
 
-    const receiver = wire.createReceiver(async (topic, payload) => {
+    const receiver = wire.createReceiver(async (_topic, payload) => {
       return { received: payload };
     });
 
@@ -131,7 +131,7 @@ describe('Edge Cases Integration', () => {
   test('should handle very large payloads', async () => {
     const wire = createWire();
 
-    const receiver = wire.createReceiver(async (topic, payload: any) => {
+    const receiver = wire.createReceiver(async (_topic, payload: any) => {
       return { size: JSON.stringify(payload).length };
     });
 
@@ -197,7 +197,7 @@ describe('Edge Cases Integration', () => {
 
     // Rapidly start and stop receivers
     for (let i = 0; i < 5; i++) {
-      const receiver = wire.createReceiver(async (topic, payload) => ({
+      const receiver = wire.createReceiver(async (_topic, _payload) => ({
         cycle: i
       }));
 
@@ -216,7 +216,7 @@ describe('Edge Cases Integration', () => {
 
     let processingCount = 0;
     const receiver = wire.createReceiver(
-      async (topic, payload: any) => {
+      async (_topic, payload: any) => {
         processingCount++;
         // Simulate variable processing time
         const delay = payload.slow ? 2500 : 100;
@@ -259,7 +259,7 @@ describe('Edge Cases Integration', () => {
   test('should handle zero timeout gracefully', async () => {
     const wire = createWire();
 
-    const receiver = wire.createReceiver(async (topic, payload) => {
+    const receiver = wire.createReceiver(async (_topic, _payload) => {
       return { received: true };
     });
 
@@ -288,7 +288,7 @@ describe('Edge Cases Integration', () => {
   test('should handle sender close during in-flight messages', async () => {
     const wire = createWire();
 
-    const receiver = wire.createReceiver(async (topic, payload) => {
+    const receiver = wire.createReceiver(async (_topic, _payload) => {
       // Long processing to ensure message is in-flight
       await new Promise(resolve => setTimeout(resolve, 2000));
       return { processed: true };
@@ -331,7 +331,7 @@ describe('Edge Cases Integration', () => {
     const wire = createWire();
 
     let processingStarted = false;
-    const receiver = wire.createReceiver(async (topic, payload) => {
+    const receiver = wire.createReceiver(async (_topic, _payload) => {
       processingStarted = true;
       await new Promise(resolve => setTimeout(resolve, 1000));
       return { processed: true };
@@ -367,7 +367,7 @@ describe('Edge Cases Integration', () => {
     const wire = createWire();
 
     let processCount = 0;
-    const receiver = wire.createReceiver(async (topic, payload) => {
+    const receiver = wire.createReceiver(async (_topic, payload) => {
       processCount++;
       return { count: processCount, payload };
     });
@@ -395,7 +395,7 @@ describe('Edge Cases Integration', () => {
   test('should handle receiver heartbeat expiry', async () => {
     const wire = createWire();
 
-    const receiver = wire.createReceiver(async (topic, payload) => ({ received: true }), {
+    const receiver = wire.createReceiver(async (_topic, _payload) => ({ received: true }), {
       heartbeatInterval: 100,
       heartbeatTtl: 200
     });

@@ -1,7 +1,12 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, SessionMessageType, Solution, Tenant } from '@metorial-subspace/db';
+import {
+  db,
+  type SessionMessageType,
+  type Solution,
+  type Tenant
+} from '@metorial-subspace/db';
 import {
   normalizeStatusForGet,
   normalizeStatusForList,

@@ -1,4 +1,4 @@
-import { type Solution, type Tenant } from '@metorial-subspace/db';
+import type { Solution, Tenant } from '@metorial-subspace/db';
 
 export interface TenantSelector {
   tenant: Tenant;

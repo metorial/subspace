@@ -5,7 +5,7 @@ import {
   mcpValidate,
   wireResultToMcpMessage
 } from '@metorial-subspace/connection-utils';
-import { db, ID, SessionConnectionMcpConnectionTransport } from '@metorial-subspace/db';
+import { db, type SessionConnectionMcpConnectionTransport } from '@metorial-subspace/db';
 import {
   type CallToolRequest,
   CallToolRequestSchema,
@@ -22,8 +22,8 @@ import {
 import { PING_MESSAGE_ID_PREFIX } from '../const';
 import { providerToolPresenter } from '../presenter';
 import { upsertParticipant } from '../shared/upsertParticipant';
-import { McpControlMessageHandler } from './control';
-import { McpManager } from './manager';
+import type { McpControlMessageHandler } from './control';
+import type { McpManager } from './manager';
 
 type ID = string | number;
 
@@ -172,7 +172,7 @@ export class McpSender {
     let id = 'id' in msg ? msg.id : null;
 
     if (method === 'ping' && id) return this.handlePingRequest(id);
-    if (typeof id == 'string' && id.startsWith(PING_MESSAGE_ID_PREFIX))
+    if (typeof id === 'string' && id.startsWith(PING_MESSAGE_ID_PREFIX))
       return this.handlePingResponse(id);
 
     if (!method) {
@@ -186,20 +186,23 @@ export class McpSender {
     }
 
     switch (method) {
-      case 'initialize':
+      case 'initialize': {
         let initMessage = mcpValidate(id, InitializeRequestSchema, msg);
         if (!initMessage.success) return { mcp: initMessage.error, store: true };
         return this.handleInitMessage(id, initMessage.data);
+      }
 
-      case 'tools/list':
+      case 'tools/list': {
         let toolList = mcpValidate(id, ListToolsRequestSchema, msg);
         if (!toolList.success) return { mcp: toolList.error, store: true };
         return this.handleToolListMessage(id);
+      }
 
-      case 'tools/call':
+      case 'tools/call': {
         let toolCall = mcpValidate(id, CallToolRequestSchema, msg);
         if (!toolCall.success) return { mcp: toolCall.error, store: true };
         return this.handleToolCallMessage(id, toolCall.data, opts);
+      }
     }
 
     return {
@@ -222,7 +225,7 @@ export class McpSender {
     };
   }
 
-  private async handlePingResponse(id: ID) {
+  private async handlePingResponse(_id: ID) {
     if (this.connection) {
       await db.sessionConnection.updateMany({
         where: { oid: this.connection.oid },

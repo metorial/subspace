@@ -1,5 +1,5 @@
 import { generatePlainId } from '@lowerdeck/id';
-import { SessionConnectionMcpConnectionTransport } from '@metorial-subspace/db';
+import type { SessionConnectionMcpConnectionTransport } from '@metorial-subspace/db';
 import { interleave } from '@metorial-subspace/generator';
 import type { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
 import {
@@ -64,7 +64,7 @@ export class McpConnection {
     let close = async () => {
       this.#listenerClose.delete(close);
 
-      if (this.#listenerClose.size == 0) {
+      if (this.#listenerClose.size === 0) {
         connectionsWithListeners.delete(this.#id);
       }
 

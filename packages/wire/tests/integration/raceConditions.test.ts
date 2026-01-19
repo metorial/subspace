@@ -10,7 +10,7 @@ describe('Race Conditions Integration', () => {
 
     // Create a receiver that tracks which messages it processes
     const processedMessages: string[] = [];
-    const receiver = wire.createReceiver(async (topic, payload: any) => {
+    const receiver = wire.createReceiver(async (_topic, payload: any) => {
       processedMessages.push(payload.senderId);
       return { received: payload.senderId };
     });
@@ -49,10 +49,10 @@ describe('Race Conditions Integration', () => {
     const wire = createWire();
 
     // Create two receivers
-    const receiver1 = wire.createReceiver(async (topic, payload) => {
+    const receiver1 = wire.createReceiver(async (_topic, payload) => {
       return { receiver: 1, payload };
     });
-    const receiver2 = wire.createReceiver(async (topic, payload) => {
+    const receiver2 = wire.createReceiver(async (_topic, payload) => {
       return { receiver: 2, payload };
     });
 
@@ -93,7 +93,7 @@ describe('Race Conditions Integration', () => {
 
     // Create first receiver with very short TTL
     const receiver1 = wire.createReceiver(
-      async (topic, payload) => {
+      async (_topic, _payload) => {
         return { receiver: 1 };
       },
       {
@@ -113,10 +113,10 @@ describe('Race Conditions Integration', () => {
     await receiver1.stop();
 
     // Create two new receivers
-    const receiver2 = wire.createReceiver(async (topic, payload) => {
+    const receiver2 = wire.createReceiver(async (_topic, _payload) => {
       return { receiver: 2 };
     });
-    const receiver3 = wire.createReceiver(async (topic, payload) => {
+    const receiver3 = wire.createReceiver(async (_topic, _payload) => {
       return { receiver: 3 };
     });
 
@@ -160,7 +160,7 @@ describe('Race Conditions Integration', () => {
     // Create multiple receivers
     const receivers = await Promise.all(
       Array.from({ length: 3 }, async (_, i) => {
-        const r = wire.createReceiver(async (topic, payload) => ({
+        const r = wire.createReceiver(async (_topic, _payload) => ({
           receiver: i
         }));
         await r.start();
@@ -243,7 +243,7 @@ describe('Race Conditions Integration', () => {
   test('should maintain ownership under high concurrent load', async () => {
     const wire = createWire();
 
-    const receiver = wire.createReceiver(async (topic, payload) => {
+    const receiver = wire.createReceiver(async (_topic, _payload) => {
       // Small delay to simulate processing
       await new Promise(resolve => setTimeout(resolve, 5));
       return { processed: true };

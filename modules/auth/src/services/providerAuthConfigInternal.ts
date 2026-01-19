@@ -2,28 +2,28 @@ import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
-  Backend,
+  type Backend,
   db,
   getId,
-  Provider,
-  ProviderAuthConfig,
-  ProviderAuthConfigSource,
-  ProviderAuthConfigType,
-  ProviderAuthImport,
-  ProviderAuthMethod,
+  type Provider,
+  type ProviderAuthConfig,
+  type ProviderAuthConfigSource,
+  type ProviderAuthConfigType,
+  type ProviderAuthImport,
+  type ProviderAuthMethod,
   ProviderAuthMethodType,
-  ProviderConfig,
-  ProviderDeployment,
-  ProviderVariant,
-  ProviderVersion,
-  Solution,
-  Tenant,
+  type ProviderConfig,
+  type ProviderDeployment,
+  type ProviderVariant,
+  type ProviderVersion,
+  type Solution,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
 import { providerDeploymentInternalService } from '@metorial-subspace/module-provider-internal';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
-import { ProviderAuthConfigCreateRes } from '@metorial-subspace/provider-utils';
+import type { ProviderAuthConfigCreateRes } from '@metorial-subspace/provider-utils';
 import { providerAuthConfigCreatedQueue } from '../queues/lifecycle/providerAuthConfig';
 import { providerAuthConfigInclude } from './providerAuthConfig';
 
@@ -108,7 +108,7 @@ class providerAuthConfigInternalServiceImpl {
         providerOid: d.provider.oid,
         specificationOid: version.specificationOid,
 
-        ...(typeof d.authMethodId == 'string'
+        ...(typeof d.authMethodId === 'string'
           ? {
               OR: [
                 { id: d.authMethodId },
@@ -166,7 +166,7 @@ class providerAuthConfigInternalServiceImpl {
     checkTenant(d, d.providerDeployment);
     checkTenant(d, d.backendProviderAuthConfig.slateAuthConfig);
 
-    if (d.providerDeployment && d.providerDeployment.providerOid != d.provider.oid) {
+    if (d.providerDeployment && d.providerDeployment.providerOid !== d.provider.oid) {
       throw new ServiceError(
         badRequestError({
           message: 'Provider deployment does not belong to provider',
@@ -174,7 +174,7 @@ class providerAuthConfigInternalServiceImpl {
         })
       );
     }
-    if (d.authMethod.providerOid != d.provider.oid) {
+    if (d.authMethod.providerOid !== d.provider.oid) {
       throw new ServiceError(
         badRequestError({
           message: 'Auth method does not belong to provider',
@@ -191,7 +191,7 @@ class providerAuthConfigInternalServiceImpl {
         })
       );
     }
-    if (d.input.isDefault && d.authMethod.type == 'oauth') {
+    if (d.input.isDefault && d.authMethod.type === 'oauth') {
       throw new ServiceError(
         badRequestError({
           message: 'OAuth auth methods cannot have default auth configs',
@@ -237,12 +237,12 @@ class providerAuthConfigInternalServiceImpl {
         }
       });
 
-      let authImport: ProviderAuthImport | undefined = undefined;
+      let authImport: ProviderAuthImport | undefined;
 
       if (
         d.import &&
-        providerAuthConfig.source == 'manual' &&
-        providerAuthConfig.type != 'oauth_automated'
+        providerAuthConfig.source === 'manual' &&
+        providerAuthConfig.type !== 'oauth_automated'
       ) {
         authImport = await db.providerAuthImport.create({
           data: {

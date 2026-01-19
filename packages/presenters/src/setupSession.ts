@@ -45,7 +45,7 @@ export let providerSetupSessionPresenter = (
   }
 ) => {
   let status =
-    providerSetupSession.status == 'pending' && providerSetupSession.expiresAt <= new Date()
+    providerSetupSession.status === 'pending' && providerSetupSession.expiresAt <= new Date()
       ? ('expired' as const)
       : providerSetupSession.status;
 

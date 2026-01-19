@@ -12,7 +12,7 @@ import type {
   ToolCall
 } from '@metorial-subspace/db';
 import { messageInputToMcp, messageOutputToMcp } from '@metorial-subspace/db';
-import { sessionErrorPresenter, type SessionErrorPresenterProps } from './sessionError';
+import { type SessionErrorPresenterProps, sessionErrorPresenter } from './sessionError';
 import { sessionParticipantPresenter } from './sessionParticipant';
 import { toolCallPresenter } from './toolCall';
 
@@ -62,7 +62,7 @@ export let sessionMessagePresenter = async (message: SessionMessagePresenterProp
       type: message.transport,
 
       mcp:
-        message.transport == 'mcp'
+        message.transport === 'mcp'
           ? {
               object: 'session.message.transport#mcp',
 
@@ -78,7 +78,7 @@ export let sessionMessagePresenter = async (message: SessionMessagePresenterProp
           : undefined,
 
       toolCall:
-        message.transport != 'tool_call'
+        message.transport !== 'tool_call'
           ? {
               object: 'session.message.transport#tool_call',
               id: message.toolCall?.id || null

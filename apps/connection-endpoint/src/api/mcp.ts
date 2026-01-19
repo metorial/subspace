@@ -1,10 +1,9 @@
 import { delay } from '@lowerdeck/delay';
 import { createHono } from '@lowerdeck/hono';
 import { McpConnection } from '@metorial-subspace/module-connection';
-import { websocket } from 'hono/bun';
 import { streamSSE } from 'hono/streaming';
 
-let isDev = process.env.NODE_ENV != 'production';
+let isDev = process.env.NODE_ENV !== 'production';
 
 type Transports = 'sse' | 'streamable_http';
 
@@ -31,7 +30,7 @@ export let mcpRouter = createHono().all(`/:key?`, async c => {
   let mcpSessionId = c.req.header('mcp-session-id');
 
   let transport: Transports = 'sse';
-  if (mcpSessionId || (c.req.method == 'POST' && !queryConnectionId))
+  if (mcpSessionId || (c.req.method === 'POST' && !queryConnectionId))
     transport = 'streamable_http';
 
   let baseParams = {
@@ -48,8 +47,8 @@ export let mcpRouter = createHono().all(`/:key?`, async c => {
     metorialProxyUrl = c.req.url;
   }
 
-  if (transport == 'sse') {
-    if (c.req.method == 'GET') {
+  if (transport === 'sse') {
+    if (c.req.method === 'GET') {
       return streamSSE(c, async stream => {
         let con = await McpConnection.create(baseParams);
 
@@ -83,7 +82,7 @@ export let mcpRouter = createHono().all(`/:key?`, async c => {
       });
     }
 
-    if (c.req.method == 'POST') {
+    if (c.req.method === 'POST') {
       let json: any;
       try {
         json = await c.req.json();
@@ -108,7 +107,7 @@ export let mcpRouter = createHono().all(`/:key?`, async c => {
 
     return c.text('Method Not Allowed', 405);
   } else {
-    if (c.req.method == 'GET') {
+    if (c.req.method === 'GET') {
       if (baseParams.connectionToken) {
         return c.text('mcp-session-id header must be set for this endpoint', 400);
       }
@@ -142,7 +141,7 @@ export let mcpRouter = createHono().all(`/:key?`, async c => {
       });
     }
 
-    if (c.req.method == 'POST') {
+    if (c.req.method === 'POST') {
       let json: any;
       try {
         json = await c.req.json();
@@ -175,7 +174,7 @@ export let mcpRouter = createHono().all(`/:key?`, async c => {
       // return c.json(res.mcp);
     }
 
-    if (c.req.method == 'DELETE') {
+    if (c.req.method === 'DELETE') {
       let con = await McpConnection.create(baseParams);
       await con.disableConnection();
       return c.text('OK', 200);

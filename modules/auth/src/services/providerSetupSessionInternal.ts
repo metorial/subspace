@@ -3,16 +3,16 @@ import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
   getId,
-  Provider,
-  ProviderAuthCredentials,
-  ProviderAuthMethod,
-  ProviderDeployment,
-  ProviderOAuthSetup,
-  ProviderSetupSession,
-  ProviderVariant,
-  ProviderVersion,
-  Solution,
-  Tenant,
+  type Provider,
+  type ProviderAuthCredentials,
+  type ProviderAuthMethod,
+  type ProviderDeployment,
+  type ProviderOAuthSetup,
+  type ProviderSetupSession,
+  type ProviderVariant,
+  type ProviderVersion,
+  type Solution,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
 import { providerConfigService } from '@metorial-subspace/module-deployment';
@@ -44,7 +44,7 @@ class providerSetupSessionInternalServiceImpl {
       ua: string | undefined;
     };
   }) {
-    if (d.authMethod.type == 'oauth') {
+    if (d.authMethod.type === 'oauth') {
       if (!d.credentials) {
         throw new ServiceError(
           badRequestError({
@@ -147,14 +147,14 @@ class providerSetupSessionInternalServiceImpl {
   }) {
     return withTransaction(async db => {
       if (
-        d.session.status == 'completed' ||
-        d.session.status == 'archived' ||
-        d.session.status == 'deleted' ||
-        d.session.status == 'expired'
+        d.session.status === 'completed' ||
+        d.session.status === 'archived' ||
+        d.session.status === 'deleted' ||
+        d.session.status === 'expired'
       )
         return d.setup;
 
-      if (d.setup.status == 'completed') {
+      if (d.setup.status === 'completed') {
         await db.providerSetupSession.update({
           where: { oid: d.session.oid },
           data: {
@@ -225,10 +225,10 @@ class providerSetupSessionInternalServiceImpl {
 
   async evaluate(d: { session: ProviderSetupSession; context: { ip: string; ua: string } }) {
     if (
-      d.session.status == 'completed' ||
-      d.session.status == 'archived' ||
-      d.session.status == 'deleted' ||
-      d.session.status == 'expired'
+      d.session.status === 'completed' ||
+      d.session.status === 'archived' ||
+      d.session.status === 'deleted' ||
+      d.session.status === 'expired'
     )
       return d.session;
 
@@ -240,11 +240,12 @@ class providerSetupSessionInternalServiceImpl {
 
       let isComplete = false;
 
-      if (d.session.type == 'auth_only' && hasAuthConfig) isComplete = true;
+      if (d.session.type === 'auth_only' && hasAuthConfig) isComplete = true;
 
-      if (d.session.type == 'auth_and_config' && hasAuthConfig && hasConfig) isComplete = true;
+      if (d.session.type === 'auth_and_config' && hasAuthConfig && hasConfig)
+        isComplete = true;
 
-      if (d.session.type == 'config_only' && hasConfig) isComplete = true;
+      if (d.session.type === 'config_only' && hasConfig) isComplete = true;
 
       if (isComplete) {
         result = await db.providerSetupSession.update({

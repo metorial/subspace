@@ -1,11 +1,11 @@
 import {
   db,
   getId,
-  SessionMessageFailureReason,
   type ProviderRun,
   type Session,
   type SessionConnection,
-  type SessionErrorType
+  type SessionErrorType,
+  type SessionMessageFailureReason
 } from '@metorial-subspace/db';
 import { createErrorQueue } from '../queues/error/createError';
 

@@ -14,8 +14,8 @@ import {
   ID,
   type Session,
   type SessionConnection,
-  SessionConnectionMcpConnectionTransport,
-  SessionConnectionTransport,
+  type SessionConnectionMcpConnectionTransport,
+  type SessionConnectionTransport,
   type SessionParticipant,
   type SessionProvider,
   type Solution,
@@ -36,7 +36,7 @@ import { env } from '../env';
 import { topics } from '../lib/topic';
 import { wire } from '../lib/wire';
 import { completeMessage } from '../shared/completeMessage';
-import { createMessage, type CreateMessageProps } from '../shared/createMessage';
+import { type CreateMessageProps, createMessage } from '../shared/createMessage';
 import { upsertParticipant } from '../shared/upsertParticipant';
 
 let instanceLock = createLock({
@@ -115,12 +115,12 @@ export class SenderManager {
       if (connection.isManuallyDisabled) {
         throw new ServiceError(goneError({ message: 'Connection has been disabled' }));
       }
-      if (connection.status == 'archived') {
+      if (connection.status === 'archived') {
         throw new ServiceError(goneError({ message: 'Connection has been archived' }));
       }
 
       if (connection.expiresAt < new Date()) {
-        if (connection.initState == 'pending') {
+        if (connection.initState === 'pending') {
           throw new ServiceError(
             badRequestError({
               message: 'Connection not initialized in time'
@@ -136,7 +136,7 @@ export class SenderManager {
         });
       }
 
-      if (connection.transport != d.transport) {
+      if (connection.transport !== d.transport) {
         throw new ServiceError(
           badRequestError({
             message: `Connection cannot be used with transport ${d.transport}`
@@ -144,7 +144,7 @@ export class SenderManager {
         );
       }
 
-      if (connection.state == 'disconnected') {
+      if (connection.state === 'disconnected') {
         (async () => {
           await db.sessionConnection.updateMany({
             where: { oid: connection.oid },
@@ -350,7 +350,7 @@ export class SenderManager {
         badRequestError({ message: 'No connection id/token passed to connection' })
       );
     }
-    if (connection.initState != 'completed') {
+    if (connection.initState !== 'completed') {
       throw new ServiceError(badRequestError({ message: 'Connection is not initialized' }));
     }
     if (!connection.participant) {
@@ -508,13 +508,13 @@ export class SenderManager {
 
   async initialize(d: InitProps) {
     // Ignore if already initialized
-    if (this.connection?.initState == 'completed') return this.connection;
+    if (this.connection?.initState === 'completed') return this.connection;
 
     let participant = await upsertParticipant({
       session: this.session,
       from: {
         type: 'connection_client',
-        transport: d.mcpTransport == 'none' ? 'metorial' : 'mcp',
+        transport: d.mcpTransport === 'none' ? 'metorial' : 'mcp',
         participant: d.client
       }
     });

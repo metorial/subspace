@@ -18,7 +18,7 @@ export let postprocessMessageQueueProcessor = postprocessMessageQueue.process(as
   });
   if (!message) throw new QueueRetryError();
 
-  if (message.status == 'waiting_for_response') {
+  if (message.status === 'waiting_for_response') {
     let createdAgo = Math.abs(differenceInMinutes(new Date(), message.createdAt));
 
     if (createdAgo >= 5) {

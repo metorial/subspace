@@ -11,15 +11,15 @@ import {
   addAfterTransactionHook,
   db,
   getId,
-  Provider,
-  ProviderConfig,
-  ProviderConfigStatus,
-  ProviderConfigVault,
-  ProviderDeployment,
-  ProviderVariant,
-  ProviderVersion,
-  Solution,
-  Tenant,
+  type Provider,
+  type ProviderConfig,
+  type ProviderConfigStatus,
+  type ProviderConfigVault,
+  type ProviderDeployment,
+  type ProviderVariant,
+  type ProviderVersion,
+  type Solution,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
 import {
@@ -29,8 +29,8 @@ import {
   normalizeStatusForList,
   resolveProviderConfigs,
   resolveProviderDeployments,
-  resolveProviders,
-  resolveProviderSpecifications
+  resolveProviderSpecifications,
+  resolveProviders
 } from '@metorial-subspace/list-utils';
 import {
   providerDeploymentConfigPairInternalService,
@@ -216,7 +216,7 @@ class providerConfigServiceImpl {
     checkDeletedRelation(d.provider, { allowEphemeral: d.input.isEphemeral });
     checkDeletedRelation(d.providerDeployment, { allowEphemeral: d.input.isEphemeral });
 
-    if (d.input.config.type == 'vault') {
+    if (d.input.config.type === 'vault') {
       checkTenant(d, d.input.config.vault);
       checkDeletedRelation(d.input.config.vault, { allowEphemeral: d.input.isEphemeral });
     }
@@ -258,11 +258,11 @@ class providerConfigServiceImpl {
       };
 
       let config = await (async () => {
-        if (d.input.config.type == 'vault') {
+        if (d.input.config.type === 'vault') {
           if (
             d.input.config.vault.deploymentOid &&
             d.providerDeployment &&
-            d.input.config.vault.deploymentOid != d.providerDeployment.oid
+            d.input.config.vault.deploymentOid !== d.providerDeployment.oid
           ) {
             throw new ServiceError(
               preconditionFailedError({

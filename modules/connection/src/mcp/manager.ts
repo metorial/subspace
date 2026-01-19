@@ -33,7 +33,7 @@ export class McpManager {
           let result = await wireResultToMcpMessage(msg);
 
           // Ignore targeted messages if we only want broadcasts
-          if (d.selectedChannels == 'broadcast' && msg.channel == 'targeted_response') {
+          if (d.selectedChannels === 'broadcast' && msg.channel === 'targeted_response') {
             continue;
           }
 

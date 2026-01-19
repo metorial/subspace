@@ -187,9 +187,7 @@ describe('MemoryCoordination', () => {
     test('should handle concurrent receiver registrations', async () => {
       const receivers = Array.from({ length: 10 }, (_, i) => `receiver-${i}`);
 
-      await Promise.all(
-        receivers.map(id => coordination.registerReceiver(id, 10000))
-      );
+      await Promise.all(receivers.map(id => coordination.registerReceiver(id, 10000)));
 
       const activeReceivers = await coordination.getActiveReceivers();
       expect(activeReceivers).toHaveLength(10);
