@@ -30,6 +30,7 @@ export let getConnectionBaseState = async (d: {
               provider: true,
               slate: true,
               slateVersion: true,
+              backend: true,
               providerVariant: true
             }
           }
@@ -64,6 +65,7 @@ export let getConnectionBaseState = async (d: {
   let sessionProvider = instance.sessionProvider;
   let session = instance.sessionProvider.session;
   let provider = sessionProvider.provider;
+  let backend = version.backend;
 
   let anyRecordDeleted =
     isRecordDeleted(provider) ||
@@ -81,6 +83,7 @@ export let getConnectionBaseState = async (d: {
     session,
     version,
     provider,
+    backend,
     sessionProvider
   };
 };

@@ -41,6 +41,7 @@ export let messageCreatedQueueProcessor = messageCreatedQueue.process(async data
   await db.session.updateMany({
     where: { oid: message.sessionOid },
     data: {
+      lastActiveAt: new Date(),
       lastMessageAt: new Date(),
       totalProductiveClientMessageCount:
         message.isProductive && message.source == 'client' ? { increment: 1 } : undefined

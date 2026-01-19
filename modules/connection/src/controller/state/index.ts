@@ -68,9 +68,13 @@ export class ConnectionState {
       return 1000 * 15;
     }
 
+    if (this.backend.type == 'slates') {
+      return 1000 * 30;
+    }
+
     // TODO: @herber add handling for non-slates providers
 
-    return 1000 * 30;
+    return 1000 * 60 * 2;
   }
 
   get connection() {
@@ -95,6 +99,10 @@ export class ConnectionState {
 
   get provider() {
     return this.baseState.provider;
+  }
+
+  get backend() {
+    return this.baseState.backend;
   }
 
   #isDisposed = false;
