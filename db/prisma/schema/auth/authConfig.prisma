@@ -51,33 +51,29 @@ model ProviderAuthConfig {
   deploymentOid BigInt?
   deployment    ProviderDeployment? @relation(fields: [deploymentOid], references: [oid])
 
-  authCredentialsOid BigInt?
-  authCredentials    ProviderAuthCredentials? @relation(fields: [authCredentialsOid], references: [oid])
-
-  slateAuthConfigOid BigInt?          @unique
-  slateAuthConfig    SlateAuthConfig? @relation(fields: [slateAuthConfigOid], references: [oid])
+  currentVersionOid BigInt?
+  currentVersion    ProviderAuthConfigVersion? @relation(fields: [currentVersionOid], references: [oid], name: "currentVersion")
 
   providerSetupSession ProviderSetupSession?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  usingDeployments                 ProviderAuthConfigUsedForDeployment[]
-  providerAuthConfigUsedForConfigs ProviderAuthConfigUsedForConfig[]
-  providerOAuthSetups              ProviderOAuthSetup[]
-  deploymentAuthConfigs            ProviderDeployment[]                  @relation("defaultAuthConfig")
-  providerAuthExports              ProviderAuthExport[]
-  providerAuthImports              ProviderAuthImport[]
-  providerAuthConfigUpdates        ProviderAuthConfigUpdate[]
-  sessionProviders                 SessionProvider[]
-  sessionTemplateProviders         SessionTemplateProvider[]
+  providerOAuthSetups        ProviderOAuthSetup[]
+  deploymentAuthConfigs      ProviderDeployment[]        @relation("defaultAuthConfig")
+  providerAuthExports        ProviderAuthExport[]
+  providerAuthImports        ProviderAuthImport[]
+  providerAuthConfigUpdates  ProviderAuthConfigUpdate[]
+  sessionProviders           SessionProvider[]
+  sessionTemplateProviders   SessionTemplateProvider[]
+  providerAuthConfigVersions ProviderAuthConfigVersion[]
 
   @@index([isDefault])
   @@index([status])
   @@index([type])
 }
 
-model ProviderAuthConfigUpdate {
+model ProviderAuthConfigVersion {
   oid BigInt @id
   id  String @unique
 
@@ -87,35 +83,33 @@ model ProviderAuthConfigUpdate {
   slateAuthConfigOid BigInt?          @unique
   slateAuthConfig    SlateAuthConfig? @relation(fields: [slateAuthConfigOid], references: [oid])
 
+  authCredentialsOid BigInt?
+  authCredentials    ProviderAuthCredentials? @relation(fields: [authCredentialsOid], references: [oid])
+
+  currentVersionForAuthConfig ProviderAuthConfig[] @relation("currentVersion")
+
+  createdAt DateTime @default(now())
+
+  providerAuthConfigUpdates               ProviderAuthConfigUpdate[]               @relation("fromVersion")
+  providerAuthConfigUpdatesTo             ProviderAuthConfigUpdate[]               @relation("toVersion")
+  providerDeploymentConfigPairAuthConfigs ProviderDeploymentConfigPairAuthConfig[]
+}
+
+model ProviderAuthConfigUpdate {
+  oid BigInt @id
+  id  String @unique
+
+  authConfigOid BigInt
+  authConfig    ProviderAuthConfig @relation(fields: [authConfigOid], references: [oid])
+
+  fromVersionOid BigInt?
+  fromVersion    ProviderAuthConfigVersion? @relation(fields: [fromVersionOid], references: [oid], name: "fromVersion")
+
+  toVersionOid BigInt
+  toVersion    ProviderAuthConfigVersion @relation(fields: [toVersionOid], references: [oid], name: "toVersion")
+
   createdAt DateTime @default(now())
 
   providerAuthImports ProviderAuthImport[]
-}
-
-model ProviderAuthConfigUsedForDeployment {
-  oid BigInt @id
-
-  authConfigOid BigInt
-  authConfig    ProviderAuthConfig @relation(fields: [authConfigOid], references: [oid])
-
-  deploymentOid BigInt
-  deployment    ProviderDeployment @relation(fields: [deploymentOid], references: [oid], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@unique([authConfigOid, deploymentOid])
-}
-
-model ProviderAuthConfigUsedForConfig {
-  oid BigInt @id
-
-  authConfigOid BigInt
-  authConfig    ProviderAuthConfig @relation(fields: [authConfigOid], references: [oid])
-
-  configOid BigInt
-  config    ProviderConfig @relation(fields: [configOid], references: [oid], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@unique([authConfigOid, configOid])
+  slateAuthConfigs    SlateAuthConfig[]
 }
