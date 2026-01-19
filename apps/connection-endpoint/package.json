@@ -14,9 +14,12 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@metorial-subspace/module-connection": "^1.0.0",
     "@hono/zod-validator": "^0.7.6",
+    "@lowerdeck/delay": "^1.0.4",
     "@lowerdeck/error": "^1.0.10",
     "@lowerdeck/hono": "^1.0.6",
+    "@sentry/bun": "^10.34.0",
     "hono": "^4.11.3",
     "zod": "^4.3.5"
   }

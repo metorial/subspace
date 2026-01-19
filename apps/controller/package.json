@@ -14,15 +14,18 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@metorial-subspace/presenters": "^1.0.0",
-    "@metorial-subspace/module-auth": "^1.0.0",
-    "@metorial-subspace/module-tenant": "^1.0.0",
-    "@metorial-subspace/module-catalog": "^1.0.0",
-    "@metorial-subspace/module-deployment": "^1.0.0",
     "@lowerdeck/api-mux": "^1.0.1",
     "@lowerdeck/error": "^1.0.10",
     "@lowerdeck/pagination": "^1.0.4",
     "@lowerdeck/rpc-server": "^1.0.5",
-    "@lowerdeck/validation": "^1.0.4"
+    "@lowerdeck/validation": "^1.0.4",
+    "@metorial-subspace/db": "^1.0.0",
+    "@metorial-subspace/module-auth": "^1.0.0",
+    "@metorial-subspace/module-catalog": "^1.0.0",
+    "@metorial-subspace/module-deployment": "^1.0.0",
+    "@metorial-subspace/module-session": "^1.0.0",
+    "@metorial-subspace/module-tenant": "^1.0.0",
+    "@metorial-subspace/presenters": "^1.0.0",
+    "@sentry/bun": "^10.34.0"
   }
 }

@@ -20,6 +20,7 @@ COPY packages/list-utils/package.json ./packages/list-utils/package.json
 COPY packages/presenters/package.json ./packages/presenters/package.json
 COPY packages/redis-url/package.json ./packages/redis-url/package.json
 COPY packages/store/package.json ./packages/store/package.json
+COPY packages/generator/package.json ./packages/generator/package.json
 
 COPY provider-backends/provider-slates/package.json ./provider-backends/provider-slates/package.json
 COPY provider-backends/provider-utils/package.json ./provider-backends/provider-utils/package.json
@@ -27,6 +28,7 @@ COPY provider-backends/provider-manager/package.json ./provider-backends/provide
 
 COPY modules/auth/package.json ./modules/auth/package.json
 COPY modules/catalog/package.json ./modules/catalog/package.json
+COPY modules/connection/package.json ./modules/connection/package.json
 COPY modules/deployment/package.json ./modules/deployment/package.json
 COPY modules/provider-internal/package.json ./modules/provider-internal/package.json
 COPY modules/search/package.json ./modules/search/package.json
