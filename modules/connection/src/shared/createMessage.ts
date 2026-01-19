@@ -1,3 +1,4 @@
+import { sessionMessageBucketRecord } from '@metorial-subspace/connection-utils';
 import {
   db,
   getId,
@@ -13,7 +14,6 @@ import {
   type SessionProvider
 } from '@metorial-subspace/db';
 import { messageCreatedQueue } from '../queues/message/messageCreated';
-import { sessionMessageBucketRecord } from '../storage';
 import { createError, messageFailureReasonToErrorType } from './createError';
 
 export interface CreateMessageProps {

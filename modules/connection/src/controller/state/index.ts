@@ -1,8 +1,8 @@
 import { db, getId, type ProviderRun } from '@metorial-subspace/db';
 import { isRecordDeleted } from '@metorial-subspace/list-utils';
+import { Store } from '@metorial-subspace/store';
 import { addMinutes } from 'date-fns';
 import { SESSION_PROVIDER_INSTANCE_EXPIRATION_INCREMENT } from '../../const';
-import { Store } from '../../lib/store';
 import { getConnectionBaseState, type ConnectionBaseState } from './base';
 import { createProviderRun } from './providerRun';
 

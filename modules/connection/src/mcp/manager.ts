@@ -1,7 +1,7 @@
+import { wireResultToMcpMessage } from '@metorial-subspace/connection-utils';
 import type { CallToolProps, InitProps, SenderMangerProps } from '../sender';
 import { SenderConnection } from '../sender/connection';
 import type { CreateMessageProps } from '../shared/createMessage';
-import { wireResultToMcpMessage } from './lib/wireResultToMcpMessage';
 
 export class McpManager {
   private constructor(private readonly _connection: SenderConnection) {}

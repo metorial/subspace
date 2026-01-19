@@ -6,6 +6,8 @@ import {
   ServiceError
 } from '@lowerdeck/error';
 import { createLock } from '@lowerdeck/lock';
+import type { WireInput, WireResult } from '@metorial-subspace/connection-utils';
+import { checkToolAccess } from '@metorial-subspace/connection-utils';
 import {
   db,
   getId,
@@ -30,13 +32,11 @@ import {
   UNINITIALIZED_SESSION_EXPIRATION_MINUTES
 } from '../const';
 import { env } from '../env';
-import { checkToolAccess } from '../lib/checkToolAccess';
 import { topics } from '../lib/topic';
 import { wire } from '../lib/wire';
 import { completeMessage } from '../shared/completeMessage';
 import { createMessage, type CreateMessageProps } from '../shared/createMessage';
 import { upsertParticipant } from '../shared/upsertParticipant';
-import type { WireInput, WireResult } from '../types/wireMessage';
 
 let instanceLock = createLock({
   name: 'conn/sess/inst/lock',

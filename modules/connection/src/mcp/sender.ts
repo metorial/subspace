@@ -1,5 +1,10 @@
 import { Cases } from '@lowerdeck/case';
 import { internalServerError, isServiceError } from '@lowerdeck/error';
+import {
+  markdownList,
+  mcpValidate,
+  wireResultToMcpMessage
+} from '@metorial-subspace/connection-utils';
 import { db, ID, SessionConnectionMcpConnectionTransport } from '@metorial-subspace/db';
 import {
   type CallToolRequest,
@@ -17,9 +22,6 @@ import { PING_MESSAGE_ID_PREFIX } from '../const';
 import { providerToolPresenter } from '../presenter';
 import { upsertParticipant } from '../shared/upsertParticipant';
 import { McpControlMessageHandler } from './control';
-import { markdownList } from './lib/markdownList';
-import { mcpValidate } from './lib/mcpValidate';
-import { wireResultToMcpMessage } from './lib/wireResultToMcpMessage';
 import { McpManager } from './manager';
 
 type ID = string | number;

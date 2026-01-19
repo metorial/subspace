@@ -1,12 +1,16 @@
 import { internalServerError } from '@lowerdeck/error';
 import { serialize } from '@lowerdeck/serialize';
+import type {
+  BroadcastMessage,
+  WireInput,
+  WireResult
+} from '@metorial-subspace/connection-utils';
 import { getBackend } from '@metorial-subspace/provider';
 import { broadcastNats } from '../lib/nats';
 import { topics } from '../lib/topic';
 import { wire } from '../lib/wire';
 import { completeMessage } from '../shared/completeMessage';
 import { upsertParticipant } from '../shared/upsertParticipant';
-import type { BroadcastMessage, WireInput, WireResult } from '../types/wireMessage';
 import { ConnectionState } from './state';
 
 export let startController = () => {

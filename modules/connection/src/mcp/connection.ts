@@ -1,12 +1,12 @@
 import { generatePlainId } from '@lowerdeck/id';
 import { SessionConnectionMcpConnectionTransport } from '@metorial-subspace/db';
+import { interleave } from '@metorial-subspace/generator';
 import type { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
 import {
   CONNECTION_INACTIVITY_TIMEOUT_MS,
   PING_INTERVAL_MS,
   PING_MESSAGE_ID_PREFIX
 } from '../const';
-import { interleave } from '../lib/interleave';
 import type { SenderMangerProps } from '../sender';
 import { McpControlMessageHandler } from './control';
 import { McpManager } from './manager';

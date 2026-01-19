@@ -1,9 +1,9 @@
 import { createCron } from '@lowerdeck/cron';
 import { combineQueueProcessors, createQueue } from '@lowerdeck/queue';
+import { offload } from '@metorial-subspace/connection-utils';
 import { db } from '@metorial-subspace/db';
 import { subDays } from 'date-fns';
 import { env } from '../../env';
-import { offload } from '../../lib/offload';
 
 let offloadCron = createCron(
   {

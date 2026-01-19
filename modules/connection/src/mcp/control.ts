@@ -1,8 +1,8 @@
 import { serialize } from '@lowerdeck/serialize';
+import type { WireResult } from '@metorial-subspace/connection-utils';
+import { wireResultToMcpMessage } from '@metorial-subspace/connection-utils';
 import { broadcastNats } from '../lib/nats';
 import { topics } from '../lib/topic';
-import type { WireResult } from '../types/wireMessage';
-import { wireResultToMcpMessage } from './lib/wireResultToMcpMessage';
 import { McpManager } from './manager';
 
 export type McpControlMessage =

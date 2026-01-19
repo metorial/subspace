@@ -510,6 +510,58 @@
         "vitest": "^3.1.2",
       },
     },
+    "packages/connection-utils": {
+      "name": "@metorial-subspace/connection-utils",
+      "version": "1.0.0",
+      "dependencies": {
+        "@lowerdeck/env": "^1.0.4",
+        "@lowerdeck/error": "^1.0.10",
+        "@lowerdeck/id": "^1.0.5",
+        "@lowerdeck/shadow-id": "^1.0.4",
+        "@lowerdeck/slugify": "^1.0.4",
+        "@lowerdeck/validation": "^1.0.4",
+        "@metorial-subspace/db": "^1.0.0",
+        "@modelcontextprotocol/sdk": "^1.25.2",
+        "@prisma/adapter-pg": "^7.2.0",
+        "@prisma/client": "^7.2.0",
+        "date-fns": "^4.1.0",
+        "prisma": "^7.2.0",
+        "prisma-json-types-generator": "^4.0.1",
+        "snowflake-uuid": "^1.0.0",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
+    "packages/generator": {
+      "name": "@metorial-subspace/generator",
+      "version": "1.0.0",
+      "dependencies": {
+        "@lowerdeck/env": "^1.0.4",
+        "@lowerdeck/error": "^1.0.10",
+        "@lowerdeck/id": "^1.0.5",
+        "@lowerdeck/shadow-id": "^1.0.4",
+        "@lowerdeck/slugify": "^1.0.4",
+        "@lowerdeck/validation": "^1.0.4",
+        "@metorial-subspace/db": "^1.0.0",
+        "@modelcontextprotocol/sdk": "^1.25.2",
+        "@prisma/adapter-pg": "^7.2.0",
+        "@prisma/client": "^7.2.0",
+        "date-fns": "^4.1.0",
+        "prisma": "^7.2.0",
+        "prisma-json-types-generator": "^4.0.1",
+        "snowflake-uuid": "^1.0.0",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
     "packages/list-utils": {
       "name": "@metorial-subspace/list-utils",
       "version": "1.0.0",
@@ -550,6 +602,58 @@
         "@modelcontextprotocol/sdk": "^1.25.2",
         "@prisma/adapter-pg": "^7.2.0",
         "@prisma/client": "^7.2.0",
+        "prisma": "^7.2.0",
+        "prisma-json-types-generator": "^4.0.1",
+        "snowflake-uuid": "^1.0.0",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
+    "packages/redis-url": {
+      "name": "@metorial-subspace/redis-url",
+      "version": "1.0.0",
+      "dependencies": {
+        "@lowerdeck/env": "^1.0.4",
+        "@lowerdeck/error": "^1.0.10",
+        "@lowerdeck/id": "^1.0.5",
+        "@lowerdeck/shadow-id": "^1.0.4",
+        "@lowerdeck/slugify": "^1.0.4",
+        "@lowerdeck/validation": "^1.0.4",
+        "@metorial-subspace/db": "^1.0.0",
+        "@modelcontextprotocol/sdk": "^1.25.2",
+        "@prisma/adapter-pg": "^7.2.0",
+        "@prisma/client": "^7.2.0",
+        "date-fns": "^4.1.0",
+        "prisma": "^7.2.0",
+        "prisma-json-types-generator": "^4.0.1",
+        "snowflake-uuid": "^1.0.0",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
+    "packages/store": {
+      "name": "@metorial-subspace/store",
+      "version": "1.0.0",
+      "dependencies": {
+        "@lowerdeck/env": "^1.0.4",
+        "@lowerdeck/error": "^1.0.10",
+        "@lowerdeck/id": "^1.0.5",
+        "@lowerdeck/shadow-id": "^1.0.4",
+        "@lowerdeck/slugify": "^1.0.4",
+        "@lowerdeck/validation": "^1.0.4",
+        "@metorial-subspace/db": "^1.0.0",
+        "@modelcontextprotocol/sdk": "^1.25.2",
+        "@prisma/adapter-pg": "^7.2.0",
+        "@prisma/client": "^7.2.0",
+        "date-fns": "^4.1.0",
         "prisma": "^7.2.0",
         "prisma-json-types-generator": "^4.0.1",
         "snowflake-uuid": "^1.0.0",
@@ -989,7 +1093,11 @@
 
     "@metorial-subspace/app-worker": ["@metorial-subspace/app-worker@workspace:apps/worker"],
 
+    "@metorial-subspace/connection-utils": ["@metorial-subspace/connection-utils@workspace:packages/connection-utils"],
+
     "@metorial-subspace/db": ["@metorial-subspace/db@workspace:db"],
+
+    "@metorial-subspace/generator": ["@metorial-subspace/generator@workspace:packages/generator"],
 
     "@metorial-subspace/list-utils": ["@metorial-subspace/list-utils@workspace:packages/list-utils"],
 
@@ -1016,6 +1124,10 @@
     "@metorial-subspace/provider-slates": ["@metorial-subspace/provider-slates@workspace:provider-backends/provider-slates"],
 
     "@metorial-subspace/provider-utils": ["@metorial-subspace/provider-utils@workspace:provider-backends/provider-utils"],
+
+    "@metorial-subspace/redis-url": ["@metorial-subspace/redis-url@workspace:packages/redis-url"],
+
+    "@metorial-subspace/store": ["@metorial-subspace/store@workspace:packages/store"],
 
     "@metorial-subspace/tsconfig": ["@metorial-subspace/tsconfig@workspace:packages/tsconfig"],
 

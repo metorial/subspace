@@ -1,6 +1,6 @@
 import { messageOutputToMcp } from '@metorial-subspace/db';
 import type { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
-import type { WireResult } from '../../types/wireMessage';
+import type { WireResult } from './wireMessage';
 
 export let wireResultToMcpMessage = async (
   msg: WireResult

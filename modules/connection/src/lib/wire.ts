@@ -1,6 +1,6 @@
+import { parseRedisUrl } from '@metorial-subspace/redis-url';
 import { createRedisNatsWire, createWire } from '@metorial-subspace/wire';
 import { env } from '../env';
-import { parseRedisUrl } from './parseRedisUrl';
 
 export let wire = createWire(
   createRedisNatsWire({

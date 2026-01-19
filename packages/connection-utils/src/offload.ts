@@ -1,5 +1,5 @@
 import type { SessionMessage } from '@metorial-subspace/db';
-import { sessionMessageBucketRecord, storage } from '../storage';
+import { sessionMessageBucketRecord, storage } from './storage';
 
 export interface OffloadedSessionMessage {
   v: 1;
