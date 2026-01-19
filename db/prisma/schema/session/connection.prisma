@@ -20,6 +20,12 @@ enum SessionConnectionMcpConnectionTransport {
   streamable_http
 }
 
+enum SessionConnectionTransport {
+  mcp
+  tool_call
+  metorial_protocol
+}
+
 model SessionConnection {
   oid BigInt @id
   id  String @unique
@@ -28,8 +34,10 @@ model SessionConnection {
 
   isEphemeral Boolean
 
-  status          SessionConnectionStatus
-  isParentDeleted Boolean                 @default(false)
+  status    SessionConnectionStatus
+  transport SessionConnectionTransport
+
+  isParentDeleted Boolean @default(false)
 
   state              SessionConnectionState
   initState          SessionConnectionInitState

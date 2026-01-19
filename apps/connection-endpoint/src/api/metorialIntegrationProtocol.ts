@@ -19,7 +19,8 @@ export let metorialIntegrationProtocolRouter = createHono()
       let con = await SenderConnection.create({
         sessionId: c.req.param('sessionId')!,
         solutionId: c.req.param('solutionId')!,
-        tenantId: c.req.param('tenantId')!
+        tenantId: c.req.param('tenantId')!,
+        transport: 'tool_call'
       });
 
       await stream.writeSSE({
@@ -51,7 +52,8 @@ export let metorialIntegrationProtocolRouter = createHono()
       let manager = await SenderManager.create({
         sessionId: c.req.param('sessionId')!,
         solutionId: c.req.param('solutionId')!,
-        tenantId: c.req.param('tenantId')!
+        tenantId: c.req.param('tenantId')!,
+        transport: 'tool_call'
       });
 
       let body = c.req.valid('json');
@@ -68,7 +70,8 @@ export let metorialIntegrationProtocolRouter = createHono()
     let manager = await SenderManager.create({
       sessionId: c.req.param('sessionId')!,
       solutionId: c.req.param('solutionId')!,
-      tenantId: c.req.param('tenantId')!
+      tenantId: c.req.param('tenantId')!,
+      transport: 'tool_call'
     });
 
     let tools = await manager.listTools();
@@ -79,7 +82,8 @@ export let metorialIntegrationProtocolRouter = createHono()
     let manager = await SenderManager.create({
       sessionId: c.req.param('sessionId')!,
       solutionId: c.req.param('solutionId')!,
-      tenantId: c.req.param('tenantId')!
+      tenantId: c.req.param('tenantId')!,
+      transport: 'tool_call'
     });
 
     let toolId = c.req.valid('query').toolId;
@@ -106,7 +110,8 @@ export let metorialIntegrationProtocolRouter = createHono()
       let manager = await SenderManager.create({
         sessionId: c.req.param('sessionId')!,
         solutionId: c.req.param('solutionId')!,
-        tenantId: c.req.param('tenantId')!
+        tenantId: c.req.param('tenantId')!,
+        transport: 'tool_call'
       });
 
       let toolRes = await manager.callTool({

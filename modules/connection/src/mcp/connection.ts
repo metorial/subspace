@@ -40,7 +40,7 @@ export class McpConnection {
   }
 
   static async create(
-    d: SenderMangerProps & {
+    d: Omit<SenderMangerProps, 'transport'> & {
       mcpTransport: SessionConnectionMcpConnectionTransport;
     }
   ): Promise<McpConnection> {

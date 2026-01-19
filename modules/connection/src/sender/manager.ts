@@ -15,7 +15,7 @@ import {
   type Session,
   type SessionConnection,
   SessionConnectionMcpConnectionTransport,
-  SessionMessageTransport,
+  SessionConnectionTransport,
   type SessionParticipant,
   type SessionProvider,
   type Solution,
@@ -61,7 +61,7 @@ export interface CallToolProps {
   toolId: string;
   input: Record<string, any>;
   waitForResponse: boolean;
-  transport: SessionMessageTransport;
+  transport: SessionConnectionTransport;
   clientMcpId?: PrismaJson.SessionMessageClientMcpId;
 }
 
@@ -70,6 +70,7 @@ export interface SenderMangerProps {
   solutionId: string;
   tenantId: string;
   connectionToken?: string;
+  transport: SessionConnectionTransport;
 }
 
 export class SenderManager {
@@ -81,7 +82,8 @@ export class SenderManager {
       | (SessionConnection & { participant?: SessionParticipant | null })
       | undefined,
     readonly tenant: Tenant,
-    readonly solution: Solution
+    readonly solution: Solution,
+    readonly transport: SessionConnectionTransport
   ) {}
 
   static async create(d: SenderMangerProps): Promise<SenderManager> {
@@ -134,6 +136,14 @@ export class SenderManager {
         });
       }
 
+      if (connection.transport != d.transport) {
+        throw new ServiceError(
+          badRequestError({
+            message: `Connection cannot be used with transport ${d.transport}`
+          })
+        );
+      }
+
       if (connection.state == 'disconnected') {
         (async () => {
           await db.sessionConnection.updateMany({
@@ -160,7 +170,13 @@ export class SenderManager {
       }
     }
 
-    return new SenderManager(session, connection, session.tenant, session.solution);
+    return new SenderManager(
+      session,
+      connection,
+      session.tenant,
+      session.solution,
+      d.transport
+    );
   }
 
   async ensureProviderInstance(provider: SessionProvider) {
@@ -437,6 +453,8 @@ export class SenderManager {
           status: 'active',
           state: 'connected',
           initState: 'pending',
+          transport: this.transport,
+
           isManuallyDisabled: false,
           isReplaced: false,
 
@@ -519,7 +537,9 @@ export class SenderManager {
       expiresAt: addDays(new Date(), DEFAULT_SESSION_EXPIRATION_DAYS),
       lastPingAt: new Date(),
       lastActiveAt: new Date(),
-      disconnectedAt: null
+      disconnectedAt: null,
+
+      transport: this.transport
     };
 
     let connection: SessionConnection;

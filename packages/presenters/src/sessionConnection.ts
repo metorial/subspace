@@ -21,6 +21,7 @@ export let sessionConnectionPresenter = (connection: SessionConnectionPresenterP
   id: connection.id,
   status: connection.status,
   connectionState: connection.state,
+  transport: connection.transport,
 
   usage: {
     totalProductiveClientMessageCount: connection.totalProductiveClientMessageCount,

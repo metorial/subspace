@@ -2,10 +2,10 @@ import { sessionMessageBucketRecord } from '@metorial-subspace/connection-utils'
 import {
   db,
   getId,
+  SessionConnectionTransport,
   SessionMessageFailureReason,
   SessionMessageSource,
   SessionMessageStatus,
-  SessionMessageTransport,
   SessionMessageType,
   type ProviderTool,
   type Session,
@@ -22,7 +22,7 @@ export interface CreateMessageProps {
   type: SessionMessageType;
   source: SessionMessageSource;
   senderParticipant: SessionParticipant;
-  transport: SessionMessageTransport;
+  transport: SessionConnectionTransport;
   failureReason?: SessionMessageFailureReason;
 
   input: PrismaJson.SessionMessageInput;

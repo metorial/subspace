@@ -21,12 +21,6 @@ enum SessionMessageFailureReason {
   none
 }
 
-enum SessionMessageTransport {
-  mcp
-  tool_call
-  metorial_protocol
-}
-
 model SessionMessage {
   oid BigInt @id
   id  String @unique
@@ -34,7 +28,7 @@ model SessionMessage {
   status        SessionMessageStatus
   type          SessionMessageType
   source        SessionMessageSource
-  transport     SessionMessageTransport
+  transport     SessionConnectionTransport
   failureReason SessionMessageFailureReason
 
   isParentDeleted Boolean @default(false)

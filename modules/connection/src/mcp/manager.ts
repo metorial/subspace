@@ -6,8 +6,13 @@ import type { CreateMessageProps } from '../shared/createMessage';
 export class McpManager {
   private constructor(private readonly _connection: SenderConnection) {}
 
-  static async create(d: SenderMangerProps): Promise<McpManager> {
-    return new McpManager(await SenderConnection.create(d));
+  static async create(d: Omit<SenderMangerProps, 'transport'>): Promise<McpManager> {
+    return new McpManager(
+      await SenderConnection.create({
+        ...d,
+        transport: 'mcp'
+      })
+    );
   }
 
   get session() {
