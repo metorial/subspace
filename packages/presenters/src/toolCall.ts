@@ -48,10 +48,10 @@ export let toolCallPresenter = async (toolCall: ToolCallPresenterProps) => {
     tool: providerToolPresenter(toolCall.tool),
 
     input: toolCall.message.input
-      ? messageInputToToolCall(toolCall.message.input, toolCall.message)
+      ? await messageInputToToolCall(toolCall.message.input, toolCall.message)
       : null,
     output: toolCall.message.output
-      ? messageOutputToToolCall(toolCall.message.output, toolCall.message)
+      ? await messageOutputToToolCall(toolCall.message.output, toolCall.message)
       : null,
 
     error: toolCall.message.error ? sessionErrorPresenter(toolCall.message.error) : null,

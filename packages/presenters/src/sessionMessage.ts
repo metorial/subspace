@@ -86,11 +86,11 @@ export let sessionMessagePresenter = async (message: SessionMessagePresenterProp
           : undefined
     },
 
-    input: message.input ? messageInputToMcp(message.input, message) : null,
-    output: message.output ? messageOutputToMcp(message.output, message) : null,
+    input: message.input ? await messageInputToMcp(message.input, message) : null,
+    output: message.output ? await messageOutputToMcp(message.output, message) : null,
 
     toolCall: message.toolCall
-      ? toolCallPresenter({
+      ? await toolCallPresenter({
           ...message.toolCall,
           message
         })

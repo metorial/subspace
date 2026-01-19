@@ -5,6 +5,7 @@ import type {
   WireInput,
   WireResult
 } from '@metorial-subspace/connection-utils';
+import { db } from '@metorial-subspace/db';
 import { getBackend } from '@metorial-subspace/provider';
 import { broadcastNats } from '../lib/nats';
 import { topics } from '../lib/topic';
@@ -45,6 +46,10 @@ export let startController = () => {
     });
 
     let processMessage = async (data: WireInput) => {
+      let message = await db.sessionMessage.findFirstOrThrow({
+        where: { id: data.sessionMessageId }
+      });
+
       try {
         let result = await backend.toolInvocation.createToolInvocation({
           tenant: state.instance.sessionProvider.tenant,
@@ -55,7 +60,8 @@ export let startController = () => {
           runState: backendProviderRun.runState,
           providerAuthConfig: state.instance.sessionProvider.authConfig,
           input: data.input,
-          sender: state.participant
+          sender: state.participant,
+          message
         });
 
         let status =

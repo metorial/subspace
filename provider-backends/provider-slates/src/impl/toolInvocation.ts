@@ -1,4 +1,4 @@
-import { db, snowflake } from '@metorial-subspace/db';
+import { db, messageInputToToolCall, snowflake } from '@metorial-subspace/db';
 import type {
   ProviderFunctionalityCtorParams,
   ProviderRunCreateParam,
@@ -73,19 +73,22 @@ export class ProviderToolInvocation extends IProviderToolInvocation {
         })
       : null;
 
+    let input = await messageInputToToolCall(data.input, data.message);
+
     let res = await slates.slateSessionToolCall.call({
       tenantId: tenant.id,
-      input: data.input,
       toolId: data.tool.callableId,
       sessionId: data.slateSession!.id,
       authConfigId: slateAuthConfig?.id,
 
+      input,
+
       participants: [
         {
           type: 'consumer',
-          id: data.client.id,
-          name: data.client.name,
-          description: (data.client.payload as any).description
+          id: data.sender.id,
+          name: data.sender.name,
+          description: (data.sender.payload as any).description
         }
       ]
     });

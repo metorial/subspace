@@ -25,14 +25,14 @@ export let sessionEventPresenter = async (
     sessionId: event.session.id,
 
     connection: event.connection
-      ? sessionConnectionPresenter({
+      ? await sessionConnectionPresenter({
           ...event.connection,
           session: event.session
         })
       : null,
 
     providerRun: event.providerRun
-      ? providerRunPresenter({
+      ? await providerRunPresenter({
           ...event.providerRun,
           session: event.session
         })

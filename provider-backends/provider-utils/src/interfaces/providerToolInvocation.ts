@@ -5,6 +5,7 @@ import type {
   ProviderRun,
   ProviderVariant,
   ProviderVersion,
+  SessionMessage,
   SessionParticipant,
   SlateSession,
   SlateToolCall,
@@ -46,7 +47,8 @@ export interface ToolInvocationCreateParam {
   slateSession?: SlateSession;
 
   runState: any;
-  input: Record<string, any>;
+  input: PrismaJson.SessionMessageInput;
+  message: SessionMessage;
 }
 
 export interface ToolInvocationCreateRes {
