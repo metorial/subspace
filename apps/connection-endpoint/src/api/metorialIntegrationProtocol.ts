@@ -116,7 +116,10 @@ export let metorialIntegrationProtocolRouter = createHono()
 
       let toolRes = await manager.callTool({
         toolId: body.toolId,
-        input: body.input,
+        input: {
+          type: 'tool.call',
+          data: body.input
+        },
         waitForResponse: !!body.waitForResponse,
         transport: 'tool_call'
       });

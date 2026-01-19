@@ -3,7 +3,7 @@ import { combineQueueProcessors, createQueue } from '@lowerdeck/queue';
 import { db } from '@metorial-subspace/db';
 import { env } from '../../env';
 
-export let startRankQueue = createQueue({
+let startRankQueue = createQueue({
   name: 'pint/rank/start',
   redisUrl: env.service.REDIS_URL,
   workerOpts: {

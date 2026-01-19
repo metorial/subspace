@@ -4,8 +4,6 @@ import { McpConnection } from '@metorial-subspace/module-connection';
 import { websocket } from 'hono/bun';
 import { streamSSE } from 'hono/streaming';
 
-export { websocket };
-
 let isDev = process.env.NODE_ENV != 'production';
 
 type Transports = 'sse' | 'streamable_http';
