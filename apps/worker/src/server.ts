@@ -1,1 +1,3 @@
 import './worker';
+
+import './connection';

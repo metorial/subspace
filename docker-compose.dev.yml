@@ -331,45 +331,6 @@ services:
     networks:
       - subspace-network
 
-  subspace-connection-manager:
-    build:
-      context: .
-      dockerfile: ./apps/connection-manager/dev.Dockerfile
-    container_name: subspace-connection-manager-service
-    restart: unless-stopped
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
-      REDIS_URL: redis://redis:6379/0
-      NATS_URL: nats://nats-1:4222,nats://nats-2:4222
-      METORIAL_ENV: development
-      PUBLIC_SERVICE_URL: http://localhost:52071
-      SLATES_HUB_URL: http://slates-hub:52046/slates-hub
-      VOYAGER_URL: http://voyager:52060/metorial-voyager
-      OBJECT_STORAGE_URL: http://object-storage:52010
-      MESSAGE_BUCKET_NAME: messages
-
-    volumes:
-      - ./apps/connection-manager:/app/apps/connection-manager:ro
-      - ./apps/connection-manager/package.json:/app/apps/connection-manager/package.json:ro
-      - ./modules:/app/modules:ro
-      - ./packages:/app/packages:ro
-      - ./provider-backends:/app/provider-backends:ro
-      - ./db:/app/db:ro
-    depends_on:
-      - postgres
-      - redis
-      - object-storage
-      - slates-registry
-      - forge
-      - function-bay
-      - signal
-      - voyager
-      - slates-hub
-      - nats-1
-      - nats-2
-    networks:
-      - subspace-network
-
   subspace-connection-endpoint:
     build:
       context: .
