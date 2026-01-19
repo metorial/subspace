@@ -121,7 +121,6 @@ class providerConfigVaultServiceImpl {
       lockedVersion: ProviderVersion | null;
     };
     input: {
-      isEphemeral: boolean | undefined;
       name: string;
       description?: string;
       metadata?: Record<string, any>;

@@ -5,7 +5,9 @@
   "type": "module",
   "private": true,
   "version": "1.0.0",
-  "scripts": {},
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
