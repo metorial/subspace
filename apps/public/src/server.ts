@@ -1,3 +1,5 @@
+import './instrument';
+
 import { apiMux } from '@lowerdeck/api-mux';
 import { rpcMux } from '@lowerdeck/rpc-server';
 import { subspaceFrontendRPC } from './api/internal';

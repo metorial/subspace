@@ -1,3 +1,5 @@
+import './instrument';
+
 import { api } from './api';
 import { websocket } from './api/metorialIntegrationProtocol';
 
