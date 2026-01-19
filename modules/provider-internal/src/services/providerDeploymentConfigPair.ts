@@ -96,9 +96,9 @@ class providerDeploymentConfigPairInternalServiceImpl {
 
       let existingAuthConfigLink = await db.providerDeploymentConfigPairAuthConfig.findUnique({
         where: {
-          pairOid_authConfigOid: {
+          pairOid_authConfigVersionOid: {
             pairOid: res.pair.oid,
-            authConfigOid: d.authConfig.oid
+            authConfigVersionOid: d.authConfig.currentVersionOid
           }
         }
       });
@@ -108,7 +108,7 @@ class providerDeploymentConfigPairInternalServiceImpl {
         data: {
           oid: snowflake.nextId(),
           pairOid: res.pair.oid,
-          authConfigOid: d.authConfig.currentVersionOid
+          authConfigVersionOid: d.authConfig.currentVersionOid
         }
       });
 
