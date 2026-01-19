@@ -24,6 +24,7 @@ RUN bun add -D @vercel/ncc
 
 # Build the application using ncc
 # This bundles all dependencies into a single file
+# Note: Frontend should be pre-built before creating the Docker image
 WORKDIR /app/apps/public
 # Remove frontend source (not needed for backend bundle, only dist is needed at runtime)
 RUN rm -rf frontend/src frontend/tsconfig.* frontend/vite.config.ts frontend/index.html
