@@ -1,7 +1,7 @@
 import { Solution, Tenant } from '@metorial-subspace/db';
 
 export let checkTenant = <
-  T extends { tenantOid?: bigint | null; solutionOid?: bigint | null } | null | undefined
+  T extends { tenantOid?: bigint | null; solutionOid?: number | null } | null | undefined
 >(
   tenantData: {
     tenant: Tenant;

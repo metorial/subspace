@@ -24,7 +24,8 @@ enum ProviderAccess {
 
 enum ProviderStatus {
   active
-  inactive
+  archived
+  deleted
 }
 
 model Provider {
@@ -53,7 +54,7 @@ model Provider {
   ownerTenantOid BigInt?
   ownerTenant    Tenant? @relation(fields: [ownerTenantOid], references: [oid])
 
-  ownerSolutionOid BigInt?
+  ownerSolutionOid Int?
   ownerSolution    Solution? @relation(fields: [ownerSolutionOid], references: [oid], onDelete: Cascade)
 
   defaultVariantOid BigInt?
@@ -67,7 +68,6 @@ model Provider {
   tenantProviders           TenantProvider[]
   deployment                ProviderDeployment[]
   listing                   ProviderListing?
-  sessionProviders          ProviderSession[]
   providerConfigs           ProviderConfig[]
   tools                     ProviderTool[]
   authMethods               ProviderAuthMethod[]
@@ -79,4 +79,11 @@ model Provider {
   providerToolGlobals       ProviderToolGlobal[]
   providerAuthMethodGlobals ProviderAuthMethodGlobal[]
   providerSetupSessions     ProviderSetupSession[]
+  sessionProviders          SessionProvider[]
+  providerRuns              ProviderRun[]
+  sessionTemplateProviders  SessionTemplateProvider[]
+  sessionParticipants       SessionParticipant[]
+  sessionErrorGroups        SessionErrorGroup[]
+
+  @@index([status])
 }

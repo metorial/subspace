@@ -1,0 +1,132 @@
+enum SessionMessageStatus {
+  waiting_for_response
+  failed
+  succeeded
+}
+
+enum SessionMessageType {
+  tool_call
+  mcp_control
+  unknown
+}
+
+enum SessionMessageSource {
+  client
+}
+
+enum SessionMessageFailureReason {
+  timeout
+  provider_error
+  system_error
+  none
+}
+
+model SessionMessage {
+  oid BigInt @id
+  id  String @unique
+
+  status        SessionMessageStatus
+  type          SessionMessageType
+  source        SessionMessageSource
+  transport     SessionConnectionTransport
+  failureReason SessionMessageFailureReason
+
+  isParentDeleted Boolean @default(false)
+
+  methodOrToolKey String?
+
+  /// [SessionMessageClientMcpId]
+  clientMcpId Json
+
+  /// [SessionMessageInput]
+  input Json?
+
+  /// [SessionMessageOutput]
+  output Json?
+
+  isProductive Boolean @default(true)
+
+  isOffloadedToStorage Boolean                     @default(false)
+  bucketOid            Int
+  bucket               SessionMessageStorageBucket @relation(fields: [bucketOid], references: [oid])
+
+  sessionOid BigInt
+  session    Session @relation(fields: [sessionOid], references: [oid])
+
+  senderParticipantOid BigInt
+  senderParticipant    SessionParticipant @relation(fields: [senderParticipantOid], references: [oid], name: "SenderParticipant")
+
+  responderParticipantOid BigInt?
+  responderParticipant    SessionParticipant? @relation(fields: [responderParticipantOid], references: [oid], name: "ResponderParticipant")
+
+  sessionProviderOid BigInt?
+  sessionProvider    SessionProvider? @relation(fields: [sessionProviderOid], references: [oid])
+
+  connectionOid BigInt?
+  connection    SessionConnection? @relation(fields: [connectionOid], references: [oid])
+
+  providerRunOid BigInt?
+  providerRun    ProviderRun? @relation(fields: [providerRunOid], references: [oid])
+
+  slateToolCallOid BigInt?
+  slateToolCall    SlateToolCall? @relation(fields: [slateToolCallOid], references: [oid])
+
+  errorOid BigInt?
+  error    SessionError? @relation(fields: [errorOid], references: [oid])
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid Int
+  solution    Solution @relation(fields: [solutionOid], references: [oid])
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  sessionEvents   SessionEvent[]
+  providerTool    ProviderTool?  @relation(fields: [providerToolOid], references: [oid])
+  providerToolOid BigInt?
+  toolCall        ToolCall?
+
+  @@index([isOffloadedToStorage])
+  @@index([status])
+  @@index([type])
+}
+
+model SessionMessageStorageBucket {
+  oid       Int      @id
+  bucket    String   @unique
+  createdAt DateTime @default(now())
+
+  sessionMessages SessionMessage[]
+}
+
+model ToolCall {
+  oid BigInt @id
+  id  String @unique
+
+  toolKey String
+
+  messageId String         @unique
+  message   SessionMessage @relation(fields: [messageId], references: [id])
+
+  sessionOid BigInt
+  session    Session @relation(fields: [sessionOid], references: [oid])
+
+  sessionProviderOid BigInt?
+  sessionProvider    SessionProvider? @relation(fields: [sessionProviderOid], references: [oid])
+
+  providerRunOid BigInt?
+  providerRun    ProviderRun? @relation(fields: [providerRunOid], references: [oid])
+
+  toolOid BigInt
+  tool    ProviderTool @relation(fields: [toolOid], references: [oid])
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid Int
+  solution    Solution @relation(fields: [solutionOid], references: [oid])
+
+  createdAt DateTime @default(now())
+}

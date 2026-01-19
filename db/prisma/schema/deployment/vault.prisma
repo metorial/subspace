@@ -1,6 +1,14 @@
+enum ProviderConfigVaultStatus {
+  active
+  archived
+  deleted
+}
+
 model ProviderConfigVault {
   oid BigInt @id @default(autoincrement())
   id  String @unique
+
+  status ProviderConfigVaultStatus
 
   name        String
   description String?
@@ -12,7 +20,7 @@ model ProviderConfigVault {
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
 
-  solutionOid BigInt
+  solutionOid Int
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
   providerOid BigInt
@@ -24,5 +32,7 @@ model ProviderConfigVault {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  fromOfConfigs ProviderConfig[] @relation("vaultSource")
+  createdConfigs ProviderConfig[] @relation("vaultSource")
+
+  @@index([status])
 }

@@ -2,6 +2,13 @@ import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import { db, Solution, Tenant } from '@metorial-subspace/db';
+import {
+  resolveProviderCategories,
+  resolveProviderCollections,
+  resolveProviderGroups,
+  resolvePublishers
+} from '@metorial-subspace/list-utils';
+import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { providerInclude } from './provider';
 
 let getInclude = (tenant: Tenant, solution: Solution) => ({
@@ -55,8 +62,10 @@ class ProviderListingService {
   async listProviderListings(d: {
     search?: string;
 
-    collectionIds?: string[];
-    categoryIds?: string[];
+    ids?: string[];
+    providerCollectionIds?: string[];
+    providerCategoryIds?: string[];
+    providerGroupIds?: string[];
     publisherIds?: string[];
 
     isPublic?: boolean;
@@ -71,41 +80,24 @@ class ProviderListingService {
 
     orderByRank?: boolean;
   }) {
-    let collections =
-      d.collectionIds && d.collectionIds.length > 0
-        ? await db.providerListingCollection.findMany({
-            where: { OR: [{ id: { in: d.collectionIds } }, { slug: { in: d.collectionIds } }] }
-          })
-        : undefined;
-    let categories =
-      d.categoryIds && d.categoryIds.length > 0
-        ? await db.providerListingCategory.findMany({
-            where: { OR: [{ id: { in: d.categoryIds } }, { slug: { in: d.categoryIds } }] }
-          })
-        : undefined;
-    let publishers =
-      d.publisherIds && d.publisherIds.length > 0
-        ? await db.publisher.findMany({
-            where: {
-              OR: [{ id: { in: d.publisherIds } }, { identifier: { in: d.publisherIds } }]
-            }
-          })
-        : undefined;
+    let collections = await resolveProviderCollections(d, d.providerCollectionIds);
+    let categories = await resolveProviderCategories(d, d.providerCategoryIds);
+    let groups = await resolveProviderGroups(d, d.providerGroupIds);
+    let publishers = await resolvePublishers(d, d.publisherIds);
 
     d.search = d.search?.trim();
     if (!d.search?.length) d.search = undefined;
 
     return Paginator.create(({ prisma }) =>
       prisma(async opts => {
-        // let search = d.search
-        //   ? await searchService.search<{ id: string }>({
-        //       index: 'provider_listing',
-        //       query: d.search,
-        //       options: {
-        //         limit: opts.take * 2
-        //       }
-        //     })
-        //   : undefined;
+        let search = d.search
+          ? await voyager.record.search({
+              tenantId: d.tenant.id,
+              sourceId: voyagerSource.id,
+              indexId: voyagerIndex.providerListing.id,
+              query: d.search
+            })
+          : null;
 
         return await db.providerListing.findMany({
           ...opts,
@@ -116,35 +108,9 @@ class ProviderListingService {
             status: 'active',
 
             AND: [
-              // {
-              //   OR: [
-              //     { id: { in: search?.map(s => s.id) } },
-              //     { slug: { in: search?.map(s => s.id) } }
-              //   ]
-              // },
+              d.ids ? { id: { in: d.ids } } : undefined!,
 
-              collections
-                ? {
-                    collections: {
-                      some: { oid: { in: collections?.map(c => c.oid) } }
-                    }
-                  }
-                : {},
-
-              categories
-                ? {
-                    categories: {
-                      some: { oid: { in: categories?.map(c => c.oid) } }
-                    }
-                  }
-                : {},
-              publishers
-                ? {
-                    publisher: {
-                      id: { in: publishers?.map(p => p.id) }
-                    }
-                  }
-                : {},
+              search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
 
               {
                 OR: [
@@ -153,19 +119,25 @@ class ProviderListingService {
                 ]
               },
 
+              collections ? { collections: { some: collections.oidIn } } : undefined!,
+              categories ? { categories: { some: categories.oidIn } } : undefined!,
+              groups ? { groups: { some: groups.oidIn } } : undefined!,
+
+              publishers ? { publisherOid: publishers.in } : undefined!,
+
               d.onlyFromTenant
                 ? {
                     ownerTenantOid: d.tenant?.oid ?? -1,
                     ownerSolutionOid: d.solution?.oid ?? -1
                   }
-                : {},
+                : undefined!,
 
-              d.isPublic ? { isPublic: true } : {},
+              d.isPublic ? { isPublic: true } : undefined!,
 
-              d.isVerified !== undefined ? { isVerified: d.isVerified } : {},
-              d.isOfficial !== undefined ? { isOfficial: d.isOfficial } : {},
-              d.isMetorial !== undefined ? { isMetorial: d.isMetorial } : {}
-            ]
+              d.isVerified !== undefined ? { isVerified: d.isVerified } : undefined!,
+              d.isOfficial !== undefined ? { isOfficial: d.isOfficial } : undefined!,
+              d.isMetorial !== undefined ? { isMetorial: d.isMetorial } : undefined!
+            ].filter(Boolean)
           },
           include: getInclude(d.tenant, d.solution),
           omit: {

@@ -53,7 +53,25 @@ export let ID = createIdGenerator({
   providerAuthExport: idType.sorted('pace'),
 
   providerAuthConfigUsedForConfig: idType.sorted('pacufc'),
-  providerAuthConfigUsedForDeployment: idType.sorted('pacufd')
+  providerAuthConfigUsedForDeployment: idType.sorted('pacufd'),
+
+  session: idType.sorted('ses'),
+  sessionTemplate: idType.sorted('set'),
+  sessionTemplateProvider: idType.sorted('stp'),
+  sessionProvider: idType.sorted('spv'),
+  sessionProviderInstance: idType.sorted('spi'),
+  sessionMessage: idType.sorted('smg'),
+  sessionParticipant: idType.sorted('spar'),
+  sessionEvent: idType.sorted('sev'),
+  sessionClientConnection: idType.sorted('scc'),
+  sessionConnection: idType.sorted('scon'),
+  sessionConnection_token: idType.unsorted('scon_tok', 30),
+  sessionError: idType.sorted('serr'),
+  sessionErrorGroup: idType.sorted('serg'),
+
+  providerRun: idType.sorted('prun'),
+
+  toolCall: idType.sorted('tcl')
 });
 
 let workerIdBits = 12;

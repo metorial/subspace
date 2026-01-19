@@ -11,8 +11,43 @@ import {
   Solution,
   Tenant
 } from '@metorial-subspace/db';
+import { resolveProviderListings, resolveProviders } from '@metorial-subspace/list-utils';
 
 class ProviderListingGroupService {
+  async listProviderListingGroups(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    ids?: string[];
+    providerIds?: string[];
+    providerListingIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+    let providerListings = await resolveProviderListings(d, d.providerListingIds);
+
+    return Paginator.create(({ prisma }) =>
+      prisma(
+        async opts =>
+          await db.providerListingGroup.findMany({
+            ...opts,
+            where: {
+              tenantOid: d.tenant.oid,
+              solutionOid: d.solution.oid,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+
+                providers ? { listings: { some: { providerOid: providers.in } } } : undefined!,
+                providerListings
+                  ? { listings: { some: { oid: providerListings.in } } }
+                  : undefined!
+              ].filter(Boolean)
+            }
+          })
+      )
+    );
+  }
+
   async getProviderListingGroupById(d: {
     tenant: Tenant;
     solution: Solution;
@@ -31,21 +66,6 @@ class ProviderListingGroupService {
     }
 
     return providerListingGroup;
-  }
-
-  async listProviderListingGroups(d: { tenant: Tenant; solution: Solution }) {
-    return Paginator.create(({ prisma }) =>
-      prisma(
-        async opts =>
-          await db.providerListingGroup.findMany({
-            ...opts,
-            where: {
-              tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid
-            }
-          })
-      )
-    );
   }
 
   async createProviderListingGroup(d: {

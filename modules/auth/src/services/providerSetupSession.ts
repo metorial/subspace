@@ -11,6 +11,7 @@ import {
   ProviderAuthCredentials,
   ProviderDeployment,
   ProviderSetupSession,
+  ProviderSetupSessionStatus,
   ProviderSetupSessionType,
   ProviderSetupSessionUiMode,
   ProviderVariant,
@@ -19,6 +20,17 @@ import {
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import {
+  checkDeletedEdit,
+  checkDeletedRelation,
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviderAuthConfigs,
+  resolveProviderAuthCredentials,
+  resolveProviderAuthMethods,
+  resolveProviderDeployments,
+  resolveProviders
+} from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { addMinutes } from 'date-fns';
 import {
@@ -47,7 +59,29 @@ let include = {
 export let providerSetupSessionInclude = include;
 
 class providerSetupSessionServiceImpl {
-  async listProviderSetupSessions(d: { tenant: Tenant; solution: Solution }) {
+  async listProviderSetupSessions(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    status?: ProviderSetupSessionStatus[];
+    allowDeleted?: boolean;
+
+    ids?: string[];
+    providerIds?: string[];
+    providerAuthMethodIds?: string[];
+    providerDeploymentIds?: string[];
+    providerAuthConfigIds?: string[];
+    providerAuthCredentialsIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+    let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
+    let authConfigs = await resolveProviderAuthConfigs(d, d.providerAuthConfigIds);
+    let authCredentials = await resolveProviderAuthCredentials(
+      d,
+      d.providerAuthCredentialsIds
+    );
+    let authMethods = await resolveProviderAuthMethods(d, d.providerAuthMethodIds);
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -55,7 +89,18 @@ class providerSetupSessionServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid
+              solutionOid: d.solution.oid,
+
+              ...normalizeStatusForList(d).onlyParent,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                providers ? { providerOid: providers.in } : undefined!,
+                deployments ? { deploymentOid: deployments.in } : undefined!,
+                authConfigs ? { authConfigOid: authConfigs.in } : undefined!,
+                authCredentials ? { authCredentialsOid: authCredentials.in } : undefined!,
+                authMethods ? { authMethodOid: authMethods.in } : undefined!
+              ].filter(Boolean)
             },
             include
           })
@@ -67,12 +112,14 @@ class providerSetupSessionServiceImpl {
     tenant: Tenant;
     solution: Solution;
     providerSetupSessionId: string;
+    allowDeleted?: boolean;
   }) {
     let providerSetupSession = await db.providerSetupSession.findFirst({
       where: {
         id: d.providerSetupSessionId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+        ...normalizeStatusForGet(d).onlyParent
       },
       include
     });
@@ -115,6 +162,9 @@ class providerSetupSessionServiceImpl {
     };
   }) {
     checkTenant(d, d.providerDeployment);
+
+    checkDeletedRelation(d.providerDeployment);
+    checkDeletedRelation(d.credentials);
 
     if (d.providerDeployment && d.providerDeployment.providerOid != d.provider.oid) {
       throw new ServiceError(
@@ -294,6 +344,8 @@ class providerSetupSessionServiceImpl {
       metadata?: Record<string, any>;
     };
   }) {
+    checkDeletedEdit(d.providerSetupSession, 'update');
+
     return withTransaction(async db => {
       let config = await db.providerSetupSession.update({
         where: {

@@ -23,6 +23,18 @@ services:
     networks:
       - subspace-network
 
+  nats-1:
+    image: nats
+    command: "--cluster_name NATS --cluster nats://0.0.0.0:6222 --http_port 8222 "
+    networks:
+      - subspace-network
+  nats-2:
+    image: nats
+    command: "--cluster_name NATS --cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats-1:6222"
+    depends_on: ["nats-1"]
+    networks:
+    - subspace-network
+
   object-storage:
     image: ghcr.io/metorial/object-storage:latest
     volumes:
@@ -209,18 +221,21 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats-1:4222,nats://nats-2:4222
       METORIAL_ENV: development
-
       PUBLIC_SERVICE_URL: http://localhost:52071
-
       SLATES_HUB_URL: http://slates-hub:52046/slates-hub
       VOYAGER_URL: http://voyager:52060/metorial-voyager
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      MESSAGE_BUCKET_NAME: messages
 
     volumes:
       - ./apps/controller:/app/apps/controller:ro
       - ./apps/controller/package.json:/app/apps/controller/package.json:ro
       - ./modules:/app/modules:ro
       - ./packages:/app/packages:ro
+      - ./provider-backends:/app/provider-backends:ro
+      - ./db:/app/db:ro
     depends_on:
       - postgres
       - redis
@@ -231,6 +246,8 @@ services:
       - signal
       - voyager
       - slates-hub
+      - nats-1
+      - nats-2
     networks:
       - subspace-network
 
@@ -245,18 +262,21 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats-1:4222,nats://nats-2:4222
       METORIAL_ENV: development
-
       PUBLIC_SERVICE_URL: http://localhost:52071
-
       SLATES_HUB_URL: http://slates-hub:52046/slates-hub
       VOYAGER_URL: http://voyager:52060/metorial-voyager
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      MESSAGE_BUCKET_NAME: messages
 
     volumes:
       - ./apps/public:/app/apps/public:ro
       - ./apps/public/package.json:/app/apps/public/package.json:ro
       - ./modules:/app/modules:ro
       - ./packages:/app/packages:ro
+      - ./provider-backends:/app/provider-backends:ro
+      - ./db:/app/db:ro
     depends_on:
       - postgres
       - redis
@@ -267,6 +287,8 @@ services:
       - signal
       - voyager
       - slates-hub
+      - nats-1
+      - nats-2
     networks:
       - subspace-network
 
@@ -276,23 +298,24 @@ services:
       dockerfile: ./apps/worker/dev.Dockerfile
     container_name: subspace-worker-service
     restart: unless-stopped
-    ports:
-      - "52071:52071"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats-1:4222,nats://nats-2:4222
       METORIAL_ENV: development
-
       PUBLIC_SERVICE_URL: http://localhost:52071
-
       SLATES_HUB_URL: http://slates-hub:52046/slates-hub
       VOYAGER_URL: http://voyager:52060/metorial-voyager
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      MESSAGE_BUCKET_NAME: messages
 
     volumes:
       - ./apps/worker:/app/apps/worker:ro
       - ./apps/worker/package.json:/app/apps/worker/package.json:ro
       - ./modules:/app/modules:ro
       - ./packages:/app/packages:ro
+      - ./provider-backends:/app/provider-backends:ro
+      - ./db:/app/db:ro
     depends_on:
       - postgres
       - redis
@@ -303,6 +326,88 @@ services:
       - signal
       - voyager
       - slates-hub
+      - nats-1
+      - nats-2
+    networks:
+      - subspace-network
+
+  subspace-connection-manager:
+    build:
+      context: .
+      dockerfile: ./apps/connection-manager/dev.Dockerfile
+    container_name: subspace-connection-manager-service
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats-1:4222,nats://nats-2:4222
+      METORIAL_ENV: development
+      PUBLIC_SERVICE_URL: http://localhost:52071
+      SLATES_HUB_URL: http://slates-hub:52046/slates-hub
+      VOYAGER_URL: http://voyager:52060/metorial-voyager
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      MESSAGE_BUCKET_NAME: messages
+
+    volumes:
+      - ./apps/connection-manager:/app/apps/connection-manager:ro
+      - ./apps/connection-manager/package.json:/app/apps/connection-manager/package.json:ro
+      - ./modules:/app/modules:ro
+      - ./packages:/app/packages:ro
+      - ./provider-backends:/app/provider-backends:ro
+      - ./db:/app/db:ro
+    depends_on:
+      - postgres
+      - redis
+      - object-storage
+      - slates-registry
+      - forge
+      - function-bay
+      - signal
+      - voyager
+      - slates-hub
+      - nats-1
+      - nats-2
+    networks:
+      - subspace-network
+
+  subspace-connection-endpoint:
+    build:
+      context: .
+      dockerfile: ./apps/connection-endpoint/dev.Dockerfile
+    container_name: subspace-connection-endpoint-service
+    restart: unless-stopped
+    ports:
+      - "52072:52072"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats-1:4222,nats://nats-2:4222
+      METORIAL_ENV: development
+      PUBLIC_SERVICE_URL: http://localhost:52071
+      SLATES_HUB_URL: http://slates-hub:52046/slates-hub
+      VOYAGER_URL: http://voyager:52060/metorial-voyager
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      MESSAGE_BUCKET_NAME: messages
+
+    volumes:
+      - ./apps/connection-endpoint:/app/apps/connection-endpoint:ro
+      - ./apps/connection-endpoint/package.json:/app/apps/connection-endpoint/package.json:ro
+      - ./modules:/app/modules:ro
+      - ./packages:/app/packages:ro
+      - ./provider-backends:/app/provider-backends:ro
+      - ./provider-backends:/app/provider-backends:ro
+    depends_on:
+      - postgres
+      - redis
+      - object-storage
+      - slates-registry
+      - forge
+      - function-bay
+      - signal
+      - voyager
+      - slates-hub
+      - nats-1
+      - nats-2
     networks:
       - subspace-network
 

@@ -1,11 +1,11 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { providerConfigVaultPresenter } from '@metorial-subspace/db';
 import { providerService } from '@metorial-subspace/module-catalog';
 import {
   providerConfigVaultService,
   providerDeploymentService
 } from '@metorial-subspace/module-deployment';
+import { providerConfigVaultPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 
@@ -16,7 +16,8 @@ export let providerConfigVaultApp = tenantApp.use(async ctx => {
   let providerConfigVault = await providerConfigVaultService.getProviderConfigVaultById({
     providerConfigVaultId,
     tenant: ctx.tenant,
-    solution: ctx.solution
+    solution: ctx.solution,
+    allowDeleted: ctx.body.allowDeleted
   });
 
   return { providerConfigVault };
@@ -28,14 +29,30 @@ export let providerConfigVaultController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+
+          status: v.optional(v.array(v.enumOf(['active', 'archived']))),
+          allowDeleted: v.optional(v.boolean()),
+
+          ids: v.optional(v.array(v.string())),
+          providerIds: v.optional(v.array(v.string())),
+          providerDeploymentIds: v.optional(v.array(v.string())),
+          providerConfigIds: v.optional(v.array(v.string()))
         })
       )
     )
     .do(async ctx => {
       let paginator = await providerConfigVaultService.listProviderConfigVaults({
         tenant: ctx.tenant,
-        solution: ctx.solution
+        solution: ctx.solution,
+
+        status: ctx.input.status,
+        allowDeleted: ctx.input.allowDeleted,
+
+        ids: ctx.input.ids,
+        providerIds: ctx.input.providerIds,
+        providerDeploymentIds: ctx.input.providerDeploymentIds,
+        providerConfigIds: ctx.input.providerConfigIds
       });
 
       let list = await paginator.run(ctx.input);
@@ -48,7 +65,8 @@ export let providerConfigVaultController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
-        providerConfigVaultId: v.string()
+        providerConfigVaultId: v.string(),
+        allowDeleted: v.optional(v.boolean())
       })
     )
     .do(async ctx => providerConfigVaultPresenter(ctx.providerConfigVault)),
@@ -114,6 +132,7 @@ export let providerConfigVaultController = app.controller({
       v.object({
         tenantId: v.string(),
         providerConfigVaultId: v.string(),
+        allowDeleted: v.optional(v.boolean()),
 
         name: v.optional(v.string()),
         description: v.optional(v.string()),

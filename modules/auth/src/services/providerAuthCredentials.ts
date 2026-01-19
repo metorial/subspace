@@ -7,11 +7,20 @@ import {
   getId,
   Provider,
   ProviderAuthCredentials,
+  ProviderAuthCredentialsStatus,
   ProviderVariant,
   Solution,
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import {
+  checkDeletedEdit,
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviders
+} from '@metorial-subspace/list-utils';
+import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
+import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
 import {
   providerAuthCredentialsCreatedQueue,
@@ -23,7 +32,29 @@ let include = {
 };
 
 class providerAuthCredentialsServiceImpl {
-  async listProviderAuthCredentials(d: { tenant: Tenant; solution: Solution }) {
+  async listProviderAuthCredentials(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    status?: ProviderAuthCredentialsStatus[];
+    allowDeleted?: boolean;
+
+    search?: string;
+
+    ids?: string[];
+    providerIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+
+    let search = d.search
+      ? await voyager.record.search({
+          tenantId: d.tenant.id,
+          sourceId: voyagerSource.id,
+          indexId: voyagerIndex.providerAuthCredentials.id,
+          query: d.search
+        })
+      : null;
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -32,7 +63,15 @@ class providerAuthCredentialsServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
-              isEphemeral: false
+              isEphemeral: false,
+
+              ...normalizeStatusForList(d).noParent,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
+                providers ? { providerOid: providers.in } : undefined!
+              ].filter(Boolean)
             },
             include
           })
@@ -44,12 +83,15 @@ class providerAuthCredentialsServiceImpl {
     tenant: Tenant;
     solution: Solution;
     providerAuthCredentialsId: string;
+    allowDeleted?: boolean;
   }) {
     let providerAuthCredentials = await db.providerAuthCredentials.findFirst({
       where: {
         id: d.providerAuthCredentialsId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+
+        ...normalizeStatusForGet(d).noParent
       },
       include
     });
@@ -98,6 +140,7 @@ class providerAuthCredentialsServiceImpl {
           ...getId('providerAuthCredentials'),
 
           type: backendProviderAuthCredentials.type,
+          status: 'active',
 
           backendOid: backend.backend.oid,
 
@@ -152,6 +195,9 @@ class providerAuthCredentialsServiceImpl {
       metadata?: Record<string, any>;
     };
   }) {
+    checkTenant(d, d.providerAuthCredentials);
+    checkDeletedEdit(d.providerAuthCredentials, 'update');
+
     return withTransaction(async db => {
       let config = await db.providerAuthCredentials.update({
         where: {

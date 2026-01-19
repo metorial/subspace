@@ -1,8 +1,12 @@
 import type { ICoordinationAdapter } from '../adapters/coordination/coordinationAdapter';
 
+export type OwnershipLossCallback = (topic: string) => void;
+
 export class OwnershipManager {
   private ownedTopics: Set<string> = new Set();
+  private topicTtls: Map<string, number> = new Map(); // Per-topic TTLs
   private renewalInterval: Timer | null = null;
+  private ownershipLossCallbacks: OwnershipLossCallback[] = [];
 
   constructor(
     private receiverId: string,
@@ -30,12 +34,20 @@ export class OwnershipManager {
     }
   }
 
-  addTopic(topic: string): void {
+  addTopic(topic: string, ttl?: number): void {
     this.ownedTopics.add(topic);
+    if (ttl !== undefined) {
+      this.topicTtls.set(topic, ttl);
+    }
   }
 
   removeTopic(topic: string): void {
     this.ownedTopics.delete(topic);
+    this.topicTtls.delete(topic);
+  }
+
+  onOwnershipLoss(callback: OwnershipLossCallback): void {
+    this.ownershipLossCallbacks.push(callback);
   }
 
   ownsTopic(topic: string): boolean {
@@ -60,16 +72,19 @@ export class OwnershipManager {
   private async renewOwnerships(): Promise<void> {
     let renewals = Array.from(this.ownedTopics).map(async topic => {
       try {
-        let renewed = await this.coordination.renewTopicOwnership(
-          topic,
-          this.receiverId,
-          this.ownershipTtl
-        );
+        // Use per-topic TTL if available, otherwise use default
+        const ttl = this.topicTtls.get(topic) ?? this.ownershipTtl;
+
+        let renewed = await this.coordination.renewTopicOwnership(topic, this.receiverId, ttl);
 
         // If renewal failed, we lost ownership
         if (!renewed) {
           console.warn(`Lost ownership of topic ${topic}, removing from owned set`);
           this.ownedTopics.delete(topic);
+          this.topicTtls.delete(topic);
+
+          // Notify callbacks
+          this.notifyOwnershipLoss(topic);
         }
       } catch (err) {
         console.error(`Error renewing ownership of ${topic}:`, err);
@@ -78,6 +93,16 @@ export class OwnershipManager {
     });
 
     await Promise.all(renewals);
+  }
+
+  private notifyOwnershipLoss(topic: string): void {
+    for (const callback of this.ownershipLossCallbacks) {
+      try {
+        callback(topic);
+      } catch (err) {
+        console.error(`Error in ownership loss callback for topic ${topic}:`, err);
+      }
+    }
   }
 
   getOwnedCount(): number {

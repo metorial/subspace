@@ -36,6 +36,8 @@ export interface SenderConfig {
   retryBackoffMultiplier: number;
 
   inFlightCacheTtl: number;
+
+  maxInFlightMessages: number;
 }
 
 export type CoordinationConfig = { type: 'redis'; redis: RedisConfig } | { type: 'memory' };
@@ -62,7 +64,7 @@ export const DEFAULT_CONFIG: WireConfig = {
     heartbeatInterval: 5000,
     heartbeatTtl: 10000,
     topicOwnershipTtl: 30000,
-    ownershipRenewalInterval: 20000,
+    ownershipRenewalInterval: 10000, // Renew at TTL/3 for safety margin
     messageCacheTtl: 60000,
     messageCacheSize: 10000,
     timeoutExtensionThreshold: 1000
@@ -72,7 +74,8 @@ export const DEFAULT_CONFIG: WireConfig = {
     maxRetries: 3,
     retryBackoffMs: 100,
     retryBackoffMultiplier: 2,
-    inFlightCacheTtl: 60000
+    inFlightCacheTtl: 60000,
+    maxInFlightMessages: 1000
   },
   coordination: {
     type: 'memory'

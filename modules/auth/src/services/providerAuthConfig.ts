@@ -8,6 +8,7 @@ import {
   Provider,
   ProviderAuthConfig,
   ProviderAuthConfigSource,
+  ProviderAuthConfigStatus,
   ProviderAuthImport,
   ProviderDeployment,
   ProviderVariant,
@@ -16,6 +17,17 @@ import {
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import {
+  checkDeletedEdit,
+  checkDeletedRelation,
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviderAuthCredentials,
+  resolveProviderAuthMethods,
+  resolveProviderDeployments,
+  resolveProviders
+} from '@metorial-subspace/list-utils';
+import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { providerAuthConfigUpdatedQueue } from '../queues/lifecycle/providerAuthConfig';
 import { providerAuthConfigInternalService } from './providerAuthConfigInternal';
@@ -30,7 +42,35 @@ let include = {
 export let providerAuthConfigInclude = include;
 
 class providerAuthConfigServiceImpl {
-  async listProviderAuthConfigs(d: { tenant: Tenant; solution: Solution }) {
+  async listProviderAuthConfigs(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    status?: ProviderAuthConfigStatus[];
+    allowDeleted?: boolean;
+
+    search?: string;
+
+    ids?: string[];
+    providerIds?: string[];
+    providerDeploymentIds?: string[];
+    providerAuthCredentialsIds?: string[];
+    providerAuthMethodIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+    let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
+    let credentials = await resolveProviderAuthCredentials(d, d.providerAuthCredentialsIds);
+    let authMethods = await resolveProviderAuthMethods(d, d.providerAuthMethodIds);
+
+    let search = d.search
+      ? await voyager.record.search({
+          tenantId: d.tenant.id,
+          sourceId: voyagerSource.id,
+          indexId: voyagerIndex.providerAuthConfig.id,
+          query: d.search
+        })
+      : null;
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -39,7 +79,18 @@ class providerAuthConfigServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
-              isEphemeral: false
+              isEphemeral: false,
+
+              ...normalizeStatusForList(d).hasParent,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
+                providers ? { providerOid: providers.in } : undefined!,
+                deployments ? { deploymentOid: deployments.in } : undefined!,
+                credentials ? { authCredentialsOid: credentials.in } : undefined!,
+                authMethods ? { authMethodOid: authMethods.in } : undefined!
+              ].filter(Boolean)
             },
             include
           })
@@ -51,6 +102,7 @@ class providerAuthConfigServiceImpl {
     tenant: Tenant;
     solution: Solution;
     providerAuthConfigId: string;
+    allowDeleted?: boolean;
   }) {
     let providerAuthConfig = await db.providerAuthConfig.findFirst({
       where: {
@@ -60,7 +112,9 @@ class providerAuthConfigServiceImpl {
         OR: [
           { id: d.providerAuthConfigId },
           { providerSetupSession: { id: d.providerAuthConfigId } }
-        ]
+        ],
+
+        ...normalizeStatusForGet(d).hasParent
       },
       include
     });
@@ -157,6 +211,7 @@ class providerAuthConfigServiceImpl {
     };
   }) {
     checkTenant(d, d.providerDeployment);
+    checkDeletedRelation(d.providerDeployment, { allowEphemeral: d.input.isEphemeral });
 
     if (d.providerDeployment && d.providerDeployment.providerOid != d.provider.oid) {
       throw new ServiceError(
@@ -240,6 +295,7 @@ class providerAuthConfigServiceImpl {
     };
   }) {
     checkTenant(d, d.providerAuthConfig);
+    checkDeletedEdit(d.providerAuthConfig, 'update');
 
     if (d.providerAuthConfig.type == 'oauth_automated') {
       throw new ServiceError(

@@ -1,24 +1,16 @@
 export interface WireMessage {
   messageId: string;
-
   topic: string;
-
   payload: unknown;
-
   replySubject: string;
-
   timeout: number;
-
   sentAt: number;
-
   retryCount: number;
 }
 
 export interface TimeoutExtension {
   messageId: string;
-
   extensionMs: number;
-
   type: 'timeout_extension';
 }
 

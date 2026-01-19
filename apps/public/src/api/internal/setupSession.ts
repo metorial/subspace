@@ -1,11 +1,11 @@
 import { v } from '@lowerdeck/validation';
+import { providerSetupSessionUiService } from '@metorial-subspace/module-auth';
+import { brandService } from '@metorial-subspace/module-tenant';
 import {
   brandPresenter,
   providerOAuthSetupPresenter,
   providerSetupSessionPresenter
-} from '@metorial-subspace/db';
-import { providerSetupSessionUiService } from '@metorial-subspace/module-auth';
-import { brandService } from '@metorial-subspace/module-tenant';
+} from '@metorial-subspace/presenters';
 import { app } from './_app';
 
 let sessionApp = app.use(async ctx => {

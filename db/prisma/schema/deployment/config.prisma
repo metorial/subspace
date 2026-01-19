@@ -1,6 +1,14 @@
+enum ProviderConfigStatus {
+  active
+  archived
+  deleted
+}
+
 model ProviderConfig {
   oid BigInt @id
   id  String @unique
+
+  status ProviderConfigStatus
 
   isDefault   Boolean
   isEphemeral Boolean
@@ -13,7 +21,7 @@ model ProviderConfig {
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
 
-  solutionOid BigInt
+  solutionOid Int
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
   providerOid BigInt
@@ -43,6 +51,9 @@ model ProviderConfig {
   deploymentPairs                  ProviderDeploymentConfigPair[]
   providerAuthConfigUsedForConfigs ProviderAuthConfigUsedForConfig[]
   providerSetupSession             ProviderSetupSession?
+  sessionProviders                 SessionProvider[]
+  sessionTemplateProviders         SessionTemplateProvider[]
 
   @@index([isDefault])
+  @@index([status])
 }

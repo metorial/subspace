@@ -1,4 +1,5 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
+import { createLock } from '@lowerdeck/lock';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
@@ -9,6 +10,7 @@ import {
   Provider,
   ProviderConfigVault,
   ProviderDeployment,
+  ProviderDeploymentStatus,
   ProviderVariant,
   ProviderVersion,
   snowflake,
@@ -16,8 +18,18 @@ import {
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import {
+  checkDeletedEdit,
+  checkDeletedRelation,
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviders,
+  resolveProviderVersions
+} from '@metorial-subspace/list-utils';
+import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
+import { env } from '../env';
 import {
   providerDeploymentCreatedQueue,
   providerDeploymentUpdatedQueue
@@ -31,8 +43,37 @@ let include = {
   lockedVersion: { include: { specification: true } }
 };
 
+let defaultLock = createLock({
+  name: 'dep/pdep/def/lock',
+  redisUrl: env.service.REDIS_URL
+});
+
 class providerDeploymentServiceImpl {
-  async listProviderDeployments(d: { tenant: Tenant; solution: Solution }) {
+  async listProviderDeployments(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    search?: string;
+
+    status?: ProviderDeploymentStatus[];
+    allowDeleted?: boolean;
+
+    ids?: string[];
+    providerIds?: string[];
+    providerVersionIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+    let versions = await resolveProviderVersions(d, d.providerVersionIds);
+
+    let search = d.search
+      ? await voyager.record.search({
+          tenantId: d.tenant.id,
+          sourceId: voyagerSource.id,
+          indexId: voyagerIndex.providerDeployment.id,
+          query: d.search
+        })
+      : null;
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -41,7 +82,16 @@ class providerDeploymentServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
-              isEphemeral: false
+              isEphemeral: false,
+
+              ...normalizeStatusForList(d).noParent,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
+                providers ? { providerOid: providers.in } : undefined!,
+                versions ? { lockedVersionOid: versions.in } : undefined!
+              ].filter(Boolean)
             },
             include
           })
@@ -53,12 +103,15 @@ class providerDeploymentServiceImpl {
     tenant: Tenant;
     solution: Solution;
     providerDeploymentId: string;
+    allowDeleted?: boolean;
   }) {
     let providerDeployment = await db.providerDeployment.findFirst({
       where: {
         id: d.providerDeploymentId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+
+        ...normalizeStatusForGet(d).noParent
       },
       include
     });
@@ -78,6 +131,7 @@ class providerDeploymentServiceImpl {
       description?: string;
       metadata?: Record<string, any>;
       isEphemeral?: boolean;
+      isDefault?: boolean;
 
       config:
         | {
@@ -93,7 +147,12 @@ class providerDeploymentServiceImpl {
           };
     };
   }) {
-    if (d.input.config.type == 'vault') checkTenant(d, d.input.config.vault);
+    checkDeletedRelation(d.provider, { allowEphemeral: d.input.isEphemeral });
+
+    if (d.input.config.type == 'vault') {
+      checkTenant(d, d.input.config.vault);
+      checkDeletedRelation(d.input.config.vault, { allowEphemeral: d.input.isEphemeral });
+    }
 
     return withTransaction(async db => {
       if (!d.provider.defaultVariant) {
@@ -138,7 +197,10 @@ class providerDeploymentServiceImpl {
         data: {
           ...ids,
 
+          status: 'active',
+
           isEphemeral: !!d.input.isEphemeral,
+          isDefault: !!d.input.isDefault,
 
           name: d.input.name?.trim() || undefined,
           description: d.input.description?.trim() || undefined,
@@ -160,7 +222,7 @@ class providerDeploymentServiceImpl {
       });
 
       if (d.input.config.type != 'none') {
-        let config = await providerConfigService.createProviderConfig({
+        await providerConfigService.createProviderConfig({
           tenant: d.tenant,
           providerDeployment,
           provider: d.provider,
@@ -173,14 +235,18 @@ class providerDeploymentServiceImpl {
             isDefault: true
           }
         });
+      }
 
-        await db.providerDeployment.update({
-          where: { oid: providerDeployment.oid },
-          data: { defaultConfigOid: config.oid }
-        });
-        await db.providerConfig.updateMany({
-          where: { oid: config.oid },
-          data: { isDefault: true }
+      if (providerDeployment.isDefault) {
+        await db.providerDeployment.updateMany({
+          where: {
+            tenantOid: d.tenant.oid,
+            solutionOid: d.solution.oid,
+            providerOid: d.provider.oid,
+            oid: { not: providerDeployment.oid },
+            isDefault: true
+          },
+          data: { isDefault: false }
         });
       }
 
@@ -195,6 +261,32 @@ class providerDeploymentServiceImpl {
     });
   }
 
+  async ensureDefaultProviderDeployment(d: {
+    tenant: Tenant;
+    solution: Solution;
+    provider: Provider & { defaultVariant: ProviderVariant | null };
+  }) {
+    let currentDefault = await this.getDefaultProviderDeployment(d);
+    if (currentDefault) return currentDefault;
+
+    return await defaultLock.usingLock(d.provider.id, async () => {
+      let currentDefault = await this.getDefaultProviderDeployment(d);
+      if (currentDefault) return currentDefault;
+
+      return await this.createProviderDeployment({
+        tenant: d.tenant,
+        solution: d.solution,
+        provider: d.provider,
+        input: {
+          name: `Default Deployment for ${d.provider.name}`,
+          description: 'Auto-created by Metorial',
+          config: { type: 'none' },
+          isDefault: true
+        }
+      });
+    });
+  }
+
   async updateProviderDeployment(d: {
     tenant: Tenant;
     solution: Solution;
@@ -205,6 +297,8 @@ class providerDeploymentServiceImpl {
       metadata?: Record<string, any>;
     };
   }) {
+    checkDeletedEdit(d.providerDeployment, 'update');
+
     return withTransaction(async db => {
       let providerDeployment = await db.providerDeployment.update({
         where: {
@@ -226,6 +320,26 @@ class providerDeploymentServiceImpl {
 
       return providerDeployment;
     });
+  }
+
+  private async getDefaultProviderDeployment(d: {
+    tenant: Tenant;
+    solution: Solution;
+    provider: Provider;
+  }) {
+    return await withTransaction(
+      db =>
+        db.providerDeployment.findFirst({
+          where: {
+            tenantOid: d.tenant.oid,
+            solutionOid: d.solution.oid,
+            providerOid: d.provider.oid,
+            isDefault: true
+          },
+          include
+        }),
+      { ifExists: true }
+    );
   }
 }
 

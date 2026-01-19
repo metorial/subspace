@@ -25,6 +25,7 @@ model ProviderDeploymentConfigPair {
 
   versions                                 ProviderDeploymentConfigPairProviderVersion[]
   providerSpecificationChangeNotifications ProviderSpecificationChangeNotification[]
+  sessionProviderInstances                 SessionProviderInstance[]
 
   @@unique([providerConfigOid, providerDeploymentOid])
 }
@@ -50,9 +51,10 @@ model ProviderDeploymentConfigPairProviderVersion {
   createdAt  DateTime @default(now())
   lastUsedAt DateTime @default(now())
 
-  lastUsedInPair  ProviderDeploymentConfigPair[]                    @relation("lastUsedVersion")
-  fromSpecChanges ProviderDeploymentConfigPairSpecificationChange[] @relation("SpecChangeFromPairVersion")
-  toSpecChanges   ProviderDeploymentConfigPairSpecificationChange[] @relation("SpecChangeToPairVersion")
+  lastUsedInPair           ProviderDeploymentConfigPair[]                    @relation("lastUsedVersion")
+  fromSpecChanges          ProviderDeploymentConfigPairSpecificationChange[] @relation("SpecChangeFromPairVersion")
+  toSpecChanges            ProviderDeploymentConfigPairSpecificationChange[] @relation("SpecChangeToPairVersion")
+  sessionProviderInstances SessionProviderInstance[]
 
   @@unique([pairOid, versionOid])
 }

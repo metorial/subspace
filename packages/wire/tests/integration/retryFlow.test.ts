@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { createMemoryWire } from '../../src/index';
+import { createWire } from '../../src/index';
 
 describe('Retry Flow Integration', () => {
   test('should timeout and fail when no receiver available', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({ defaultTimeout: 100, maxRetries: 1 });
 
     // No receiver started, should timeout
@@ -20,7 +20,7 @@ describe('Retry Flow Integration', () => {
   });
 
   test('should retry and succeed when receiver becomes available', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       defaultTimeout: 200,
       maxRetries: 3,
@@ -49,7 +49,7 @@ describe('Retry Flow Integration', () => {
   }, 10000);
 
   test('should return cached result on retry', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender();
 
     let processCount = 0;
@@ -80,7 +80,7 @@ describe('Retry Flow Integration', () => {
   });
 
   test('should return receiver errors without retry', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       maxRetries: 3,
       retryBackoffMs: 50

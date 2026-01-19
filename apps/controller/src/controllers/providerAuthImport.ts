@@ -1,16 +1,13 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import {
-  providerAuthImportPresenter,
-  type Solution,
-  type Tenant
-} from '@metorial-subspace/db';
+import { type Solution, type Tenant } from '@metorial-subspace/db';
 import {
   providerAuthConfigService,
   providerAuthImportService
 } from '@metorial-subspace/module-auth';
 import { providerService } from '@metorial-subspace/module-catalog';
 import { providerDeploymentService } from '@metorial-subspace/module-deployment';
+import { providerAuthImportPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 
@@ -21,7 +18,8 @@ export let providerAuthImportApp = tenantApp.use(async ctx => {
   let providerAuthImport = await providerAuthImportService.getProviderAuthImportById({
     providerAuthImportId,
     tenant: ctx.tenant,
-    solution: ctx.solution
+    solution: ctx.solution,
+    allowDeleted: ctx.body.allowDeleted
   });
 
   return { providerAuthImport };
@@ -65,14 +63,30 @@ export let providerAuthImportController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+
+          allowDeleted: v.optional(v.boolean()),
+
+          ids: v.optional(v.array(v.string())),
+          providerIds: v.optional(v.array(v.string())),
+          providerAuthCredentialsIds: v.optional(v.array(v.string())),
+          providerAuthConfigIds: v.optional(v.array(v.string())),
+          providerDeploymentIds: v.optional(v.array(v.string()))
         })
       )
     )
     .do(async ctx => {
       let paginator = await providerAuthImportService.listProviderAuthImports({
         tenant: ctx.tenant,
-        solution: ctx.solution
+        solution: ctx.solution,
+
+        allowDeleted: ctx.input.allowDeleted,
+
+        ids: ctx.input.ids,
+        providerIds: ctx.input.providerIds,
+        providerAuthCredentialsIds: ctx.input.providerAuthCredentialsIds,
+        providerAuthConfigIds: ctx.input.providerAuthConfigIds,
+        providerDeploymentIds: ctx.input.providerDeploymentIds
       });
 
       let list = await paginator.run(ctx.input);
@@ -123,7 +137,8 @@ export let providerAuthImportController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
-        providerAuthImportId: v.string()
+        providerAuthImportId: v.string(),
+        allowDeleted: v.optional(v.boolean())
       })
     )
     .do(async ctx => providerAuthImportPresenter(ctx.providerAuthImport)),

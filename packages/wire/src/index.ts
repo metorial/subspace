@@ -1,10 +1,13 @@
 // Core components
 export { MessageCache } from './core/messageCache';
 export { OwnershipManager } from './core/ownershipManager';
+export type { OwnershipLossCallback } from './core/ownershipManager';
 export { Receiver } from './core/receiver';
 export type { MessageHandler } from './core/receiver';
 export { RetryManager } from './core/retryManager';
 export { Sender } from './core/sender';
+export { createWireReceiver, WireReceiver } from './core/wireReceiver';
+export type { TopicContext, TopicHandler, WireReceiverConfig } from './core/wireReceiver';
 
 // Adapters - Interfaces
 export type { ICoordinationAdapter } from './adapters/coordination/coordinationAdapter';
@@ -21,10 +24,13 @@ export { NatsTransport } from './adapters/transport/natsTransport';
 
 // Imports for factory function
 import { MemoryCoordination } from './adapters/coordination/memoryCoordination';
+import { RedisCoordination } from './adapters/coordination/redisCoordination';
 import { MemoryTransport } from './adapters/transport/memoryTransport';
+import { NatsTransport } from './adapters/transport/natsTransport';
 import { Receiver, type MessageHandler } from './core/receiver';
 import { Sender } from './core/sender';
-import type { ReceiverConfig, SenderConfig } from './types/config';
+import { createWireReceiver, type TopicHandler } from './core/wireReceiver';
+import type { NatsConfig, ReceiverConfig, RedisConfig, SenderConfig } from './types/config';
 
 // Types
 export { DEFAULT_CONFIG, mergeConfig } from './types/config';
@@ -47,41 +53,78 @@ export type {
   TopicSubscription
 } from './types/topicListener';
 
-// Factory functions for easy setup
-export function createMemoryWire(wireId: string = 'default') {
-  const coordination = new MemoryCoordination(wireId);
-  const transport = new MemoryTransport();
+let getSenderConfig = (config?: Partial<SenderConfig>): SenderConfig => ({
+  defaultTimeout: 5000,
+  maxRetries: 20,
+  retryBackoffMs: 100,
+  retryBackoffMultiplier: 2,
+  inFlightCacheTtl: 60000,
+  maxInFlightMessages: 1000,
+  ...config
+});
+
+let getReceiverConfig = (config?: Partial<ReceiverConfig>): ReceiverConfig => ({
+  heartbeatInterval: 3000,
+  heartbeatTtl: 10000,
+  topicOwnershipTtl: 10000,
+  ownershipRenewalInterval: 5000,
+  messageCacheTtl: 60000,
+  messageCacheSize: 10000,
+  timeoutExtensionThreshold: 1000,
+  ...config
+});
+
+export let createMemoryWire = (wireId: string = 'default') => {
+  let coordination = new MemoryCoordination(wireId);
+  let transport = new MemoryTransport();
+
+  return {
+    wireId,
+    coordination,
+    transport
+  };
+};
+
+export let createRedisNatsWire = (opts: {
+  wireId: string;
+  redisConfig: RedisConfig;
+  natsConfig: NatsConfig;
+}) => {
+  let coordination = new RedisCoordination(opts.redisConfig, opts.wireId);
+  let transport = new NatsTransport(opts.natsConfig);
+
+  return {
+    wireId: opts.wireId,
+    coordination,
+    transport
+  };
+};
+
+export type Adapter =
+  | ReturnType<typeof createMemoryWire>
+  | ReturnType<typeof createRedisNatsWire>;
+
+export let createWire = (adapter: Adapter = createMemoryWire()) => {
+  let { wireId, coordination, transport } = adapter;
 
   return {
     coordination,
     transport,
-    createSender: (config?: Partial<SenderConfig>) => {
-      const fullConfig = {
-        defaultTimeout: 5000,
-        maxRetries: 3,
-        retryBackoffMs: 100,
-        retryBackoffMultiplier: 2,
-        inFlightCacheTtl: 60000,
-        ...config
-      };
-      return new Sender(coordination, transport, fullConfig, wireId);
-    },
-    createReceiver: (handler: MessageHandler, config?: Partial<ReceiverConfig>) => {
-      const fullConfig = {
-        heartbeatInterval: 5000,
-        heartbeatTtl: 10000,
-        topicOwnershipTtl: 30000,
-        ownershipRenewalInterval: 20000,
-        messageCacheTtl: 60000,
-        messageCacheSize: 10000,
-        timeoutExtensionThreshold: 1000,
-        ...config
-      };
-      return new Receiver(coordination, transport, fullConfig, handler, wireId);
-    },
+    createSender: (config?: Partial<SenderConfig>) =>
+      new Sender(coordination, transport, getSenderConfig(config), wireId),
+    createReceiver: (handler: MessageHandler, config?: Partial<ReceiverConfig>) =>
+      new Receiver(coordination, transport, getReceiverConfig(config), handler, wireId),
+    createWireReceiver: (handleTopic: TopicHandler, config?: Partial<ReceiverConfig>) =>
+      createWireReceiver({
+        coordination,
+        transport,
+        wireId,
+        handleTopic,
+        config: getReceiverConfig(config)
+      }),
     close: async () => {
       await coordination.close();
       await transport.close();
     }
   };
-}
+};

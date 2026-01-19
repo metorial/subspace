@@ -3,49 +3,38 @@ import type { NatsConfig } from '../../types/config';
 import type { ITransportAdapter, MessageHandler } from './transportAdapter';
 
 export class NatsTransport implements ITransportAdapter {
-  private nc: NatsConnection | null = null;
+  private nc: Promise<NatsConnection>;
   private subscriptions: Map<string, Subscription> = new Map();
   private nextSubId = 0;
 
-  constructor(private config: NatsConfig) {}
-
-  async connect(): Promise<void> {
-    if (this.nc) {
-      return;
-    }
-
-    this.nc = await connect({
+  constructor(private config: NatsConfig) {
+    this.nc = connect({
       servers: this.config.servers,
       token: this.config.token,
       user: this.config.user,
-      pass: this.config.pass
+      pass: this.config.pass,
+
+      waitOnFirstConnect: true
     });
   }
 
   async publish(subject: string, data: Uint8Array): Promise<void> {
-    if (!this.nc) {
-      throw new Error('NATS not connected. Call connect() first.');
-    }
-
-    this.nc.publish(subject, data);
+    let nc = await this.nc;
+    nc.publish(subject, data);
   }
 
   async request(subject: string, data: Uint8Array, timeout: number): Promise<Uint8Array> {
-    if (!this.nc) {
-      throw new Error('NATS not connected. Call connect() first.');
-    }
+    let nc = await this.nc;
 
-    let response = await this.nc.request(subject, data, { timeout });
+    let response = await nc.request(subject, data, { timeout });
     return response.data;
   }
 
   async subscribe(subject: string, handler: MessageHandler): Promise<string> {
-    if (!this.nc) {
-      throw new Error('NATS not connected. Call connect() first.');
-    }
+    let nc = await this.nc;
 
     let id = `sub-${this.nextSubId++}`;
-    let sub = this.nc.subscribe(subject);
+    let sub = nc.subscribe(subject);
 
     // Store subscription
     this.subscriptions.set(id, sub);
@@ -80,9 +69,7 @@ export class NatsTransport implements ITransportAdapter {
   }
 
   async close(): Promise<void> {
-    if (!this.nc) {
-      return;
-    }
+    let nc = await this.nc;
 
     // Unsubscribe all
     for (let sub of this.subscriptions.values()) {
@@ -91,15 +78,7 @@ export class NatsTransport implements ITransportAdapter {
     this.subscriptions.clear();
 
     // Close connection
-    await this.nc.close();
-    this.nc = null;
-  }
-
-  /**
-   * Get the underlying NATS connection
-   * Useful for advanced use cases like replying to requests
-   */
-  getConnection(): NatsConnection | null {
-    return this.nc;
+    await nc.close();
+    this.nc = null as any;
   }
 }
