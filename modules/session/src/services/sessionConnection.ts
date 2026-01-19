@@ -21,6 +21,7 @@ let include = {
   session: true,
   participant: { include: sessionParticipantInclude }
 };
+export let sessionConnectionInclude = include;
 
 class sessionConnectionServiceImpl {
   async listSessionConnections(d: {

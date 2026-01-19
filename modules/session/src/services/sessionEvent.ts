@@ -12,13 +12,17 @@ import {
   resolveSessionProviders,
   resolveSessions
 } from '@metorial-subspace/list-utils';
+import { providerRunInclude } from './providerRun';
+import { sessionConnectionInclude } from './sessionConnection';
+import { sessionErrorInclude } from './sessionError';
+import { sessionMessageInclude } from './sessionMessage';
 
 let include = {
   session: true,
-  providerRun: true,
-  message: true,
-  connection: true,
-  error: true
+  providerRun: { include: providerRunInclude },
+  message: { include: sessionMessageInclude },
+  connection: { include: sessionConnectionInclude },
+  error: { include: sessionErrorInclude }
 };
 
 class sessionEventServiceImpl {

@@ -18,6 +18,7 @@ let include = {
   provider: true,
   connection: true
 };
+export let providerRunInclude = include;
 
 class providerRunServiceImpl {
   async listProviderRuns(d: {

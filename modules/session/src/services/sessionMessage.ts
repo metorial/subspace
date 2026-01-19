@@ -16,13 +16,24 @@ import { sessionErrorInclude } from './sessionError';
 
 let include = {
   session: true,
-  senderParticipant: true,
   sessionProvider: true,
-  responderParticipant: true,
+  senderParticipant: { include: { provider: true } },
+  responderParticipant: { include: { provider: true } },
   connection: true,
   providerRun: true,
+  toolCall: {
+    include: {
+      tool: {
+        include: {
+          provider: true,
+          specification: { omit: { value: true } }
+        }
+      }
+    }
+  },
   error: { include: sessionErrorInclude }
 };
+export let sessionMessageInclude = include;
 
 class sessionMessageServiceImpl {
   async listSessionMessages(d: {
