@@ -1,55 +1,19 @@
+import { type Session, type SessionEvent } from '@metorial-subspace/db';
+import { providerRunPresenter, type ProviderRunPresenterProps } from './providerRun';
 import {
-  type Provider,
-  type ProviderRun,
-  type Session,
-  type SessionConnection,
-  type SessionError,
-  type SessionErrorGroup,
-  type SessionEvent,
-  type SessionMessage,
-  type SessionParticipant,
-  type SessionProvider
-} from '@metorial-subspace/db';
-import { providerRunPresenter } from './providerRun';
-import { sessionConnectionPresenter } from './sessionConnection';
-import { sessionErrorPresenter } from './sessionError';
-import { sessionMessagePresenter } from './sessionMessage';
+  sessionConnectionPresenter,
+  type SessionConnectionPresenterProps
+} from './sessionConnection';
+import { sessionErrorPresenter, type SessionErrorPresenterProps } from './sessionError';
+import { sessionMessagePresenter, type SessionMessagePresenterProps } from './sessionMessage';
 
 export let sessionEventPresenter = async (
   event: SessionEvent & {
     session: Session;
-    providerRun:
-      | (ProviderRun & {
-          sessionProvider: SessionProvider;
-          provider: Provider;
-          connection: SessionConnection;
-        })
-      | null;
-    message:
-      | (SessionMessage & {
-          senderParticipant: SessionParticipant;
-          sessionProvider: SessionProvider | null;
-          responderParticipant: SessionParticipant | null;
-          connection: SessionConnection | null;
-          providerRun: ProviderRun | null;
-        })
-      | null;
-    connection:
-      | (SessionConnection & {
-          participant:
-            | (SessionParticipant & {
-                provider: Provider | null;
-              })
-            | null;
-        })
-      | null;
-    error:
-      | (SessionError & {
-          group: SessionErrorGroup | null;
-          providerRun: ProviderRun | null;
-          connection: SessionConnection | null;
-        })
-      | null;
+    providerRun: ProviderRunPresenterProps | null;
+    message: SessionMessagePresenterProps | null;
+    connection: SessionConnectionPresenterProps | null;
+    error: SessionErrorPresenterProps | null;
   }
 ) => {
   return {
