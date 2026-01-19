@@ -1,3 +1,5 @@
-import './worker';
+import './instrument';
 
-import './connection';
+await import('./worker');
+
+await import('./connection');

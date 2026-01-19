@@ -1,3 +1,5 @@
+import './instrument';
+
 import { subspaceControllerApi } from './controllers';
 
 let server = Bun.serve({
