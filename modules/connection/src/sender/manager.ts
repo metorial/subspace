@@ -16,8 +16,7 @@ import {
   type SessionParticipant,
   type SessionProvider,
   type Solution,
-  type Tenant,
-  withTransaction
+  type Tenant
 } from '@metorial-subspace/db';
 import { isRecordDeleted } from '@metorial-subspace/list-utils';
 import {
@@ -126,44 +125,11 @@ export class SenderManager {
           );
         }
 
-        connection = await withTransaction(async db => {
-          await db.sessionConnection.updateMany({
-            where: { oid: connection!.oid },
-            data: {
-              token: await ID.generateId('sessionConnection_token'),
-              isReplaced: true
-            }
-          });
-
-          return await db.sessionConnection.create({
-            data: {
-              ...getId('sessionConnection'),
-
-              isEphemeral: connection!.isEphemeral,
-
-              // We move the token to a new connection after a certain time
-              // to prevent stale connections from being reused
-              token: d.connectionToken!,
-              mcpTransport: connection!.mcpTransport,
-              mcpProtocolVersion: connection!.mcpProtocolVersion,
-
-              status: 'active',
-              state: 'disconnected' as const, // We want to reuse the connection logic below
-              initState: connection!.initState,
-              isManuallyDisabled: false,
-              isReplaced: false,
-
-              sessionOid: session.oid,
-              participantOid: connection!.participantOid,
-              tenantOid: session.tenantOid,
-              solutionOid: session.solutionOid,
-
-              mcpData: connection!.mcpData,
-
-              expiresAt: addDays(new Date(), DEFAULT_SESSION_EXPIRATION_DAYS),
-              lastPingAt: new Date()
-            }
-          });
+        connection = await db.sessionConnection.update({
+          where: { oid: connection!.oid },
+          data: {
+            expiresAt: addDays(new Date(), DEFAULT_SESSION_EXPIRATION_DAYS)
+          }
         });
       }
 
@@ -585,25 +551,24 @@ export class SenderManager {
     });
 
     await db.sessionEvent.createMany({
-      data: {
-        ...getId('sessionEvent'),
-        type: 'connection_created',
-        sessionOid: this.session.oid,
-        connectionOid: connection.oid,
-        tenantOid: this.session.tenantOid,
-        solutionOid: this.session.solutionOid
-      }
-    });
-
-    await db.sessionEvent.createMany({
-      data: {
-        ...getId('sessionEvent'),
-        type: 'connection_connected',
-        sessionOid: this.session.oid,
-        connectionOid: connection.oid,
-        tenantOid: this.session.tenantOid,
-        solutionOid: this.session.solutionOid
-      }
+      data: [
+        {
+          ...getId('sessionEvent'),
+          type: 'connection_created',
+          sessionOid: this.session.oid,
+          connectionOid: connection.oid,
+          tenantOid: this.session.tenantOid,
+          solutionOid: this.session.solutionOid
+        },
+        {
+          ...getId('sessionEvent'),
+          type: 'connection_connected',
+          sessionOid: this.session.oid,
+          connectionOid: connection.oid,
+          tenantOid: this.session.tenantOid,
+          solutionOid: this.session.solutionOid
+        }
+      ]
     });
 
     (async () => {
