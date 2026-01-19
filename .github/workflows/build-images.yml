@@ -43,7 +43,7 @@ jobs:
         if: matrix.service.name == 'public'
         run: |
           bun install
-          cd apps/public && bun add -D @vitejs/plugin-react && bun run build
+          cd apps/public && bun run build
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
