@@ -8,14 +8,14 @@ import {
   type SessionErrorGroup
 } from '@metorial-subspace/db';
 
-export let sessionErrorPresenter = async (
-  error: SessionError & {
-    session: Session;
-    group: SessionErrorGroup | null;
-    providerRun: ProviderRun | null;
-    connection: SessionConnection | null;
-  }
-) => {
+export type SessionErrorPresenterProps = SessionError & {
+  session: Session;
+  group: SessionErrorGroup | null;
+  providerRun: ProviderRun | null;
+  connection: SessionConnection | null;
+};
+
+export let sessionErrorPresenter = async (error: SessionErrorPresenterProps) => {
   let i = 0;
   while (!error.isProcessing || !error.group) {
     if (i++ >= 50) break;

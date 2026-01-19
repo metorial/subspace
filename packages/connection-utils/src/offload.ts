@@ -25,15 +25,16 @@ export let offload = {
   },
 
   getOffloadedSessionMessage: async (message: SessionMessage) => {
-    let res = await storage.getObject(
-      sessionMessageBucketRecord.bucket,
-      `msg/${message.id}/data`
-    );
-    if (!res) return null;
-
-    let str = res.data.toString('utf-8');
-
-    return JSON.parse(str) as OffloadedSessionMessage;
+    try {
+      let res = await storage.getObject(
+        sessionMessageBucketRecord.bucket,
+        `msg/${message.id}/data`
+      );
+      let str = res.data.toString('utf-8');
+      return JSON.parse(str) as OffloadedSessionMessage;
+    } catch (e) {
+      return null;
+    }
   }
 };
 

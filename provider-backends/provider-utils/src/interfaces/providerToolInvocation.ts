@@ -5,7 +5,7 @@ import type {
   ProviderRun,
   ProviderVariant,
   ProviderVersion,
-  SessionClient,
+  SessionParticipant,
   SlateSession,
   SlateToolCall,
   Tenant
@@ -40,7 +40,7 @@ export interface ToolInvocationCreateParam {
   provider: Provider;
   providerRun: ProviderRun;
   tool: { callableId: string };
-  client: SessionClient;
+  sender: SessionParticipant;
   providerAuthConfig: ProviderAuthConfig | null;
 
   slateSession?: SlateSession;

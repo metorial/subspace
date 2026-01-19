@@ -6,14 +6,14 @@ import type {
   SessionProvider
 } from '@metorial-subspace/db';
 
-export let providerRunPresenter = (
-  providerRun: ProviderRun & {
-    session: Session;
-    sessionProvider: SessionProvider;
-    provider: Provider;
-    connection: SessionConnection;
-  }
-) => ({
+export type ProviderRunPresenterProps = ProviderRun & {
+  session: Session;
+  sessionProvider: SessionProvider;
+  provider: Provider;
+  connection: SessionConnection;
+};
+
+export let providerRunPresenter = (providerRun: ProviderRunPresenterProps) => ({
   object: 'provider.run',
 
   id: providerRun.id,

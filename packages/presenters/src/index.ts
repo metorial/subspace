@@ -33,4 +33,5 @@ export * from './sessionTemplateProvider';
 export * from './setupSession';
 export * from './solution';
 export * from './tenant';
+export * from './toolCall';
 export * from './vault';

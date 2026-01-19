@@ -6,16 +6,16 @@ import type {
 } from '@metorial-subspace/db';
 import { sessionParticipantPresenter } from './sessionParticipant';
 
-export let sessionConnectionPresenter = (
-  connection: SessionConnection & {
-    session: Session;
-    participant:
-      | (SessionParticipant & {
-          provider: Provider | null;
-        })
-      | null;
-  }
-) => ({
+export type SessionConnectionPresenterProps = SessionConnection & {
+  session: Session;
+  participant:
+    | (SessionParticipant & {
+        provider: Provider | null;
+      })
+    | null;
+};
+
+export let sessionConnectionPresenter = (connection: SessionConnectionPresenterProps) => ({
   object: 'session.connection',
 
   id: connection.id,
