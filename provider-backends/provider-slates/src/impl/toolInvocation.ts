@@ -14,7 +14,7 @@ export class ProviderToolInvocation extends IProviderToolInvocation {
   ): Promise<ProviderRunCreateRes> {
     if (
       !data.providerVariant.slateOid ||
-      !data.providerConfig.slateInstanceOid ||
+      !data.providerConfigVersion.slateInstanceOid ||
       !data.providerVersion.slateVersionOid
     ) {
       throw new Error('Provider data is missing required slate associations');
@@ -26,7 +26,7 @@ export class ProviderToolInvocation extends IProviderToolInvocation {
       where: { oid: data.providerVariant.slateOid }
     });
     let slateInstance = await db.slateInstance.findUniqueOrThrow({
-      where: { oid: data.providerConfig.slateInstanceOid }
+      where: { oid: data.providerConfigVersion.slateInstanceOid }
     });
     let slateVersion = await db.slateVersion.findUniqueOrThrow({
       where: { oid: data.providerVersion.slateVersionOid }
@@ -56,15 +56,15 @@ export class ProviderToolInvocation extends IProviderToolInvocation {
   override async createToolInvocation(
     data: ToolInvocationCreateParam
   ): Promise<ToolInvocationCreateRes> {
-    if (data.providerAuthConfig && !data.providerAuthConfig.slateAuthConfigOid) {
+    if (data.providerAuthConfigVersion && !data.providerAuthConfigVersion.slateAuthConfigOid) {
       throw new Error('Provider auth config is missing slate auth config association');
     }
 
     let tenant = await getTenantForSlates(data.tenant);
 
-    let slateAuthConfig = data.providerAuthConfig?.slateAuthConfigOid
+    let slateAuthConfig = data.providerAuthConfigVersion?.slateAuthConfigOid
       ? await db.slateAuthConfig.findUniqueOrThrow({
-          where: { oid: data.providerAuthConfig.slateAuthConfigOid }
+          where: { oid: data.providerAuthConfigVersion.slateAuthConfigOid }
         })
       : null;
 

@@ -1,6 +1,7 @@
 import type {
   Provider,
   ProviderAuthConfig,
+  ProviderAuthConfigVersion,
   ProviderAuthCredentials,
   ProviderAuthCredentialsType,
   ProviderAuthMethod,
@@ -100,6 +101,7 @@ export interface ProviderOAuthSetupRetrieveRes {
 export interface GetDecryptedAuthConfigParam {
   tenant: Tenant;
   authConfig: ProviderAuthConfig;
+  authConfigVersion: ProviderAuthConfigVersion;
   note: string;
 }
 

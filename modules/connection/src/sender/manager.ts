@@ -36,7 +36,7 @@ import { env } from '../env';
 import { topics } from '../lib/topic';
 import { wire } from '../lib/wire';
 import { completeMessage } from '../shared/completeMessage';
-import { type CreateMessageProps, createMessage } from '../shared/createMessage';
+import { createMessage, type CreateMessageProps } from '../shared/createMessage';
 import { upsertParticipant } from '../shared/upsertParticipant';
 
 let instanceLock = createLock({
@@ -228,6 +228,7 @@ export class SenderManager {
 
       let pair = await providerDeploymentConfigPairInternalService.useDeploymentConfigPair({
         deployment: fullProvider.deployment,
+        authConfig: fullProvider.authConfig,
         config: fullProvider.config,
         version
       });

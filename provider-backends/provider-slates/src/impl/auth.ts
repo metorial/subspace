@@ -206,12 +206,12 @@ export class ProviderAuth extends IProviderAuth {
   ): Promise<GetDecryptedAuthConfigRes> {
     let tenant = await getTenantForSlates(data.tenant);
 
-    if (!data.authConfig.slateAuthConfigOid) {
+    if (!data.authConfigVersion.slateAuthConfigOid) {
       throw new Error('Auth config does not have associated slate auth config');
     }
 
     let slateAuthConfig = await db.slateAuthConfig.findUniqueOrThrow({
-      where: { oid: data.authConfig.slateAuthConfigOid }
+      where: { oid: data.authConfigVersion.slateAuthConfigOid }
     });
 
     let record = await slates.slateAuthConfig.decrypt({

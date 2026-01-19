@@ -37,6 +37,7 @@ export let startController = () => {
     let backendProviderRun = await backend.toolInvocation.createProviderRun({
       tenant: state.instance.sessionProvider.tenant,
       providerConfig: state.instance.sessionProvider.config,
+      providerConfigVersion: state.instance.sessionProvider.config.currentVersion!,
 
       providerVersion: state.version,
       provider: state.version.provider,
@@ -59,6 +60,8 @@ export let startController = () => {
           slateSession: backendProviderRun.slateSession,
           runState: backendProviderRun.runState,
           providerAuthConfig: state.instance.sessionProvider.authConfig,
+          providerAuthConfigVersion:
+            state.instance.sessionProvider.authConfig?.currentVersion ?? null,
           input: data.input,
           sender: state.participant,
           message

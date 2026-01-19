@@ -13,8 +13,8 @@ import {
   type ProviderDeploymentStatus,
   type ProviderVariant,
   type ProviderVersion,
-  type Solution,
   snowflake,
+  type Solution,
   type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
