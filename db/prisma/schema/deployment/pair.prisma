@@ -26,8 +26,23 @@ model ProviderDeploymentConfigPair {
   versions                                 ProviderDeploymentConfigPairProviderVersion[]
   providerSpecificationChangeNotifications ProviderSpecificationChangeNotification[]
   sessionProviderInstances                 SessionProviderInstance[]
+  providerDeploymentConfigPairAuthConfigs  ProviderDeploymentConfigPairAuthConfig[]
 
   @@unique([providerConfigOid, providerDeploymentOid])
+}
+
+model ProviderDeploymentConfigPairAuthConfig {
+  oid BigInt @id
+
+  pairOid BigInt
+  pair    ProviderDeploymentConfigPair @relation(fields: [pairOid], references: [oid])
+
+  authConfigVersionOid BigInt
+  authConfigVersion    ProviderAuthConfigVersion @relation(fields: [authConfigVersionOid], references: [oid])
+
+  createdAt DateTime @default(now())
+
+  @@unique([pairOid, authConfigVersionOid])
 }
 
 model ProviderDeploymentConfigPairProviderVersion {
