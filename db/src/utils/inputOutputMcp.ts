@@ -84,9 +84,11 @@ export let messageOutputToToolCall = async (
   if (!output) return null;
 
   if (output.type == 'mcp') {
-    if ('params' in output.data) return output.data.params?.arguments ?? output.data.params;
-    if ('result' in output.data) return output.data.result;
-    if ('error' in output.data) return output.data.error;
+    if ('params' in output.data && output.data.params)
+      return output.data.params?.arguments ?? output.data.params;
+    if ('result' in output.data && output.data.result)
+      return output.data.result?.structuredContent ?? output.data.result;
+    if ('error' in output.data && output.data.error) return output.data.error;
     return {};
   }
 
@@ -104,9 +106,11 @@ export let messageInputToToolCall = async (
   if (!input) return null;
 
   if (input.type == 'mcp') {
-    if ('params' in input.data) return input.data.params?.arguments ?? input.data.params;
-    if ('result' in input.data) return input.data.result;
-    if ('error' in input.data) return input.data.error;
+    if ('params' in input.data && input.data.params)
+      return input.data.params?.arguments ?? input.data.params;
+    if ('result' in input.data && input.data.result)
+      return input.data.result?.structuredContent ?? input.data.result;
+    if ('error' in input.data && input.data.error) return input.data.error;
     return {};
   }
 
