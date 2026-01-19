@@ -128,8 +128,7 @@ export let providerDeploymentController = app.controller({
 
           isEphemeral: ctx.input.isEphemeral,
 
-          config:
-            ctx.input.config.type === 'vault'
+          config: (ctx.input.config.type === 'vault'
               ? {
                   type: 'vault',
                   vault: await providerConfigVaultService.getProviderConfigVaultById({
@@ -138,7 +137,7 @@ export let providerDeploymentController = app.controller({
                     solution: ctx.solution
                   })
                 }
-              : ctx.input.config
+              : ctx.input.config) as any
         }
       });
 

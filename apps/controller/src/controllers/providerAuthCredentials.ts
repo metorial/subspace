@@ -105,7 +105,7 @@ export let providerAuthCredentialsController = app.controller({
             description: ctx.input.description,
             metadata: ctx.input.metadata,
             isEphemeral: ctx.input.isEphemeral,
-            config: ctx.input.config
+            config: ctx.input.config as any
           }
         });
 
