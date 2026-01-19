@@ -7,5 +7,3 @@ export * from './controller';
 export * from './mcp';
 export * from './presenter';
 export * from './sender';
-
-export { getOffloadedSessionMessage } from './lib/offload';

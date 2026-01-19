@@ -9,7 +9,7 @@ export type WireInput = {
   toolKey: string;
   toolCallableId: string;
 
-  input: any;
+  input: PrismaJson.SessionMessageInput;
 };
 
 export type WireResult = {

@@ -65,6 +65,12 @@ export let mcpRouter = createHono().all(`/:key?`, async c => {
         let endpoint = new URL(metorialProxyUrl);
         endpoint.searchParams.set('connection_token', connection.token);
 
+        if (con.connection) {
+          c.res.headers.set('mcp-session-id', con.connection.token);
+          c.res.headers.set('Metorial-Connection-Id', con.connection.id);
+          c.res.headers.set('Metorial-Connection-Token', con.connection.token);
+        }
+
         await stream.writeSSE({
           event: 'endpoint',
           data: endpoint.toString()
@@ -88,6 +94,12 @@ export let mcpRouter = createHono().all(`/:key?`, async c => {
       }
 
       let con = await McpConnection.create(baseParams);
+
+      if (con.connection) {
+        c.res.headers.set('mcp-session-id', con.connection.token);
+        c.res.headers.set('Metorial-Connection-Id', con.connection.id);
+        c.res.headers.set('Metorial-Connection-Token', con.connection.token);
+      }
 
       await con.handleMessage(json, {
         waitForResponse: false

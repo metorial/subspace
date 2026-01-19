@@ -14,6 +14,7 @@ import {
   type InitializeResult,
   type JSONRPCErrorResponse,
   type JSONRPCMessage,
+  type JSONRPCRequest,
   type JSONRPCResponse,
   ListToolsRequestSchema,
   type ListToolsResult
@@ -243,13 +244,16 @@ export class McpSender {
 
   private async handleToolCallMessage(
     id: ID,
-    msg: CallToolRequest,
+    msg: CallToolRequest & JSONRPCRequest,
     opts: { waitForResponse: boolean }
   ) {
     let result = await this.manager.callTool({
       clientMcpId: id,
       toolId: msg.params.name,
-      input: msg.params.arguments ?? {},
+      input: {
+        type: 'mcp',
+        data: msg
+      },
       waitForResponse: opts.waitForResponse,
       transport: 'mcp'
     });

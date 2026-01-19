@@ -22,8 +22,17 @@ export let mcpValidate = <S extends z.ZodSchema>(
     };
   }
 
+  if (typeof res.data != 'object' || res.data === null) {
+    throw new Error('mcpValidate: Parsed data is not an object');
+  }
+
   return {
     success: true as const,
-    data: res.data
+    data: {
+      method: (res.data as any).method,
+      ...res.data,
+      jsonrpc: '2.0' as const,
+      id: (id ?? data.id ?? null) as string | number | null
+    }
   };
 };

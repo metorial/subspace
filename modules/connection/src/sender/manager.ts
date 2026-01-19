@@ -59,7 +59,7 @@ export interface InitProps {
 
 export interface CallToolProps {
   toolId: string;
-  input: Record<string, any>;
+  input: PrismaJson.SessionMessageInput;
   waitForResponse: boolean;
   transport: SessionConnectionTransport;
   clientMcpId?: PrismaJson.SessionMessageClientMcpId;
@@ -128,7 +128,7 @@ export class SenderManager {
           );
         }
 
-        connection = await db.sessionConnection.update({
+        await db.sessionConnection.updateMany({
           where: { oid: connection!.oid },
           data: {
             expiresAt: addDays(new Date(), DEFAULT_SESSION_EXPIRATION_DAYS)
@@ -350,8 +350,11 @@ export class SenderManager {
         badRequestError({ message: 'No connection id/token passed to connection' })
       );
     }
-    if (!connection.participant || connection.initState != 'completed') {
+    if (connection.initState != 'completed') {
       throw new ServiceError(badRequestError({ message: 'Connection is not initialized' }));
+    }
+    if (!connection.participant) {
+      throw new Error('Connection participant not loaded');
     }
 
     let { provider, tool, instance } = await this.getToolById({ toolId: d.toolId });
@@ -365,10 +368,7 @@ export class SenderManager {
       status: 'waiting_for_response',
       type: 'tool_call',
       source: 'client',
-      input: {
-        type: 'tool.call',
-        data: d.input
-      },
+      input: d.input,
       senderParticipant: connection.participant,
       clientMcpId: d.clientMcpId,
       transport: d.transport,
@@ -525,7 +525,7 @@ export class SenderManager {
       isManuallyDisabled: false,
 
       sessionOid: this.session.oid,
-      clientOid: participant.oid,
+      participantOid: participant.oid,
 
       mcpData: {
         capabilities: d.mcpCapabilities,
