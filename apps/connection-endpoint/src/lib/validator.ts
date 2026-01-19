@@ -8,16 +8,18 @@ export let useValidation = <Target extends keyof ValidationTargets, T extends z.
   schema: T
 ) =>
   zValidator(target, schema, (data, c) => {
-    if (!data.success)
+    if (!data.success) {
+      const error = 'error' in data ? data.error : null;
       return c.json(
         validationError({
           entity: 'query',
-          errors: data.error.issues.map(e => ({
+          errors: error?.issues.map(e => ({
             code: e.code,
             message: e.message,
             path: e.path.map(p => p.toString())
-          }))
+          })) ?? []
         }).toResponse(),
         400
       ) as never;
+    }
   });
