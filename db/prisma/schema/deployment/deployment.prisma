@@ -52,16 +52,15 @@ model ProviderDeployment {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  configPairs                          ProviderDeploymentConfigPair[]
-  providerOAuthSetups                  ProviderOAuthSetup[]
-  providerAuthConfigUsedForDeployments ProviderAuthConfigUsedForDeployment[]
-  providerConfigVaults                 ProviderConfigVault[]
-  providerConfigs                      ProviderConfig[]
-  providerAuthConfigs                  ProviderAuthConfig[]
-  providerAuthImports                  ProviderAuthImport[]
-  providerSetupSessions                ProviderSetupSession[]
-  sessionProviders                     SessionProvider[]
-  sessionTemplateProviders             SessionTemplateProvider[]
+  configPairs              ProviderDeploymentConfigPair[]
+  providerOAuthSetups      ProviderOAuthSetup[]
+  providerConfigVaults     ProviderConfigVault[]
+  providerConfigs          ProviderConfig[]
+  providerAuthConfigs      ProviderAuthConfig[]
+  providerAuthImports      ProviderAuthImport[]
+  providerSetupSessions    ProviderSetupSession[]
+  sessionProviders         SessionProvider[]
+  sessionTemplateProviders SessionTemplateProvider[]
 
   @@index([isDefault])
   @@index([status])

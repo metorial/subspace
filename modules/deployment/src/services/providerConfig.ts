@@ -29,8 +29,8 @@ import {
   normalizeStatusForList,
   resolveProviderConfigs,
   resolveProviderDeployments,
-  resolveProviderSpecifications,
-  resolveProviders
+  resolveProviders,
+  resolveProviderSpecifications
 } from '@metorial-subspace/list-utils';
 import {
   providerDeploymentConfigPairInternalService,
@@ -276,10 +276,11 @@ class providerConfigServiceImpl {
             where: {
               oid: d.input.config.vault.configOid,
               tenantOid: d.tenant.oid
-            }
+            },
+            include: { currentVersion: true }
           });
 
-          return await db.providerConfig.create({
+          let config = await db.providerConfig.create({
             data: {
               ...ids,
               ...data,
@@ -290,12 +291,25 @@ class providerConfigServiceImpl {
               fromVaultOid: d.input.config.vault.oid,
 
               deploymentOid: d.providerDeployment?.oid ?? d.input.config.vault.deploymentOid,
-              specificationOid: parentConfig.specificationOid,
-
-              slateInstanceOid: parentConfig.slateInstanceOid
+              specificationOid: parentConfig.specificationOid
             },
             include
           });
+
+          let currentVersion = await db.providerConfigVersion.create({
+            data: {
+              ...getId('providerConfigVersion'),
+              configOid: config.oid,
+              slateInstanceOid: parentConfig.currentVersion?.slateInstanceOid
+            }
+          });
+
+          await db.providerConfig.updateMany({
+            where: { oid: config.oid },
+            data: { currentVersionOid: currentVersion.oid }
+          });
+
+          return config;
         }
 
         let version = await providerDeploymentInternalService.getCurrentVersionOptional({
@@ -327,10 +341,30 @@ class providerConfigServiceImpl {
             status: 'active',
 
             deploymentOid: d.providerDeployment?.oid,
-            slateInstanceOid: inner.slateInstance?.oid,
             specificationOid: version.specificationOid
           },
           include
+        });
+
+        let currentVersion = await db.providerConfigVersion.create({
+          data: {
+            ...getId('providerConfigVersion'),
+            configOid: config.oid,
+            slateInstanceOid: inner.slateInstance?.oid
+          }
+        });
+
+        await db.providerConfig.updateMany({
+          where: { oid: config.oid },
+          data: { currentVersionOid: currentVersion.oid }
+        });
+
+        await db.providerConfigUpdate.create({
+          data: {
+            ...getId('providerConfigUpdate'),
+            configOid: config.oid,
+            toVersionOid: currentVersion.oid
+          }
         });
 
         if (config.isDefault && d.providerDeployment) {
@@ -355,7 +389,9 @@ class providerConfigServiceImpl {
       if (d.providerDeployment) {
         await providerDeploymentConfigPairInternalService.upsertDeploymentConfigPair({
           deployment: d.providerDeployment,
-          config
+          config,
+
+          authConfig: null
         });
       }
 

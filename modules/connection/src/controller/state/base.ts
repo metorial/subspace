@@ -18,9 +18,9 @@ export let getConnectionBaseState = async (d: {
           deployment: true,
           session: true,
           tenant: true,
-          config: true,
-          authConfig: true,
-          provider: true
+          provider: true,
+          config: { include: { currentVersion: true } },
+          authConfig: { include: { currentVersion: true } }
         }
       },
       pairVersion: {

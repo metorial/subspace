@@ -1,7 +1,9 @@
 import type {
   Provider,
   ProviderAuthConfig,
+  ProviderAuthConfigVersion,
   ProviderConfig,
+  ProviderConfigVersion,
   ProviderRun,
   ProviderVariant,
   ProviderVersion,
@@ -28,6 +30,7 @@ export interface ProviderRunCreateParam {
 
   providerVariant: ProviderVariant;
   providerConfig: ProviderConfig;
+  providerConfigVersion: ProviderConfigVersion;
   providerVersion: ProviderVersion;
 }
 
@@ -43,6 +46,7 @@ export interface ToolInvocationCreateParam {
   tool: { callableId: string };
   sender: SessionParticipant;
   providerAuthConfig: ProviderAuthConfig | null;
+  providerAuthConfigVersion: ProviderAuthConfigVersion | null;
 
   slateSession?: SlateSession;
 

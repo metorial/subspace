@@ -83,6 +83,7 @@ class providerOAuthSetupInternalServiceImpl {
                 provider: providerOAuthSetup.provider,
                 solution: providerOAuthSetup.solution,
                 providerDeployment: providerOAuthSetup.deployment ?? undefined,
+                credentials: providerOAuthSetup.authCredentials,
                 input: {
                   name: providerOAuthSetup.name ?? undefined,
                   description: providerOAuthSetup.description ?? undefined,
