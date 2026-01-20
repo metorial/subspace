@@ -1,5 +1,5 @@
-export interface WireConfig {
-  wireId: string;
+export interface ConduitConfig {
+  conduitId: string;
 
   receiver: ReceiverConfig;
 
@@ -58,8 +58,8 @@ export interface NatsConfig {
   pass?: string;
 }
 
-export const DEFAULT_CONFIG: WireConfig = {
-  wireId: 'default',
+export const DEFAULT_CONFIG: ConduitConfig = {
+  conduitId: 'default',
   receiver: {
     heartbeatInterval: 5000,
     heartbeatTtl: 10000,
@@ -85,9 +85,9 @@ export const DEFAULT_CONFIG: WireConfig = {
   }
 };
 
-export let mergeConfig = (userConfig: Partial<WireConfig>): WireConfig => {
+export let mergeConfig = (userConfig: Partial<ConduitConfig>): ConduitConfig => {
   return {
-    wireId: userConfig.wireId || DEFAULT_CONFIG.wireId,
+    conduitId: userConfig.conduitId || DEFAULT_CONFIG.conduitId,
     receiver: { ...DEFAULT_CONFIG.receiver, ...userConfig.receiver },
     sender: { ...DEFAULT_CONFIG.sender, ...userConfig.sender },
     coordination: userConfig.coordination || DEFAULT_CONFIG.coordination,

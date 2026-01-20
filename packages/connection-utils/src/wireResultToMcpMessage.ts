@@ -1,9 +1,9 @@
 import { messageOutputToMcp } from '@metorial-subspace/db';
 import type { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
-import type { WireResult } from './wireMessage';
+import type { ConduitResult } from './conduitMessage';
 
-export let wireResultToMcpMessage = async (
-  msg: WireResult
+export let conduitResultToMcpMessage = async (
+  msg: ConduitResult
 ): Promise<JSONRPCMessage | null> => {
   let output = msg.output ?? msg.message?.output;
   if (!output) return null;

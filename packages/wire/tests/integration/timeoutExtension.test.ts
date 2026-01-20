@@ -1,15 +1,15 @@
 import { describe, expect, test } from 'vitest';
-import { createWire } from '../../src/index';
+import { createConduit } from '../../src/index';
 
 describe('Timeout Extension Integration', () => {
   test('should handle long processing with timeout extension', async () => {
-    const wire = createWire();
-    const sender = wire.createSender({
+    const conduit = createConduit();
+    const sender = conduit.createSender({
       defaultTimeout: 2000 // 2 second timeout
     });
 
     // Receiver with timeoutExtensionThreshold set low to test extension
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, payload) => {
         // Simulate long processing (3 seconds)
         await new Promise(resolve => setTimeout(resolve, 3000));
@@ -31,16 +31,16 @@ describe('Timeout Extension Integration', () => {
 
     await receiver.stop();
     await sender.close();
-    await wire.close();
+    await conduit.close();
   }, 15000);
 
   test('should timeout if processing takes too long even with extensions', async () => {
-    const wire = createWire();
-    const sender = wire.createSender({
+    const conduit = createConduit();
+    const sender = conduit.createSender({
       defaultTimeout: 1000 // 1 second timeout
     });
 
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, _payload) => {
         // Simulate very long processing (30 seconds)
         // Extensions will be sent but eventually sender will give up
@@ -61,16 +61,16 @@ describe('Timeout Extension Integration', () => {
 
     await receiver.stop();
     await sender.close();
-    await wire.close();
+    await conduit.close();
   }, 5000);
 
   test('should not send extension for fast processing', async () => {
-    const wire = createWire();
-    const sender = wire.createSender({
+    const conduit = createConduit();
+    const sender = conduit.createSender({
       defaultTimeout: 5000
     });
 
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, _payload) => {
         // Fast processing (100ms)
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -90,16 +90,16 @@ describe('Timeout Extension Integration', () => {
 
     await receiver.stop();
     await sender.close();
-    await wire.close();
+    await conduit.close();
   });
 
   test('should handle multiple extensions for very long processing', async () => {
-    const wire = createWire();
-    const sender = wire.createSender({
+    const conduit = createConduit();
+    const sender = conduit.createSender({
       defaultTimeout: 2000
     });
 
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, _payload) => {
         // Process in chunks to allow multiple extensions
         for (let i = 0; i < 5; i++) {
@@ -122,6 +122,6 @@ describe('Timeout Extension Integration', () => {
 
     await receiver.stop();
     await sender.close();
-    await wire.close();
+    await conduit.close();
   }, 20000);
 });

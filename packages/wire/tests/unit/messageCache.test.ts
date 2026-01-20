@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { MessageCache } from '../../src/core/messageCache';
-import type { WireResponse } from '../../src/types/response';
+import type { ConduitResponse } from '../../src/types/response';
 
 describe('MessageCache', () => {
   let cache: MessageCache;
@@ -14,7 +14,7 @@ describe('MessageCache', () => {
   });
 
   test('should store and retrieve responses', () => {
-    const response: WireResponse = {
+    const response: ConduitResponse = {
       messageId: 'msg-1',
       success: true,
       result: { data: 'test' },
@@ -33,7 +33,7 @@ describe('MessageCache', () => {
   });
 
   test('should indicate has() correctly', () => {
-    const response: WireResponse = {
+    const response: ConduitResponse = {
       messageId: 'msg-1',
       success: true,
       result: null,
@@ -46,7 +46,7 @@ describe('MessageCache', () => {
   });
 
   test('should delete entries', () => {
-    const response: WireResponse = {
+    const response: ConduitResponse = {
       messageId: 'msg-1',
       success: true,
       result: null,
@@ -79,7 +79,7 @@ describe('MessageCache', () => {
   });
 
   test('should expire entries after TTL', async () => {
-    const response: WireResponse = {
+    const response: ConduitResponse = {
       messageId: 'msg-1',
       success: true,
       result: null,

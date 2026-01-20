@@ -95,7 +95,7 @@ export class McpConnection {
     await this.#control.sendControlMessage({
       type: 'mcp_control_message',
       channel: 'broadcast_response_or_notification',
-      wire: {
+      conduit: {
         status: 'succeeded',
         message: null,
         output: {

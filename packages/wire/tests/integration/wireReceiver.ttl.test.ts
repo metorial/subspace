@@ -1,23 +1,23 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import type { TopicContext } from '../../src/core/wireReceiver';
-import { createMemoryWire, createWire } from '../../src/index';
+import type { TopicContext } from '../../src/core/conduitReceiver';
+import { createConduit, createMemoryConduit } from '../../src/index';
 
-describe('WireReceiver TTL Tests', () => {
-  let wire: ReturnType<typeof createWire>;
+describe('ConduitReceiver TTL Tests', () => {
+  let conduit: ReturnType<typeof createConduit>;
 
   beforeEach(() => {
-    wire = createWire(createMemoryWire('test-wire'));
+    conduit = createConduit(createMemoryConduit('test-conduit'));
   });
 
   afterEach(async () => {
-    await wire.close();
+    await conduit.close();
   });
 
   it('should voluntarily close topic when TTL expires', async () => {
     const closeCalls: string[] = [];
     const messageCount: Record<string, number> = {};
 
-    const receiver = wire.createWireReceiver(async (ctx: TopicContext) => {
+    const receiver = conduit.createConduitReceiver(async (ctx: TopicContext) => {
       messageCount[ctx.topic] = 0;
 
       // Set a very short TTL (200ms)
@@ -37,7 +37,7 @@ describe('WireReceiver TTL Tests', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Send first message
     await sender.send('test-topic', { value: 1 });
@@ -63,7 +63,7 @@ describe('WireReceiver TTL Tests', () => {
     const closeCalls: string[] = [];
     const messageCount: Record<string, number> = {};
 
-    const receiver = wire.createWireReceiver(async (ctx: TopicContext) => {
+    const receiver = conduit.createConduitReceiver(async (ctx: TopicContext) => {
       messageCount[ctx.topic] = 0;
 
       // Initial TTL: 200ms
@@ -85,7 +85,7 @@ describe('WireReceiver TTL Tests', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Send messages every 150ms (before TTL expires)
     await sender.send('test-topic', { value: 1 });
@@ -115,7 +115,7 @@ describe('WireReceiver TTL Tests', () => {
   it('should handle multiple topics with different TTLs', async () => {
     const closeCalls: string[] = [];
 
-    const receiver = wire.createWireReceiver(async (ctx: TopicContext) => {
+    const receiver = conduit.createConduitReceiver(async (ctx: TopicContext) => {
       if (ctx.topic === 'short-ttl') {
         ctx.extendTtl(200); // 200ms
       } else if (ctx.topic === 'long-ttl') {
@@ -135,7 +135,7 @@ describe('WireReceiver TTL Tests', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Send to both topics
     await sender.send('short-ttl', { value: 1 });
@@ -164,7 +164,7 @@ describe('WireReceiver TTL Tests', () => {
 
   it('should not interfere with Redis ownership TTL', async () => {
     // This test verifies that the logical TTL doesn't affect Redis ownership
-    const receiver = wire.createWireReceiver(async (ctx: TopicContext) => {
+    const receiver = conduit.createConduitReceiver(async (ctx: TopicContext) => {
       // Set a very long logical TTL (10 seconds)
       ctx.extendTtl(10000);
 
@@ -175,7 +175,7 @@ describe('WireReceiver TTL Tests', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Send a message
     await sender.send('test-topic', { value: 1 });

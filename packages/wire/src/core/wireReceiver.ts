@@ -14,10 +14,10 @@ export interface TopicContext {
 
 export type TopicHandler = (ctx: TopicContext) => Promise<void> | void;
 
-export interface WireReceiverConfig {
+export interface ConduitReceiverConfig {
   coordination: ICoordinationAdapter;
   transport: ITransportAdapter;
-  wireId: string;
+  conduitId: string;
   handleTopic: TopicHandler;
   config?: Partial<ReceiverConfig>;
 }
@@ -38,14 +38,14 @@ interface TopicState {
   ttlExpiresAt: number; // Logical TTL - when this receiver wants to stop handling this topic
 }
 
-export class WireReceiver {
+export class ConduitReceiver {
   private receiver: Receiver;
   private topicHandler: TopicHandler;
   private topicStates: Map<string, TopicState> = new Map();
   private readonly coordination: ICoordinationAdapter;
   private ttlCheckInterval: Timer | null = null;
 
-  constructor(config: WireReceiverConfig) {
+  constructor(config: ConduitReceiverConfig) {
     this.coordination = config.coordination;
     this.topicHandler = config.handleTopic;
 
@@ -70,7 +70,7 @@ export class WireReceiver {
       config.transport,
       fullConfig,
       messageHandler,
-      config.wireId
+      config.conduitId
     );
   }
 
@@ -108,7 +108,7 @@ export class WireReceiver {
   }
 
   private async handleOwnershipLoss(topic: string): Promise<void> {
-    console.log(`WireReceiver: ownership lost for topic ${topic}`);
+    console.log(`ConduitReceiver: ownership lost for topic ${topic}`);
     // Close the topic, which will trigger onClose handlers
     await this.closeTopic(topic);
   }
@@ -288,7 +288,7 @@ export class WireReceiver {
 
       // Check if the logical TTL has expired
       if (state.ttlExpiresAt <= now) {
-        console.log(`WireReceiver: TTL expired for topic ${topic}, closing voluntarily`);
+        console.log(`ConduitReceiver: TTL expired for topic ${topic}, closing voluntarily`);
         await this.closeTopic(topic);
       }
     }
@@ -298,13 +298,13 @@ export class WireReceiver {
     let state = this.topicStates.get(topic);
     if (!state || state.closed) {
       console.log(
-        `[WireReceiver] closeTopic called for ${topic} but state is ${!state ? 'missing' : 'already closed'}`
+        `[ConduitReceiver] closeTopic called for ${topic} but state is ${!state ? 'missing' : 'already closed'}`
       );
       return;
     }
 
     console.log(
-      `[WireReceiver] Closing topic ${topic}, has ${state.closeHandlers.length} close handlers`
+      `[ConduitReceiver] Closing topic ${topic}, has ${state.closeHandlers.length} close handlers`
     );
     state.closed = true;
 
@@ -317,9 +317,9 @@ export class WireReceiver {
     // Call all close handlers
     for (let handler of state.closeHandlers) {
       try {
-        console.log(`[WireReceiver] Calling close handler for ${topic}`);
+        console.log(`[ConduitReceiver] Calling close handler for ${topic}`);
         await handler();
-        console.log(`[WireReceiver] Close handler completed for ${topic}`);
+        console.log(`[ConduitReceiver] Close handler completed for ${topic}`);
       } catch (err) {
         console.error(`Error in close handler for topic ${topic}:`, err);
       }
@@ -359,4 +359,5 @@ export class WireReceiver {
   }
 }
 
-export let createWireReceiver = (config: WireReceiverConfig) => new WireReceiver(config);
+export let createConduitReceiver = (config: ConduitReceiverConfig) =>
+  new ConduitReceiver(config);

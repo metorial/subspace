@@ -2,20 +2,20 @@ import { internalServerError } from '@lowerdeck/error';
 import { serialize } from '@lowerdeck/serialize';
 import type {
   BroadcastMessage,
-  WireInput,
-  WireResult
+  ConduitInput,
+  ConduitResult
 } from '@metorial-subspace/connection-utils';
 import { db } from '@metorial-subspace/db';
 import { getBackend } from '@metorial-subspace/provider';
+import { conduit } from '../lib/conduit';
 import { broadcastNats } from '../lib/nats';
 import { topics } from '../lib/topic';
-import { wire } from '../lib/wire';
 import { completeMessage } from '../shared/completeMessage';
 import { upsertParticipant } from '../shared/upsertParticipant';
 import { ConnectionState } from './state';
 
 export let startController = () => {
-  let receiver = wire.createWireReceiver(async ctx => {
+  let receiver = conduit.createConduitReceiver(async ctx => {
     ctx.extendTtl(1000 * 60);
 
     let topic = topics.instance.decode(ctx.topic);
@@ -46,7 +46,7 @@ export let startController = () => {
       providerRun: state.providerRun
     });
 
-    let processMessage = async (data: WireInput) => {
+    let processMessage = async (data: ConduitInput) => {
       let message = await db.sessionMessage.findFirstOrThrow({
         where: { id: data.sessionMessageId }
       });
@@ -95,7 +95,7 @@ export let startController = () => {
       }
     };
 
-    ctx.onMessage(async (data: WireInput) => {
+    ctx.onMessage(async (data: ConduitInput) => {
       ctx.extendTtl(state.messageTTLExtensionMs);
 
       let res = await processMessage(data);
@@ -131,7 +131,7 @@ export let startController = () => {
         output,
         status: res.status,
         completedAt: res.completedAt
-      } satisfies WireResult;
+      } satisfies ConduitResult;
 
       await broadcastNats.publish(
         topics.sessionConnection.encode({

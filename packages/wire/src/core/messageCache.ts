@@ -1,7 +1,7 @@
-import type { WireResponse } from '../types/response';
+import type { ConduitResponse } from '../types/response';
 
 interface CacheEntry {
-  response: WireResponse;
+  response: ConduitResponse;
   expiresAt: number;
 }
 
@@ -17,7 +17,7 @@ export class MessageCache {
     this.cleanupInterval = setInterval(() => this.cleanup(), 10000);
   }
 
-  get(messageId: string): WireResponse | undefined {
+  get(messageId: string): ConduitResponse | undefined {
     let entry = this.cache.get(messageId);
     if (!entry) {
       return undefined;
@@ -32,7 +32,7 @@ export class MessageCache {
     return entry.response;
   }
 
-  set(messageId: string, response: WireResponse): void {
+  set(messageId: string, response: ConduitResponse): void {
     // Enforce max size (LRU eviction)
     if (this.cache.size >= this.maxSize && !this.cache.has(messageId)) {
       // Remove oldest entry (first in map)

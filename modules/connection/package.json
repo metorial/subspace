@@ -28,7 +28,7 @@
     "@metorial-subspace/provider": "^1.0.0",
     "@metorial-subspace/redis-url": "^1.0.0",
     "@metorial-subspace/store": "^1.0.0",
-    "@metorial-subspace/wire": "^1.0.0",
+    "@metorial-subspace/conduit": "^1.0.0",
     "@modelcontextprotocol/sdk": "^1.25.2",
     "date-fns": "^4.1.0",
     "nats": "^2.29.3",

@@ -3,15 +3,15 @@ import type { ICoordinationAdapter } from '../adapters/coordination/coordination
 import type { MemoryTransport } from '../adapters/transport/memoryTransport';
 import type { ITransportAdapter } from '../adapters/transport/transportAdapter';
 import type { ReceiverConfig } from '../types/config';
-import type { TimeoutExtension, WireMessage } from '../types/message';
-import type { WireResponse } from '../types/response';
+import type { ConduitMessage, TimeoutExtension } from '../types/message';
+import type { ConduitResponse } from '../types/response';
 import { MessageCache } from './messageCache';
 import { OwnershipManager } from './ownershipManager';
 
 export type MessageHandler = (topic: string, payload: unknown) => Promise<unknown>;
 
 interface ProcessingMessage {
-  message: WireMessage;
+  message: ConduitMessage;
   startTime: number;
   lastExtensionSentAt: number; // Timestamp of last extension
   currentDeadline: number; // Current timeout deadline
@@ -24,7 +24,7 @@ export class Receiver {
   private heartbeatInterval: Timer | null = null;
   private subscriptionId: string | null = null;
   private running = false;
-  private readonly wireId: string;
+  private readonly conduitId: string;
   private processingMessages: Map<string, ProcessingMessage> = new Map();
   private timeoutCheckInterval: Timer | null = null;
 
@@ -33,9 +33,9 @@ export class Receiver {
     private transport: ITransportAdapter,
     private config: ReceiverConfig,
     private handler: MessageHandler,
-    wireId: string = 'default'
+    conduitId: string = 'default'
   ) {
-    this.wireId = wireId;
+    this.conduitId = conduitId;
     this.receiverId = `receiver-${crypto.randomUUID()}`;
     this.messageCache = new MessageCache(config.messageCacheSize, config.messageCacheTtl);
     this.ownershipManager = new OwnershipManager(
@@ -105,8 +105,8 @@ export class Receiver {
   }
 
   private async subscribe(): Promise<void> {
-    // Subscribe to wire.{wireId}.receiver.{receiverId}.>
-    let subject = `wire.${this.wireId}.receiver.${this.receiverId}.>`;
+    // Subscribe to conduit.{conduitId}.receiver.{receiverId}.>
+    let subject = `conduit.${this.conduitId}.receiver.${this.receiverId}.>`;
 
     this.subscriptionId = await this.transport.subscribe(subject, async (data: Uint8Array) => {
       await this.handleMessage(data);
@@ -118,7 +118,7 @@ export class Receiver {
       // Decode message
       let decoder = new TextDecoder();
       let messageStr = decoder.decode(data);
-      let message: WireMessage = serialize.decode(messageStr);
+      let message: ConduitMessage = serialize.decode(messageStr);
 
       // Check if we've seen this message before
       let cachedResponse = this.messageCache.get(message.messageId);
@@ -145,7 +145,7 @@ export class Receiver {
     }
   }
 
-  private async processMessage(message: WireMessage): Promise<WireResponse> {
+  private async processMessage(message: ConduitMessage): Promise<ConduitResponse> {
     try {
       // Track message for timeout extension monitoring
       const now = Date.now();
@@ -245,7 +245,7 @@ export class Receiver {
   }
 
   private async sendExtension(
-    message: WireMessage,
+    message: ConduitMessage,
     extension: TimeoutExtension
   ): Promise<void> {
     let encoder = new TextEncoder();
@@ -260,7 +260,10 @@ export class Receiver {
     }
   }
 
-  private async sendResponse(message: WireMessage, response: WireResponse): Promise<void> {
+  private async sendResponse(
+    message: ConduitMessage,
+    response: ConduitResponse
+  ): Promise<void> {
     let encoder = new TextEncoder();
     let data = encoder.encode(serialize.encode(response));
 
@@ -277,8 +280,8 @@ export class Receiver {
   }
 
   // private async broadcastTopicResponse(
-  //   message: WireMessage,
-  //   response: WireResponse
+  //   message: ConduitMessage,
+  //   response: ConduitResponse
   // ): Promise<void> {
   //   try {
   //     let broadcast: TopicResponseBroadcast = {
@@ -291,7 +294,7 @@ export class Receiver {
 
   //     let encoder = new TextEncoder();
   //     let data = encoder.encode(serialize.encode(broadcast));
-  //     let subject = `wire.${this.wireId}.topic.responses.${message.topic}`;
+  //     let subject = `conduit.${this.conduitId}.topic.responses.${message.topic}`;
 
   //     await this.transport.publish(subject, data);
   //   } catch (err) {

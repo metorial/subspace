@@ -1,5 +1,5 @@
 {
-  "name": "@metorial-subspace/wire",
+  "name": "@metorial-subspace/conduit",
   "module": "index.ts",
   "type": "module",
   "private": true,
