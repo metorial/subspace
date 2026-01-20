@@ -38,15 +38,24 @@ interface FormFieldProps {
   RenderError: React.ComponentType<{ field: string }>;
 }
 
+let getDescription = (field: FieldDefinition) => {
+  let desc = field.description;
+  if (!desc || desc.length <= 5) return undefined;
+  if (field.placeholder && desc.toLowerCase() === field.placeholder.toLowerCase())
+    return undefined;
+  return desc;
+};
+
 let FormField = ({ field, form, RenderError }: FormFieldProps) => {
   let value = form.values[field.key];
+  let description = getDescription(field);
 
   if (field.type === 'select' && field.options) {
     return (
       <div>
         <Select
           label={field.required ? `${field.label} *` : field.label}
-          description={field.description}
+          description={description}
           value={value as string}
           onChange={val => form.setFieldValue(field.key, val)}
           placeholder="Select..."
@@ -62,7 +71,7 @@ let FormField = ({ field, form, RenderError }: FormFieldProps) => {
       <div>
         <Checkbox
           label={field.required ? `${field.label} *` : field.label}
-          description={field.description}
+          description={description}
           checked={value as boolean}
           onCheckedChange={checked => form.setFieldValue(field.key, checked)}
         />
@@ -77,7 +86,7 @@ let FormField = ({ field, form, RenderError }: FormFieldProps) => {
         <Input
           as="textarea"
           label={field.required ? `${field.label} *` : field.label}
-          description={field.description}
+          description={description}
           value={value as string}
           onChange={form.handleChange}
           onBlur={form.handleBlur}
@@ -95,7 +104,7 @@ let FormField = ({ field, form, RenderError }: FormFieldProps) => {
     <div>
       <Input
         label={field.required ? `${field.label} *` : field.label}
-        description={field.description}
+        description={description}
         type={field.type}
         value={value as string}
         onChange={form.handleChange}

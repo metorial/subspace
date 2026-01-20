@@ -1,8 +1,8 @@
 import React from 'react';
-import { Flex, Spinner, Text, Title } from '@metorial-io/ui';
+import styled from 'styled-components';
+import { Group, CenteredSpinner, Text, Title, theme } from '@metorial-io/ui';
 import { useSetupSession } from '../../state/setupSession';
 import { SetupSessionFlow } from './SetupSessionFlow';
-import { MetorialElementsLayout } from './layouts/MetorialElementsLayout';
 import { SuccessIcon, WarningIcon, ErrorIcon } from './components/StatusIcons';
 
 export let SetupSessionPage = () => {
@@ -64,6 +64,114 @@ export let SetupSessionPage = () => {
   return <SetupSessionFlow session={session} brand={brand} clientSecret={clientSecret} />;
 };
 
+let Wrapper = styled.div`
+  min-height: 100dvh;
+  padding: 60px 20px;
+  background: ${theme.colors.gray100};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  @media (max-width: 640px) {
+    padding: 0;
+    background: white;
+    align-items: flex-start;
+  }
+`;
+
+let Inner = styled.div`
+  width: 420px;
+  max-width: 100%;
+  margin: 0 auto;
+`;
+
+let Card = styled.div`
+  background: white;
+  box-shadow: ${theme.shadows.medium};
+  border-radius: 10px;
+  border: 1px solid ${theme.colors.gray300};
+  overflow: hidden;
+
+  & > div {
+    border: none;
+    border-radius: 0;
+  }
+
+  @media (max-width: 640px) {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: none;
+    border-radius: 0;
+    border: none;
+
+    & > div {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+
+      & > *:first-child {
+        margin: auto 0;
+        border-bottom: none !important;
+      }
+
+      & > *:last-child {
+        border-bottom: none !important;
+      }
+    }
+  }
+`;
+
+let StatusContent = styled(Group.Content)`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 24px;
+`;
+
+let IconWrapper = styled.div`
+  margin-bottom: 24px;
+`;
+
+let StatusTitle = styled(Title)`
+  text-align: center;
+`;
+
+let StatusDescription = styled.p`
+  text-align: center;
+  line-height: 1.5;
+  margin-top: 12px;
+  color: #666;
+  font-size: 14px;
+`;
+
+let Footer = styled(Group.Footer)`
+  justify-content: center;
+  gap: 6px;
+  border-top: none;
+
+  @media (max-width: 640px) {
+    margin-top: auto;
+    padding: 24px;
+  }
+`;
+
+let FooterLink = styled.a`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #1a1a1a;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 13px;
+`;
+
+let FooterLogo = styled.img`
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+`;
+
 interface StatusPageViewProps {
   icon: React.ReactElement;
   title: string;
@@ -72,92 +180,33 @@ interface StatusPageViewProps {
 
 let StatusPageView = ({ icon, title, description }: StatusPageViewProps) => {
   return (
-    <Flex
-      align="center"
-      justify="center"
-      style={{
-        minHeight: '100vh',
-        padding: 24,
-        background:
-          'linear-gradient(135deg, #f5d0e0 0%, #ffecd2 25%, #fcfcfc 50%, #dfe9f3 75%, #e0f7fa 100%)'
-      }}
-    >
-      <Flex
-        direction="column"
-        align="center"
-        style={{
-          width: '100%',
-          maxWidth: 420,
-          background: 'white',
-          borderRadius: 16,
-          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)',
-          overflow: 'hidden'
-        }}
-      >
-        <Flex direction="column" align="center" style={{ padding: '48px 24px' }}>
-          <div style={{ marginBottom: 24 }}>{icon}</div>
-          <Title size="3" weight="bold" style={{ textAlign: 'center' }}>
-            {title}
-          </Title>
-          <div style={{ height: 12 }} />
-          <Text color="gray600" style={{ textAlign: 'center', lineHeight: 1.5 }}>
-            {description}
-          </Text>
-        </Flex>
+    <Wrapper>
+      <Inner>
+        <Card>
+          <Group.Wrapper>
+            <StatusContent>
+              <IconWrapper>{icon}</IconWrapper>
+              <StatusTitle size="3" weight="bold">
+                {title}
+              </StatusTitle>
+              <StatusDescription>{description}</StatusDescription>
+            </StatusContent>
 
-        <Flex
-          align="center"
-          justify="center"
-          gap={6}
-          style={{
-            width: '100%',
-            padding: '16px 24px',
-            borderTop: '1px solid #f0f0f0',
-            background: '#fafafa'
-          }}
-        >
-          <Text color="gray600">Secured by</Text>
-          <a
-            href="https://metorial.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              color: '#1a1a1a',
-              textDecoration: 'none',
-              fontWeight: 500,
-              fontSize: 13
-            }}
-          >
-            <img
-              src="https://cdn.metorial.com/2025-06-13--14-59-55/logos/metorial/primary_logo/raw.svg"
-              alt="Metorial"
-              style={{ width: 16, height: 16, borderRadius: 3 }}
-            />
-            Metorial
-          </a>
-        </Flex>
-      </Flex>
-    </Flex>
+            <Footer>
+              <Text color="gray600">Secured by</Text>
+              <FooterLink href="https://metorial.com" target="_blank" rel="noopener noreferrer">
+                <FooterLogo
+                  src="https://cdn.metorial.com/2025-06-13--14-59-55/logos/metorial/primary_logo/raw.svg"
+                  alt="Metorial"
+                />
+                Metorial
+              </FooterLink>
+            </Footer>
+          </Group.Wrapper>
+        </Card>
+      </Inner>
+    </Wrapper>
   );
 };
 
-let LoadingPage = () => {
-  return (
-    <Flex
-      direction="column"
-      align="center"
-      justify="center"
-      gap={16}
-      style={{
-        minHeight: '100vh',
-        background:
-          'linear-gradient(135deg, #f5d0e0 0%, #ffecd2 25%, #fcfcfc 50%, #dfe9f3 75%, #e0f7fa 100%)'
-      }}
-    >
-      <Spinner size={32} />
-    </Flex>
-  );
-};
+let LoadingPage = () => <CenteredSpinner size={32} />;

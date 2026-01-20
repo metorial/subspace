@@ -22,7 +22,7 @@ export let ConfigStep = ({ schema, onSubmit, isSubmitting }: ConfigStepProps) =>
 
   return (
     <form onSubmit={form.handleSubmit}>
-      <Flex direction="column" gap={24}>
+      <Flex direction="column" gap={20}>
         <FormFromSchema schema={schema} form={form} RenderError={form.RenderError} />
 
         <Button

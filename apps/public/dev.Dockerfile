@@ -31,4 +31,4 @@ RUN bun install
 RUN cd apps/public && bun run build
 
 # Run in dev mode with hot reloading
-CMD ["sh", "-c", "cd db && bun prisma db push --accept-data-loss && cd ../apps/public && bun run start:dev"]
+CMD ["sh", "-c", "cd db && bun prisma db push --accept-data-loss && bun prisma generate && cd ../apps/public && bun run start:dev"]

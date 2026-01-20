@@ -29,4 +29,4 @@ COPY . .
 RUN bun install 
 
 # Run in dev mode with hot reloading
-CMD ["sh", "-c", "cd db && bun prisma db push --accept-data-loss && cd ../apps/worker && bun start:dev"]
+CMD ["sh", "-c", "cd db && bun prisma db push --accept-data-loss && bun prisma generate && cd ../apps/worker && bun start:dev"]

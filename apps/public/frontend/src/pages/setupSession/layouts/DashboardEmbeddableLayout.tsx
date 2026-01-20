@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import styled from 'styled-components';
 import { RiCheckLine } from '@remixicon/react';
 import { Flex, Text } from '@metorial-io/ui';
 
@@ -9,6 +10,45 @@ interface DashboardEmbeddableLayoutProps {
   children: ReactNode;
 }
 
+let Wrapper = styled.div`
+  padding: 24px;
+  max-width: 600px;
+  margin: 0 auto;
+
+  @media (max-width: 640px) {
+    padding: 16px;
+  }
+`;
+
+let StepIndicator = styled(Flex)`
+  margin-bottom: 32px;
+
+  @media (max-width: 640px) {
+    margin-bottom: 24px;
+  }
+`;
+
+let StepLabel = styled(Text)<{ $isCompleted: boolean; $isActive: boolean }>`
+  white-space: nowrap;
+  color: ${p => (p.$isCompleted ? '#10b981' : p.$isActive ? '#1a1a1a' : '#999')};
+
+  @media (max-width: 480px) {
+    display: none;
+  }
+`;
+
+let StepConnector = styled.div<{ $isCompleted: boolean }>`
+  flex: 1;
+  height: 2px;
+  margin: 0 12px;
+  background: ${p => (p.$isCompleted ? '#10b981' : '#e5e5e5')};
+  transition: background 0.2s;
+
+  @media (max-width: 480px) {
+    margin: 0 8px;
+  }
+`;
+
 export let DashboardEmbeddableLayout = ({
   currentStep,
   totalSteps,
@@ -16,9 +56,9 @@ export let DashboardEmbeddableLayout = ({
   children
 }: DashboardEmbeddableLayoutProps) => {
   return (
-    <div style={{ padding: 24, maxWidth: 600, margin: '0 auto' }}>
+    <Wrapper>
       {totalSteps > 1 && (
-        <Flex align="center" style={{ marginBottom: 32 }}>
+        <StepIndicator align="center">
           {stepLabels.map((label, index) => {
             let isActive = index === currentStep;
             let isCompleted = index < currentStep;
@@ -43,34 +83,18 @@ export let DashboardEmbeddableLayout = ({
                   >
                     {isCompleted ? <RiCheckLine size={14} /> : index + 1}
                   </Flex>
-                  <Text
-                    weight="medium"
-                    style={{
-                      whiteSpace: 'nowrap',
-                      color: isCompleted ? '#10b981' : isActive ? '#1a1a1a' : '#999'
-                    }}
-                  >
+                  <StepLabel weight="medium" $isCompleted={isCompleted} $isActive={isActive}>
                     {label}
-                  </Text>
+                  </StepLabel>
                 </Flex>
-                {!isLast && (
-                  <div
-                    style={{
-                      flex: 1,
-                      height: 2,
-                      margin: '0 12px',
-                      background: isCompleted ? '#10b981' : '#e5e5e5',
-                      transition: 'background 0.2s'
-                    }}
-                  />
-                )}
+                {!isLast && <StepConnector $isCompleted={isCompleted} />}
               </Flex>
             );
           })}
-        </Flex>
+        </StepIndicator>
       )}
 
       <div>{children}</div>
-    </div>
+    </Wrapper>
   );
 };
