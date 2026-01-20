@@ -17,8 +17,7 @@ import { publisherCreatedQueueProcessor, publisherUpdatedQueueProcessor } from '
 import {
   specificationCreatedAssocAuthMethodQueueProcessor,
   specificationCreatedAssocToolQueueProcessor,
-  specificationCreatedQueueProcessor,
-  specificationUpdatedQueueProcessor
+  specificationCreatedQueueProcessor
 } from './specification';
 
 export let lifecycleQueues = combineQueueProcessors([
@@ -34,7 +33,6 @@ export let lifecycleQueues = combineQueueProcessors([
   publisherCreatedQueueProcessor,
   publisherUpdatedQueueProcessor,
   specificationCreatedQueueProcessor,
-  specificationUpdatedQueueProcessor,
   specificationCreatedAssocToolQueueProcessor,
   specificationCreatedAssocAuthMethodQueueProcessor
 ]);

@@ -1,16 +1,16 @@
 import { describe, expect, test } from 'vitest';
-import { createMemoryWire } from '../../src/index';
+import { createWire } from '../../src/index';
 
 describe('Timeout Extension Integration', () => {
   test('should handle long processing with timeout extension', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       defaultTimeout: 2000 // 2 second timeout
     });
 
     // Receiver with timeoutExtensionThreshold set low to test extension
     const receiver = wire.createReceiver(
-      async (topic, payload) => {
+      async (_topic, payload) => {
         // Simulate long processing (3 seconds)
         await new Promise(resolve => setTimeout(resolve, 3000));
         return { processed: true, payload };
@@ -35,13 +35,13 @@ describe('Timeout Extension Integration', () => {
   }, 15000);
 
   test('should timeout if processing takes too long even with extensions', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       defaultTimeout: 1000 // 1 second timeout
     });
 
     const receiver = wire.createReceiver(
-      async (topic, payload) => {
+      async (_topic, _payload) => {
         // Simulate very long processing (30 seconds)
         // Extensions will be sent but eventually sender will give up
         await new Promise(resolve => setTimeout(resolve, 30000));
@@ -65,13 +65,13 @@ describe('Timeout Extension Integration', () => {
   }, 5000);
 
   test('should not send extension for fast processing', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       defaultTimeout: 5000
     });
 
     const receiver = wire.createReceiver(
-      async (topic, payload) => {
+      async (_topic, _payload) => {
         // Fast processing (100ms)
         await new Promise(resolve => setTimeout(resolve, 100));
         return { processed: true };
@@ -94,13 +94,13 @@ describe('Timeout Extension Integration', () => {
   });
 
   test('should handle multiple extensions for very long processing', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       defaultTimeout: 2000
     });
 
     const receiver = wire.createReceiver(
-      async (topic, payload) => {
+      async (_topic, _payload) => {
         // Process in chunks to allow multiple extensions
         for (let i = 0; i < 5; i++) {
           await new Promise(resolve => setTimeout(resolve, 1000));

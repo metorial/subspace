@@ -1,5 +1,4 @@
 import { snowflake, withTransaction } from '@metorial-subspace/db';
-import type { ProviderFunctionalityCtorParams } from '@metorial-subspace/provider-utils';
 import {
   IProviderDeployment,
   type ProviderConfigCreateParam,
@@ -10,12 +9,8 @@ import {
 import { getTenantForSlates, slates } from '../client';
 
 export class ProviderDeployment extends IProviderDeployment {
-  constructor(params: ProviderFunctionalityCtorParams) {
-    super(params);
-  }
-
   override async createProviderDeployment(
-    data: ProviderDeploymentCreateParam
+    _data: ProviderDeploymentCreateParam
   ): Promise<ProviderDeploymentCreateRes> {
     return {};
   }

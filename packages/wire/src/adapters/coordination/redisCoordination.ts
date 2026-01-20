@@ -15,6 +15,8 @@ export class RedisCoordination implements ICoordinationAdapter {
   private readonly CACHE_TTL = 1000; // 1 second cache
 
   constructor(config: RedisConfig, wireId: string = 'default') {
+    console.log('Connecting to Redis for coordination...');
+
     this.redis = new Redis({
       host: config.host,
       port: config.port,
@@ -42,12 +44,12 @@ export class RedisCoordination implements ICoordinationAdapter {
   }
 
   async registerReceiver(receiverId: string, ttl: number): Promise<void> {
-    const key = this.receiverKey(receiverId);
-    const ttlSeconds = Math.ceil(ttl / 1000);
-    const expiryTime = Date.now() + ttl;
+    let key = this.receiverKey(receiverId);
+    let ttlSeconds = Math.ceil(ttl / 1000);
+    let expiryTime = Date.now() + ttl;
 
     // Atomic operation: set key and add to sorted set
-    const script = `
+    let script = `
       redis.call("setex", KEYS[1], ARGV[1], "alive")
       redis.call("zadd", KEYS[2], ARGV[2], ARGV[3])
       return 1
@@ -68,9 +70,9 @@ export class RedisCoordination implements ICoordinationAdapter {
   }
 
   async unregisterReceiver(receiverId: string): Promise<void> {
-    const key = this.receiverKey(receiverId);
+    let key = this.receiverKey(receiverId);
 
-    const pipeline = this.redis.pipeline();
+    let pipeline = this.redis.pipeline();
     pipeline.del(key);
     pipeline.zrem(this.receiverZSetKey(), receiverId);
     await pipeline.exec();
@@ -85,8 +87,8 @@ export class RedisCoordination implements ICoordinationAdapter {
       return this.receiversCache.receivers;
     }
 
-    const now = Date.now();
-    const pipeline = this.redis.pipeline();
+    let now = Date.now();
+    let pipeline = this.redis.pipeline();
 
     // Remove expired receivers atomically
     pipeline.zremrangebyscore(this.receiverZSetKey(), '-inf', now);
@@ -94,8 +96,8 @@ export class RedisCoordination implements ICoordinationAdapter {
     // Get remaining active receivers
     pipeline.zrangebyscore(this.receiverZSetKey(), now, '+inf');
 
-    const results = await pipeline.exec();
-    const receivers = (results?.[1]?.[1] as string[]) || [];
+    let results = await pipeline.exec();
+    let receivers = (results?.[1]?.[1] as string[]) || [];
 
     // Store in cache
     this.receiversCache = {
@@ -123,10 +125,10 @@ export class RedisCoordination implements ICoordinationAdapter {
   }
 
   async releaseTopicOwnership(topic: string, receiverId: string): Promise<void> {
-    const key = this.topicOwnerKey(topic);
+    let key = this.topicOwnerKey(topic);
 
     // Only delete if we're still the owner (atomic check-and-delete)
-    const script = `
+    let script = `
       if redis.call("get", KEYS[1]) == ARGV[1] then
         return redis.call("del", KEYS[1])
       else
@@ -138,11 +140,11 @@ export class RedisCoordination implements ICoordinationAdapter {
   }
 
   async renewTopicOwnership(topic: string, receiverId: string, ttl: number): Promise<boolean> {
-    const key = this.topicOwnerKey(topic);
-    const ttlSeconds = Math.ceil(ttl / 1000);
+    let key = this.topicOwnerKey(topic);
+    let ttlSeconds = Math.ceil(ttl / 1000);
 
     // Only extend TTL if we're still the owner (atomic check-and-extend)
-    const script = `
+    let script = `
       if redis.call("get", KEYS[1]) == ARGV[1] then
         redis.call("expire", KEYS[1], ARGV[2])
         return 1
@@ -151,7 +153,7 @@ export class RedisCoordination implements ICoordinationAdapter {
       end
     `;
 
-    const result = await this.evalScript(script, 1, key, receiverId, ttlSeconds);
+    let result = await this.evalScript(script, 1, key, receiverId, ttlSeconds);
 
     return result === 1;
   }
@@ -191,8 +193,8 @@ export class RedisCoordination implements ICoordinationAdapter {
   }
 
   private async cleanupExpiredReceivers(): Promise<void> {
-    const now = Date.now();
-    const removed = await this.redis.zremrangebyscore(this.receiverZSetKey(), '-inf', now);
+    let now = Date.now();
+    let removed = await this.redis.zremrangebyscore(this.receiverZSetKey(), '-inf', now);
 
     if (removed > 0) {
       // Invalidate cache after cleanup

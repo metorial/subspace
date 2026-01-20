@@ -2,8 +2,8 @@ import { canonicalize } from '@lowerdeck/canonicalize';
 import { Hash } from '@lowerdeck/hash';
 import { createLock } from '@lowerdeck/lock';
 import { Service } from '@lowerdeck/service';
-import { db, getId, Provider, ProviderVersion } from '@metorial-subspace/db';
-import {
+import { db, getId, type Provider, type ProviderVersion } from '@metorial-subspace/db';
+import type {
   Specification,
   SpecificationAuthMethod,
   SpecificationFeatures,
@@ -49,8 +49,8 @@ class providerSpecificationInternalServiceImpl {
       if (existingSpec) return existingSpec;
 
       let defaultAuthConfig =
-        d.authMethods.find(am => am.type == 'token') ??
-        d.authMethods.find(am => am.type == 'oauth') ??
+        d.authMethods.find(am => am.type === 'token') ??
+        d.authMethods.find(am => am.type === 'oauth') ??
         d.authMethods[0];
 
       await db.providerToolGlobal.createMany({
@@ -116,7 +116,7 @@ class providerSpecificationInternalServiceImpl {
 
                 type: am.type,
                 key: am.key,
-                isDefault: am.specId == defaultAuthConfig?.specId,
+                isDefault: am.specId === defaultAuthConfig?.specId,
 
                 name: am.name,
                 description: am.description,

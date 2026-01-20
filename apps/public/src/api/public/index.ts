@@ -5,7 +5,6 @@ import { oauthSetupApp } from './oauthSetup';
 import { setupSessionApp } from './setupSession';
 
 let assetsDir = path.join(process.cwd(), 'frontend', 'dist', 'assets');
-let publicDir = path.join(process.cwd(), 'public');
 
 export let app = createHono()
   .options('*', c => c.text(''))

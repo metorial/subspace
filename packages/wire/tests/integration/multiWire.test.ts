@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { createMemoryWire } from '../../src/index';
+import { createMemoryWire, createWire } from '../../src/index';
 
 describe('Multi-Wire Integration', () => {
-  const wires: ReturnType<typeof createMemoryWire>[] = [];
+  const wires: ReturnType<typeof createWire>[] = [];
 
   afterEach(async () => {
     // Close all wires
@@ -14,8 +14,8 @@ describe('Multi-Wire Integration', () => {
 
   it('should isolate messages between different wire instances', async () => {
     // Create two separate Wire instances with different IDs
-    const wire1 = createMemoryWire('wire1');
-    const wire2 = createMemoryWire('wire2');
+    const wire1 = createWire(createMemoryWire('wire1'));
+    const wire2 = createWire(createMemoryWire('wire2'));
     wires.push(wire1, wire2);
 
     // Track which receivers process which messages
@@ -23,12 +23,12 @@ describe('Multi-Wire Integration', () => {
     const wire2Messages: string[] = [];
 
     // Create receivers on both wires for the same topic
-    const receiver1 = wire1.createReceiver(async (topic, payload) => {
+    const receiver1 = wire1.createReceiver(async (_topic, payload) => {
       wire1Messages.push(payload as string);
       return { wire: 'wire1', payload };
     });
 
-    const receiver2 = wire2.createReceiver(async (topic, payload) => {
+    const receiver2 = wire2.createReceiver(async (_topic, payload) => {
       wire2Messages.push(payload as string);
       return { wire: 'wire2', payload };
     });
@@ -63,8 +63,8 @@ describe('Multi-Wire Integration', () => {
 
   it('should not allow cross-wire topic subscriptions', async () => {
     // Create two separate Wire instances
-    const wire1 = createMemoryWire('wire1');
-    const wire2 = createMemoryWire('wire2');
+    const wire1 = createWire(createMemoryWire('wire1'));
+    const wire2 = createWire(createMemoryWire('wire2'));
     wires.push(wire1, wire2);
 
     // Track broadcasts
@@ -118,9 +118,9 @@ describe('Multi-Wire Integration', () => {
 
   it('should handle multiple wires with the same topic names', async () => {
     // Create three Wire instances
-    const wireA = createMemoryWire('wireA');
-    const wireB = createMemoryWire('wireB');
-    const wireC = createMemoryWire('wireC');
+    const wireA = createWire(createMemoryWire('wireA'));
+    const wireB = createWire(createMemoryWire('wireB'));
+    const wireC = createWire(createMemoryWire('wireC'));
     wires.push(wireA, wireB, wireC);
 
     // Create receivers on all wires
@@ -166,8 +166,8 @@ describe('Multi-Wire Integration', () => {
 
   it('should maintain separate topic ownership per wire', async () => {
     // Create two wires
-    const wire1 = createMemoryWire('wire1');
-    const wire2 = createMemoryWire('wire2');
+    const wire1 = createWire(createMemoryWire('wire1'));
+    const wire2 = createWire(createMemoryWire('wire2'));
     wires.push(wire1, wire2);
 
     // Create multiple receivers on each wire
@@ -208,16 +208,16 @@ describe('Multi-Wire Integration', () => {
     expect(response2_2.success).toBe(true);
 
     // wire1 messages should be processed by wire1 receivers
-    expect(response1_1.result.wire).toBe('wire1');
-    expect(response1_2.result.wire).toBe('wire1');
+    expect((response1_1.result as any).wire).toBe('wire1');
+    expect((response1_2.result as any).wire).toBe('wire1');
 
     // wire2 messages should be processed by wire2 receivers
-    expect(response2_1.result.wire).toBe('wire2');
-    expect(response2_2.result.wire).toBe('wire2');
+    expect((response2_1.result as any).wire).toBe('wire2');
+    expect((response2_2.result as any).wire).toBe('wire2');
 
     // Messages on same wire should be handled by same receiver (topic ownership)
-    expect(response1_1.result.receiver).toBe(response1_2.result.receiver);
-    expect(response2_1.result.receiver).toBe(response2_2.result.receiver);
+    expect((response1_1.result as any).receiver).toBe((response1_2.result as any).receiver);
+    expect((response2_1.result as any).receiver).toBe((response2_2.result as any).receiver);
 
     // Cleanup
     await receiver1a.stop();
@@ -230,8 +230,8 @@ describe('Multi-Wire Integration', () => {
 
   it('should allow default wireId to work alongside custom wireIds', async () => {
     // Create one wire with default ID and one with custom ID
-    const defaultWire = createMemoryWire(); // Uses 'default'
-    const customWire = createMemoryWire('custom');
+    const defaultWire = createWire(); // Uses 'default'
+    const customWire = createWire(createMemoryWire('custom'));
     wires.push(defaultWire, customWire);
 
     // Create receivers

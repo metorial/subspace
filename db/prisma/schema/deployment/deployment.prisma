@@ -1,3 +1,9 @@
+enum ProviderDeploymentStatus {
+  active
+  archived
+  deleted
+}
+
 enum ProviderDeploymentSpecificationDiscoveryStatus {
   discovering
   discovered
@@ -8,7 +14,10 @@ model ProviderDeployment {
   oid BigInt @id
   id  String @unique
 
+  status ProviderDeploymentStatus
+
   isEphemeral Boolean
+  isDefault   Boolean
 
   name        String?
   description String?
@@ -19,7 +28,7 @@ model ProviderDeployment {
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
 
-  solutionOid BigInt
+  solutionOid Int
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
   providerOid BigInt
@@ -43,12 +52,16 @@ model ProviderDeployment {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  configPairs                          ProviderDeploymentConfigPair[]
-  providerOAuthSetups                  ProviderOAuthSetup[]
-  providerAuthConfigUsedForDeployments ProviderAuthConfigUsedForDeployment[]
-  providerConfigVaults                 ProviderConfigVault[]
-  providerConfigs                      ProviderConfig[]
-  providerAuthConfigs                  ProviderAuthConfig[]
-  providerAuthImports                  ProviderAuthImport[]
-  providerSetupSessions                ProviderSetupSession[]
+  configPairs              ProviderDeploymentConfigPair[]
+  providerOAuthSetups      ProviderOAuthSetup[]
+  providerConfigVaults     ProviderConfigVault[]
+  providerConfigs          ProviderConfig[]
+  providerAuthConfigs      ProviderAuthConfig[]
+  providerAuthImports      ProviderAuthImport[]
+  providerSetupSessions    ProviderSetupSession[]
+  sessionProviders         SessionProvider[]
+  sessionTemplateProviders SessionTemplateProvider[]
+
+  @@index([isDefault])
+  @@index([status])
 }

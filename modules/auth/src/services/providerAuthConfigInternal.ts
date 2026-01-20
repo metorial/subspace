@@ -2,67 +2,31 @@ import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
-  Backend,
+  type Backend,
   db,
   getId,
-  Provider,
-  ProviderAuthConfig,
-  ProviderAuthConfigSource,
-  ProviderAuthConfigType,
-  ProviderAuthImport,
-  ProviderAuthMethod,
+  type Provider,
+  type ProviderAuthConfigSource,
+  type ProviderAuthConfigType,
+  ProviderAuthCredentials,
+  type ProviderAuthImport,
+  type ProviderAuthMethod,
   ProviderAuthMethodType,
-  ProviderConfig,
-  ProviderDeployment,
-  ProviderVariant,
-  ProviderVersion,
-  Solution,
-  Tenant,
+  type ProviderDeployment,
+  type ProviderVariant,
+  type ProviderVersion,
+  type Solution,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
 import { providerDeploymentInternalService } from '@metorial-subspace/module-provider-internal';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
-import { ProviderAuthConfigCreateRes } from '@metorial-subspace/provider-utils';
+import type { ProviderAuthConfigCreateRes } from '@metorial-subspace/provider-utils';
 import { providerAuthConfigCreatedQueue } from '../queues/lifecycle/providerAuthConfig';
 import { providerAuthConfigInclude } from './providerAuthConfig';
 
 class providerAuthConfigInternalServiceImpl {
-  async useProviderAuthConfigForDeploymentSession(d: {
-    tenant: Tenant;
-    provider: Provider;
-    providerDeployment: ProviderDeployment;
-    providerVersion: ProviderVersion;
-    providerConfig: ProviderConfig;
-    authConfig: ProviderAuthConfig;
-  }) {
-    checkTenant(d, d.providerDeployment);
-    checkTenant(d, d.providerConfig);
-    checkTenant(d, d.authConfig);
-
-    return await withTransaction(async db => {
-      await db.providerAuthConfigUsedForConfig.createMany({
-        skipDuplicates: true,
-        data: {
-          ...getId('providerAuthConfigUsedForConfig'),
-          authConfigOid: d.authConfig.oid,
-          configOid: d.providerConfig.oid
-        }
-      });
-
-      await db.providerAuthConfigUsedForDeployment.createMany({
-        skipDuplicates: true,
-        data: {
-          ...getId('providerAuthConfigUsedForDeployment'),
-          authConfigOid: d.authConfig.oid,
-          deploymentOid: d.providerDeployment.oid
-        }
-      });
-
-      return d.authConfig;
-    });
-  }
-
   async getVersionAndAuthMethod(d: {
     tenant: Tenant;
     solution: Solution;
@@ -108,7 +72,7 @@ class providerAuthConfigInternalServiceImpl {
         providerOid: d.provider.oid,
         specificationOid: version.specificationOid,
 
-        ...(typeof d.authMethodId == 'string'
+        ...(typeof d.authMethodId === 'string'
           ? {
               OR: [
                 { id: d.authMethodId },
@@ -147,6 +111,7 @@ class providerAuthConfigInternalServiceImpl {
     backend: Backend;
     type: ProviderAuthConfigType;
     source: ProviderAuthConfigSource;
+    credentials?: ProviderAuthCredentials;
     input: {
       name?: string;
       description?: string;
@@ -166,7 +131,7 @@ class providerAuthConfigInternalServiceImpl {
     checkTenant(d, d.providerDeployment);
     checkTenant(d, d.backendProviderAuthConfig.slateAuthConfig);
 
-    if (d.providerDeployment && d.providerDeployment.providerOid != d.provider.oid) {
+    if (d.providerDeployment && d.providerDeployment.providerOid !== d.provider.oid) {
       throw new ServiceError(
         badRequestError({
           message: 'Provider deployment does not belong to provider',
@@ -174,11 +139,28 @@ class providerAuthConfigInternalServiceImpl {
         })
       );
     }
-    if (d.authMethod.providerOid != d.provider.oid) {
+    if (d.authMethod.providerOid !== d.provider.oid) {
       throw new ServiceError(
         badRequestError({
           message: 'Auth method does not belong to provider',
           code: 'provider_mismatch'
+        })
+      );
+    }
+
+    if (d.input.isDefault && !d.providerDeployment) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Default auth configs must be associated with a deployment',
+          code: 'invalid_default_auth_config'
+        })
+      );
+    }
+    if (d.input.isDefault && d.authMethod.type === 'oauth') {
+      throw new ServiceError(
+        badRequestError({
+          message: 'OAuth auth methods cannot have default auth configs',
+          code: 'invalid_default_auth_config'
         })
       );
     }
@@ -188,6 +170,7 @@ class providerAuthConfigInternalServiceImpl {
         data: {
           ...getId('providerAuthConfig'),
 
+          status: 'active',
           backendOid: d.backend.oid,
 
           type: d.type,
@@ -204,27 +187,38 @@ class providerAuthConfigInternalServiceImpl {
           solutionOid: d.solution.oid,
           providerOid: d.provider.oid,
           authMethodOid: d.authMethod.oid,
-          deploymentOid: d.providerDeployment?.oid,
-
-          slateAuthConfigOid: d.backendProviderAuthConfig.slateAuthConfig?.oid
+          deploymentOid: d.providerDeployment?.oid
         },
         include: providerAuthConfigInclude
+      });
+
+      let currentVersion = await db.providerAuthConfigVersion.create({
+        data: {
+          ...getId('providerAuthConfigVersion'),
+          authConfigOid: providerAuthConfig.oid,
+          slateAuthConfigOid: d.backendProviderAuthConfig.slateAuthConfig?.oid
+        }
+      });
+
+      await db.providerAuthConfig.update({
+        where: { oid: providerAuthConfig.oid },
+        data: { currentVersionOid: currentVersion.oid }
       });
 
       let update = await db.providerAuthConfigUpdate.create({
         data: {
           ...getId('providerAuthConfigUpdate'),
           authConfigOid: providerAuthConfig.oid,
-          slateAuthConfigOid: providerAuthConfig.slateAuthConfigOid
+          toVersionOid: currentVersion.oid
         }
       });
 
-      let authImport: ProviderAuthImport | undefined = undefined;
+      let authImport: ProviderAuthImport | undefined;
 
       if (
         d.import &&
-        providerAuthConfig.source == 'manual' &&
-        providerAuthConfig.type != 'oauth_automated'
+        providerAuthConfig.source === 'manual' &&
+        providerAuthConfig.type !== 'oauth_automated'
       ) {
         authImport = await db.providerAuthImport.create({
           data: {
@@ -269,7 +263,8 @@ class providerAuthConfigInternalServiceImpl {
 
       return {
         ...providerAuthConfig,
-        authImport
+        authImport,
+        currentVersion
       };
     });
   }

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type { Receiver, Sender, TopicResponseBroadcast } from '../../src/index';
-import { createMemoryWire } from '../../src/index';
+import { createWire } from '../../src/index';
 
 describe('Topic Listener Integration', () => {
   let sender: Sender;
@@ -8,7 +8,7 @@ describe('Topic Listener Integration', () => {
   let cleanup: () => Promise<void>;
 
   beforeEach(async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
 
     sender = wire.createSender();
     receiver = wire.createReceiver(async (topic, payload) => {
@@ -193,7 +193,7 @@ describe('Topic Listener Integration', () => {
     await receiver.stop();
 
     // Create receiver that throws errors
-    const wire2 = createMemoryWire();
+    const wire2 = createWire();
     const errorReceiver = wire2.createReceiver(async () => {
       throw new Error('Processing failed');
     });
@@ -230,7 +230,7 @@ describe('Topic Listener Integration', () => {
     await sender.close();
 
     // Create new sender
-    const wire2 = createMemoryWire();
+    const wire2 = createWire();
     sender = wire2.createSender();
 
     expect(sender.getSubscribedTopics()).toHaveLength(0);

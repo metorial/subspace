@@ -1,5 +1,5 @@
 model Solution {
-  oid BigInt @id
+  oid Int    @id
   id  String @unique
 
   identifier String @unique
@@ -19,8 +19,16 @@ model Solution {
   providers                                Provider[]
   providerSpecificationChangeNotifications ProviderSpecificationChangeNotification[]
   sessions                                 Session[]
-  providerSessions                         ProviderSession[]
   providerAuthExports                      ProviderAuthExport[]
   providerAuthImports                      ProviderAuthImport[]
   providerSetupSessions                    ProviderSetupSession[]
+  sessionProviders                         SessionProvider[]
+  sessionTemplates                         SessionTemplate[]
+  sessionTemplateProviders                 SessionTemplateProvider[]
+  sessionConnections                       SessionConnection[]
+  sessionErrors                            SessionError[]
+  sessionMessages                          SessionMessage[]
+  sessionEvents                            SessionEvent[]
+  providerRuns                             ProviderRun[]
+  toolCalls                                ToolCall[]
 }

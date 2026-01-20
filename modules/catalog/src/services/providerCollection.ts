@@ -2,9 +2,41 @@ import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import { slugify } from '@lowerdeck/slugify';
-import { db, getId, Solution, Tenant } from '@metorial-subspace/db';
+import { db, getId, type Solution, type Tenant } from '@metorial-subspace/db';
+import { resolveProviderListings, resolveProviders } from '@metorial-subspace/list-utils';
 
 class providerListingCollectionServiceImpl {
+  async listProviderListingCollections(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    ids?: string[];
+    providerIds?: string[];
+    providerListingIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+    let providerListings = await resolveProviderListings(d, d.providerListingIds);
+
+    return Paginator.create(({ prisma }) =>
+      prisma(
+        async opts =>
+          await db.providerListingCollection.findMany({
+            ...opts,
+            where: {
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+
+                providers ? { listings: { some: { providerOid: providers.in } } } : undefined!,
+                providerListings
+                  ? { listings: { some: { oid: providerListings.in } } }
+                  : undefined!
+              ].filter(Boolean)
+            }
+          })
+      )
+    );
+  }
+
   async getProviderListingCollectionById(d: {
     tenant: Tenant;
     solution: Solution;
@@ -22,17 +54,6 @@ class providerListingCollectionServiceImpl {
     }
 
     return providerListingCollection;
-  }
-
-  async listProviderListingCollections(d: { tenant: Tenant; solution: Solution }) {
-    return Paginator.create(({ prisma }) =>
-      prisma(
-        async opts =>
-          await db.providerListingCollection.findMany({
-            ...opts
-          })
-      )
-    );
   }
 
   async upsertProviderListingCollection(d: {

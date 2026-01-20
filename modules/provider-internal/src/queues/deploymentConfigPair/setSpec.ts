@@ -2,7 +2,7 @@ import { createQueue, QueueRetryError } from '@lowerdeck/queue';
 import {
   db,
   getId,
-  ProviderDeploymentConfigPairSpecificationDiscoveryStatus
+  type ProviderDeploymentConfigPairSpecificationDiscoveryStatus
 } from '@metorial-subspace/db';
 import { env } from '../../env';
 import { providerVersionSetSpecificationQueue } from '../version/setSpec';
@@ -96,7 +96,7 @@ export let providerDeploymentConfigPairSetSpecificationQueueProcessor =
 
       if (
         pairVersion?.previousPairVersion?.specificationOid &&
-        newPairVersion.specificationOid != pairVersion.previousPairVersion.specificationOid
+        newPairVersion.specificationOid !== pairVersion.previousPairVersion.specificationOid
       ) {
         try {
           let change = await db.providerDeploymentConfigPairSpecificationChange.create({

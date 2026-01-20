@@ -4,8 +4,8 @@ import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
   db,
-  ProviderAuthConfig,
-  ProviderOAuthSetup,
+  type ProviderAuthConfig,
+  type ProviderOAuthSetup,
   withTransaction
 } from '@metorial-subspace/db';
 import { getBackend } from '@metorial-subspace/provider';
@@ -65,7 +65,7 @@ class providerOAuthSetupInternalServiceImpl {
           setup: providerOAuthSetup
         });
 
-        let authConfig: ProviderAuthConfig | undefined = undefined;
+        let authConfig: ProviderAuthConfig | undefined;
 
         if (record.slateAuthConfig) {
           let existing = await db.providerAuthConfig.findUnique({
@@ -83,6 +83,7 @@ class providerOAuthSetupInternalServiceImpl {
                 provider: providerOAuthSetup.provider,
                 solution: providerOAuthSetup.solution,
                 providerDeployment: providerOAuthSetup.deployment ?? undefined,
+                credentials: providerOAuthSetup.authCredentials,
                 input: {
                   name: providerOAuthSetup.name ?? undefined,
                   description: providerOAuthSetup.description ?? undefined,
@@ -103,9 +104,9 @@ class providerOAuthSetupInternalServiceImpl {
           where: { oid: providerOAuthSetup.oid },
           data: {
             status:
-              record.status == 'failed'
+              record.status === 'failed'
                 ? 'failed'
-                : record.status == 'completed'
+                : record.status === 'completed'
                   ? 'completed'
                   : undefined,
 

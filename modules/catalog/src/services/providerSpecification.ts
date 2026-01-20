@@ -1,21 +1,22 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, Solution, Tenant } from '@metorial-subspace/db';
+import { db, type Solution, type Tenant } from '@metorial-subspace/db';
+import { resolveProviders } from '@metorial-subspace/list-utils';
 
 class providerSpecificationServiceImpl {
   async listProviderSpecifications(d: {
     tenant: Tenant;
     solution: Solution;
 
+    ids?: string[];
     providerIds?: string[];
     providerVersionIds?: string[];
     providerDeploymentIds?: string[];
     providerConfigIds?: string[];
   }) {
-    let providers = d.providerIds
-      ? await db.provider.findMany({ where: { id: { in: d.providerIds } } })
-      : undefined;
+    let providers = await resolveProviders(d, d.providerIds);
+
     let versions = d.providerVersionIds
       ? await db.providerVersion.findMany({
           where: { id: { in: d.providerVersionIds } }
@@ -60,7 +61,8 @@ class providerSpecificationServiceImpl {
                   }
                 },
 
-                providers ? { providerOid: { in: providers.map(p => p.oid) } } : undefined!,
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                providers ? { providerOid: providers.in } : undefined!,
                 specOids.length ? { oid: { in: specOids } } : undefined!
               ].filter(Boolean)
             },

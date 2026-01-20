@@ -1,12 +1,15 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { providerConfigPresenter, providerConfigSchemaPresenter } from '@metorial-subspace/db';
 import { providerService, providerVersionService } from '@metorial-subspace/module-catalog';
 import {
   providerConfigService,
   providerConfigVaultService,
   providerDeploymentService
 } from '@metorial-subspace/module-deployment';
+import {
+  providerConfigPresenter,
+  providerConfigSchemaPresenter
+} from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 
@@ -17,7 +20,8 @@ export let providerConfigApp = tenantApp.use(async ctx => {
   let providerConfig = await providerConfigService.getProviderConfigById({
     providerConfigId,
     tenant: ctx.tenant,
-    solution: ctx.solution
+    solution: ctx.solution,
+    allowDeleted: ctx.body.allowDeleted
   });
 
   return { providerConfig };
@@ -29,14 +33,32 @@ export let providerConfigController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+
+          status: v.optional(v.array(v.enumOf(['active', 'archived']))),
+          allowDeleted: v.optional(v.boolean()),
+
+          ids: v.optional(v.array(v.string())),
+          providerIds: v.optional(v.array(v.string())),
+          providerSpecificationIds: v.optional(v.array(v.string())),
+          providerDeploymentIds: v.optional(v.array(v.string())),
+          providerConfigVaultIds: v.optional(v.array(v.string()))
         })
       )
     )
     .do(async ctx => {
       let paginator = await providerConfigService.listProviderConfigs({
         tenant: ctx.tenant,
-        solution: ctx.solution
+        solution: ctx.solution,
+
+        status: ctx.input.status,
+        allowDeleted: ctx.input.allowDeleted,
+
+        ids: ctx.input.ids,
+        providerIds: ctx.input.providerIds,
+        providerSpecificationIds: ctx.input.providerSpecificationIds,
+        providerDeploymentIds: ctx.input.providerDeploymentIds,
+        providerConfigVaultIds: ctx.input.providerConfigVaultIds
       });
 
       let list = await paginator.run(ctx.input);
@@ -100,7 +122,8 @@ export let providerConfigController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
-        providerConfigId: v.string()
+        providerConfigId: v.string(),
+        allowDeleted: v.optional(v.boolean())
       })
     )
     .do(async ctx => providerConfigPresenter(ctx.providerConfig)),
@@ -161,7 +184,7 @@ export let providerConfigController = app.controller({
           isEphemeral: ctx.input.isEphemeral,
 
           config:
-            ctx.input.config.type == 'vault'
+            ctx.input.config.type === 'vault'
               ? {
                   type: 'vault',
                   vault: await providerConfigVaultService.getProviderConfigVaultById({
@@ -186,6 +209,7 @@ export let providerConfigController = app.controller({
       v.object({
         tenantId: v.string(),
         providerConfigId: v.string(),
+        allowDeleted: v.optional(v.boolean()),
 
         name: v.optional(v.string()),
         description: v.optional(v.string()),

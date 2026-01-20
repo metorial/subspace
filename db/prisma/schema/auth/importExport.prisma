@@ -7,10 +7,12 @@ model ProviderAuthExport {
   ua       String?
   metadata Json?
 
+  isParentDeleted Boolean @default(false)
+
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
 
-  solutionOid BigInt
+  solutionOid Int
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
   authConfigOid BigInt
@@ -29,10 +31,12 @@ model ProviderAuthImport {
   note     String?
   metadata Json?
 
+  isParentDeleted Boolean @default(false)
+
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
 
-  solutionOid BigInt
+  solutionOid Int
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
   authConfigOid BigInt

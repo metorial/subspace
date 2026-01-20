@@ -2,11 +2,11 @@ import { createLock } from '@lowerdeck/lock';
 import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
-  Backend,
+  type Backend,
   getId,
-  ProviderVariant,
-  Slate,
-  SlateVersion,
+  type ProviderVariant,
+  type Slate,
+  type SlateVersion,
   withTransaction
 } from '@metorial-subspace/db';
 import { env } from '../env';
@@ -90,7 +90,7 @@ class providerVersionInternalServiceImpl {
           }
 
           await addAfterTransactionHook(async () => {
-            if (providerVersion.id == newId.id) {
+            if (providerVersion.id === newId.id) {
               await providerVersionCreatedQueue.add({ providerVersionId: providerVersion.id });
             } else {
               await providerVersionUpdatedQueue.add({ providerVersionId: providerVersion.id });

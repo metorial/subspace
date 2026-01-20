@@ -52,4 +52,5 @@ model ProviderVersion {
   providerVersionSpecificationChangesFrom      ProviderVersionSpecificationChange[]          @relation("SpecChangeFromVersion")
   providerVersionSpecificationChangesTo        ProviderVersionSpecificationChange[]          @relation("SpecChangeToVersion")
   providerSpecificationChangeNotifications     ProviderSpecificationChangeNotification[]
+  providerRuns                                 ProviderRun[]
 }

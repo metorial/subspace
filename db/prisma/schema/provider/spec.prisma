@@ -48,6 +48,8 @@ model ProviderTool {
   updatedAt DateTime @default(now()) @updatedAt
 
   currentInGlobal ProviderToolGlobal[] @relation("currentToolInstance")
+  sessionMessages SessionMessage[]
+  toolCalls       ToolCall[]
 
   @@unique([providerOid, specificationOid, hash])
   @@unique([specificationOid, key])

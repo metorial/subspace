@@ -1,6 +1,6 @@
 import { v } from '@lowerdeck/validation';
-import { solutionPresenter } from '@metorial-subspace/db';
 import { solutionService } from '@metorial-subspace/module-tenant';
+import { solutionPresenter } from '@metorial-subspace/presenters';
 import { app, appWithoutSolution } from './_app';
 
 export let solutionApp = appWithoutSolution.use(async ctx => {

@@ -1,11 +1,11 @@
 import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
-  Backend,
+  type Backend,
   getId,
-  Provider,
-  Publisher,
-  Slate,
+  type Provider,
+  type Publisher,
+  type Slate,
   withTransaction
 } from '@metorial-subspace/db';
 import { createTag } from '../lib/createTag';
@@ -170,14 +170,14 @@ class providerInternalServiceImpl {
       }
 
       await addAfterTransactionHook(async () => {
-        if (provider.id == newProviderId.id) {
+        if (provider.id === newProviderId.id) {
           await providerCreatedQueue.add({ providerId: provider.id });
         } else {
           await providerUpdatedQueue.add({ providerId: provider.id });
         }
       });
       await addAfterTransactionHook(async () => {
-        if (listing.id == newListingId.id) {
+        if (listing.id === newListingId.id) {
           await listingCreatedQueue.add({ providerListingId: listing.id });
         } else {
           await listingUpdatedQueue.add({ providerListingId: listing.id });

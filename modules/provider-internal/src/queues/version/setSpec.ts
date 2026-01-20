@@ -1,5 +1,9 @@
 import { createQueue, QueueRetryError } from '@lowerdeck/queue';
-import { db, getId, ProviderVersionSpecificationDiscoveryStatus } from '@metorial-subspace/db';
+import {
+  db,
+  getId,
+  type ProviderVersionSpecificationDiscoveryStatus
+} from '@metorial-subspace/db';
 import { env } from '../../env';
 
 export let providerVersionSetSpecificationQueue = createQueue<{
@@ -52,7 +56,7 @@ export let providerVersionSetSpecificationQueueProcessor =
       });
 
       if (
-        version.specificationOid != previousVersion.specificationOid &&
+        version.specificationOid !== previousVersion.specificationOid &&
         previousVersion.specificationOid
       ) {
         try {

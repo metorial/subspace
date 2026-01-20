@@ -1,33 +1,36 @@
 // Core components
-export { MessageCache } from './core/messageCache';
-export { OwnershipManager } from './core/ownershipManager';
-export { Receiver } from './core/receiver';
-export type { MessageHandler } from './core/receiver';
-export { RetryManager } from './core/retryManager';
-export { Sender } from './core/sender';
 
 // Adapters - Interfaces
 export type { ICoordinationAdapter } from './adapters/coordination/coordinationAdapter';
-export type {
-  ITransportAdapter,
-  MessageHandler as TransportMessageHandler
-} from './adapters/transport/transportAdapter';
-
 // Adapters - Implementations
 export { MemoryCoordination } from './adapters/coordination/memoryCoordination';
 export { RedisCoordination } from './adapters/coordination/redisCoordination';
 export { MemoryTransport } from './adapters/transport/memoryTransport';
 export { NatsTransport } from './adapters/transport/natsTransport';
+export type {
+  ITransportAdapter,
+  MessageHandler as TransportMessageHandler
+} from './adapters/transport/transportAdapter';
+export { MessageCache } from './core/messageCache';
+export type { OwnershipLossCallback } from './core/ownershipManager';
+export { OwnershipManager } from './core/ownershipManager';
+export type { MessageHandler } from './core/receiver';
+export { Receiver } from './core/receiver';
+export { RetryManager } from './core/retryManager';
+export { Sender } from './core/sender';
+export type { TopicContext, TopicHandler, WireReceiverConfig } from './core/wireReceiver';
+export { createWireReceiver, WireReceiver } from './core/wireReceiver';
 
 // Imports for factory function
 import { MemoryCoordination } from './adapters/coordination/memoryCoordination';
+import { RedisCoordination } from './adapters/coordination/redisCoordination';
 import { MemoryTransport } from './adapters/transport/memoryTransport';
-import { Receiver, type MessageHandler } from './core/receiver';
+import { NatsTransport } from './adapters/transport/natsTransport';
+import { type MessageHandler, Receiver } from './core/receiver';
 import { Sender } from './core/sender';
-import type { ReceiverConfig, SenderConfig } from './types/config';
+import { createWireReceiver, type TopicHandler } from './core/wireReceiver';
+import type { NatsConfig, ReceiverConfig, RedisConfig, SenderConfig } from './types/config';
 
-// Types
-export { DEFAULT_CONFIG, mergeConfig } from './types/config';
 export type {
   CoordinationConfig,
   NatsConfig,
@@ -37,51 +40,90 @@ export type {
   TransportConfig,
   WireConfig
 } from './types/config';
-export { isTimeoutExtension } from './types/message';
+// Types
+export { DEFAULT_CONFIG, mergeConfig } from './types/config';
 export type { TimeoutExtension, WireMessage } from './types/message';
-export { WireProcessError, WireSendError } from './types/response';
+export { isTimeoutExtension } from './types/message';
 export type { WireResponse } from './types/response';
+export { WireProcessError, WireSendError } from './types/response';
 export type {
   TopicListener,
   TopicResponseBroadcast,
   TopicSubscription
 } from './types/topicListener';
 
-// Factory functions for easy setup
-export function createMemoryWire(wireId: string = 'default') {
-  const coordination = new MemoryCoordination(wireId);
-  const transport = new MemoryTransport();
+let getSenderConfig = (config?: Partial<SenderConfig>): SenderConfig => ({
+  defaultTimeout: 5000,
+  maxRetries: 20,
+  retryBackoffMs: 100,
+  retryBackoffMultiplier: 2,
+  inFlightCacheTtl: 60000,
+  maxInFlightMessages: 1000,
+  ...config
+});
+
+let getReceiverConfig = (config?: Partial<ReceiverConfig>): ReceiverConfig => ({
+  heartbeatInterval: 3000,
+  heartbeatTtl: 10000,
+  topicOwnershipTtl: 10000,
+  ownershipRenewalInterval: 5000,
+  messageCacheTtl: 60000,
+  messageCacheSize: 10000,
+  timeoutExtensionThreshold: 1000,
+  ...config
+});
+
+export let createMemoryWire = (wireId: string = 'default') => {
+  let coordination = new MemoryCoordination(wireId);
+  let transport = new MemoryTransport();
+
+  return {
+    wireId,
+    coordination,
+    transport
+  };
+};
+
+export let createRedisNatsWire = (opts: {
+  wireId: string;
+  redisConfig: RedisConfig;
+  natsConfig: NatsConfig;
+}) => {
+  let coordination = new RedisCoordination(opts.redisConfig, opts.wireId);
+  let transport = new NatsTransport(opts.natsConfig);
+
+  return {
+    wireId: opts.wireId,
+    coordination,
+    transport
+  };
+};
+
+export type Adapter =
+  | ReturnType<typeof createMemoryWire>
+  | ReturnType<typeof createRedisNatsWire>;
+
+export let createWire = (adapter: Adapter = createMemoryWire()) => {
+  let { wireId, coordination, transport } = adapter;
 
   return {
     coordination,
     transport,
-    createSender: (config?: Partial<SenderConfig>) => {
-      const fullConfig = {
-        defaultTimeout: 5000,
-        maxRetries: 3,
-        retryBackoffMs: 100,
-        retryBackoffMultiplier: 2,
-        inFlightCacheTtl: 60000,
-        ...config
-      };
-      return new Sender(coordination, transport, fullConfig, wireId);
-    },
-    createReceiver: (handler: MessageHandler, config?: Partial<ReceiverConfig>) => {
-      const fullConfig = {
-        heartbeatInterval: 5000,
-        heartbeatTtl: 10000,
-        topicOwnershipTtl: 30000,
-        ownershipRenewalInterval: 20000,
-        messageCacheTtl: 60000,
-        messageCacheSize: 10000,
-        timeoutExtensionThreshold: 1000,
-        ...config
-      };
-      return new Receiver(coordination, transport, fullConfig, handler, wireId);
-    },
+    createSender: (config?: Partial<SenderConfig>) =>
+      new Sender(coordination, transport, getSenderConfig(config), wireId),
+    createReceiver: (handler: MessageHandler, config?: Partial<ReceiverConfig>) =>
+      new Receiver(coordination, transport, getReceiverConfig(config), handler, wireId),
+    createWireReceiver: (handleTopic: TopicHandler, config?: Partial<ReceiverConfig>) =>
+      createWireReceiver({
+        coordination,
+        transport,
+        wireId,
+        handleTopic,
+        config: getReceiverConfig(config)
+      }),
     close: async () => {
       await coordination.close();
       await transport.close();
     }
   };
-}
+};

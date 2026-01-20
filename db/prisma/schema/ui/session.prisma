@@ -23,9 +23,10 @@ model ProviderSetupSession {
   oid BigInt @id
   id  String @unique
 
-  status ProviderSetupSessionStatus
-  type   ProviderSetupSessionType
-  uiMode ProviderSetupSessionUiMode @default(metorial_elements)
+  status          ProviderSetupSessionStatus
+  type            ProviderSetupSessionType
+  uiMode          ProviderSetupSessionUiMode @default(metorial_elements)
+  isParentDeleted Boolean                    @default(false)
 
   clientSecret String
 
@@ -38,7 +39,7 @@ model ProviderSetupSession {
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
 
-  solutionOid BigInt
+  solutionOid Int
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
   providerOid BigInt
@@ -70,6 +71,8 @@ model ProviderSetupSession {
   expiresAt DateTime
 
   events ProviderSetupSessionEvent[]
+
+  @@index([status])
 }
 
 enum ProviderSetupSessionEventType {

@@ -1,7 +1,9 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, Solution, Tenant } from '@metorial-subspace/db';
+import { db, type Solution, type Tenant } from '@metorial-subspace/db';
+import { resolveProviders } from '@metorial-subspace/list-utils';
+import { getProviderTenantFilter } from './provider';
 import { providerVariantInclude } from './providerVariant';
 
 let include = {
@@ -13,6 +15,34 @@ let include = {
 };
 
 class providerVersionServiceImpl {
+  async listProviderVersions(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    ids?: string[];
+    providerIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+
+    return Paginator.create(({ prisma }) =>
+      prisma(
+        async opts =>
+          await db.providerVersion.findMany({
+            ...opts,
+            where: {
+              provider: getProviderTenantFilter(d),
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                providers ? { providerOid: providers.in } : undefined!
+              ].filter(Boolean)
+            },
+            include
+          })
+      )
+    );
+  }
+
   async getProviderVersionById(d: {
     providerVersionId: string;
     tenant: Tenant;
@@ -20,22 +50,11 @@ class providerVersionServiceImpl {
   }) {
     let providerVersion = await db.providerVersion.findFirst({
       where: {
+        provider: getProviderTenantFilter(d),
+
         AND: [
           {
             OR: [{ id: d.providerVersionId }, { identifier: d.providerVersionId }]
-          },
-
-          {
-            provider: {
-              OR: [
-                { access: 'public' as const },
-                {
-                  access: 'tenant' as const,
-                  ownerTenantOid: d.tenant.oid,
-                  ownerSolutionOid: d.solution.oid
-                }
-              ]
-            }
           }
         ]
       },
@@ -46,30 +65,6 @@ class providerVersionServiceImpl {
     }
 
     return providerVersion;
-  }
-
-  async listProviderVersions(d: { tenant: Tenant; solution: Solution }) {
-    return Paginator.create(({ prisma }) =>
-      prisma(
-        async opts =>
-          await db.providerVersion.findMany({
-            ...opts,
-            where: {
-              provider: {
-                OR: [
-                  { access: 'public' as const },
-                  {
-                    access: 'tenant' as const,
-                    ownerTenantOid: d.tenant.oid,
-                    ownerSolutionOid: d.solution.oid
-                  }
-                ]
-              }
-            },
-            include
-          })
-      )
-    );
   }
 }
 

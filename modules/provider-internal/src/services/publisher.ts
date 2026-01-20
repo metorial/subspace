@@ -4,7 +4,7 @@ import {
   addAfterTransactionHook,
   db,
   getId,
-  Tenant,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
 import { createTag } from '../lib/createTag';
@@ -32,7 +32,7 @@ class publisherInternalServiceImpl {
       publisher &&
       publisher.name === d.input.name &&
       publisher.description === d.input.description &&
-      (publisher.source == d.input.source ||
+      (publisher.source === d.input.source ||
         canonicalize(publisher.source) === canonicalize(d.input.source))
     ) {
       return publisher;
@@ -69,7 +69,7 @@ class publisherInternalServiceImpl {
       });
 
       await addAfterTransactionHook(async () => {
-        if (publisher.id == newId.id) {
+        if (publisher.id === newId.id) {
           await publisherCreatedQueue.add({ publisherId: publisher.id });
         } else {
           await publisherUpdatedQueue.add({ publisherId: publisher.id });

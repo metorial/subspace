@@ -3,15 +3,16 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
-  Provider,
-  ProviderAuthConfig,
-  ProviderConfig,
-  ProviderDeployment,
-  ProviderSpecification,
-  ProviderVersion,
-  Solution,
-  Tenant
+  type Provider,
+  type ProviderAuthConfig,
+  type ProviderConfig,
+  type ProviderDeployment,
+  type ProviderSpecification,
+  type ProviderVersion,
+  type Solution,
+  type Tenant
 } from '@metorial-subspace/db';
+import { getProviderTenantFilter } from './provider';
 
 class providerAuthMethodServiceImpl {
   async listProviderAuthMethods(d: {
@@ -44,16 +45,7 @@ class providerAuthMethodServiceImpl {
           where: {
             AND: [
               {
-                provider: {
-                  OR: [
-                    { access: 'public' as const },
-                    {
-                      access: 'tenant' as const,
-                      ownerTenantOid: d.tenant.oid,
-                      ownerSolutionOid: d.solution.oid
-                    }
-                  ]
-                }
+                provider: getProviderTenantFilter(d)
               }
             ],
             providerOid: d.provider?.oid,
@@ -106,17 +98,7 @@ class providerAuthMethodServiceImpl {
   }) {
     let providerAuthMethod = await db.providerAuthMethod.findFirst({
       where: {
-        provider: {
-          OR: [
-            { access: 'public' as const },
-            {
-              access: 'tenant' as const,
-              ownerTenantOid: d.tenant.oid,
-              ownerSolutionOid: d.solution.oid
-            }
-          ]
-        },
-
+        provider: getProviderTenantFilter(d),
         id: d.providerAuthMethodId
       },
       include: {

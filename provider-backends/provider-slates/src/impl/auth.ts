@@ -7,7 +7,6 @@ import type {
   ProviderAuthConfigCreateRes,
   ProviderAuthCredentialsCreateParam,
   ProviderAuthCredentialsCreateRes,
-  ProviderFunctionalityCtorParams,
   ProviderOAuthSetupCreateParam,
   ProviderOAuthSetupCreateRes,
   ProviderOAuthSetupRetrieveParam,
@@ -17,14 +16,10 @@ import { IProviderAuth } from '@metorial-subspace/provider-utils';
 import { getTenantForSlates, slates } from '../client';
 
 export class ProviderAuth extends IProviderAuth {
-  constructor(params: ProviderFunctionalityCtorParams) {
-    super(params);
-  }
-
   override async createProviderAuthCredentials(
     data: ProviderAuthCredentialsCreateParam
   ): Promise<ProviderAuthCredentialsCreateRes> {
-    if (data.input.type != 'oauth') {
+    if (data.input.type !== 'oauth') {
       throw new ServiceError(
         badRequestError({
           message: 'Only oauth credentials are supported by this provider'
@@ -211,12 +206,12 @@ export class ProviderAuth extends IProviderAuth {
   ): Promise<GetDecryptedAuthConfigRes> {
     let tenant = await getTenantForSlates(data.tenant);
 
-    if (!data.authConfig.slateAuthConfigOid) {
+    if (!data.authConfigVersion.slateAuthConfigOid) {
       throw new Error('Auth config does not have associated slate auth config');
     }
 
     let slateAuthConfig = await db.slateAuthConfig.findUniqueOrThrow({
-      where: { oid: data.authConfig.slateAuthConfigOid }
+      where: { oid: data.authConfigVersion.slateAuthConfigOid }
     });
 
     let record = await slates.slateAuthConfig.decrypt({

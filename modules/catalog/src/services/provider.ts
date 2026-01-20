@@ -1,7 +1,7 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, Provider, Solution, Tenant } from '@metorial-subspace/db';
+import { db, type Provider, type Solution, type Tenant } from '@metorial-subspace/db';
 import { providerInternalService } from '@metorial-subspace/module-provider-internal';
 import { providerVariantInclude } from './providerVariant';
 
@@ -16,30 +16,32 @@ let include = {
 
 export let providerInclude = include;
 
+export let getProviderTenantFilter = (d: { tenant: Tenant; solution: Solution }) => ({
+  OR: [
+    { access: 'public' as const },
+    {
+      access: 'tenant' as const,
+      ownerTenantOid: d.tenant.oid,
+      ownerSolutionOid: d.solution.oid
+    }
+  ]
+});
+
 class providerServiceImpl {
   async getProviderById(d: { providerId: string; tenant: Tenant; solution: Solution }) {
     let provider = await db.provider.findFirst({
       where: {
         AND: [
+          getProviderTenantFilter(d),
+
           {
             OR: [
               { id: d.providerId },
               { listing: { id: d.providerId } },
               { listing: { slug: d.providerId } }
             ]
-          },
-
-          {
-            OR: [
-              { access: 'public' },
-              {
-                access: 'tenant',
-                ownerTenantOid: d.tenant.oid,
-                ownerSolutionOid: d.solution.oid
-              }
-            ]
           }
-        ]
+        ].filter(Boolean)
       },
       include
     });
@@ -50,22 +52,13 @@ class providerServiceImpl {
     return provider;
   }
 
-  async listProviders(d: { tenant: Tenant; solution: Solution }) {
+  async listProviders(d: { tenant: Tenant; solution: Solution; search?: string }) {
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
           await db.provider.findMany({
             ...opts,
-            where: {
-              OR: [
-                { access: 'public' },
-                {
-                  access: 'tenant',
-                  ownerTenantOid: d.tenant.oid,
-                  ownerSolutionOid: d.solution.oid
-                }
-              ]
-            },
+            where: getProviderTenantFilter(d),
             include
           })
       )

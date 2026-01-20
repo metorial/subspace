@@ -1,7 +1,7 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { providerVersionPresenter } from '@metorial-subspace/db';
 import { providerVersionService } from '@metorial-subspace/module-catalog';
+import { providerVersionPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 
@@ -24,14 +24,20 @@ export let providerVersionController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+
+          ids: v.optional(v.array(v.string())),
+          providerIds: v.optional(v.array(v.string()))
         })
       )
     )
     .do(async ctx => {
       let paginator = await providerVersionService.listProviderVersions({
         tenant: ctx.tenant,
-        solution: ctx.solution
+        solution: ctx.solution,
+
+        ids: ctx.input.ids,
+        providerIds: ctx.input.providerIds
       });
 
       let list = await paginator.run(ctx.input);

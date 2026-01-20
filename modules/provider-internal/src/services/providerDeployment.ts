@@ -2,10 +2,10 @@ import { delay } from '@lowerdeck/delay';
 import { Service } from '@lowerdeck/service';
 import {
   db,
-  Provider,
-  ProviderDeployment,
-  ProviderVariant,
-  ProviderVersion
+  type Provider,
+  type ProviderDeployment,
+  type ProviderVariant,
+  type ProviderVersion
 } from '@metorial-subspace/db';
 
 class providerDeploymentInternalServiceImpl {
@@ -37,11 +37,11 @@ class providerDeploymentInternalServiceImpl {
   }) {
     let inner = await this.getCurrentVersionInner(d);
 
-    if (inner.specificationDiscoveryStatus == 'discovering') {
+    if (inner.specificationDiscoveryStatus === 'discovering') {
       for (let i = 0; i < 50; i++) {
         await delay(100);
         inner = await this.getCurrentVersionInner(d);
-        if (inner.specificationDiscoveryStatus != 'discovering') break;
+        if (inner.specificationDiscoveryStatus !== 'discovering') break;
       }
     }
 

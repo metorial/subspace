@@ -5,17 +5,30 @@ import {
   addAfterTransactionHook,
   db,
   getId,
-  Provider,
-  ProviderAuthConfig,
-  ProviderAuthConfigSource,
-  ProviderAuthImport,
-  ProviderDeployment,
-  ProviderVariant,
-  ProviderVersion,
-  Solution,
-  Tenant,
+  type Provider,
+  type ProviderAuthConfig,
+  type ProviderAuthConfigSource,
+  type ProviderAuthConfigStatus,
+  ProviderAuthCredentials,
+  type ProviderAuthImport,
+  type ProviderDeployment,
+  type ProviderVariant,
+  type ProviderVersion,
+  type Solution,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import {
+  checkDeletedEdit,
+  checkDeletedRelation,
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviderAuthCredentials,
+  resolveProviderAuthMethods,
+  resolveProviderDeployments,
+  resolveProviders
+} from '@metorial-subspace/list-utils';
+import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { providerAuthConfigUpdatedQueue } from '../queues/lifecycle/providerAuthConfig';
 import { providerAuthConfigInternalService } from './providerAuthConfigInternal';
@@ -30,7 +43,35 @@ let include = {
 export let providerAuthConfigInclude = include;
 
 class providerAuthConfigServiceImpl {
-  async listProviderAuthConfigs(d: { tenant: Tenant; solution: Solution }) {
+  async listProviderAuthConfigs(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    status?: ProviderAuthConfigStatus[];
+    allowDeleted?: boolean;
+
+    search?: string;
+
+    ids?: string[];
+    providerIds?: string[];
+    providerDeploymentIds?: string[];
+    providerAuthCredentialsIds?: string[];
+    providerAuthMethodIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+    let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
+    let credentials = await resolveProviderAuthCredentials(d, d.providerAuthCredentialsIds);
+    let authMethods = await resolveProviderAuthMethods(d, d.providerAuthMethodIds);
+
+    let search = d.search
+      ? await voyager.record.search({
+          tenantId: d.tenant.id,
+          sourceId: voyagerSource.id,
+          indexId: voyagerIndex.providerAuthConfig.id,
+          query: d.search
+        })
+      : null;
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -39,7 +80,18 @@ class providerAuthConfigServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
-              isEphemeral: false
+              isEphemeral: false,
+
+              ...normalizeStatusForList(d).hasParent,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
+                providers ? { providerOid: providers.in } : undefined!,
+                deployments ? { deploymentOid: deployments.in } : undefined!,
+                credentials ? { authCredentialsOid: credentials.in } : undefined!,
+                authMethods ? { authMethodOid: authMethods.in } : undefined!
+              ].filter(Boolean)
             },
             include
           })
@@ -51,6 +103,7 @@ class providerAuthConfigServiceImpl {
     tenant: Tenant;
     solution: Solution;
     providerAuthConfigId: string;
+    allowDeleted?: boolean;
   }) {
     let providerAuthConfig = await db.providerAuthConfig.findFirst({
       where: {
@@ -60,7 +113,9 @@ class providerAuthConfigServiceImpl {
         OR: [
           { id: d.providerAuthConfigId },
           { providerSetupSession: { id: d.providerAuthConfigId } }
-        ]
+        ],
+
+        ...normalizeStatusForGet(d).hasParent
       },
       include
     });
@@ -93,8 +148,7 @@ class providerAuthConfigServiceImpl {
       return authMethod.value;
     }
 
-    let provider: (Provider & { defaultVariant: ProviderVariant | null }) | undefined =
-      undefined;
+    let provider: (Provider & { defaultVariant: ProviderVariant | null }) | undefined;
     if (d.provider) {
       provider = d.provider;
     } else if (d.providerDeployment) {
@@ -141,6 +195,7 @@ class providerAuthConfigServiceImpl {
       lockedVersion: ProviderVersion | null;
     };
     source: ProviderAuthConfigSource;
+    credentials?: ProviderAuthCredentials;
     input: {
       name?: string;
       description?: string;
@@ -157,8 +212,9 @@ class providerAuthConfigServiceImpl {
     };
   }) {
     checkTenant(d, d.providerDeployment);
+    checkDeletedRelation(d.providerDeployment, { allowEphemeral: d.input.isEphemeral });
 
-    if (d.providerDeployment && d.providerDeployment.providerOid != d.provider.oid) {
+    if (d.providerDeployment && d.providerDeployment.providerOid !== d.provider.oid) {
       throw new ServiceError(
         badRequestError({
           message: 'Provider deployment does not belong to provider',
@@ -212,9 +268,10 @@ class providerAuthConfigServiceImpl {
         input: d.input,
         import: d.import,
         authMethod,
+        credentials: d.credentials,
         backend: backendRes.backend,
         backendProviderAuthConfig: backendRes.backendProviderAuthConfig,
-        type: authMethod.type == 'oauth' ? 'oauth_manual' : 'manual'
+        type: authMethod.type === 'oauth' ? 'oauth_manual' : 'manual'
       });
     });
   }
@@ -240,8 +297,9 @@ class providerAuthConfigServiceImpl {
     };
   }) {
     checkTenant(d, d.providerAuthConfig);
+    checkDeletedEdit(d.providerAuthConfig, 'update');
 
-    if (d.providerAuthConfig.type == 'oauth_automated') {
+    if (d.providerAuthConfig.type === 'oauth_automated') {
       throw new ServiceError(
         badRequestError({
           message: 'Cannot update automated OAuth provider auth configs',
@@ -270,7 +328,7 @@ class providerAuthConfigServiceImpl {
           providerDeployment,
           authMethodId: d.providerAuthConfig.authMethodOid
         });
-      if (d.input.authMethodId && d.input.authMethodId != authMethod.id) {
+      if (d.input.authMethodId && d.input.authMethodId !== authMethod.id) {
         throw new ServiceError(
           badRequestError({
             message: 'Cannot change auth method of existing auth config',
@@ -292,30 +350,38 @@ class providerAuthConfigServiceImpl {
           })
         : undefined;
 
+      let newConfigVersion = await db.providerAuthConfigVersion.create({
+        data: {
+          ...getId('providerAuthConfigVersion'),
+          authConfigOid: d.providerAuthConfig.oid,
+          slateAuthConfigOid: backendRes?.backendProviderAuthConfig.slateAuthConfig?.oid
+        }
+      });
+      let fromVersionOid = d.providerAuthConfig.currentVersionOid;
+
       let config = await db.providerAuthConfig.update({
         where: {
-          oid: d.providerAuthConfig.oid,
-          tenantOid: d.tenant.oid,
-          solutionOid: d.solution.oid
+          oid: d.providerAuthConfig.oid
         },
         data: {
           name: d.input.name?.trim() || d.providerAuthConfig.name,
           description: d.input.description?.trim() || d.providerAuthConfig.description,
           metadata: d.input.metadata ?? d.providerAuthConfig.metadata,
 
-          slateAuthConfigOid: backendRes?.backendProviderAuthConfig?.slateAuthConfig?.oid
+          currentVersionOid: newConfigVersion.oid
         },
         include
       });
 
-      let authImport: ProviderAuthImport | undefined = undefined;
+      let authImport: ProviderAuthImport | undefined;
 
       if (backendRes) {
         let update = await db.providerAuthConfigUpdate.create({
           data: {
             ...getId('providerAuthConfigUpdate'),
             authConfigOid: config.oid,
-            slateAuthConfigOid: config.slateAuthConfigOid
+            fromVersionOid: fromVersionOid,
+            toVersionOid: newConfigVersion.oid
           }
         });
 

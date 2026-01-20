@@ -3,7 +3,7 @@ import { combineQueueProcessors, createQueue } from '@lowerdeck/queue';
 import { db } from '@metorial-subspace/db';
 import { env } from '../../env';
 
-export let startRankQueue = createQueue({
+let startRankQueue = createQueue({
   name: 'pint/rank/start',
   redisUrl: env.service.REDIS_URL,
   workerOpts: {
@@ -16,7 +16,7 @@ export let processSingleRankQueue = createQueue<{ providerListingId: string }>({
   redisUrl: env.service.REDIS_URL,
   workerOpts: {
     concurrency: 2,
-    limiter: process.env.NODE_ENV == 'development' ? undefined : { max: 20, duration: 1000 }
+    limiter: process.env.NODE_ENV === 'development' ? undefined : { max: 20, duration: 1000 }
   }
 });
 
@@ -27,13 +27,13 @@ let rankCron = createCron(
     redisUrl: env.service.REDIS_URL
   },
   async () => {
-    if (process.env.NODE_ENV == 'development') return;
+    if (process.env.NODE_ENV === 'development') return;
     await startRankQueue.add({}, { id: 'rank' });
   }
 );
 
 let startRankQueueProcessor = startRankQueue.process(async () => {
-  let afterId: string | undefined = undefined;
+  let afterId: string | undefined;
 
   for (let i = 0; i < 10_000; i++) {
     let providers = await db.providerListing.findMany({
@@ -44,7 +44,7 @@ let startRankQueueProcessor = startRankQueue.process(async () => {
       take: 100,
       orderBy: { id: 'asc' }
     });
-    if (providers.length == 0) break;
+    if (providers.length === 0) break;
 
     await processSingleRankQueue.addManyWithOps(
       providers.map(provider => ({
@@ -79,11 +79,11 @@ let processSingleRankQueueProcessor = processSingleRankQueue.process(async data 
   deploymentsCount = await db.providerDeployment.count({
     where: { providerOid: providerListing.providerOid }
   });
-  providerSessionsCount = await db.providerSession.count({
+  providerSessionsCount = await db.sessionProvider.count({
     where: { providerOid: providerListing.providerOid }
   });
 
-  let providerMessagesCountAgg = await db.providerSession.aggregate({
+  let providerMessagesCountAgg = await db.sessionProvider.aggregate({
     where: { providerOid: providerListing.providerOid },
     _sum: {
       totalProductiveServerMessageCount: true,

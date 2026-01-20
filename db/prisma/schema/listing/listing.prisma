@@ -36,7 +36,7 @@ model ProviderListing {
   ownerTenantOid BigInt?
   ownerTenant    Tenant? @relation(fields: [ownerTenantOid], references: [oid])
 
-  ownerSolutionOid BigInt?
+  ownerSolutionOid Int?
   ownerSolution    Solution? @relation(fields: [ownerSolutionOid], references: [oid], onDelete: Cascade)
 
   publisherOid BigInt
@@ -56,6 +56,7 @@ model ProviderListing {
   ProviderListingUpdate ProviderListingUpdate[]
 
   @@index([rank])
+  @@index([status])
 }
 
 model ProviderListingUpdate {

@@ -6,7 +6,7 @@ services:
     container_name: subspace-postgres
     restart: unless-stopped
     ports:
-      - "45432:5432"
+      - '45432:5432'
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -23,6 +23,18 @@ services:
     networks:
       - subspace-network
 
+  nats-1:
+    image: nats
+    command: '--cluster_name NATS --cluster nats://0.0.0.0:6222 --http_port 8222 '
+    networks:
+      - subspace-network
+  nats-2:
+    image: nats
+    command: '--cluster_name NATS --cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats-1:6222'
+    depends_on: ['nats-1']
+    networks:
+      - subspace-network
+
   object-storage:
     image: ghcr.io/metorial/object-storage:latest
     volumes:
@@ -32,7 +44,7 @@ services:
       AWS_ACCESS_KEY_ID: ${OBJECT_STORAGE_AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${OBJECT_STORAGE_AWS_SECRET_ACCESS_KEY}
       AWS_REGION: ${OBJECT_STORAGE_AWS_REGION}
-      
+
       OBJECT_STORE__SERVER__HOST: 0.0.0.0
       OBJECT_STORE__SERVER__PORT: 52010
       OBJECT_STORE__BACKEND__TYPE: s3
@@ -44,15 +56,14 @@ services:
     networks:
       - subspace-network
 
-
-  forge:  
+  forge:
     image: ghcr.io/metorial/forge:latest
     container_name: subspace-forge
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/forge
       REDIS_URL: redis://redis:6379/0
-      
+
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       DEFAULT_PROVIDER: aws.code-build
 
@@ -72,14 +83,14 @@ services:
     networks:
       - subspace-network
 
-  function-bay:  
+  function-bay:
     image: ghcr.io/metorial/function-bay:latest
     container_name: subspace-function-bay
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/function-bay
       REDIS_URL: redis://redis:6379/0
-      
+
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       DEFAULT_PROVIDER: ${DEFAULT_PROVIDER}
 
@@ -100,12 +111,12 @@ services:
     networks:
       - subspace-network
 
-  signal:  
+  signal:
     image: ghcr.io/metorial/signal:latest
     container_name: subspace-signal
     restart: unless-stopped
     ports:
-      - "52050:52050"
+      - '52050:52050'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/signal
       REDIS_URL: redis://redis:6379/0
@@ -124,7 +135,7 @@ services:
     container_name: subspace-voyager
     restart: unless-stopped
     ports:
-      - "52060:52060"
+      - '52060:52060'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/voyager
       SEARCH_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/voyager-search
@@ -135,13 +146,13 @@ services:
     networks:
       - subspace-network
 
-  slates-registry:  
+  slates-registry:
     image: ghcr.io/metorial/slates-registry:latest
     container_name: subspace-slates-registry
     restart: unless-stopped
     ports:
-      - "52040:52040"
-      - "52041:52041"
+      - '52040:52040'
+      - '52041:52041'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/slates-registry
       REDIS_URL: redis://redis:6379/0
@@ -163,8 +174,8 @@ services:
     container_name: subspace-slates-hub
     restart: unless-stopped
     ports:
-      - "52045:52045"
-      - "52046:52046"
+      - '52045:52045'
+      - '52046:52046'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/slates-hub
       REDIS_URL: redis://redis:6379/0
@@ -180,7 +191,7 @@ services:
       OBJECT_STORAGE_URL: http://object-storage:52010
       INVOCATIONS_BUCKET_NAME: subspace-invocations
 
-      INITIAL_REGISTRIES: "http://slates-registry:52040"
+      INITIAL_REGISTRIES: 'http://slates-registry:52040'
 
       SIGNAL_API_URL: http://signal:52050/metorial-signal
       SIGNAL_SENDER_IDENTIFIER: dev-subspace
@@ -205,22 +216,25 @@ services:
     container_name: subspace-controller-service
     restart: unless-stopped
     ports:
-      - "52070:52070"
+      - '52070:52070'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats-1:4222,nats://nats-2:4222
       METORIAL_ENV: development
-
       PUBLIC_SERVICE_URL: http://localhost:52071
-
       SLATES_HUB_URL: http://slates-hub:52046/slates-hub
       VOYAGER_URL: http://voyager:52060/metorial-voyager
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      MESSAGE_BUCKET_NAME: messages
 
     volumes:
       - ./apps/controller:/app/apps/controller:ro
       - ./apps/controller/package.json:/app/apps/controller/package.json:ro
       - ./modules:/app/modules:ro
       - ./packages:/app/packages:ro
+      - ./provider-backends:/app/provider-backends:ro
+      - ./db:/app/db:ro
     depends_on:
       - postgres
       - redis
@@ -231,6 +245,8 @@ services:
       - signal
       - voyager
       - slates-hub
+      - nats-1
+      - nats-2
     networks:
       - subspace-network
 
@@ -241,16 +257,17 @@ services:
     container_name: subspace-public-service
     restart: unless-stopped
     ports:
-      - "52071:52071"
+      - '52071:52071'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats-1:4222,nats://nats-2:4222
       METORIAL_ENV: development
-
       PUBLIC_SERVICE_URL: http://localhost:52071
-
       SLATES_HUB_URL: http://slates-hub:52046/slates-hub
       VOYAGER_URL: http://voyager:52060/metorial-voyager
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      MESSAGE_BUCKET_NAME: messages
 
     volumes:
       - ./apps/public/src:/app/apps/public/src:ro
@@ -258,6 +275,8 @@ services:
       - ./apps/public/package.json:/app/apps/public/package.json:ro
       - ./modules:/app/modules:ro
       - ./packages:/app/packages:ro
+      - ./provider-backends:/app/provider-backends:ro
+      - ./db:/app/db:ro
     depends_on:
       - postgres
       - redis
@@ -268,6 +287,8 @@ services:
       - signal
       - voyager
       - slates-hub
+      - nats-1
+      - nats-2
     networks:
       - subspace-network
 
@@ -278,22 +299,25 @@ services:
     container_name: subspace-worker-service
     restart: unless-stopped
     ports:
-      - "52072:52072"
+      - '52072:52072'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats-1:4222,nats://nats-2:4222
       METORIAL_ENV: development
-
       PUBLIC_SERVICE_URL: http://localhost:52071
-
       SLATES_HUB_URL: http://slates-hub:52046/slates-hub
       VOYAGER_URL: http://voyager:52060/metorial-voyager
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      MESSAGE_BUCKET_NAME: messages
 
     volumes:
       - ./apps/worker:/app/apps/worker:ro
       - ./apps/worker/package.json:/app/apps/worker/package.json:ro
       - ./modules:/app/modules:ro
       - ./packages:/app/packages:ro
+      - ./provider-backends:/app/provider-backends:ro
+      - ./db:/app/db:ro
     depends_on:
       - postgres
       - redis
@@ -304,6 +328,49 @@ services:
       - signal
       - voyager
       - slates-hub
+      - nats-1
+      - nats-2
+    networks:
+      - subspace-network
+
+  subspace-connection-endpoint:
+    build:
+      context: .
+      dockerfile: ./apps/connection-endpoint/dev.Dockerfile
+    container_name: subspace-connection-endpoint-service
+    restart: unless-stopped
+    ports:
+      - '52072:52072'
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
+      REDIS_URL: redis://redis:6379/0
+      NATS_URL: nats://nats-1:4222,nats://nats-2:4222
+      METORIAL_ENV: development
+      PUBLIC_SERVICE_URL: http://localhost:52071
+      SLATES_HUB_URL: http://slates-hub:52046/slates-hub
+      VOYAGER_URL: http://voyager:52060/metorial-voyager
+      OBJECT_STORAGE_URL: http://object-storage:52010
+      MESSAGE_BUCKET_NAME: messages
+
+    volumes:
+      - ./apps/connection-endpoint:/app/apps/connection-endpoint:ro
+      - ./apps/connection-endpoint/package.json:/app/apps/connection-endpoint/package.json:ro
+      - ./modules:/app/modules:ro
+      - ./packages:/app/packages:ro
+      - ./provider-backends:/app/provider-backends:ro
+      - ./provider-backends:/app/provider-backends:ro
+    depends_on:
+      - postgres
+      - redis
+      - object-storage
+      - slates-registry
+      - forge
+      - function-bay
+      - signal
+      - voyager
+      - slates-hub
+      - nats-1
+      - nats-2
     networks:
       - subspace-network
 

@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { createMemoryWire } from '../../src/index';
+import { createWire } from '../../src/index';
 
 describe('Receiver Crash Integration', () => {
   test('should handle receiver crash and retry to new receiver', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       defaultTimeout: 500,
       maxRetries: 3,
@@ -11,7 +11,7 @@ describe('Receiver Crash Integration', () => {
     });
 
     // Create first receiver
-    const receiver1 = wire.createReceiver(async (topic, payload) => {
+    const receiver1 = wire.createReceiver(async (_topic, payload) => {
       return { receiver: 1, payload };
     });
     await receiver1.start();
@@ -29,7 +29,7 @@ describe('Receiver Crash Integration', () => {
     await receiver1.stop();
 
     // Create second receiver
-    const receiver2 = wire.createReceiver(async (topic, payload) => {
+    const receiver2 = wire.createReceiver(async (_topic, payload) => {
       return { receiver: 2, payload };
     });
 
@@ -52,7 +52,7 @@ describe('Receiver Crash Integration', () => {
   }, 10000);
 
   test('should fail gracefully when no receivers available after crash', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       defaultTimeout: 200,
       maxRetries: 2,
@@ -60,7 +60,7 @@ describe('Receiver Crash Integration', () => {
     });
 
     // Create and then stop receiver
-    const receiver = wire.createReceiver(async (topic, payload) => {
+    const receiver = wire.createReceiver(async (_topic, _payload) => {
       return { data: 'test' };
     });
     await receiver.start();
@@ -86,7 +86,7 @@ describe('Receiver Crash Integration', () => {
   }, 10000);
 
   test('should handle multiple receivers crashing', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       defaultTimeout: 500,
       maxRetries: 5,
@@ -96,17 +96,17 @@ describe('Receiver Crash Integration', () => {
     // Create 3 receivers
     const receivers = await Promise.all([
       (async () => {
-        const r = wire.createReceiver(async (topic, payload) => ({ r: 1 }));
+        const r = wire.createReceiver(async (_topic, _payload) => ({ r: 1 }));
         await r.start();
         return r;
       })(),
       (async () => {
-        const r = wire.createReceiver(async (topic, payload) => ({ r: 2 }));
+        const r = wire.createReceiver(async (_topic, _payload) => ({ r: 2 }));
         await r.start();
         return r;
       })(),
       (async () => {
-        const r = wire.createReceiver(async (topic, payload) => ({ r: 3 }));
+        const r = wire.createReceiver(async (_topic, _payload) => ({ r: 3 }));
         await r.start();
         return r;
       })()
@@ -131,7 +131,7 @@ describe('Receiver Crash Integration', () => {
   }, 10000);
 
   test('should recover when receiver comes back online', async () => {
-    const wire = createMemoryWire();
+    const wire = createWire();
     const sender = wire.createSender({
       defaultTimeout: 300,
       maxRetries: 10,
@@ -139,7 +139,7 @@ describe('Receiver Crash Integration', () => {
     });
 
     // Start receiver
-    let receiver = wire.createReceiver(async (topic, payload) => {
+    let receiver = wire.createReceiver(async (_topic, payload) => {
       return { version: 1, payload };
     });
     await receiver.start();
@@ -155,7 +155,7 @@ describe('Receiver Crash Integration', () => {
     await new Promise(resolve => setTimeout(resolve, 200));
 
     // Start new receiver
-    receiver = wire.createReceiver(async (topic, payload) => {
+    receiver = wire.createReceiver(async (_topic, payload) => {
       return { version: 2, payload };
     });
     await receiver.start();

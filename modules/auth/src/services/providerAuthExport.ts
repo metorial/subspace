@@ -1,7 +1,21 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, getId, ProviderAuthConfig, Solution, Tenant } from '@metorial-subspace/db';
+import {
+  db,
+  getId,
+  type ProviderAuthConfig,
+  type Solution,
+  type Tenant
+} from '@metorial-subspace/db';
+import {
+  checkDeletedRelation,
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviderAuthConfigs,
+  resolveProviderAuthCredentials,
+  resolveProviders
+} from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
 import { providerAuthConfigInclude } from './providerAuthConfig';
@@ -13,7 +27,23 @@ let include = {
 };
 
 class providerAuthExportServiceImpl {
-  async listProviderAuthExports(d: { tenant: Tenant; solution: Solution }) {
+  async listProviderAuthExports(d: {
+    tenant: Tenant;
+    solution: Solution;
+    allowDeleted?: boolean;
+
+    ids?: string[];
+    providerIds?: string[];
+    providerAuthCredentialsIds?: string[];
+    providerAuthConfigIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+    let authConfigs = await resolveProviderAuthConfigs(d, d.providerAuthConfigIds);
+    let authCredentials = await resolveProviderAuthCredentials(
+      d,
+      d.providerAuthCredentialsIds
+    );
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -21,7 +51,18 @@ class providerAuthExportServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid
+              solutionOid: d.solution.oid,
+
+              ...normalizeStatusForList(d).onlyParent,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                providers ? { authConfig: { providerOid: providers.in } } : undefined!,
+                authConfigs ? { authConfigOid: authConfigs.in } : undefined!,
+                authCredentials
+                  ? { authConfig: { authCredentialsOid: authCredentials.in } }
+                  : undefined!
+              ].filter(Boolean)
             },
             include
           })
@@ -33,12 +74,14 @@ class providerAuthExportServiceImpl {
     tenant: Tenant;
     solution: Solution;
     providerAuthExportId: string;
+    allowDeleted?: boolean;
   }) {
     let providerAuthExport = await db.providerAuthExport.findFirst({
       where: {
         id: d.providerAuthExportId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+        ...normalizeStatusForGet(d).onlyParent
       },
       include
     });
@@ -61,14 +104,21 @@ class providerAuthExportServiceImpl {
     };
   }) {
     checkTenant(d, d.authConfig);
+    checkDeletedRelation(d.authConfig);
 
     let backend = await getBackend({ entity: d.authConfig });
 
     let newId = getId('providerAuthExport');
 
+    if (!d.authConfig.currentVersionOid) throw new Error('Auth config has no current version');
+    let currentVersion = await db.providerAuthConfigVersion.findUniqueOrThrow({
+      where: { oid: d.authConfig.currentVersionOid }
+    });
+
     let data = await backend.auth.getDecryptedAuthConfig({
       tenant: d.tenant,
       authConfig: d.authConfig,
+      authConfigVersion: currentVersion,
       note: `SUBSPACE/export ${d.input.ip}`
     });
 

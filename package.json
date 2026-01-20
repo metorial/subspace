@@ -2,11 +2,15 @@
   "name": "@metorial-subspace/root",
   "private": true,
   "scripts": {
-    "dev": "docker compose -p subspace -f ./docker-compose.dev.yml up --pull always --build slates-hub slates-registry signal function-bay forge voyager subspace-controller subspace-public subspace-worker"
+    "knip": "knip",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "prettier --write .",
+    "dev": "docker compose -p subspace -f ./docker-compose.dev.yml up --pull always --build slates-hub slates-registry signal function-bay forge voyager subspace-controller subspace-public subspace-worker subspace-connection-endpoint"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.3.11",
     "prettier": "^3.5.3",
-    "turbo": "^2.5.5",
     "typescript": "5.8.2"
   },
   "engines": {
@@ -16,12 +20,13 @@
   "packageManager": "bun@1.2.15",
   "workspaces": [
     "db",
+    "clients/*",
     "provider-backends/*",
     "apps/*",
     "packages/*",
     "modules/*"
   ],
   "dependencies": {
-    "npm-run-all": "^4.1.5"
+    "knip": "^5.82.0"
   }
 }

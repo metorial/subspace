@@ -10,6 +10,8 @@ model Tenant {
 
   createdAt DateTime @default(now())
 
+  logRetentionInDays Int @default(30)
+
   providers                                Provider[]
   tenantProviders                          TenantProvider[]
   providerListingGroups                    ProviderListingGroup[]
@@ -28,9 +30,19 @@ model Tenant {
   slateAuthConfigs                         SlateAuthConfig[]
   providerAuthConfigs                      ProviderAuthConfig[]
   providerSpecificationChangeNotifications ProviderSpecificationChangeNotification[]
-  providerSessions                         ProviderSession[]
   providerAuthExports                      ProviderAuthExport[]
   providerAuthImports                      ProviderAuthImport[]
   providerSetupSessions                    ProviderSetupSession[]
   brand                                    Brand?
+  sessionProviders                         SessionProvider[]
+  sessionTemplates                         SessionTemplate[]
+  sessionTemplateProviders                 SessionTemplateProvider[]
+  sessionConnections                       SessionConnection[]
+  sessionErrors                            SessionError[]
+  sessionMessages                          SessionMessage[]
+  sessionEvents                            SessionEvent[]
+  sessionParticipants                      SessionParticipant[]
+  providerRuns                             ProviderRun[]
+  sessionErrorGroups                       SessionErrorGroup[]
+  toolCalls                                ToolCall[]
 }

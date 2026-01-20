@@ -5,15 +5,26 @@ import {
   addAfterTransactionHook,
   db,
   getId,
-  Provider,
-  ProviderConfigVault,
-  ProviderDeployment,
-  ProviderVariant,
-  ProviderVersion,
-  Solution,
-  Tenant,
+  type Provider,
+  type ProviderConfigVault,
+  type ProviderConfigVaultStatus,
+  type ProviderDeployment,
+  type ProviderVariant,
+  type ProviderVersion,
+  type Solution,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import {
+  checkDeletedEdit,
+  checkDeletedRelation,
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviderConfigs,
+  resolveProviderDeployments,
+  resolveProviders
+} from '@metorial-subspace/list-utils';
+import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import {
   providerConfigVaultCreatedQueue,
@@ -27,7 +38,33 @@ let include = {
 };
 
 class providerConfigVaultServiceImpl {
-  async listProviderConfigVaults(d: { tenant: Tenant; solution: Solution }) {
+  async listProviderConfigVaults(d: {
+    tenant: Tenant;
+    solution: Solution;
+
+    search?: string;
+
+    status?: ProviderConfigVaultStatus[];
+    allowDeleted?: boolean;
+
+    ids?: string[];
+    providerIds?: string[];
+    providerDeploymentIds?: string[];
+    providerConfigIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+    let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
+    let configs = await resolveProviderConfigs(d, d.providerConfigIds);
+
+    let search = d.search
+      ? await voyager.record.search({
+          tenantId: d.tenant.id,
+          sourceId: voyagerSource.id,
+          indexId: voyagerIndex.providerConfigVault.id,
+          query: d.search
+        })
+      : null;
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -35,7 +72,17 @@ class providerConfigVaultServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid
+              solutionOid: d.solution.oid,
+
+              ...normalizeStatusForList(d).noParent,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
+                providers ? { providerOid: providers.in } : undefined!,
+                deployments ? { deploymentOid: deployments.in } : undefined!,
+                configs ? { configOid: configs.in } : undefined!
+              ].filter(Boolean)
             },
             include
           })
@@ -47,12 +94,14 @@ class providerConfigVaultServiceImpl {
     tenant: Tenant;
     solution: Solution;
     providerConfigVaultId: string;
+    allowDeleted?: boolean;
   }) {
     let providerConfigVault = await db.providerConfigVault.findFirst({
       where: {
         id: d.providerConfigVaultId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+        ...normalizeStatusForGet(d).noParent
       },
       include
     });
@@ -83,6 +132,9 @@ class providerConfigVaultServiceImpl {
   }) {
     checkTenant(d, d.providerDeployment);
 
+    checkDeletedRelation(d.provider);
+    checkDeletedRelation(d.providerDeployment);
+
     return await withTransaction(async db => {
       let config = await providerConfigService.createProviderConfig({
         tenant: d.tenant,
@@ -101,6 +153,7 @@ class providerConfigVaultServiceImpl {
       let vault = await db.providerConfigVault.create({
         data: {
           ...getId('providerConfigVault'),
+          status: 'active',
           name: d.input.name,
           description: d.input.description?.trim() || undefined,
           metadata: d.input.metadata,
@@ -132,6 +185,7 @@ class providerConfigVaultServiceImpl {
     };
   }) {
     checkTenant(d, d.providerConfigVault);
+    checkDeletedEdit(d.providerConfigVault, 'update');
 
     return withTransaction(async db => {
       let vault = await db.providerConfigVault.update({

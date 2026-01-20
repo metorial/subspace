@@ -3,14 +3,23 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
-  Provider,
-  ProviderAuthConfig,
-  ProviderDeployment,
-  ProviderVariant,
-  ProviderVersion,
-  Solution,
-  Tenant
+  type Provider,
+  type ProviderAuthConfig,
+  type ProviderDeployment,
+  type ProviderVariant,
+  type ProviderVersion,
+  type Solution,
+  type Tenant
 } from '@metorial-subspace/db';
+import {
+  checkDeletedRelation,
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviderAuthConfigs,
+  resolveProviderAuthCredentials,
+  resolveProviderDeployments,
+  resolveProviders
+} from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { providerAuthConfigInclude, providerAuthConfigService } from './providerAuthConfig';
 import { providerAuthConfigInternalService } from './providerAuthConfigInternal';
@@ -35,7 +44,25 @@ export interface ProviderAuthImportParams {
 }
 
 class providerAuthImportServiceImpl {
-  async listProviderAuthImports(d: { tenant: Tenant; solution: Solution }) {
+  async listProviderAuthImports(d: {
+    tenant: Tenant;
+    solution: Solution;
+    allowDeleted?: boolean;
+
+    ids?: string[];
+    providerIds?: string[];
+    providerAuthCredentialsIds?: string[];
+    providerAuthConfigIds?: string[];
+    providerDeploymentIds?: string[];
+  }) {
+    let providers = await resolveProviders(d, d.providerIds);
+    let authConfigs = await resolveProviderAuthConfigs(d, d.providerAuthConfigIds);
+    let authCredentials = await resolveProviderAuthCredentials(
+      d,
+      d.providerAuthCredentialsIds
+    );
+    let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
+
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>
@@ -43,7 +70,19 @@ class providerAuthImportServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid
+              solutionOid: d.solution.oid,
+
+              ...normalizeStatusForList(d).onlyParent,
+
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                providers ? { authConfig: { providerOid: providers.in } } : undefined!,
+                authConfigs ? { authConfigOid: authConfigs.in } : undefined!,
+                authCredentials
+                  ? { authConfig: { authCredentialsOid: authCredentials.in } }
+                  : undefined!,
+                deployments ? { authConfig: { deploymentOid: deployments.in } } : undefined!
+              ].filter(Boolean)
             },
             include
           })
@@ -55,12 +94,14 @@ class providerAuthImportServiceImpl {
     tenant: Tenant;
     solution: Solution;
     providerAuthImportId: string;
+    allowDeleted?: boolean;
   }) {
     let providerAuthImport = await db.providerAuthImport.findFirst({
       where: {
         id: d.providerAuthImportId,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+        ...normalizeStatusForGet(d).onlyParent
       },
       include
     });
@@ -75,6 +116,12 @@ class providerAuthImportServiceImpl {
       input: { authMethodId?: string };
     }
   ) {
+    checkTenant(d, d.providerAuthConfig);
+    checkTenant(d, d.providerDeployment);
+
+    checkDeletedRelation(d.providerAuthConfig);
+    checkDeletedRelation(d.providerDeployment);
+
     let checkRes = await this.check(d);
 
     let { authMethod } = await providerAuthConfigInternalService.getVersionAndAuthMethod({
@@ -85,7 +132,7 @@ class providerAuthImportServiceImpl {
       authMethodId: d.input.authMethodId
     });
 
-    return authMethod.type == 'oauth'
+    return authMethod.type === 'oauth'
       ? authMethod.value.outputJsonSchema
       : authMethod.value.inputJsonSchema;
   }
@@ -107,7 +154,7 @@ class providerAuthImportServiceImpl {
 
     let importOid: bigint;
 
-    if (checkRes.type == 'update_config') {
+    if (checkRes.type === 'update_config') {
       let authConfigRes = await providerAuthConfigService.updateProviderAuthConfig({
         tenant: d.tenant,
         solution: d.solution,
@@ -166,7 +213,7 @@ class providerAuthImportServiceImpl {
     if (
       d.providerDeployment &&
       d.provider &&
-      d.providerDeployment.providerOid != d.provider.oid
+      d.providerDeployment.providerOid !== d.provider.oid
     ) {
       throw new ServiceError(
         badRequestError({
@@ -208,7 +255,7 @@ class providerAuthImportServiceImpl {
 
       if (
         d.providerDeployment &&
-        d.providerAuthConfig.deploymentOid != d.providerDeployment.oid
+        d.providerAuthConfig.deploymentOid !== d.providerDeployment.oid
       ) {
         throw new ServiceError(
           badRequestError({

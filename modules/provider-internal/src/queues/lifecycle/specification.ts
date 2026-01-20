@@ -31,16 +31,7 @@ export let specificationCreatedQueueProcessor = specificationCreatedQueue.proces
   }
 );
 
-export let specificationUpdatedQueue = createQueue<{ specificationId: string }>({
-  name: 'pint/lc/specification/updated',
-  redisUrl: env.service.REDIS_URL
-});
-
-export let specificationUpdatedQueueProcessor = specificationUpdatedQueue.process(
-  async data => {}
-);
-
-export let specificationCreatedAssocToolQueue = createQueue<{
+let specificationCreatedAssocToolQueue = createQueue<{
   toolOid: bigint;
   globalOid: bigint;
 }>({
@@ -56,7 +47,7 @@ export let specificationCreatedAssocToolQueueProcessor =
     });
   });
 
-export let specificationCreatedAssocAuthMethodQueue = createQueue<{
+let specificationCreatedAssocAuthMethodQueue = createQueue<{
   authMethodOid: bigint;
   globalOid: bigint;
 }>({
