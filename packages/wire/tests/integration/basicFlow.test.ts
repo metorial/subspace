@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type { Receiver, Sender } from '../../src/index';
-import { createWire } from '../../src/index';
+import { createConduit } from '../../src/index';
 
 describe('Basic Flow Integration', () => {
   let sender: Sender;
@@ -8,17 +8,17 @@ describe('Basic Flow Integration', () => {
   let cleanup: () => Promise<void>;
 
   beforeEach(async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     // Create sender
-    sender = wire.createSender();
+    sender = conduit.createSender();
 
     // Create receiver with simple handler
-    receiver = wire.createReceiver(async (topic, payload) => {
+    receiver = conduit.createReceiver(async (topic, payload) => {
       return { echo: payload, topic };
     });
 
-    cleanup = wire.close;
+    cleanup = conduit.close;
 
     // Start receiver
     await receiver.start();
@@ -71,12 +71,12 @@ describe('Basic Flow Integration', () => {
     // Stop the original receiver
     await receiver.stop();
 
-    // Create a wire and receiver that throws errors
-    const wire2 = createWire();
-    const errorReceiver = wire2.createReceiver(async () => {
+    // Create a conduit and receiver that throws errors
+    const conduit2 = createConduit();
+    const errorReceiver = conduit2.createReceiver(async () => {
       throw new Error('Processing failed');
     });
-    const errorSender = wire2.createSender();
+    const errorSender = conduit2.createSender();
 
     await errorReceiver.start();
 
@@ -87,7 +87,7 @@ describe('Basic Flow Integration', () => {
 
     await errorReceiver.stop();
     await errorSender.close();
-    await wire2.close();
+    await conduit2.close();
 
     // Restart original receiver for remaining tests
     await receiver.start();

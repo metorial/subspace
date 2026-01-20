@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'vitest';
-import { createWire } from '../../src/index';
+import { createConduit } from '../../src/index';
 
 describe('Unlimited Timeout Extensions', () => {
   test('should send multiple timeout extensions for very long processing', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     let extensionsReceived = 0;
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, _payload) => {
         // Process for 15 seconds (long enough to require multiple extensions)
         await new Promise(resolve => setTimeout(resolve, 15000));
@@ -19,7 +19,7 @@ describe('Unlimited Timeout Extensions', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender({
+    const sender = conduit.createSender({
       defaultTimeout: 5000 // Start with 5s timeout
     });
 
@@ -31,13 +31,13 @@ describe('Unlimited Timeout Extensions', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   }, 30000);
 
   test('should handle extremely long processing with many extensions', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, _payload) => {
         // Process in chunks to simulate long-running work
         for (let i = 0; i < 20; i++) {
@@ -52,7 +52,7 @@ describe('Unlimited Timeout Extensions', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender({
+    const sender = conduit.createSender({
       defaultTimeout: 5000 // Initial timeout of 5s
     });
 
@@ -64,13 +64,13 @@ describe('Unlimited Timeout Extensions', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   }, 45000);
 
   test('should rate-limit timeout extensions', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, _payload) => {
         // Process for 8 seconds
         await new Promise(resolve => setTimeout(resolve, 8000));
@@ -83,7 +83,7 @@ describe('Unlimited Timeout Extensions', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender({
+    const sender = conduit.createSender({
       defaultTimeout: 5000
     });
 
@@ -94,14 +94,14 @@ describe('Unlimited Timeout Extensions', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   }, 20000);
 
   test('should stop sending extensions after message completes', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     let processingComplete = false;
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, _payload) => {
         await new Promise(resolve => setTimeout(resolve, 3000));
         processingComplete = true;
@@ -114,7 +114,7 @@ describe('Unlimited Timeout Extensions', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender({
+    const sender = conduit.createSender({
       defaultTimeout: 5000
     });
 
@@ -131,13 +131,13 @@ describe('Unlimited Timeout Extensions', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   }, 15000);
 
   test('should handle concurrent messages with extensions', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, payload: any) => {
         // Variable processing time
         const delay = payload.slow ? 8000 : 500;
@@ -151,7 +151,7 @@ describe('Unlimited Timeout Extensions', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender({
+    const sender = conduit.createSender({
       defaultTimeout: 3000
     });
 
@@ -172,6 +172,6 @@ describe('Unlimited Timeout Extensions', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   }, 25000);
 });

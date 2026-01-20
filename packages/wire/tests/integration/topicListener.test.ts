@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type { Receiver, Sender, TopicResponseBroadcast } from '../../src/index';
-import { createWire } from '../../src/index';
+import { createConduit } from '../../src/index';
 
 describe('Topic Listener Integration', () => {
   let sender: Sender;
@@ -8,14 +8,14 @@ describe('Topic Listener Integration', () => {
   let cleanup: () => Promise<void>;
 
   beforeEach(async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
-    sender = wire.createSender();
-    receiver = wire.createReceiver(async (topic, payload) => {
+    sender = conduit.createSender();
+    receiver = conduit.createReceiver(async (topic, payload) => {
       return { processed: true, topic, payload };
     });
 
-    cleanup = wire.close;
+    cleanup = conduit.close;
     await receiver.start();
   });
 
@@ -193,11 +193,11 @@ describe('Topic Listener Integration', () => {
     await receiver.stop();
 
     // Create receiver that throws errors
-    const wire2 = createWire();
-    const errorReceiver = wire2.createReceiver(async () => {
+    const conduit2 = createConduit();
+    const errorReceiver = conduit2.createReceiver(async () => {
       throw new Error('Processing failed');
     });
-    const errorSender = wire2.createSender();
+    const errorSender = conduit2.createSender();
 
     await errorReceiver.start();
 
@@ -217,7 +217,7 @@ describe('Topic Listener Integration', () => {
 
     await errorReceiver.stop();
     await errorSender.close();
-    await wire2.close();
+    await conduit2.close();
 
     // Restart original receiver
     await receiver.start();
@@ -230,12 +230,12 @@ describe('Topic Listener Integration', () => {
     await sender.close();
 
     // Create new sender
-    const wire2 = createWire();
-    sender = wire2.createSender();
+    const conduit2 = createConduit();
+    sender = conduit2.createSender();
 
     expect(sender.getSubscribedTopics()).toHaveLength(0);
 
     await sender.close();
-    await wire2.close();
+    await conduit2.close();
   });
 });

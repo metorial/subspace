@@ -6,7 +6,7 @@ import {
   ServiceError
 } from '@lowerdeck/error';
 import { createLock } from '@lowerdeck/lock';
-import type { WireInput, WireResult } from '@metorial-subspace/connection-utils';
+import type { ConduitInput, ConduitResult } from '@metorial-subspace/connection-utils';
 import { checkToolAccess } from '@metorial-subspace/connection-utils';
 import {
   db,
@@ -33,8 +33,8 @@ import {
   UNINITIALIZED_SESSION_EXPIRATION_MINUTES
 } from '../const';
 import { env } from '../env';
+import { conduit } from '../lib/conduit';
 import { topics } from '../lib/topic';
-import { wire } from '../lib/wire';
 import { completeMessage } from '../shared/completeMessage';
 import { createMessage, type CreateMessageProps } from '../shared/createMessage';
 import { upsertParticipant } from '../shared/upsertParticipant';
@@ -44,7 +44,7 @@ let instanceLock = createLock({
   redisUrl: env.service.REDIS_URL
 });
 
-let sender = wire.createSender();
+let sender = conduit.createSender();
 
 export interface InitProps {
   client: {
@@ -390,7 +390,7 @@ export class SenderManager {
           toolKey: tool.key,
 
           input: d.input
-        } satisfies WireInput);
+        } satisfies ConduitInput);
 
         if (!res.success) {
           let system = await upsertParticipant({
@@ -414,7 +414,7 @@ export class SenderManager {
             }
           );
         } else {
-          let data = res.result as WireResult;
+          let data = res.result as ConduitResult;
           message = Object.assign(message, {
             ...data.message,
             output: data.output ?? data.message?.output
@@ -434,7 +434,7 @@ export class SenderManager {
       output: message.output,
       status: message.status,
       completedAt: message.completedAt
-    } satisfies WireResult;
+    } satisfies ConduitResult;
   }
 
   #createConnectionPromise: Promise<SessionConnection> | null = null;

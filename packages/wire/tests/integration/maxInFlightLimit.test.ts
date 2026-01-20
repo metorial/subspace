@@ -1,19 +1,19 @@
 import { describe, expect, test } from 'vitest';
-import { createWire } from '../../src/index';
+import { createConduit } from '../../src/index';
 
 describe('Max In-Flight Limit Integration', () => {
   test('should reject messages when max in-flight limit reached', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     // Create a receiver that takes time to respond
-    const receiver = wire.createReceiver(async () => {
+    const receiver = conduit.createReceiver(async () => {
       await new Promise(resolve => setTimeout(resolve, 500));
       return { processed: true };
     });
     await receiver.start();
 
     // Create sender with very low max in-flight limit and short timeout
-    const sender = wire.createSender({
+    const sender = conduit.createSender({
       defaultTimeout: 1000,
       maxInFlightMessages: 3,
       maxRetries: 0 // Don't retry
@@ -47,6 +47,6 @@ describe('Max In-Flight Limit Integration', () => {
 
     await receiver.stop();
     await sender.close();
-    await wire.close();
+    await conduit.close();
   }, 5000);
 });

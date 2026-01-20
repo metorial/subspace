@@ -11,41 +11,45 @@ export type {
   ITransportAdapter,
   MessageHandler as TransportMessageHandler
 } from './adapters/transport/transportAdapter';
+export { ConduitReceiver, createConduitReceiver } from './core/conduitReceiver';
+export type {
+  ConduitReceiverConfig,
+  TopicContext,
+  TopicHandler
+} from './core/conduitReceiver';
 export { MessageCache } from './core/messageCache';
-export type { OwnershipLossCallback } from './core/ownershipManager';
 export { OwnershipManager } from './core/ownershipManager';
-export type { MessageHandler } from './core/receiver';
+export type { OwnershipLossCallback } from './core/ownershipManager';
 export { Receiver } from './core/receiver';
+export type { MessageHandler } from './core/receiver';
 export { RetryManager } from './core/retryManager';
 export { Sender } from './core/sender';
-export type { TopicContext, TopicHandler, WireReceiverConfig } from './core/wireReceiver';
-export { createWireReceiver, WireReceiver } from './core/wireReceiver';
 
 // Imports for factory function
 import { MemoryCoordination } from './adapters/coordination/memoryCoordination';
 import { RedisCoordination } from './adapters/coordination/redisCoordination';
 import { MemoryTransport } from './adapters/transport/memoryTransport';
 import { NatsTransport } from './adapters/transport/natsTransport';
+import { createConduitReceiver, type TopicHandler } from './core/conduitReceiver';
 import { type MessageHandler, Receiver } from './core/receiver';
 import { Sender } from './core/sender';
-import { createWireReceiver, type TopicHandler } from './core/wireReceiver';
 import type { NatsConfig, ReceiverConfig, RedisConfig, SenderConfig } from './types/config';
 
 export type {
+  ConduitConfig,
   CoordinationConfig,
   NatsConfig,
   ReceiverConfig,
   RedisConfig,
   SenderConfig,
-  TransportConfig,
-  WireConfig
+  TransportConfig
 } from './types/config';
 // Types
 export { DEFAULT_CONFIG, mergeConfig } from './types/config';
-export type { TimeoutExtension, WireMessage } from './types/message';
 export { isTimeoutExtension } from './types/message';
-export type { WireResponse } from './types/response';
-export { WireProcessError, WireSendError } from './types/response';
+export type { ConduitMessage, TimeoutExtension } from './types/message';
+export { ConduitProcessError, ConduitSendError } from './types/response';
+export type { ConduitResponse } from './types/response';
 export type {
   TopicListener,
   TopicResponseBroadcast,
@@ -73,51 +77,51 @@ let getReceiverConfig = (config?: Partial<ReceiverConfig>): ReceiverConfig => ({
   ...config
 });
 
-export let createMemoryWire = (wireId: string = 'default') => {
-  let coordination = new MemoryCoordination(wireId);
+export let createMemoryConduit = (conduitId: string = 'default') => {
+  let coordination = new MemoryCoordination(conduitId);
   let transport = new MemoryTransport();
 
   return {
-    wireId,
+    conduitId,
     coordination,
     transport
   };
 };
 
-export let createRedisNatsWire = (opts: {
-  wireId: string;
+export let createRedisNatsConduit = (opts: {
+  conduitId: string;
   redisConfig: RedisConfig;
   natsConfig: NatsConfig;
 }) => {
-  let coordination = new RedisCoordination(opts.redisConfig, opts.wireId);
+  let coordination = new RedisCoordination(opts.redisConfig, opts.conduitId);
   let transport = new NatsTransport(opts.natsConfig);
 
   return {
-    wireId: opts.wireId,
+    conduitId: opts.conduitId,
     coordination,
     transport
   };
 };
 
 export type Adapter =
-  | ReturnType<typeof createMemoryWire>
-  | ReturnType<typeof createRedisNatsWire>;
+  | ReturnType<typeof createMemoryConduit>
+  | ReturnType<typeof createRedisNatsConduit>;
 
-export let createWire = (adapter: Adapter = createMemoryWire()) => {
-  let { wireId, coordination, transport } = adapter;
+export let createConduit = (adapter: Adapter = createMemoryConduit()) => {
+  let { conduitId, coordination, transport } = adapter;
 
   return {
     coordination,
     transport,
     createSender: (config?: Partial<SenderConfig>) =>
-      new Sender(coordination, transport, getSenderConfig(config), wireId),
+      new Sender(coordination, transport, getSenderConfig(config), conduitId),
     createReceiver: (handler: MessageHandler, config?: Partial<ReceiverConfig>) =>
-      new Receiver(coordination, transport, getReceiverConfig(config), handler, wireId),
-    createWireReceiver: (handleTopic: TopicHandler, config?: Partial<ReceiverConfig>) =>
-      createWireReceiver({
+      new Receiver(coordination, transport, getReceiverConfig(config), handler, conduitId),
+    createConduitReceiver: (handleTopic: TopicHandler, config?: Partial<ReceiverConfig>) =>
+      createConduitReceiver({
         coordination,
         transport,
-        wireId,
+        conduitId,
         handleTopic,
         config: getReceiverConfig(config)
       }),

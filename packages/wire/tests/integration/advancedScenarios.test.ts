@@ -1,15 +1,15 @@
 import { describe, expect, test } from 'vitest';
-import { createWire } from '../../src/index';
+import { createConduit } from '../../src/index';
 
 describe('Advanced Scenarios Integration', () => {
   describe('Race Conditions', () => {
     test('should handle concurrent ownership claims correctly', async () => {
-      const wire = createWire();
+      const conduit = createConduit();
 
       // Create 5 receivers simultaneously
       const receivers = await Promise.all(
         Array.from({ length: 5 }, async (_, i) => {
-          const r = wire.createReceiver(async (_topic, payload) => ({
+          const r = conduit.createReceiver(async (_topic, payload) => ({
             receiver: i,
             payload
           }));
@@ -18,7 +18,7 @@ describe('Advanced Scenarios Integration', () => {
         })
       );
 
-      const sender = wire.createSender();
+      const sender = conduit.createSender();
 
       // Send message - exactly one receiver should get ownership
       const response = await sender.send('race-topic', { data: 'test' });
@@ -38,19 +38,19 @@ describe('Advanced Scenarios Integration', () => {
         await r.stop();
       }
       await sender.close();
-      await wire.close();
+      await conduit.close();
     });
 
     test('should handle concurrent messages to different topics', async () => {
-      const wire = createWire();
-      const receiver = wire.createReceiver(async (topic, payload) => ({
+      const conduit = createConduit();
+      const receiver = conduit.createReceiver(async (topic, payload) => ({
         topic,
         payload,
         processedAt: Date.now()
       }));
       await receiver.start();
 
-      const sender = wire.createSender();
+      const sender = conduit.createSender();
 
       // Send 50 messages to different topics concurrently
       const promises = Array.from({ length: 50 }, (_, i) =>
@@ -67,20 +67,20 @@ describe('Advanced Scenarios Integration', () => {
 
       await receiver.stop();
       await sender.close();
-      await wire.close();
+      await conduit.close();
     });
 
     test('should handle simultaneous sender and receiver operations', async () => {
-      const wire = createWire();
+      const conduit = createConduit();
 
       let processedCount = 0;
-      const receiver = wire.createReceiver(async (_topic, _payload) => {
+      const receiver = conduit.createReceiver(async (_topic, _payload) => {
         processedCount++;
         await new Promise(resolve => setTimeout(resolve, 10));
         return { processed: processedCount };
       });
 
-      const sender = wire.createSender();
+      const sender = conduit.createSender();
 
       // Start sending messages while receiver is starting
       const sendPromises = Array.from({ length: 20 }, (_, i) =>
@@ -99,16 +99,16 @@ describe('Advanced Scenarios Integration', () => {
 
       await receiver.stop();
       await sender.close();
-      await wire.close();
+      await conduit.close();
     }, 15000);
   });
 
   describe('Ownership Loss During Processing', () => {
     test('should complete message processing even if ownership expires', async () => {
-      const wire = createWire();
+      const conduit = createConduit();
 
       // Create receiver with very short ownership TTL
-      const receiver = wire.createReceiver(
+      const receiver = conduit.createReceiver(
         async (_topic, payload) => {
           // Simulate long processing that outlasts ownership
           await new Promise(resolve => setTimeout(resolve, 200));
@@ -122,7 +122,7 @@ describe('Advanced Scenarios Integration', () => {
 
       await receiver.start();
 
-      const sender = wire.createSender();
+      const sender = conduit.createSender();
 
       // Send message - ownership will expire during processing
       const response = await sender.send('short-ttl-topic', { data: 'test' });
@@ -136,19 +136,19 @@ describe('Advanced Scenarios Integration', () => {
 
       await receiver.stop();
       await sender.close();
-      await wire.close();
+      await conduit.close();
     }, 10000);
 
     test('should transfer ownership after receiver stops processing', async () => {
-      const wire = createWire();
+      const conduit = createConduit();
 
-      const receiver1 = wire.createReceiver(async (_topic, payload) => ({
+      const receiver1 = conduit.createReceiver(async (_topic, payload) => ({
         receiver: 1,
         payload
       }));
       await receiver1.start();
 
-      const sender = wire.createSender();
+      const sender = conduit.createSender();
 
       // Send first message
       const response1 = await sender.send('transfer-topic', { data: 'msg1' });
@@ -158,7 +158,7 @@ describe('Advanced Scenarios Integration', () => {
       await receiver1.stop();
 
       // Create receiver2
-      const receiver2 = wire.createReceiver(async (_topic, payload) => ({
+      const receiver2 = conduit.createReceiver(async (_topic, payload) => ({
         receiver: 2,
         payload
       }));
@@ -173,21 +173,21 @@ describe('Advanced Scenarios Integration', () => {
 
       await receiver2.stop();
       await sender.close();
-      await wire.close();
+      await conduit.close();
     }, 10000);
   });
 
   describe('High Concurrency', () => {
     test('should handle high message throughput', async () => {
-      const wire = createWire();
+      const conduit = createConduit();
 
-      const receiver = wire.createReceiver(async (_topic, payload) => ({
+      const receiver = conduit.createReceiver(async (_topic, payload) => ({
         processed: true,
         payload
       }));
       await receiver.start();
 
-      const sender = wire.createSender();
+      const sender = conduit.createSender();
 
       // Send 200 messages as fast as possible
       const startTime = Date.now();
@@ -206,20 +206,20 @@ describe('Advanced Scenarios Integration', () => {
 
       await receiver.stop();
       await sender.close();
-      await wire.close();
+      await conduit.close();
     }, 30000);
 
     test('should handle many concurrent senders', async () => {
-      const wire = createWire();
+      const conduit = createConduit();
 
-      const receiver = wire.createReceiver(async (_topic, payload) => ({
+      const receiver = conduit.createReceiver(async (_topic, payload) => ({
         processed: true,
         payload
       }));
       await receiver.start();
 
       // Create 10 senders
-      const senders = Array.from({ length: 10 }, () => wire.createSender());
+      const senders = Array.from({ length: 10 }, () => conduit.createSender());
 
       // Each sender sends 10 messages
       const allPromises = senders.flatMap((sender, senderIdx) =>
@@ -241,16 +241,16 @@ describe('Advanced Scenarios Integration', () => {
       for (const sender of senders) {
         await sender.close();
       }
-      await wire.close();
+      await conduit.close();
     }, 30000);
 
     test('should handle many concurrent receivers', async () => {
-      const wire = createWire();
+      const conduit = createConduit();
 
       // Create 10 receivers
       const receivers = await Promise.all(
         Array.from({ length: 10 }, async (_, i) => {
-          const r = wire.createReceiver(async (_topic, payload) => ({
+          const r = conduit.createReceiver(async (_topic, payload) => ({
             receiver: i,
             payload
           }));
@@ -259,7 +259,7 @@ describe('Advanced Scenarios Integration', () => {
         })
       );
 
-      const sender = wire.createSender();
+      const sender = conduit.createSender();
 
       // Send messages to 50 different topics
       const promises = Array.from({ length: 50 }, (_, i) =>
@@ -285,17 +285,17 @@ describe('Advanced Scenarios Integration', () => {
         await r.stop();
       }
       await sender.close();
-      await wire.close();
+      await conduit.close();
     }, 30000);
   });
 
   describe('Cross-Receiver Idempotency', () => {
     test('should handle message retry across different receivers', async () => {
-      const wire = createWire();
+      const conduit = createConduit();
       const processLog: Array<{ receiver: number; messageId: string }> = [];
 
       // Create receiver 1 that will "crash" after seeing message
-      const receiver1 = wire.createReceiver(
+      const receiver1 = conduit.createReceiver(
         async (_topic, payload: any) => {
           processLog.push({ receiver: 1, messageId: payload.messageId });
           // Don't return - simulate hanging/crash
@@ -305,7 +305,7 @@ describe('Advanced Scenarios Integration', () => {
       );
       await receiver1.start();
 
-      const sender = wire.createSender({
+      const sender = conduit.createSender({
         defaultTimeout: 200,
         maxRetries: 3,
         retryBackoffMs: 100
@@ -321,7 +321,7 @@ describe('Advanced Scenarios Integration', () => {
       await new Promise(resolve => setTimeout(resolve, 250));
       await receiver1.stop();
 
-      const receiver2 = wire.createReceiver(async (_topic, payload: any) => {
+      const receiver2 = conduit.createReceiver(async (_topic, payload: any) => {
         processLog.push({ receiver: 2, messageId: payload.messageId });
         return { processed: true, receiver: 2 };
       });
@@ -338,14 +338,14 @@ describe('Advanced Scenarios Integration', () => {
 
       await receiver2.stop();
       await sender.close();
-      await wire.close();
+      await conduit.close();
     }, 15000);
 
     test('should cache responses per receiver', async () => {
-      const wire = createWire();
+      const conduit = createConduit();
 
       let processCount = 0;
-      const receiver = wire.createReceiver(async (_topic, payload) => {
+      const receiver = conduit.createReceiver(async (_topic, payload) => {
         processCount++;
         return {
           count: processCount,
@@ -354,7 +354,7 @@ describe('Advanced Scenarios Integration', () => {
       });
       await receiver.start();
 
-      const sender = wire.createSender();
+      const sender = conduit.createSender();
 
       // Send first message
       const response1 = await sender.send('cache-topic', { data: 'test' });
@@ -370,14 +370,14 @@ describe('Advanced Scenarios Integration', () => {
 
       await receiver.stop();
       await sender.close();
-      await wire.close();
+      await conduit.close();
     });
   });
 
   describe('Distributed System Behavior', () => {
     test('should handle cascading receiver failures', async () => {
-      const wire = createWire();
-      const sender = wire.createSender({
+      const conduit = createConduit();
+      const sender = conduit.createSender({
         defaultTimeout: 200,
         maxRetries: 5,
         retryBackoffMs: 50
@@ -385,7 +385,7 @@ describe('Advanced Scenarios Integration', () => {
 
       // Create receiver that will timeout (not respond)
       const createHangingReceiver = (_id: number) => {
-        return wire.createReceiver(
+        return conduit.createReceiver(
           async (_topic, _payload) => {
             // Hang forever (timeout will occur)
             await new Promise(() => {});
@@ -409,7 +409,7 @@ describe('Advanced Scenarios Integration', () => {
         // Stop r2 and start r3 after another timeout
         setTimeout(async () => {
           await r2.stop();
-          const r3 = wire.createReceiver(async (_topic, payload) => ({
+          const r3 = conduit.createReceiver(async (_topic, payload) => ({
             receiver: 3,
             payload
           }));
@@ -428,18 +428,18 @@ describe('Advanced Scenarios Integration', () => {
       expect((response.result as any).receiver).toBe(3);
 
       await sender.close();
-      await wire.close();
+      await conduit.close();
     }, 15000);
 
     test('should handle topic rebalancing', async () => {
-      const wire = createWire();
+      const conduit = createConduit();
 
       // Start with 2 receivers
-      const r1 = wire.createReceiver(async (_topic, payload) => ({
+      const r1 = conduit.createReceiver(async (_topic, payload) => ({
         receiver: 1,
         payload
       }));
-      const r2 = wire.createReceiver(async (_topic, payload) => ({
+      const r2 = conduit.createReceiver(async (_topic, payload) => ({
         receiver: 2,
         payload
       }));
@@ -447,7 +447,7 @@ describe('Advanced Scenarios Integration', () => {
       await r1.start();
       await r2.start();
 
-      const sender = wire.createSender();
+      const sender = conduit.createSender();
 
       // Send messages to 10 topics
       for (let i = 0; i < 10; i++) {
@@ -466,7 +466,7 @@ describe('Advanced Scenarios Integration', () => {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Start r3
-      const r3 = wire.createReceiver(async (_topic, payload) => ({
+      const r3 = conduit.createReceiver(async (_topic, payload) => ({
         receiver: 3,
         payload
       }));
@@ -483,16 +483,16 @@ describe('Advanced Scenarios Integration', () => {
       await r2.stop();
       await r3.stop();
       await sender.close();
-      await wire.close();
+      await conduit.close();
     }, 15000);
   });
 
   describe('Error Resilience', () => {
     test('should handle processing errors without losing messages', async () => {
-      const wire = createWire();
+      const conduit = createConduit();
       let failureCount = 0;
 
-      const receiver = wire.createReceiver(async (_topic, payload: any) => {
+      const receiver = conduit.createReceiver(async (_topic, payload: any) => {
         if (payload.shouldFail && failureCount < 1) {
           failureCount++;
           throw new Error('Simulated processing error');
@@ -501,7 +501,7 @@ describe('Advanced Scenarios Integration', () => {
       });
       await receiver.start();
 
-      const sender = wire.createSender();
+      const sender = conduit.createSender();
 
       // Send message that causes processing error
       const errorResponse = await sender.send('error-test', {
@@ -522,12 +522,12 @@ describe('Advanced Scenarios Integration', () => {
 
       await receiver.stop();
       await sender.close();
-      await wire.close();
+      await conduit.close();
     });
 
     test('should handle network-like errors with retries', async () => {
-      const wire = createWire();
-      const sender = wire.createSender({
+      const conduit = createConduit();
+      const sender = conduit.createSender({
         defaultTimeout: 200,
         maxRetries: 3,
         retryBackoffMs: 50
@@ -537,7 +537,7 @@ describe('Advanced Scenarios Integration', () => {
 
       // Simulate receiver that becomes available after a few attempts
       setTimeout(async () => {
-        const receiver = wire.createReceiver(async (_topic, payload) => ({
+        const receiver = conduit.createReceiver(async (_topic, payload) => ({
           processed: true,
           attempt: ++attemptCount,
           payload
@@ -556,7 +556,7 @@ describe('Advanced Scenarios Integration', () => {
       expect(attemptCount).toBe(1); // Should process once when available
 
       await sender.close();
-      await wire.close();
+      await conduit.close();
     }, 10000);
   });
 });

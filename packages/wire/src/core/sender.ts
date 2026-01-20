@@ -2,10 +2,10 @@ import { serialize } from '@lowerdeck/serialize';
 import type { ICoordinationAdapter } from '../adapters/coordination/coordinationAdapter';
 import type { ITransportAdapter } from '../adapters/transport/transportAdapter';
 import type { SenderConfig } from '../types/config';
-import type { TimeoutExtension, WireMessage } from '../types/message';
+import type { ConduitMessage, TimeoutExtension } from '../types/message';
 import { isTimeoutExtension } from '../types/message';
-import type { WireResponse } from '../types/response';
-import { WireSendError } from '../types/response';
+import type { ConduitResponse } from '../types/response';
+import { ConduitSendError } from '../types/response';
 import type {
   TopicListener,
   TopicResponseBroadcast,
@@ -14,7 +14,7 @@ import type {
 import { RetryManager } from './retryManager';
 
 interface InFlightMessage {
-  resolve: (response: WireResponse) => void;
+  resolve: (response: ConduitResponse) => void;
   reject: (error: Error) => void;
   timeout: Timer;
   currentTimeout: number;
@@ -28,7 +28,7 @@ export class Sender {
   private messageCounter = 0;
   private inFlightMessages: Map<string, InFlightMessage> = new Map();
   private topicSubscriptions: Map<string, string> = new Map(); // topic -> subscriptionId
-  private readonly wireId: string;
+  private readonly conduitId: string;
   private failedUnsubscribes: Set<string> = new Set(); // Track failed unsubscribes
   private cleanupInterval: Timer | null = null;
 
@@ -36,9 +36,9 @@ export class Sender {
     private coordination: ICoordinationAdapter,
     private transport: ITransportAdapter,
     private config: SenderConfig,
-    wireId: string = 'default'
+    conduitId: string = 'default'
   ) {
-    this.wireId = wireId;
+    this.conduitId = conduitId;
     this.senderId = `sender-${crypto.randomUUID()}`;
     this.retryManager = new RetryManager(
       config.maxRetries,
@@ -54,10 +54,10 @@ export class Sender {
     }, 30000); // Retry every 30 seconds
   }
 
-  async send(topic: string, payload: unknown, timeout?: number): Promise<WireResponse> {
+  async send(topic: string, payload: unknown, timeout?: number): Promise<ConduitResponse> {
     // Check max in-flight limit
     if (this.inFlightMessages.size >= this.config.maxInFlightMessages) {
-      throw new WireSendError(
+      throw new ConduitSendError(
         `Max in-flight messages limit reached (${this.config.maxInFlightMessages}). Cannot send new message.`,
         'N/A',
         topic,
@@ -69,7 +69,7 @@ export class Sender {
     let messageId = this.generateMessageId();
 
     return this.retryManager.withRetry(async attemptNumber => {
-      let message: WireMessage = {
+      let message: ConduitMessage = {
         messageId,
         topic,
         payload,
@@ -90,7 +90,7 @@ export class Sender {
     }
 
     // Subscribe to topic response channel
-    let subject = `wire.${this.wireId}.topic.responses.${topic}`;
+    let subject = `conduit.${this.conduitId}.topic.responses.${topic}`;
 
     let subscriptionId = await this.transport.subscribe(subject, async (data: Uint8Array) => {
       try {
@@ -184,11 +184,14 @@ export class Sender {
     }
   }
 
-  private async sendMessage(message: WireMessage, timeout: number): Promise<WireResponse> {
+  private async sendMessage(
+    message: ConduitMessage,
+    timeout: number
+  ): Promise<ConduitResponse> {
     // Resolve topic owner
     let receiverId = await this.resolveOwner(message.topic);
     if (!receiverId) {
-      throw new WireSendError(
+      throw new ConduitSendError(
         `No receiver available for topic ${message.topic}`,
         message.messageId,
         message.topic,
@@ -197,9 +200,9 @@ export class Sender {
     }
 
     // Publish to receiver-specific subject
-    let subject = `wire.${this.wireId}.receiver.${receiverId}.${message.topic}`;
+    let subject = `conduit.${this.conduitId}.receiver.${receiverId}.${message.topic}`;
 
-    return new Promise<WireResponse>((resolve, reject) => {
+    return new Promise<ConduitResponse>((resolve, reject) => {
       let currentTimeout = timeout;
 
       // Set up timeout
@@ -211,7 +214,7 @@ export class Sender {
           this.safeUnsubscribe(inFlight.subscriptionId).catch(() => {});
         }
         reject(
-          new WireSendError(
+          new ConduitSendError(
             `Request timeout after ${currentTimeout}ms`,
             message.messageId,
             message.topic,
@@ -222,7 +225,7 @@ export class Sender {
 
       // Store in-flight message (will be updated with subscriptionId later)
       this.inFlightMessages.set(message.messageId, {
-        resolve: (response: WireResponse) => {
+        resolve: (response: ConduitResponse) => {
           clearTimeout(timeoutHandle);
           let inFlight = this.inFlightMessages.get(message.messageId);
           this.inFlightMessages.delete(message.messageId);
@@ -257,7 +260,7 @@ export class Sender {
           try {
             let decoder = new TextDecoder();
             let responseStr = decoder.decode(responseData);
-            let response = serialize.decode(responseStr) as WireResponse | TimeoutExtension;
+            let response = serialize.decode(responseStr) as ConduitResponse | TimeoutExtension;
 
             // Check if it's a timeout extension
             if (isTimeoutExtension(response)) {
@@ -268,13 +271,13 @@ export class Sender {
             // It's the final response - resolve and cleanup
             let inFlight = this.inFlightMessages.get(message.messageId);
             if (inFlight) {
-              inFlight.resolve(response as WireResponse);
+              inFlight.resolve(response as ConduitResponse);
             }
           } catch (err) {
             let inFlight = this.inFlightMessages.get(message.messageId);
             if (inFlight) {
               inFlight.reject(
-                new WireSendError(
+                new ConduitSendError(
                   `Response parsing error: ${err instanceof Error ? err.message : String(err)}`,
                   message.messageId,
                   message.topic,
@@ -310,7 +313,7 @@ export class Sender {
             let inFlight = this.inFlightMessages.get(message.messageId);
             if (inFlight) {
               inFlight.reject(
-                new WireSendError(
+                new ConduitSendError(
                   `Transport error: ${err.message}`,
                   message.messageId,
                   message.topic,
@@ -325,7 +328,7 @@ export class Sender {
           let inFlight = this.inFlightMessages.get(message.messageId);
           if (inFlight) {
             inFlight.reject(
-              new WireSendError(
+              new ConduitSendError(
                 `Subscription error: ${err.message}`,
                 message.messageId,
                 message.topic,
@@ -388,7 +391,7 @@ export class Sender {
     inFlight.timeout = setTimeout(() => {
       this.inFlightMessages.delete(extension.messageId);
       inFlight.reject(
-        new WireSendError(
+        new ConduitSendError(
           `Request timeout after extension (${newTimeout}ms)`,
           extension.messageId,
           '',

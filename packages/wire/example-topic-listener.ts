@@ -3,14 +3,14 @@
  * This shows how to subscribe to all responses for a topic
  */
 
-import { createWire } from './src/index';
+import { createConduit } from './src/index';
 
-console.log('=== Wire Topic Listener Example ===\n');
+console.log('=== Conduit Topic Listener Example ===\n');
 
-const wire = createWire();
+const conduit = createConduit();
 
 // Create a receiver that processes orders
-const receiver = wire.createReceiver(async (topic, payload: any) => {
+const receiver = conduit.createReceiver(async (topic, payload: any) => {
   console.log(`📦 Receiver processing ${topic}:`, payload);
   await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -25,8 +25,8 @@ await receiver.start();
 console.log('✓ Receiver started\n');
 
 // Create multiple senders
-const sender1 = wire.createSender();
-const sender2 = wire.createSender();
+const sender1 = conduit.createSender();
+const sender2 = conduit.createSender();
 
 // Sender 1 subscribes to listen to ALL order responses
 console.log('📡 Sender 1 subscribing to "orders" topic...\n');
@@ -84,6 +84,6 @@ console.log('\n🧹 Cleaning up...');
 await receiver.stop();
 await sender1.close();
 await sender2.close();
-await wire.close();
+await conduit.close();
 
 console.log('✓ Done!');

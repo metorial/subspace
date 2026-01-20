@@ -1,17 +1,17 @@
 /**
- * Example usage of the WireReceiver high-level API
+ * Example usage of the ConduitReceiver high-level API
  * This demonstrates the new interface with per-topic lifecycle management
  */
 
 import type { TopicContext } from './src/index';
-import { createWire } from './src/index';
+import { createConduit } from './src/index';
 
-console.log('=== WireReceiver Example ===\n');
+console.log('=== ConduitReceiver Example ===\n');
 
-const wire = createWire();
+const conduit = createConduit();
 
-// Create a WireReceiver with per-topic handlers
-const receiver = wire.createWireReceiver(async (ctx: TopicContext) => {
+// Create a ConduitReceiver with per-topic handlers
+const receiver = conduit.createConduitReceiver(async (ctx: TopicContext) => {
   console.log(`📦 New topic assigned: ${ctx.topic}`);
 
   // Perform async setup work (e.g., load configuration, connect to database)
@@ -60,7 +60,7 @@ await receiver.start();
 console.log('Receiver started\n');
 
 // Create a sender
-const sender = wire.createSender();
+const sender = conduit.createSender();
 console.log('Sender created\n');
 
 // Send some messages
@@ -104,6 +104,6 @@ console.log(`- Handled topics: ${receiver.getHandledTopics().join(', ')}`);
 console.log('\nCleaning up...');
 await receiver.stop();
 await sender.close();
-await wire.close();
+await conduit.close();
 
 console.log('Done!');

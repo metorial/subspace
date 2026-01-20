@@ -1,20 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import type { TopicContext } from '../../src/core/wireReceiver';
-import { createMemoryWire, createWire } from '../../src/index';
+import type { TopicContext } from '../../src/core/conduitReceiver';
+import { createConduit, createMemoryConduit } from '../../src/index';
 
-describe('WireReceiver Basic Tests', () => {
-  let wire: ReturnType<typeof createWire>;
+describe('ConduitReceiver Basic Tests', () => {
+  let conduit: ReturnType<typeof createConduit>;
 
   beforeEach(() => {
-    wire = createWire(createMemoryWire('test-wire'));
+    conduit = createConduit(createMemoryConduit('test-conduit'));
   });
 
   afterEach(async () => {
-    await wire.close();
+    await conduit.close();
   });
 
   it('should process messages with simple handler', async () => {
-    const receiver = wire.createWireReceiver(async (ctx: TopicContext) => {
+    const receiver = conduit.createConduitReceiver(async (ctx: TopicContext) => {
       ctx.onMessage(async (data: any) => {
         return { success: true, data };
       });
@@ -22,7 +22,7 @@ describe('WireReceiver Basic Tests', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
     const response = await sender.send('test', { value: 123 });
 
     expect(response.success).toBe(true);
@@ -35,7 +35,7 @@ describe('WireReceiver Basic Tests', () => {
   it('should handle async setup', async () => {
     let setupComplete = false;
 
-    const receiver = wire.createWireReceiver(async (ctx: TopicContext) => {
+    const receiver = conduit.createConduitReceiver(async (ctx: TopicContext) => {
       await new Promise(resolve => setTimeout(resolve, 50));
       setupComplete = true;
 
@@ -46,7 +46,7 @@ describe('WireReceiver Basic Tests', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
     const response = await sender.send('test', { value: 456 });
 
     expect(response.success).toBe(true);
@@ -59,7 +59,7 @@ describe('WireReceiver Basic Tests', () => {
   it('should call onClose handlers', async () => {
     let closeCalled = false;
 
-    const receiver = wire.createWireReceiver(async (ctx: TopicContext) => {
+    const receiver = conduit.createConduitReceiver(async (ctx: TopicContext) => {
       ctx.onMessage(async (_data: any) => {
         return { processed: true };
       });
@@ -71,7 +71,7 @@ describe('WireReceiver Basic Tests', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
     await sender.send('test', { value: 1 });
 
     await receiver.stop();
@@ -82,7 +82,7 @@ describe('WireReceiver Basic Tests', () => {
   });
 
   it('should extend TTL', async () => {
-    const receiver = wire.createWireReceiver(async (ctx: TopicContext) => {
+    const receiver = conduit.createConduitReceiver(async (ctx: TopicContext) => {
       ctx.extendTtl(60000);
 
       ctx.onMessage(async (_data: any) => {
@@ -93,7 +93,7 @@ describe('WireReceiver Basic Tests', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
     await sender.send('test', { value: 1 });
 
     expect(receiver.getOwnedTopicCount()).toBe(1);

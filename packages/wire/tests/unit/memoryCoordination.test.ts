@@ -5,7 +5,7 @@ describe('MemoryCoordination', () => {
   let coordination: MemoryCoordination;
 
   beforeEach(() => {
-    coordination = new MemoryCoordination('test-wire');
+    coordination = new MemoryCoordination('test-conduit');
   });
 
   afterEach(async () => {
