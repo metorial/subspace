@@ -331,6 +331,22 @@
         "vitest": "^3.1.2",
       },
     },
+    "packages/conduit": {
+      "name": "@metorial-subspace/conduit",
+      "version": "1.0.0",
+      "dependencies": {
+        "@lowerdeck/serialize": "^1.0.4",
+        "ioredis": "^5.4.2",
+        "nats": "^2.28.2",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "vitest": "^2.1.8",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
     "packages/connection-utils": {
       "name": "@metorial-subspace/connection-utils",
       "version": "1.0.0",
@@ -419,22 +435,6 @@
       "version": "1.0.0",
       "dependencies": {
         "@types/node": "^22.15.3",
-      },
-    },
-    "packages/wire": {
-      "name": "@metorial-subspace/conduit",
-      "version": "1.0.0",
-      "dependencies": {
-        "@lowerdeck/serialize": "^1.0.4",
-        "ioredis": "^5.4.2",
-        "nats": "^2.28.2",
-      },
-      "devDependencies": {
-        "@types/bun": "latest",
-        "vitest": "^2.1.8",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
       },
     },
     "provider-backends/provider-manager": {
@@ -746,7 +746,7 @@
 
     "@metorial-subspace/app-worker": ["@metorial-subspace/app-worker@workspace:apps/worker"],
 
-    "@metorial-subspace/conduit": ["@metorial-subspace/conduit@workspace:packages/wire"],
+    "@metorial-subspace/conduit": ["@metorial-subspace/conduit@workspace:packages/conduit"],
 
     "@metorial-subspace/connection-utils": ["@metorial-subspace/connection-utils@workspace:packages/connection-utils"],
 
