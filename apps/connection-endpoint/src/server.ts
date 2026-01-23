@@ -9,7 +9,7 @@ Bun.serve({
   fetch: api.fetch,
   websocket,
   port: 52072,
-  idleTimeout: 255
+  idleTimeout: 0
 });
 
 Bun.serve({
