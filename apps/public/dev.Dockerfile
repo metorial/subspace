@@ -14,7 +14,7 @@ COPY apps/connection-endpoint/package.json ./apps/connection-endpoint/package.js
 COPY db/package.json ./db/package.json
 
 COPY packages/tsconfig/package.json ./packages/tsconfig/package.json
-COPY packages/wire/package.json ./packages/wire/package.json
+COPY packages/conduit/package.json ./packages/conduit/package.json
 COPY packages/connection-utils/package.json ./packages/connection-utils/package.json
 COPY packages/list-utils/package.json ./packages/list-utils/package.json
 COPY packages/presenters/package.json ./packages/presenters/package.json

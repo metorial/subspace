@@ -1,59 +1,59 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { createMemoryWire, createWire } from '../../src/index';
+import { createConduit, createMemoryConduit } from '../../src/index';
 
-describe('Multi-Wire Integration', () => {
-  const wires: ReturnType<typeof createWire>[] = [];
+describe('Multi-Conduit Integration', () => {
+  const conduits: ReturnType<typeof createConduit>[] = [];
 
   afterEach(async () => {
-    // Close all wires
-    for (const wire of wires) {
-      await wire.close();
+    // Close all conduits
+    for (const conduit of conduits) {
+      await conduit.close();
     }
-    wires.length = 0;
+    conduits.length = 0;
   });
 
-  it('should isolate messages between different wire instances', async () => {
-    // Create two separate Wire instances with different IDs
-    const wire1 = createWire(createMemoryWire('wire1'));
-    const wire2 = createWire(createMemoryWire('wire2'));
-    wires.push(wire1, wire2);
+  it('should isolate messages between different conduit instances', async () => {
+    // Create two separate Conduit instances with different IDs
+    const conduit1 = createConduit(createMemoryConduit('conduit1'));
+    const conduit2 = createConduit(createMemoryConduit('conduit2'));
+    conduits.push(conduit1, conduit2);
 
     // Track which receivers process which messages
-    const wire1Messages: string[] = [];
-    const wire2Messages: string[] = [];
+    const conduit1Messages: string[] = [];
+    const conduit2Messages: string[] = [];
 
-    // Create receivers on both wires for the same topic
-    const receiver1 = wire1.createReceiver(async (_topic, payload) => {
-      wire1Messages.push(payload as string);
-      return { wire: 'wire1', payload };
+    // Create receivers on both conduits for the same topic
+    const receiver1 = conduit1.createReceiver(async (_topic, payload) => {
+      conduit1Messages.push(payload as string);
+      return { conduit: 'conduit1', payload };
     });
 
-    const receiver2 = wire2.createReceiver(async (_topic, payload) => {
-      wire2Messages.push(payload as string);
-      return { wire: 'wire2', payload };
+    const receiver2 = conduit2.createReceiver(async (_topic, payload) => {
+      conduit2Messages.push(payload as string);
+      return { conduit: 'conduit2', payload };
     });
 
     await receiver1.start();
     await receiver2.start();
 
-    // Create senders on both wires
-    const sender1 = wire1.createSender();
-    const sender2 = wire2.createSender();
+    // Create senders on both conduits
+    const sender1 = conduit1.createSender();
+    const sender2 = conduit2.createSender();
 
-    // Send messages to the same topic on different wires
-    const response1 = await sender1.send('shared-topic', 'message-for-wire1');
-    const response2 = await sender2.send('shared-topic', 'message-for-wire2');
+    // Send messages to the same topic on different conduits
+    const response1 = await sender1.send('shared-topic', 'message-for-conduit1');
+    const response2 = await sender2.send('shared-topic', 'message-for-conduit2');
 
-    // Verify responses came from correct wire
+    // Verify responses came from correct conduit
     expect(response1.success).toBe(true);
-    expect(response1.result).toEqual({ wire: 'wire1', payload: 'message-for-wire1' });
+    expect(response1.result).toEqual({ conduit: 'conduit1', payload: 'message-for-conduit1' });
 
     expect(response2.success).toBe(true);
-    expect(response2.result).toEqual({ wire: 'wire2', payload: 'message-for-wire2' });
+    expect(response2.result).toEqual({ conduit: 'conduit2', payload: 'message-for-conduit2' });
 
-    // Verify each receiver only processed its own wire's message
-    expect(wire1Messages).toEqual(['message-for-wire1']);
-    expect(wire2Messages).toEqual(['message-for-wire2']);
+    // Verify each receiver only processed its own conduit's message
+    expect(conduit1Messages).toEqual(['message-for-conduit1']);
+    expect(conduit2Messages).toEqual(['message-for-conduit2']);
 
     await receiver1.stop();
     await receiver2.stop();
@@ -61,54 +61,54 @@ describe('Multi-Wire Integration', () => {
     await sender2.close();
   });
 
-  it('should not allow cross-wire topic subscriptions', async () => {
-    // Create two separate Wire instances
-    const wire1 = createWire(createMemoryWire('wire1'));
-    const wire2 = createWire(createMemoryWire('wire2'));
-    wires.push(wire1, wire2);
+  it('should not allow cross-conduit topic subscriptions', async () => {
+    // Create two separate Conduit instances
+    const conduit1 = createConduit(createMemoryConduit('conduit1'));
+    const conduit2 = createConduit(createMemoryConduit('conduit2'));
+    conduits.push(conduit1, conduit2);
 
     // Track broadcasts
-    const wire1Broadcasts: any[] = [];
-    const wire2Broadcasts: any[] = [];
+    const conduit1Broadcasts: any[] = [];
+    const conduit2Broadcasts: any[] = [];
 
     // Create receivers and senders
-    const receiver1 = wire1.createReceiver(async (_topic, payload) => {
-      return { wire: 'wire1', payload };
+    const receiver1 = conduit1.createReceiver(async (_topic, payload) => {
+      return { conduit: 'conduit1', payload };
     });
 
-    const receiver2 = wire2.createReceiver(async (_topic, payload) => {
-      return { wire: 'wire2', payload };
+    const receiver2 = conduit2.createReceiver(async (_topic, payload) => {
+      return { conduit: 'conduit2', payload };
     });
 
     await receiver1.start();
     await receiver2.start();
 
-    const sender1 = wire1.createSender();
-    const sender2 = wire2.createSender();
+    const sender1 = conduit1.createSender();
+    const sender2 = conduit2.createSender();
 
-    // Subscribe sender1 to wire1's topic
+    // Subscribe sender1 to conduit1's topic
     await sender1.subscribeTopic('test-topic', broadcast => {
-      wire1Broadcasts.push(broadcast);
+      conduit1Broadcasts.push(broadcast);
     });
 
-    // Subscribe sender2 to wire2's topic
+    // Subscribe sender2 to conduit2's topic
     await sender2.subscribeTopic('test-topic', broadcast => {
-      wire2Broadcasts.push(broadcast);
+      conduit2Broadcasts.push(broadcast);
     });
 
-    // Send messages on both wires
+    // Send messages on both conduits
     await sender1.send('test-topic', 'data1');
     await sender2.send('test-topic', 'data2');
 
     // Wait for broadcasts to be processed
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    // Each sender should only receive broadcasts from its own wire
-    expect(wire1Broadcasts.length).toBe(1);
-    expect(wire1Broadcasts[0].response.result.wire).toBe('wire1');
+    // Each sender should only receive broadcasts from its own conduit
+    expect(conduit1Broadcasts.length).toBe(1);
+    expect(conduit1Broadcasts[0].response.result.conduit).toBe('conduit1');
 
-    expect(wire2Broadcasts.length).toBe(1);
-    expect(wire2Broadcasts[0].response.result.wire).toBe('wire2');
+    expect(conduit2Broadcasts.length).toBe(1);
+    expect(conduit2Broadcasts[0].response.result.conduit).toBe('conduit2');
 
     await receiver1.stop();
     await receiver2.stop();
@@ -116,24 +116,24 @@ describe('Multi-Wire Integration', () => {
     await sender2.close();
   });
 
-  it('should handle multiple wires with the same topic names', async () => {
-    // Create three Wire instances
-    const wireA = createWire(createMemoryWire('wireA'));
-    const wireB = createWire(createMemoryWire('wireB'));
-    const wireC = createWire(createMemoryWire('wireC'));
-    wires.push(wireA, wireB, wireC);
+  it('should handle multiple conduits with the same topic names', async () => {
+    // Create three Conduit instances
+    const conduitA = createConduit(createMemoryConduit('conduitA'));
+    const conduitB = createConduit(createMemoryConduit('conduitB'));
+    const conduitC = createConduit(createMemoryConduit('conduitC'));
+    conduits.push(conduitA, conduitB, conduitC);
 
-    // Create receivers on all wires
-    const receiverA = wireA.createReceiver(async (topic, payload) => {
-      return { wire: 'A', topic, payload };
+    // Create receivers on all conduits
+    const receiverA = conduitA.createReceiver(async (topic, payload) => {
+      return { conduit: 'A', topic, payload };
     });
 
-    const receiverB = wireB.createReceiver(async (topic, payload) => {
-      return { wire: 'B', topic, payload };
+    const receiverB = conduitB.createReceiver(async (topic, payload) => {
+      return { conduit: 'B', topic, payload };
     });
 
-    const receiverC = wireC.createReceiver(async (topic, payload) => {
-      return { wire: 'C', topic, payload };
+    const receiverC = conduitC.createReceiver(async (topic, payload) => {
+      return { conduit: 'C', topic, payload };
     });
 
     await receiverA.start();
@@ -141,19 +141,19 @@ describe('Multi-Wire Integration', () => {
     await receiverC.start();
 
     // Create senders
-    const senderA = wireA.createSender();
-    const senderB = wireB.createSender();
-    const senderC = wireC.createSender();
+    const senderA = conduitA.createSender();
+    const senderB = conduitB.createSender();
+    const senderC = conduitC.createSender();
 
-    // Send to same topic names on all wires
+    // Send to same topic names on all conduits
     const responseA = await senderA.send('orders', 'order-A');
     const responseB = await senderB.send('orders', 'order-B');
     const responseC = await senderC.send('orders', 'order-C');
 
-    // Verify each wire processed only its own message
-    expect(responseA.result).toEqual({ wire: 'A', topic: 'orders', payload: 'order-A' });
-    expect(responseB.result).toEqual({ wire: 'B', topic: 'orders', payload: 'order-B' });
-    expect(responseC.result).toEqual({ wire: 'C', topic: 'orders', payload: 'order-C' });
+    // Verify each conduit processed only its own message
+    expect(responseA.result).toEqual({ conduit: 'A', topic: 'orders', payload: 'order-A' });
+    expect(responseB.result).toEqual({ conduit: 'B', topic: 'orders', payload: 'order-B' });
+    expect(responseC.result).toEqual({ conduit: 'C', topic: 'orders', payload: 'order-C' });
 
     // Cleanup
     await receiverA.stop();
@@ -164,27 +164,27 @@ describe('Multi-Wire Integration', () => {
     await senderC.close();
   });
 
-  it('should maintain separate topic ownership per wire', async () => {
-    // Create two wires
-    const wire1 = createWire(createMemoryWire('wire1'));
-    const wire2 = createWire(createMemoryWire('wire2'));
-    wires.push(wire1, wire2);
+  it('should maintain separate topic ownership per conduit', async () => {
+    // Create two conduits
+    const conduit1 = createConduit(createMemoryConduit('conduit1'));
+    const conduit2 = createConduit(createMemoryConduit('conduit2'));
+    conduits.push(conduit1, conduit2);
 
-    // Create multiple receivers on each wire
-    const receiver1a = wire1.createReceiver(async (_topic, payload) => {
-      return { wire: 'wire1', receiver: 'a', payload };
+    // Create multiple receivers on each conduit
+    const receiver1a = conduit1.createReceiver(async (_topic, payload) => {
+      return { conduit: 'conduit1', receiver: 'a', payload };
     });
 
-    const receiver1b = wire1.createReceiver(async (_topic, payload) => {
-      return { wire: 'wire1', receiver: 'b', payload };
+    const receiver1b = conduit1.createReceiver(async (_topic, payload) => {
+      return { conduit: 'conduit1', receiver: 'b', payload };
     });
 
-    const receiver2a = wire2.createReceiver(async (_topic, payload) => {
-      return { wire: 'wire2', receiver: 'a', payload };
+    const receiver2a = conduit2.createReceiver(async (_topic, payload) => {
+      return { conduit: 'conduit2', receiver: 'a', payload };
     });
 
-    const receiver2b = wire2.createReceiver(async (_topic, payload) => {
-      return { wire: 'wire2', receiver: 'b', payload };
+    const receiver2b = conduit2.createReceiver(async (_topic, payload) => {
+      return { conduit: 'conduit2', receiver: 'b', payload };
     });
 
     await receiver1a.start();
@@ -192,10 +192,10 @@ describe('Multi-Wire Integration', () => {
     await receiver2a.start();
     await receiver2b.start();
 
-    const sender1 = wire1.createSender();
-    const sender2 = wire2.createSender();
+    const sender1 = conduit1.createSender();
+    const sender2 = conduit2.createSender();
 
-    // Send multiple messages to same topic on each wire
+    // Send multiple messages to same topic on each conduit
     const response1_1 = await sender1.send('data-topic', 'msg1');
     const response1_2 = await sender1.send('data-topic', 'msg2');
     const response2_1 = await sender2.send('data-topic', 'msg3');
@@ -207,15 +207,15 @@ describe('Multi-Wire Integration', () => {
     expect(response2_1.success).toBe(true);
     expect(response2_2.success).toBe(true);
 
-    // wire1 messages should be processed by wire1 receivers
-    expect((response1_1.result as any).wire).toBe('wire1');
-    expect((response1_2.result as any).wire).toBe('wire1');
+    // conduit1 messages should be processed by conduit1 receivers
+    expect((response1_1.result as any).conduit).toBe('conduit1');
+    expect((response1_2.result as any).conduit).toBe('conduit1');
 
-    // wire2 messages should be processed by wire2 receivers
-    expect((response2_1.result as any).wire).toBe('wire2');
-    expect((response2_2.result as any).wire).toBe('wire2');
+    // conduit2 messages should be processed by conduit2 receivers
+    expect((response2_1.result as any).conduit).toBe('conduit2');
+    expect((response2_2.result as any).conduit).toBe('conduit2');
 
-    // Messages on same wire should be handled by same receiver (topic ownership)
+    // Messages on same conduit should be handled by same receiver (topic ownership)
     expect((response1_1.result as any).receiver).toBe((response1_2.result as any).receiver);
     expect((response2_1.result as any).receiver).toBe((response2_2.result as any).receiver);
 
@@ -228,34 +228,34 @@ describe('Multi-Wire Integration', () => {
     await sender2.close();
   });
 
-  it('should allow default wireId to work alongside custom wireIds', async () => {
-    // Create one wire with default ID and one with custom ID
-    const defaultWire = createWire(); // Uses 'default'
-    const customWire = createWire(createMemoryWire('custom'));
-    wires.push(defaultWire, customWire);
+  it('should allow default conduitId to work alongside custom conduitIds', async () => {
+    // Create one conduit with default ID and one with custom ID
+    const defaultConduit = createConduit(); // Uses 'default'
+    const customConduit = createConduit(createMemoryConduit('custom'));
+    conduits.push(defaultConduit, customConduit);
 
     // Create receivers
-    const defaultReceiver = defaultWire.createReceiver(async (_topic, payload) => {
-      return { wire: 'default', payload };
+    const defaultReceiver = defaultConduit.createReceiver(async (_topic, payload) => {
+      return { conduit: 'default', payload };
     });
 
-    const customReceiver = customWire.createReceiver(async (_topic, payload) => {
-      return { wire: 'custom', payload };
+    const customReceiver = customConduit.createReceiver(async (_topic, payload) => {
+      return { conduit: 'custom', payload };
     });
 
     await defaultReceiver.start();
     await customReceiver.start();
 
-    const defaultSender = defaultWire.createSender();
-    const customSender = customWire.createSender();
+    const defaultSender = defaultConduit.createSender();
+    const customSender = customConduit.createSender();
 
     // Send messages
     const defaultResponse = await defaultSender.send('topic', 'default-msg');
     const customResponse = await customSender.send('topic', 'custom-msg');
 
     // Verify isolation
-    expect(defaultResponse.result).toEqual({ wire: 'default', payload: 'default-msg' });
-    expect(customResponse.result).toEqual({ wire: 'custom', payload: 'custom-msg' });
+    expect(defaultResponse.result).toEqual({ conduit: 'default', payload: 'default-msg' });
+    expect(customResponse.result).toEqual({ conduit: 'custom', payload: 'custom-msg' });
 
     // Cleanup
     await defaultReceiver.stop();

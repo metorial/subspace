@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'vitest';
-import { createWire } from '../../src/index';
+import { createConduit } from '../../src/index';
 
 describe('Retry Flow Integration', () => {
   test('should timeout and fail when no receiver available', async () => {
-    const wire = createWire();
-    const sender = wire.createSender({ defaultTimeout: 100, maxRetries: 1 });
+    const conduit = createConduit();
+    const sender = conduit.createSender({ defaultTimeout: 100, maxRetries: 1 });
 
     // No receiver started, should timeout
     try {
@@ -16,12 +16,12 @@ describe('Retry Flow Integration', () => {
     }
 
     await sender.close();
-    await wire.close();
+    await conduit.close();
   });
 
   test('should retry and succeed when receiver becomes available', async () => {
-    const wire = createWire();
-    const sender = wire.createSender({
+    const conduit = createConduit();
+    const sender = conduit.createSender({
       defaultTimeout: 200,
       maxRetries: 3,
       retryBackoffMs: 100
@@ -30,7 +30,7 @@ describe('Retry Flow Integration', () => {
     // Start receiver after a delay
     const receiverPromise = (async () => {
       await new Promise(resolve => setTimeout(resolve, 150));
-      const receiver = wire.createReceiver(async (_topic, payload) => {
+      const receiver = conduit.createReceiver(async (_topic, payload) => {
         return { received: payload };
       });
       await receiver.start();
@@ -45,15 +45,15 @@ describe('Retry Flow Integration', () => {
     const receiver = await receiverPromise;
     await receiver.stop();
     await sender.close();
-    await wire.close();
+    await conduit.close();
   }, 10000);
 
   test('should return cached result on retry', async () => {
-    const wire = createWire();
-    const sender = wire.createSender();
+    const conduit = createConduit();
+    const sender = conduit.createSender();
 
     let processCount = 0;
-    const receiver = wire.createReceiver(async (_topic, payload) => {
+    const receiver = conduit.createReceiver(async (_topic, payload) => {
       processCount++;
       return { count: processCount, payload };
     });
@@ -76,18 +76,18 @@ describe('Retry Flow Integration', () => {
 
     await receiver.stop();
     await sender.close();
-    await wire.close();
+    await conduit.close();
   });
 
   test('should return receiver errors without retry', async () => {
-    const wire = createWire();
-    const sender = wire.createSender({
+    const conduit = createConduit();
+    const sender = conduit.createSender({
       maxRetries: 3,
       retryBackoffMs: 50
     });
 
     let attemptCount = 0;
-    const receiver = wire.createReceiver(async (_topic, _payload) => {
+    const receiver = conduit.createReceiver(async (_topic, _payload) => {
       attemptCount++;
       // Always throw error
       throw new Error(`Processing error (attempt ${attemptCount})`);
@@ -104,6 +104,6 @@ describe('Retry Flow Integration', () => {
 
     await receiver.stop();
     await sender.close();
-    await wire.close();
+    await conduit.close();
   });
 });

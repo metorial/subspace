@@ -1,16 +1,16 @@
 /**
- * Example usage of the Wire distributed messaging system
+ * Example usage of the Conduit distributed messaging system
  */
 
-import { createWire } from './src/index';
+import { createConduit } from './src/index';
 
-console.log('=== Wire Distributed Messaging Example ===\n');
+console.log('=== Conduit Distributed Messaging Example ===\n');
 
-// Create a Wire instance with in-memory adapters (for testing)
-const wire = createWire();
+// Create a Conduit instance with in-memory adapters (for testing)
+const conduit = createConduit();
 
 // Create a receiver that processes messages
-const receiver = wire.createReceiver(async (topic, payload) => {
+const receiver = conduit.createReceiver(async (topic, payload) => {
   console.log(`Receiver processing: topic=${topic}, payload=${JSON.stringify(payload)}`);
 
   // Simulate some processing
@@ -24,7 +24,7 @@ await receiver.start();
 console.log('Receiver started\n');
 
 // Create a sender
-const sender = wire.createSender();
+const sender = conduit.createSender();
 console.log('Sender created\n');
 
 // Send some messages
@@ -48,6 +48,6 @@ console.log(`- Topics: ${receiver.getOwnedTopics().join(', ')}`);
 console.log('\nCleaning up...');
 await receiver.stop();
 await sender.close();
-await wire.close();
+await conduit.close();
 
 console.log('Done!');

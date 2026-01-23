@@ -1,4 +1,4 @@
-export interface WireMessage {
+export interface ConduitMessage {
   messageId: string;
   topic: string;
   payload: unknown;

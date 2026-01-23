@@ -1,19 +1,19 @@
 import { describe, expect, test } from 'vitest';
-import { createWire } from '../../src/index';
+import { createConduit } from '../../src/index';
 
 describe('Edge Cases Integration', () => {
   test('should handle message ordering within a topic', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     const processedOrder: number[] = [];
-    const receiver = wire.createReceiver(async (_topic, payload: any) => {
+    const receiver = conduit.createReceiver(async (_topic, payload: any) => {
       processedOrder.push(payload.order);
       return { order: payload.order };
     });
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Send messages sequentially to ensure ordering
     for (let i = 0; i < 10; i++) {
@@ -25,14 +25,14 @@ describe('Edge Cases Integration', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   });
 
   test('should handle timeout extension only once per message', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     let extensionCount = 0;
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, _payload) => {
         // Process for longer than timeout but not too long
         await new Promise(resolve => setTimeout(resolve, 2500));
@@ -45,7 +45,7 @@ describe('Edge Cases Integration', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender({
+    const sender = conduit.createSender({
       defaultTimeout: 2000 // 2 second initial timeout
     });
 
@@ -55,20 +55,20 @@ describe('Edge Cases Integration', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   }, 15000);
 
   test('should handle ownership expiry at exact boundary', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
-    const receiver1 = wire.createReceiver(async (_topic, _payload) => ({ receiver: 1 }), {
+    const receiver1 = conduit.createReceiver(async (_topic, _payload) => ({ receiver: 1 }), {
       topicOwnershipTtl: 200,
       ownershipRenewalInterval: 10000 // Don't renew
     });
 
     await receiver1.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Establish ownership
     await sender.send('boundary-topic', { data: 'test1' });
@@ -81,7 +81,7 @@ describe('Edge Cases Integration', () => {
     await new Promise(resolve => setTimeout(resolve, 200));
 
     // Create new receiver
-    const receiver2 = wire.createReceiver(async (_topic, _payload) => ({
+    const receiver2 = conduit.createReceiver(async (_topic, _payload) => ({
       receiver: 2
     }));
     await receiver2.start();
@@ -93,19 +93,19 @@ describe('Edge Cases Integration', () => {
 
     await sender.close();
     await receiver2.stop();
-    await wire.close();
+    await conduit.close();
   }, 10000);
 
   test('should handle empty payload', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
-    const receiver = wire.createReceiver(async (_topic, payload) => {
+    const receiver = conduit.createReceiver(async (_topic, payload) => {
       return { received: payload };
     });
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Test various empty payloads
     const response1 = await sender.send('empty-topic', null);
@@ -125,19 +125,19 @@ describe('Edge Cases Integration', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   });
 
   test('should handle very large payloads', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
-    const receiver = wire.createReceiver(async (_topic, payload: any) => {
+    const receiver = conduit.createReceiver(async (_topic, payload: any) => {
       return { size: JSON.stringify(payload).length };
     });
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Create a large payload (1MB of data)
     const largePayload = {
@@ -152,19 +152,19 @@ describe('Edge Cases Integration', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   }, 15000);
 
   test('should handle special characters in topic names', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
-    const receiver = wire.createReceiver(async (topic, payload) => {
+    const receiver = conduit.createReceiver(async (topic, payload) => {
       return { topic, payload };
     });
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Test various special characters
     const specialTopics = [
@@ -188,16 +188,16 @@ describe('Edge Cases Integration', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   }, 15000);
 
   test('should handle rapid start/stop cycles', async () => {
-    const wire = createWire();
-    const sender = wire.createSender();
+    const conduit = createConduit();
+    const sender = conduit.createSender();
 
     // Rapidly start and stop receivers
     for (let i = 0; i < 5; i++) {
-      const receiver = wire.createReceiver(async (_topic, _payload) => ({
+      const receiver = conduit.createReceiver(async (_topic, _payload) => ({
         cycle: i
       }));
 
@@ -208,14 +208,14 @@ describe('Edge Cases Integration', () => {
     }
 
     await sender.close();
-    await wire.close();
+    await conduit.close();
   }, 15000);
 
   test('should handle receiver processing timeout during high load', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     let processingCount = 0;
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, payload: any) => {
         processingCount++;
         // Simulate variable processing time
@@ -230,7 +230,7 @@ describe('Edge Cases Integration', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender({
+    const sender = conduit.createSender({
       defaultTimeout: 3000, // Give enough time
       maxRetries: 0
     });
@@ -253,19 +253,19 @@ describe('Edge Cases Integration', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   }, 20000);
 
   test('should handle zero timeout gracefully', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
-    const receiver = wire.createReceiver(async (_topic, _payload) => {
+    const receiver = conduit.createReceiver(async (_topic, _payload) => {
       return { received: true };
     });
 
     await receiver.start();
 
-    const sender = wire.createSender({
+    const sender = conduit.createSender({
       defaultTimeout: 1, // Very short timeout
       maxRetries: 0
     });
@@ -282,13 +282,13 @@ describe('Edge Cases Integration', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   });
 
   test('should handle sender close during in-flight messages', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
-    const receiver = wire.createReceiver(async (_topic, _payload) => {
+    const receiver = conduit.createReceiver(async (_topic, _payload) => {
       // Long processing to ensure message is in-flight
       await new Promise(resolve => setTimeout(resolve, 2000));
       return { processed: true };
@@ -296,7 +296,7 @@ describe('Edge Cases Integration', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender({
+    const sender = conduit.createSender({
       defaultTimeout: 5000
     });
 
@@ -324,14 +324,14 @@ describe('Edge Cases Integration', () => {
     }
 
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   });
 
   test('should handle receiver stop during message processing', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     let processingStarted = false;
-    const receiver = wire.createReceiver(async (_topic, _payload) => {
+    const receiver = conduit.createReceiver(async (_topic, _payload) => {
       processingStarted = true;
       await new Promise(resolve => setTimeout(resolve, 1000));
       return { processed: true };
@@ -339,7 +339,7 @@ describe('Edge Cases Integration', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender({
+    const sender = conduit.createSender({
       defaultTimeout: 2000,
       maxRetries: 2
     });
@@ -360,21 +360,21 @@ describe('Edge Cases Integration', () => {
     expect(processingStarted).toBe(true);
 
     await sender.close();
-    await wire.close();
+    await conduit.close();
   }, 15000);
 
   test('should handle duplicate message IDs correctly', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     let processCount = 0;
-    const receiver = wire.createReceiver(async (_topic, payload) => {
+    const receiver = conduit.createReceiver(async (_topic, payload) => {
       processCount++;
       return { count: processCount, payload };
     });
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Send first message
     const response1 = await sender.send('dedup-topic', { data: 'test' });
@@ -389,20 +389,20 @@ describe('Edge Cases Integration', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   });
 
   test('should handle receiver heartbeat expiry', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
-    const receiver = wire.createReceiver(async (_topic, _payload) => ({ received: true }), {
+    const receiver = conduit.createReceiver(async (_topic, _payload) => ({ received: true }), {
       heartbeatInterval: 100,
       heartbeatTtl: 200
     });
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // First message should work
     const response1 = await sender.send('heartbeat-topic', { data: 'test1' });
@@ -418,6 +418,6 @@ describe('Edge Cases Integration', () => {
     await expect(sender.send('heartbeat-topic', { data: 'test2' })).rejects.toThrow();
 
     await sender.close();
-    await wire.close();
+    await conduit.close();
   }, 10000);
 });

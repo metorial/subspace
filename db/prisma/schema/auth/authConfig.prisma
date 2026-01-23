@@ -54,6 +54,9 @@ model ProviderAuthConfig {
   currentVersionOid BigInt?
   currentVersion    ProviderAuthConfigVersion? @relation(fields: [currentVersionOid], references: [oid], name: "currentVersion")
 
+  authCredentialsOid BigInt?
+  authCredentials    ProviderAuthCredentials? @relation(fields: [authCredentialsOid], references: [oid])
+
   providerSetupSession ProviderSetupSession?
 
   createdAt DateTime @default(now())

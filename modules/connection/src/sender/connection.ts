@@ -1,6 +1,6 @@
 import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { serialize } from '@lowerdeck/serialize';
-import type { BroadcastMessage, WireResult } from '@metorial-subspace/connection-utils';
+import type { BroadcastMessage, ConduitResult } from '@metorial-subspace/connection-utils';
 import { db, type SessionMessage, type SessionProvider } from '@metorial-subspace/db';
 import { broadcastNats } from '../lib/nats';
 import { topics } from '../lib/topic';
@@ -79,7 +79,7 @@ export class SenderConnection {
                 completedAt: message.completedAt,
                 message: msg,
                 output: message.output
-              } satisfies WireResult & { channel: 'targeted_response' };
+              } satisfies ConduitResult & { channel: 'targeted_response' };
             }
 
             cursor = messages.length === count ? messages[messages.length - 1]?.id : undefined;

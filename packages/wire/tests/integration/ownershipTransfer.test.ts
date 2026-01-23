@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'vitest';
-import { createWire } from '../../src/index';
+import { createConduit } from '../../src/index';
 
 describe('Ownership Transfer Integration', () => {
   test('should transfer topic ownership when receiver stops', async () => {
-    const wire = createWire();
-    const sender = wire.createSender();
+    const conduit = createConduit();
+    const sender = conduit.createSender();
 
     // Create first receiver
-    const receiver1 = wire.createReceiver(async (_topic, payload) => {
+    const receiver1 = conduit.createReceiver(async (_topic, payload) => {
       return { receiver: 1, payload };
     });
     await receiver1.start();
@@ -24,7 +24,7 @@ describe('Ownership Transfer Integration', () => {
     await receiver1.stop();
 
     // Create second receiver
-    const receiver2 = wire.createReceiver(async (_topic, payload) => {
+    const receiver2 = conduit.createReceiver(async (_topic, payload) => {
       return { receiver: 2, payload };
     });
     await receiver2.start();
@@ -42,14 +42,14 @@ describe('Ownership Transfer Integration', () => {
 
     await receiver2.stop();
     await sender.close();
-    await wire.close();
+    await conduit.close();
   }, 10000);
 
   test('should maintain topic ownership across multiple messages', async () => {
-    const wire = createWire();
-    const sender = wire.createSender();
+    const conduit = createConduit();
+    const sender = conduit.createSender();
 
-    const receiver = wire.createReceiver(async (_topic, payload) => {
+    const receiver = conduit.createReceiver(async (_topic, payload) => {
       return { processed: payload };
     });
     await receiver.start();
@@ -65,14 +65,14 @@ describe('Ownership Transfer Integration', () => {
 
     await receiver.stop();
     await sender.close();
-    await wire.close();
+    await conduit.close();
   });
 
   test('should handle graceful ownership release', async () => {
-    const wire = createWire();
-    const sender = wire.createSender();
+    const conduit = createConduit();
+    const sender = conduit.createSender();
 
-    const receiver1 = wire.createReceiver(async (_topic, _payload) => {
+    const receiver1 = conduit.createReceiver(async (_topic, _payload) => {
       return { receiver: 1 };
     });
     await receiver1.start();
@@ -82,7 +82,7 @@ describe('Ownership Transfer Integration', () => {
     expect(receiver1.getOwnedTopics()).toContain('release-topic');
 
     // Create second receiver before stopping first
-    const receiver2 = wire.createReceiver(async (_topic, _payload) => {
+    const receiver2 = conduit.createReceiver(async (_topic, _payload) => {
       return { receiver: 2 };
     });
     await receiver2.start();
@@ -97,27 +97,27 @@ describe('Ownership Transfer Integration', () => {
 
     await receiver2.stop();
     await sender.close();
-    await wire.close();
+    await conduit.close();
   });
 
   test('should distribute topics across multiple receivers', async () => {
-    const wire = createWire();
-    const sender = wire.createSender();
+    const conduit = createConduit();
+    const sender = conduit.createSender();
 
     // Create 3 receivers
     const receivers = await Promise.all([
       (async () => {
-        const r = wire.createReceiver(async (_topic, _payload) => ({ r: 1 }));
+        const r = conduit.createReceiver(async (_topic, _payload) => ({ r: 1 }));
         await r.start();
         return r;
       })(),
       (async () => {
-        const r = wire.createReceiver(async (_topic, _payload) => ({ r: 2 }));
+        const r = conduit.createReceiver(async (_topic, _payload) => ({ r: 2 }));
         await r.start();
         return r;
       })(),
       (async () => {
-        const r = wire.createReceiver(async (_topic, _payload) => ({ r: 3 }));
+        const r = conduit.createReceiver(async (_topic, _payload) => ({ r: 3 }));
         await r.start();
         return r;
       })()
@@ -146,6 +146,6 @@ describe('Ownership Transfer Integration', () => {
       await receiver.stop();
     }
     await sender.close();
-    await wire.close();
+    await conduit.close();
   }, 10000);
 });

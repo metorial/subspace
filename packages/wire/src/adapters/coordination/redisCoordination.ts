@@ -14,7 +14,7 @@ export class RedisCoordination implements ICoordinationAdapter {
   private cleanupInterval?: NodeJS.Timer;
   private readonly CACHE_TTL = 1000; // 1 second cache
 
-  constructor(config: RedisConfig, wireId: string = 'default') {
+  constructor(config: RedisConfig, conduitId: string = 'default') {
     console.log('Connecting to Redis for coordination...');
 
     this.redis = new Redis({
@@ -31,7 +31,7 @@ export class RedisCoordination implements ICoordinationAdapter {
       keepAlive: 30000
     });
 
-    this.keyPrefix = `wire:${wireId}:`;
+    this.keyPrefix = `conduit:${conduitId}:`;
 
     // Start background cleanup every 30 seconds
     this.cleanupInterval = setInterval(

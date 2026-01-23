@@ -1,9 +1,9 @@
 import { Cases } from '@lowerdeck/case';
 import { internalServerError, isServiceError } from '@lowerdeck/error';
 import {
+  conduitResultToMcpMessage,
   markdownList,
-  mcpValidate,
-  wireResultToMcpMessage
+  mcpValidate
 } from '@metorial-subspace/connection-utils';
 import { db, type SessionConnectionMcpConnectionTransport } from '@metorial-subspace/db';
 import {
@@ -88,7 +88,7 @@ export class McpSender {
       if (!isBroadcastBySender) {
         await this.control.sendControlMessage({
           type: 'mcp_control_message',
-          wire: {
+          conduit: {
             message,
             status: 'error' in res.mcp ? 'failed' : 'succeeded',
             output: { type: 'mcp', data: res.mcp },
@@ -143,7 +143,7 @@ export class McpSender {
 
       await this.control.sendControlMessage({
         type: 'mcp_control_message',
-        wire: {
+        conduit: {
           message,
           status: message.status,
           output: message.output,
@@ -154,7 +154,7 @@ export class McpSender {
 
       return {
         message,
-        mcp: await wireResultToMcpMessage({
+        mcp: await conduitResultToMcpMessage({
           message,
           output: message.output,
           status: message.status,
@@ -266,7 +266,7 @@ export class McpSender {
     return {
       store: true,
       message: result.message,
-      mcp: await wireResultToMcpMessage(result)
+      mcp: await conduitResultToMcpMessage(result)
     };
   }
 

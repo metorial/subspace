@@ -1,6 +1,6 @@
 import { serialize } from '@lowerdeck/serialize';
-import type { WireResult } from '@metorial-subspace/connection-utils';
-import { wireResultToMcpMessage } from '@metorial-subspace/connection-utils';
+import type { ConduitResult } from '@metorial-subspace/connection-utils';
+import { conduitResultToMcpMessage } from '@metorial-subspace/connection-utils';
 import { broadcastNats } from '../lib/nats';
 import { topics } from '../lib/topic';
 import type { McpManager } from './manager';
@@ -8,7 +8,7 @@ import type { McpManager } from './manager';
 export type McpControlMessage =
   | {
       type: 'mcp_control_message';
-      wire: WireResult;
+      conduit: ConduitResult;
       channel: 'targeted_response' | 'broadcast_response_or_notification';
     }
   | {
@@ -64,14 +64,14 @@ export class McpControlMessageHandler {
           self.#lastInteractionAt = Date.now();
 
           if (data.type === 'mcp_control_message') {
-            let wireRes = await wireResultToMcpMessage(data.wire);
+            let conduitRes = await conduitResultToMcpMessage(data.conduit);
 
             // Ignore targeted messages if we only want broadcasts
             if (d.selectedChannels === 'broadcast' && data.channel === 'targeted_response') {
               continue;
             }
 
-            if (wireRes) yield { mcp: wireRes, message: data.wire.message };
+            if (conduitRes) yield { mcp: conduitRes, message: data.conduit.message };
           }
         }
       }

@@ -1,4 +1,4 @@
-import { wireResultToMcpMessage } from '@metorial-subspace/connection-utils';
+import { conduitResultToMcpMessage } from '@metorial-subspace/connection-utils';
 import type { CallToolProps, InitProps, SenderMangerProps } from '../sender';
 import { SenderConnection } from '../sender/connection';
 import type { CreateMessageProps } from '../shared/createMessage';
@@ -30,7 +30,7 @@ export class McpManager {
       close: () => listener.close(),
       async *[Symbol.asyncIterator]() {
         for await (let msg of listener) {
-          let result = await wireResultToMcpMessage(msg);
+          let result = await conduitResultToMcpMessage(msg);
 
           // Ignore targeted messages if we only want broadcasts
           if (d.selectedChannels === 'broadcast' && msg.channel === 'targeted_response') {

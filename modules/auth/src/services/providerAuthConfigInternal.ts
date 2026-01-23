@@ -187,7 +187,8 @@ class providerAuthConfigInternalServiceImpl {
           solutionOid: d.solution.oid,
           providerOid: d.provider.oid,
           authMethodOid: d.authMethod.oid,
-          deploymentOid: d.providerDeployment?.oid
+          deploymentOid: d.providerDeployment?.oid,
+          authCredentialsOid: d.credentials?.oid
         },
         include: providerAuthConfigInclude
       });

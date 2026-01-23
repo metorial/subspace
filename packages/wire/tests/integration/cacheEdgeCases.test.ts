@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'vitest';
-import { createWire } from '../../src/index';
+import { createConduit } from '../../src/index';
 
 describe('Cache Edge Cases Integration', () => {
   test('should evict oldest entries when cache size limit reached', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     let processCount = 0;
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, payload: any) => {
         processCount++;
         return { count: processCount, id: payload.id };
@@ -19,7 +19,7 @@ describe('Cache Edge Cases Integration', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Send 10 messages (more than cache size)
     const responses = [];
@@ -38,15 +38,15 @@ describe('Cache Edge Cases Integration', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   });
 
   test('should expire cache entries after TTL', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     let processCount = 0;
     const processedIds: number[] = [];
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, payload: any) => {
         processCount++;
         processedIds.push(payload.id);
@@ -60,7 +60,7 @@ describe('Cache Edge Cases Integration', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Send first message
     const response1 = await sender.send('cache-ttl-topic', { id: 1 });
@@ -77,14 +77,14 @@ describe('Cache Edge Cases Integration', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   });
 
   test('should handle cache cleanup during high message volume', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     let processCount = 0;
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, _payload: any) => {
         processCount++;
         return { count: processCount };
@@ -97,7 +97,7 @@ describe('Cache Edge Cases Integration', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Send many messages rapidly
     const promises = [];
@@ -116,14 +116,14 @@ describe('Cache Edge Cases Integration', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   }, 15000);
 
   test('should deduplicate messages via cache', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     let processCount = 0;
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, payload: any) => {
         processCount++;
         return { count: processCount, payload };
@@ -136,7 +136,7 @@ describe('Cache Edge Cases Integration', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender({
+    const sender = conduit.createSender({
       defaultTimeout: 100, // Short timeout to trigger retry
       maxRetries: 2,
       retryBackoffMs: 50
@@ -144,7 +144,7 @@ describe('Cache Edge Cases Integration', () => {
 
     // Simulate a slow receiver that will cause timeout on first attempt
     let firstAttempt = true;
-    const slowReceiver = wire.createReceiver(
+    const slowReceiver = conduit.createReceiver(
       async (_topic, _payload) => {
         if (firstAttempt) {
           firstAttempt = false;
@@ -171,14 +171,14 @@ describe('Cache Edge Cases Integration', () => {
 
     await sender.close();
     await slowReceiver.stop();
-    await wire.close();
+    await conduit.close();
   }, 10000);
 
   test('should handle cache during receiver restart', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     let processCount = 0;
-    const receiver1 = wire.createReceiver(
+    const receiver1 = conduit.createReceiver(
       async (_topic, _payload: any) => {
         processCount++;
         return { receiver: 1, count: processCount };
@@ -190,7 +190,7 @@ describe('Cache Edge Cases Integration', () => {
 
     await receiver1.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Send message to establish cache
     await sender.send('restart-topic', { data: 'test1' });
@@ -200,7 +200,7 @@ describe('Cache Edge Cases Integration', () => {
     await receiver1.stop();
 
     // Start new receiver (new cache)
-    const receiver2 = wire.createReceiver(
+    const receiver2 = conduit.createReceiver(
       async (_topic, _payload: any) => {
         processCount++;
         return { receiver: 2, count: processCount };
@@ -219,14 +219,14 @@ describe('Cache Edge Cases Integration', () => {
 
     await sender.close();
     await receiver2.stop();
-    await wire.close();
+    await conduit.close();
   });
 
   test('should handle cache with concurrent processing of same topic', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     const processedMessages: string[] = [];
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, payload: any) => {
         // Small delay to ensure concurrency
         await new Promise(resolve => setTimeout(resolve, 10));
@@ -241,7 +241,7 @@ describe('Cache Edge Cases Integration', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Send multiple messages to same topic concurrently
     const promises = Array.from({ length: 20 }, (_, i) =>
@@ -265,14 +265,14 @@ describe('Cache Edge Cases Integration', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   });
 
   test('should handle cache entries with error responses', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     let attemptCount = 0;
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, payload: any) => {
         attemptCount++;
         if (payload.shouldFail) {
@@ -287,7 +287,7 @@ describe('Cache Edge Cases Integration', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Send message that will fail
     const response1 = await sender.send('error-cache-topic', { shouldFail: true });
@@ -303,14 +303,14 @@ describe('Cache Edge Cases Integration', () => {
 
     await sender.close();
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   });
 
   test('should cleanup cache on receiver stop', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     let processCount = 0;
-    const receiver = wire.createReceiver(
+    const receiver = conduit.createReceiver(
       async (_topic, _payload) => {
         processCount++;
         return { count: processCount };
@@ -322,7 +322,7 @@ describe('Cache Edge Cases Integration', () => {
 
     await receiver.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Send messages to populate cache
     await sender.send('cleanup-topic', { data: 'test1' });
@@ -336,14 +336,14 @@ describe('Cache Edge Cases Integration', () => {
     // We can't directly verify cache is cleared, but stop should not error
 
     await sender.close();
-    await wire.close();
+    await conduit.close();
   });
 
   test('should handle cache during ownership transfer', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     let r1ProcessCount = 0;
-    const receiver1 = wire.createReceiver(
+    const receiver1 = conduit.createReceiver(
       async (_topic, _payload: any) => {
         r1ProcessCount++;
         return { receiver: 1, count: r1ProcessCount };
@@ -357,7 +357,7 @@ describe('Cache Edge Cases Integration', () => {
 
     await receiver1.start();
 
-    const sender = wire.createSender();
+    const sender = conduit.createSender();
 
     // Send message to receiver1
     const response1 = await sender.send('transfer-cache-topic', { data: 'test1' });
@@ -369,7 +369,7 @@ describe('Cache Edge Cases Integration', () => {
 
     // Start receiver2
     let r2ProcessCount = 0;
-    const receiver2 = wire.createReceiver(
+    const receiver2 = conduit.createReceiver(
       async (_topic, _payload: any) => {
         r2ProcessCount++;
         return { receiver: 2, count: r2ProcessCount };
@@ -387,6 +387,6 @@ describe('Cache Edge Cases Integration', () => {
 
     await sender.close();
     await receiver2.stop();
-    await wire.close();
+    await conduit.close();
   }, 10000);
 });

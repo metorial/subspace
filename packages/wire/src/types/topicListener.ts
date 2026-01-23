@@ -1,11 +1,11 @@
-import type { WireResponse } from './response';
+import type { ConduitResponse } from './response';
 
 export interface TopicResponseBroadcast {
   topic: string;
 
   messageId: string;
 
-  response: WireResponse;
+  response: ConduitResponse;
 
   receiverId: string;
 

@@ -1,16 +1,16 @@
 import { describe, expect, test } from 'vitest';
-import { createWire } from '../../src/index';
+import { createConduit } from '../../src/index';
 
 describe('Race Conditions Integration', () => {
   test('should handle concurrent ownership claims on same topic', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     // Create multiple senders that will race to claim the same topic
-    const senders = Array.from({ length: 5 }, () => wire.createSender());
+    const senders = Array.from({ length: 5 }, () => conduit.createSender());
 
     // Create a receiver that tracks which messages it processes
     const processedMessages: string[] = [];
-    const receiver = wire.createReceiver(async (_topic, payload: any) => {
+    const receiver = conduit.createReceiver(async (_topic, payload: any) => {
       processedMessages.push(payload.senderId);
       return { received: payload.senderId };
     });
@@ -42,17 +42,17 @@ describe('Race Conditions Integration', () => {
       await sender.close();
     }
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   }, 10000);
 
   test('should handle concurrent claims from multiple senders to unowned topic', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     // Create two receivers
-    const receiver1 = wire.createReceiver(async (_topic, payload) => {
+    const receiver1 = conduit.createReceiver(async (_topic, payload) => {
       return { receiver: 1, payload };
     });
-    const receiver2 = wire.createReceiver(async (_topic, payload) => {
+    const receiver2 = conduit.createReceiver(async (_topic, payload) => {
       return { receiver: 2, payload };
     });
 
@@ -60,7 +60,7 @@ describe('Race Conditions Integration', () => {
     await receiver2.start();
 
     // Create multiple senders
-    const senders = Array.from({ length: 10 }, () => wire.createSender());
+    const senders = Array.from({ length: 10 }, () => conduit.createSender());
 
     // All senders send to new topics at the same time
     const promises = senders.map((sender, i) => sender.send('new-topic', { index: i }));
@@ -85,14 +85,14 @@ describe('Race Conditions Integration', () => {
     }
     await receiver1.stop();
     await receiver2.stop();
-    await wire.close();
+    await conduit.close();
   }, 10000);
 
   test('should handle ownership claim race during expiry', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     // Create first receiver with very short TTL
-    const receiver1 = wire.createReceiver(
+    const receiver1 = conduit.createReceiver(
       async (_topic, _payload) => {
         return { receiver: 1 };
       },
@@ -104,7 +104,7 @@ describe('Race Conditions Integration', () => {
 
     await receiver1.start();
 
-    const sender1 = wire.createSender();
+    const sender1 = conduit.createSender();
 
     // Establish ownership
     await sender1.send('expiry-topic', { data: 'test1' });
@@ -113,10 +113,10 @@ describe('Race Conditions Integration', () => {
     await receiver1.stop();
 
     // Create two new receivers
-    const receiver2 = wire.createReceiver(async (_topic, _payload) => {
+    const receiver2 = conduit.createReceiver(async (_topic, _payload) => {
       return { receiver: 2 };
     });
-    const receiver3 = wire.createReceiver(async (_topic, _payload) => {
+    const receiver3 = conduit.createReceiver(async (_topic, _payload) => {
       return { receiver: 3 };
     });
 
@@ -127,7 +127,7 @@ describe('Race Conditions Integration', () => {
     await new Promise(resolve => setTimeout(resolve, 150));
 
     // Create multiple senders that race to send after expiry
-    const senders = Array.from({ length: 5 }, () => wire.createSender());
+    const senders = Array.from({ length: 5 }, () => conduit.createSender());
     const promises = senders.map(sender => sender.send('expiry-topic', { data: 'test2' }));
 
     const responses = await Promise.all(promises);
@@ -151,16 +151,16 @@ describe('Race Conditions Integration', () => {
     }
     await receiver2.stop();
     await receiver3.stop();
-    await wire.close();
+    await conduit.close();
   }, 10000);
 
   test('should handle concurrent sends to multiple topics', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
     // Create multiple receivers
     const receivers = await Promise.all(
       Array.from({ length: 3 }, async (_, i) => {
-        const r = wire.createReceiver(async (_topic, _payload) => ({
+        const r = conduit.createReceiver(async (_topic, _payload) => ({
           receiver: i
         }));
         await r.start();
@@ -169,7 +169,7 @@ describe('Race Conditions Integration', () => {
     );
 
     // Create multiple senders
-    const senders = Array.from({ length: 10 }, () => wire.createSender());
+    const senders = Array.from({ length: 10 }, () => conduit.createSender());
 
     // Each sender sends to multiple topics concurrently
     const allPromises = senders.flatMap((sender, i) =>
@@ -205,15 +205,15 @@ describe('Race Conditions Integration', () => {
     for (const receiver of receivers) {
       await receiver.stop();
     }
-    await wire.close();
+    await conduit.close();
   }, 15000);
 
   test('should handle receiver starting during active claims', async () => {
-    const wire = createWire();
-    const sender = wire.createSender();
+    const conduit = createConduit();
+    const sender = conduit.createSender();
 
     // Create first receiver
-    const receiver1 = wire.createReceiver(async () => ({ r: 1 }));
+    const receiver1 = conduit.createReceiver(async () => ({ r: 1 }));
     await receiver1.start();
 
     // Start sending messages
@@ -223,7 +223,7 @@ describe('Race Conditions Integration', () => {
 
     // Start second receiver mid-flight
     setTimeout(async () => {
-      const receiver2 = wire.createReceiver(async () => ({ r: 2 }));
+      const receiver2 = conduit.createReceiver(async () => ({ r: 2 }));
       await receiver2.start();
     }, 50);
 
@@ -237,13 +237,13 @@ describe('Race Conditions Integration', () => {
     // Cleanup
     await sender.close();
     await receiver1.stop();
-    await wire.close();
+    await conduit.close();
   }, 10000);
 
   test('should maintain ownership under high concurrent load', async () => {
-    const wire = createWire();
+    const conduit = createConduit();
 
-    const receiver = wire.createReceiver(async (_topic, _payload) => {
+    const receiver = conduit.createReceiver(async (_topic, _payload) => {
       // Small delay to simulate processing
       await new Promise(resolve => setTimeout(resolve, 5));
       return { processed: true };
@@ -252,7 +252,7 @@ describe('Race Conditions Integration', () => {
     await receiver.start();
 
     // Create many senders sending many messages to same topic
-    const senders = Array.from({ length: 10 }, () => wire.createSender());
+    const senders = Array.from({ length: 10 }, () => conduit.createSender());
 
     const allPromises = senders.flatMap(sender =>
       Array.from({ length: 10 }, (_, i) => sender.send('high-load-topic', { index: i }))
@@ -274,6 +274,6 @@ describe('Race Conditions Integration', () => {
       await sender.close();
     }
     await receiver.stop();
-    await wire.close();
+    await conduit.close();
   }, 30000);
 });
