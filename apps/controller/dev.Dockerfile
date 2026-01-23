@@ -25,7 +25,7 @@ COPY packages/generator/package.json ./packages/generator/package.json
 COPY provider-backends/provider-slates/package.json ./provider-backends/provider-slates/package.json
 COPY provider-backends/provider-utils/package.json ./provider-backends/provider-utils/package.json
 COPY provider-backends/provider-manager/package.json ./provider-backends/provider-manager/package.json
-COPY packages/wire/package.json ./packages/wire/package.json
+COPY packages/conduit/package.json ./packages/conduit/package.json
 
 COPY modules/auth/package.json ./modules/auth/package.json
 COPY modules/catalog/package.json ./modules/catalog/package.json
