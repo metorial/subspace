@@ -8,6 +8,7 @@ import {
   getId,
   ID,
   type Provider,
+  type ProviderConfig,
   type ProviderConfigVault,
   type ProviderDeployment,
   type ProviderDeploymentStatus,
@@ -26,6 +27,9 @@ import {
   resolveProviders,
   resolveProviderVersions
 } from '@metorial-subspace/list-utils';
+import {
+  providerDeploymentConfigPairInternalService
+} from '@metorial-subspace/module-provider-internal';
 import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
@@ -142,8 +146,12 @@ class providerDeploymentServiceImpl {
             vault: ProviderConfigVault;
           }
         | {
-            type: 'inline';
+            type: 'new_config';
             data: Record<string, any>;
+          }
+        | {
+            type: 'config';
+            config: ProviderConfig;
           };
     };
   }) {
@@ -152,6 +160,11 @@ class providerDeploymentServiceImpl {
     if (d.input.config.type === 'vault') {
       checkTenant(d, d.input.config.vault);
       checkDeletedRelation(d.input.config.vault, { allowEphemeral: d.input.isEphemeral });
+    }
+
+    if (d.input.config.type === 'config') {
+      checkTenant(d, d.input.config.config);
+      checkDeletedRelation(d.input.config.config, { allowEphemeral: d.input.isEphemeral });
     }
 
     return withTransaction(async db => {
@@ -221,7 +234,26 @@ class providerDeploymentServiceImpl {
         }
       });
 
-      if (d.input.config.type !== 'none') {
+      if (d.input.config.type === 'config') {
+        // Link existing config to deployment
+        await providerDeploymentConfigPairInternalService.upsertDeploymentConfigPair({
+          deployment: providerDeployment,
+          config: d.input.config.config,
+          authConfig: null
+        });
+
+        // Set as default config for the deployment
+        await db.providerDeployment.updateMany({
+          where: { oid: providerDeployment.oid },
+          data: { defaultConfigOid: d.input.config.config.oid }
+        });
+      } else if (d.input.config.type !== 'none') {
+        // Transform external config types to internal providerConfig types
+        let internalConfig =
+          d.input.config.type === 'new_config'
+            ? { type: 'inline' as const, data: d.input.config.data }
+            : d.input.config;
+
         await providerConfigService.createProviderConfig({
           tenant: d.tenant,
           providerDeployment,
@@ -230,7 +262,7 @@ class providerDeploymentServiceImpl {
           input: {
             name: `Default Config for ${d.input.name}`,
             isEphemeral: d.input.isEphemeral,
-            config: d.input.config,
+            config: internalConfig,
             metadata: d.input.metadata,
             isDefault: true
           }

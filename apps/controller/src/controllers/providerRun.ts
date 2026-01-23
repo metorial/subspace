@@ -1,6 +1,6 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { providerRunService } from '@metorial-subspace/module-session';
+import { providerRunLogsService, providerRunService } from '@metorial-subspace/module-session';
 import { providerRunPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
@@ -69,5 +69,21 @@ export let providerRunController = app.controller({
         allowDeleted: v.optional(v.boolean())
       })
     )
-    .do(async ctx => providerRunPresenter(ctx.providerRun))
+    .do(async ctx => providerRunPresenter(ctx.providerRun)),
+
+  getLogs: providerRunApp
+    .handler()
+    .input(
+      v.object({
+        tenantId: v.string(),
+        providerRunId: v.string()
+      })
+    )
+    .do(async ctx =>
+      providerRunLogsService.getProviderRunLogs({
+        tenant: ctx.tenant,
+        solution: ctx.solution,
+        providerRunId: ctx.input.providerRunId
+      })
+    )
 });

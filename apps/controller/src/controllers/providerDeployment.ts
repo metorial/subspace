@@ -2,6 +2,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
 import { providerService, providerVersionService } from '@metorial-subspace/module-catalog';
 import {
+  providerConfigService,
   providerConfigVaultService,
   providerDeploymentService
 } from '@metorial-subspace/module-deployment';
@@ -89,8 +90,12 @@ export let providerDeploymentController = app.controller({
             type: v.literal('none')
           }),
           v.object({
-            type: v.literal('inline'),
+            type: v.literal('new_config'),
             data: v.record(v.any())
+          }),
+          v.object({
+            type: v.literal('config'),
+            providerConfigId: v.string()
           }),
           v.object({
             type: v.literal('vault'),
@@ -128,16 +133,32 @@ export let providerDeploymentController = app.controller({
 
           isEphemeral: ctx.input.isEphemeral,
 
-          config: (ctx.input.config.type === 'vault'
-              ? {
-                  type: 'vault',
-                  vault: await providerConfigVaultService.getProviderConfigVaultById({
-                    providerConfigVaultId: ctx.input.config.providerConfigVaultId,
-                    tenant: ctx.tenant,
-                    solution: ctx.solution
-                  })
-                }
-              : ctx.input.config) as any
+          config: await (async () => {
+            if (ctx.input.config.type === 'vault') {
+              return {
+                type: 'vault' as const,
+                vault: await providerConfigVaultService.getProviderConfigVaultById({
+                  providerConfigVaultId: ctx.input.config.providerConfigVaultId,
+                  tenant: ctx.tenant,
+                  solution: ctx.solution
+                })
+              };
+            }
+            if (ctx.input.config.type === 'config') {
+              return {
+                type: 'config' as const,
+                config: await providerConfigService.getProviderConfigById({
+                  providerConfigId: ctx.input.config.providerConfigId,
+                  tenant: ctx.tenant,
+                  solution: ctx.solution
+                })
+              };
+            }
+            if (ctx.input.config.type === 'new_config') {
+              return { type: 'new_config' as const, data: ctx.input.config.data };
+            }
+            return { type: 'none' as const };
+          })()
         }
       });
 
