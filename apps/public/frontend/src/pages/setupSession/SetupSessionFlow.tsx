@@ -239,6 +239,8 @@ export let SetupSessionFlow = ({ session, brand, clientSecret }: SetupSessionFlo
         brand={brand}
         providerName={session.authMethod.name}
         hideHeader={isCompleted}
+        currentStep={currentStepIndex}
+        stepLabels={stepLabels}
       >
         {renderContent()}
       </MetorialElementsLayout>

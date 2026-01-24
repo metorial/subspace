@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { Title, theme } from '@metorial-io/ui';
+import { RiCheckLine } from '@remixicon/react';
+import { Flex, Text, Title, theme } from '@metorial-io/ui';
 import type { Brand } from '../types';
 
 let METORIAL_LOGO_URL =
@@ -135,6 +136,45 @@ let Content = styled.div<{ $hideHeader: boolean }>`
   }
 `;
 
+let StepIndicator = styled(Flex)`
+  padding: 16px 32px;
+`;
+
+let StepLabel = styled(Text)<{ $isCompleted: boolean; $isActive: boolean }>`
+  white-space: nowrap;
+  color: ${p => (p.$isCompleted ? '#10b981' : p.$isActive ? '#1a1a1a' : '#999')};
+
+  @media (max-width: 480px) {
+    display: none;
+  }
+`;
+
+let StepConnector = styled.div<{ $isCompleted: boolean }>`
+  flex: 1;
+  height: 2px;
+  margin: 0 12px;
+  background: ${p => (p.$isCompleted ? '#10b981' : '#e5e5e5')};
+  transition: background 0.2s;
+
+  @media (max-width: 480px) {
+    margin: 0 8px;
+  }
+`;
+
+let StepNumber = styled.div<{ $isCompleted: boolean; $isActive: boolean }>`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  background: ${p => (p.$isCompleted ? '#10b981' : p.$isActive ? '#1a1a1a' : '#e5e5e5')};
+  color: ${p => (p.$isCompleted || p.$isActive ? 'white' : '#999')};
+`;
+
 let Footer = styled.div`
   display: flex;
   align-items: center;
@@ -169,13 +209,17 @@ interface MetorialElementsLayoutProps {
   providerName: string;
   children: ReactNode;
   hideHeader?: boolean;
+  currentStep?: number;
+  stepLabels?: string[];
 }
 
 export let MetorialElementsLayout = ({
   brand,
   providerName,
   children,
-  hideHeader = false
+  hideHeader = false,
+  currentStep = 0,
+  stepLabels = []
 }: MetorialElementsLayoutProps) => {
   return (
     <Wrapper data-layout="metorial-elements">
@@ -199,6 +243,30 @@ export let MetorialElementsLayout = ({
                 </Title>
               </HeaderText>
             </Header>
+          )}
+
+          {stepLabels.length > 1 && (
+            <StepIndicator align="center">
+              {stepLabels.map((label, index) => {
+                let isActive = index === currentStep;
+                let isCompleted = index < currentStep;
+                let isLast = index === stepLabels.length - 1;
+
+                return (
+                  <Flex key={label} align="center" style={{ flex: isLast ? 0 : 1 }}>
+                    <Flex align="center" gap={8}>
+                      <StepNumber $isCompleted={isCompleted} $isActive={isActive}>
+                        {isCompleted ? <RiCheckLine size={12} /> : index + 1}
+                      </StepNumber>
+                      <StepLabel size="1" weight="medium" $isCompleted={isCompleted} $isActive={isActive}>
+                        {label}
+                      </StepLabel>
+                    </Flex>
+                    {!isLast && <StepConnector $isCompleted={isCompleted} />}
+                  </Flex>
+                );
+              })}
+            </StepIndicator>
           )}
 
           <Content $hideHeader={hideHeader}>{children}</Content>
