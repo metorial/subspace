@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@lowerdeck/env": "^1.0.4",
+    "@lowerdeck/error": "^1.0.0",
     "@lowerdeck/id": "^1.0.6",
     "@lowerdeck/pagination": "^1.0.0",
     "@lowerdeck/queue": "^1.0.0",
