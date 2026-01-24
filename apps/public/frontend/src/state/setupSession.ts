@@ -1,4 +1,4 @@
-import { ErrorData, ServiceError } from '@lowerdeck/error';
+import { type ErrorData, ServiceError } from '@lowerdeck/error';
 import { createLoader } from '@metorial-io/data-hooks';
 import { htmlDecode } from '../../../src/lib/htmlEncode';
 import { client } from './client';

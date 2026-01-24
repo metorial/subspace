@@ -1,8 +1,7 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
 import { db, type Solution, type Tenant } from '@metorial-subspace/db';
-import { createSlatesHubInternalClient } from '@metorial-services/slates-hub-client';
-import { env } from '../env';
+import { getBackend } from '@metorial-subspace/provider';
 
 export type ProviderRunLog = {
   timestamp: number;
@@ -11,21 +10,8 @@ export type ProviderRunLog = {
   slateSessionId: string;
 };
 
-let getSlatesClient = () =>
-  createSlatesHubInternalClient({
-    endpoint: env.service.SLATES_HUB_URL
-  });
-
 class providerRunLogsServiceImpl {
-  async getProviderRunLogs(d: {
-    tenant: Tenant;
-    solution: Solution;
-    providerRunId: string;
-  }): Promise<{
-    object: 'provider.run.logs';
-    providerRunId: string;
-    logs: ProviderRunLog[];
-  }> {
+  async getProviderRunLogs(d: { tenant: Tenant; solution: Solution; providerRunId: string }) {
     let providerRun = await db.providerRun.findFirst({
       where: {
         id: d.providerRunId,
@@ -33,6 +19,7 @@ class providerRunLogsServiceImpl {
         solutionOid: d.solution.oid
       },
       include: {
+        providerVersion: true,
         slateSessions: {
           include: {
             slateToolInvocations: true
@@ -45,29 +32,21 @@ class providerRunLogsServiceImpl {
       throw new ServiceError(notFoundError('provider.run', d.providerRunId));
     }
 
-    // If tenant doesn't have a slateTenantId, return empty logs
-    if (!d.tenant.slateTenantId) {
-      return {
-        object: 'provider.run.logs',
-        providerRunId: d.providerRunId,
-        logs: []
-      };
-    }
+    let backend = await getBackend({ entity: providerRun.providerVersion });
 
-    let slates = getSlatesClient();
     let allLogs: ProviderRunLog[] = [];
 
     // Fetch logs for each tool call across all slate sessions
     for (let slateSession of providerRun.slateSessions) {
       for (let toolCall of slateSession.slateToolInvocations) {
         try {
-          let res = await slates.slateSessionToolCall.getLogs({
-            tenantId: d.tenant.slateTenantId,
-            slateSessionToolCallId: toolCall.id
+          let res = await backend.toolInvocation.getToolInvocationLogs({
+            tenant: d.tenant,
+            slateToolCallId: toolCall.id
           });
 
           // Add logs with context
-          for (let log of res.invocation.logs) {
+          for (let log of res.logs) {
             allLogs.push({
               timestamp: log.timestamp,
               message: log.message,

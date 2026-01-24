@@ -90,7 +90,7 @@ export let providerDeploymentController = app.controller({
             type: v.literal('none')
           }),
           v.object({
-            type: v.literal('new_config'),
+            type: v.literal('inline'),
             data: v.record(v.any())
           }),
           v.object({
@@ -154,8 +154,8 @@ export let providerDeploymentController = app.controller({
                 })
               };
             }
-            if (ctx.input.config.type === 'new_config') {
-              return { type: 'new_config' as const, data: ctx.input.config.data };
+            if (ctx.input.config.type === 'inline') {
+              return { type: 'inline' as const, data: ctx.input.config.data };
             }
             return { type: 'none' as const };
           })()

@@ -8,7 +8,7 @@ import {
   type Provider,
   type ProviderAuthConfigSource,
   type ProviderAuthConfigType,
-  ProviderAuthCredentials,
+  type ProviderAuthCredentials,
   type ProviderAuthImport,
   type ProviderAuthMethod,
   ProviderAuthMethodType,

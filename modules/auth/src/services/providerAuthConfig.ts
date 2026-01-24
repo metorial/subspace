@@ -9,7 +9,7 @@ import {
   type ProviderAuthConfig,
   type ProviderAuthConfigSource,
   type ProviderAuthConfigStatus,
-  ProviderAuthCredentials,
+  type ProviderAuthCredentials,
   type ProviderAuthImport,
   type ProviderDeployment,
   type ProviderVariant,
