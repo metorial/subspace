@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Title, theme } from '@metorial-io/ui';
-import { SecuredByFooter } from '../components/StepLayout';
 import type { Brand } from '../types';
+
+let METORIAL_LOGO_URL =
+  'https://cdn.metorial.com/2025-06-13--14-59-55/logos/metorial/primary_logo/raw.svg';
 
 let Wrapper = styled.div`
   min-height: 100dvh;
@@ -134,11 +136,32 @@ let Content = styled.div<{ $hideHeader: boolean }>`
 `;
 
 let Footer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 12px;
+  color: ${theme.colors.gray600};
   padding: 16px 24px 24px;
 
   @media (max-width: 640px) {
     display: none;
   }
+`;
+
+let FooterLink = styled.a`
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: ${theme.colors.gray900};
+  text-decoration: none;
+  font-weight: 500;
+`;
+
+let FooterLogo = styled.img`
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
 `;
 
 interface MetorialElementsLayoutProps {
@@ -181,7 +204,11 @@ export let MetorialElementsLayout = ({
           <Content $hideHeader={hideHeader}>{children}</Content>
 
           <Footer>
-            <SecuredByFooter />
+            <span>Secured by</span>
+            <FooterLink href="https://metorial.com" target="_blank" rel="noopener noreferrer">
+              <FooterLogo src={METORIAL_LOGO_URL} alt="Metorial" />
+              Metorial
+            </FooterLink>
           </Footer>
         </Card>
       </Inner>

@@ -33,7 +33,7 @@ export let StepContentBlock = styled.div<{ $isMetorialElement: boolean }>`
 `;
 
 let SecuredByWrapper = styled.div<{ $isMetorialElement?: boolean }>`
-  display: ${p => (p.$isMetorialElement ? 'none' : 'flex')};
+  display: none;
   align-items: center;
   justify-content: center;
   gap: 4px;
