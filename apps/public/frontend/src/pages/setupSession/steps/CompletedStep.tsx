@@ -7,17 +7,19 @@ interface CompletedStepProps {
 }
 
 export let CompletedStep = ({ redirectUrl }: CompletedStepProps) => {
+  let safeRedirectUrl = typeof redirectUrl === 'string' ? redirectUrl : null;
+
   useEffect(() => {
-    if (!redirectUrl) return;
+    if (!safeRedirectUrl) return;
 
     let timeout = setTimeout(() => {
-      window.location.href = redirectUrl;
+      window.location.href = safeRedirectUrl;
     }, 1500);
 
     return () => clearTimeout(timeout);
-  }, [redirectUrl]);
+  }, [safeRedirectUrl]);
 
-  let description = redirectUrl
+  let description = safeRedirectUrl
     ? 'Your configuration has been saved. Redirecting you back...'
     : 'Your configuration has been saved successfully. You can close this window.';
 
@@ -48,7 +50,7 @@ export let CompletedStep = ({ redirectUrl }: CompletedStepProps) => {
         {description}
       </Text>
 
-      {redirectUrl && (
+      {safeRedirectUrl && (
         <>
           <Spacer size={24} />
           <Flex align="center" gap={8} style={{ color: '#999', fontSize: 13 }}>

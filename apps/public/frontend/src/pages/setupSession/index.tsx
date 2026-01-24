@@ -5,6 +5,14 @@ import { useSetupSession } from '../../state/setupSession';
 import { SetupSessionFlow } from './SetupSessionFlow';
 import { SuccessIcon, WarningIcon, ErrorIcon } from './components/StatusIcons';
 
+let getErrorMessage = (err: unknown): string => {
+  if (typeof err === 'string') return err;
+  if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
+    return err.message;
+  }
+  return 'An unexpected error occurred. Please try again.';
+};
+
 export let SetupSessionPage = () => {
   let setupSession = useSetupSession();
 
@@ -13,9 +21,7 @@ export let SetupSessionPage = () => {
       <StatusPageView
         icon={<ErrorIcon />}
         title="Something went wrong"
-        description={
-          setupSession.error.message || 'An unexpected error occurred. Please try again.'
-        }
+        description={getErrorMessage(setupSession.error)}
       />
     );
   }
@@ -28,8 +34,9 @@ export let SetupSessionPage = () => {
   let clientSecret = new URLSearchParams(window.location.search).get('client_secret') || '';
 
   if (session.status === 'completed') {
-    if (session.redirectUrl) {
-      window.location.href = session.redirectUrl;
+    let redirectUrl = typeof session.redirectUrl === 'string' ? session.redirectUrl : null;
+    if (redirectUrl) {
+      window.location.href = redirectUrl;
       return <LoadingPage />;
     }
     return (

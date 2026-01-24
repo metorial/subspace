@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { Text, Title, theme } from '@metorial-io/ui';
+import { Spacer, Text, Title, theme } from '@metorial-io/ui';
 
 let Wrapper = styled.div`
   min-height: 100dvh;
@@ -41,12 +41,13 @@ let Card = styled.div`
 `;
 
 let Header = styled.div`
-  padding: 32px 24px 24px;
+  padding: 32px 24px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
   background: linear-gradient(180deg, #fff9f9 0%, #ffffff 100%);
+  border-bottom: 1px solid ${theme.colors.gray200};
 
   @media (max-width: 640px) {
     padding-top: 48px;
@@ -80,7 +81,7 @@ let Chevrons = styled.div`
   display: flex;
   align-items: center;
   gap: 2px;
-  color: ${theme.colors.gray400};
+  color: ${theme.colors.gray600};
 `;
 
 let ChevronSvg = styled.svg<{ $delay: number }>`
@@ -121,15 +122,20 @@ let HeaderText = styled.div`
 `;
 
 let Content = styled.div<{ $hideHeader: boolean }>`
-  padding: ${p => (p.$hideHeader ? '32px' : '20px 32px 32px')};
+  padding: ${p => (p.$hideHeader ? '32px 32px 0' : '20px 32px 0')};
+
+  @media (max-width: 640px) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
 `;
 
 let Footer = styled.div`
   padding: 16px 24px 24px;
 
   @media (max-width: 640px) {
-    margin-top: auto;
-    padding-bottom: 32px;
+    display: none;
   }
 `;
 
@@ -170,50 +176,52 @@ export let MetorialElementsLayout = ({
   children,
   hideHeader = false
 }: MetorialElementsLayoutProps) => {
+  let brandName = typeof brand.name === 'string' ? brand.name : 'App';
+  let brandImage = typeof brand.image === 'string' ? brand.image : null;
+  let displayProviderName = typeof providerName === 'string' ? providerName : 'Provider';
+
   return (
-    <Wrapper>
+    <Wrapper data-layout="metorial-elements">
       <Inner>
         <Card>
-        {!hideHeader && (
-          <Header>
-            <IconsRow>
-              {brand.image && <BrandIcon src={brand.image} alt={brand.name} />}
-              <Chevrons>
-                <ChevronIcon delay={0} />
-                <ChevronIcon delay={0.15} />
-                <ChevronIcon delay={0.3} />
-              </Chevrons>
-              <ProviderIcon>{providerName.charAt(0).toUpperCase()}</ProviderIcon>
-            </IconsRow>
-            <HeaderText>
-              <Title size="4" weight="bold">
-                Connect to {providerName}
-              </Title>
-              <Text size="2" color="gray500">
-                for {brand.name}
-              </Text>
-            </HeaderText>
-          </Header>
-        )}
+          {!hideHeader && (
+            <Header>
+              <IconsRow>
+                {brandImage && <BrandIcon src={brandImage} alt={brandName} />}
+                <Chevrons>
+                  <ChevronIcon delay={0} />
+                  <ChevronIcon delay={0.3} />
+                  <ChevronIcon delay={0.6} />
+                </Chevrons>
+                <ProviderIcon>{displayProviderName.charAt(0).toUpperCase()}</ProviderIcon>
+              </IconsRow>
 
-        <Content $hideHeader={hideHeader}>{children}</Content>
+              <HeaderText>
+                <Title size="5" weight="strong" style={{ textAlign: 'center' }}>
+                  Connect to {displayProviderName}
+                </Title>
+              </HeaderText>
+            </Header>
+          )}
 
-        <Footer>
-          <SecuredBy>
-            <span>Secured by</span>
-            <SecuredByLink
-              href="https://metorial.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <SecuredByLogo
-                src="https://cdn.metorial.com/2025-06-13--14-59-55/logos/metorial/primary_logo/raw.svg"
-                alt="Metorial"
-              />
-              Metorial
-            </SecuredByLink>
-          </SecuredBy>
-        </Footer>
+          <Content $hideHeader={hideHeader}>{children}</Content>
+
+          <Footer>
+            <SecuredBy>
+              <span>Secured by</span>
+              <SecuredByLink
+                href="https://metorial.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <SecuredByLogo
+                  src="https://cdn.metorial.com/2025-06-13--14-59-55/logos/metorial/primary_logo/raw.svg"
+                  alt="Metorial"
+                />
+                Metorial
+              </SecuredByLink>
+            </SecuredBy>
+          </Footer>
         </Card>
       </Inner>
     </Wrapper>

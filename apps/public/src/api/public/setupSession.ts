@@ -68,7 +68,7 @@ export let setupSessionApp = createHono()
 
     return c.html(
       (await getIndexHtmlText()).replace(
-        'PRELOAD',
+        '<!-- PRELOAD -->',
         `<script type="application/json" id="preload-data">${htmlEncode(JSON.stringify(preload))}</script>`
       )
     );

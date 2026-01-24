@@ -150,12 +150,9 @@ class providerSetupSessionUiServiceImpl {
         })
       );
     }
+
     if (d.providerSetupSession.oauthSetupOid || d.providerSetupSession.authConfigOid) {
-      throw new ServiceError(
-        badRequestError({
-          message: 'Auth config has already been set for this session'
-        })
-      );
+      return d.providerSetupSession;
     }
 
     return updateLock.usingLock(d.providerSetupSession.id, () =>
