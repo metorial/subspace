@@ -1,93 +1,23 @@
-import styled from 'styled-components';
-import { Button, Flex, Spacer, Text, Title, theme } from '@metorial-io/ui';
-
-let Wrapper = styled.div<{ $isMetorialLayout: boolean }>`
-  display: flex;
-  flex-direction: column;
-
-  @media (max-width: 640px) {
-    ${p =>
-      p.$isMetorialLayout &&
-      `
-      flex: 1;
-      justify-content: flex-end;
-    `}
-  }
-`;
-
-let ContentBlock = styled.div<{ $isMetorialLayout: boolean }>`
-  @media (max-width: 640px) {
-    ${p =>
-      p.$isMetorialLayout &&
-      `
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: white;
-      border-radius: 24px 24px 0 0;
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
-      padding: 32px 24px 32px;
-    `}
-  }
-`;
-
-let SecuredBy = styled.div<{ $isMetorialLayout: boolean }>`
-  display: none;
-
-  @media (max-width: 640px) {
-    ${p =>
-      p.$isMetorialLayout &&
-      `
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      font-size: 12px;
-      color: #666;
-      margin-top: 16px;
-    `}
-  }
-`;
-
-let SecuredByLink = styled.a`
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  color: ${theme.colors.gray900};
-  text-decoration: none;
-  font-weight: 500;
-`;
-
-let SecuredByLogo = styled.img`
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-`;
+import { Button, Flex, Spacer, Text, Title } from '@metorial-io/ui';
+import { StepWrapper, StepContentBlock, SecuredByFooter } from '../components/StepLayout';
+import type { OAuthSetup } from '../types';
 
 interface OAuthRedirectStepProps {
-  oauthSetup: {
-    url: string | null;
-    authMethod: {
-      name: string;
-    };
-  };
-  isMetorialLayout?: boolean;
+  oauthSetup: OAuthSetup;
+  isMetorialElement?: boolean;
 }
 
 export let OAuthRedirectStep = ({
   oauthSetup,
-  isMetorialLayout = false
+  isMetorialElement = false
 }: OAuthRedirectStepProps) => {
-  let safeUrl = typeof oauthSetup.url === 'string' ? oauthSetup.url : null;
-
   let handleRedirect = () => {
-    if (safeUrl) {
-      window.location.href = safeUrl;
+    if (oauthSetup.url) {
+      window.location.href = oauthSetup.url;
     }
   };
 
-  if (!safeUrl) {
+  if (!oauthSetup.url) {
     return (
       <Flex
         direction="column"
@@ -106,8 +36,8 @@ export let OAuthRedirectStep = ({
   }
 
   return (
-    <Wrapper $isMetorialLayout={isMetorialLayout}>
-      <ContentBlock $isMetorialLayout={isMetorialLayout}>
+    <StepWrapper $isMetorialElement={isMetorialElement}>
+      <StepContentBlock $isMetorialElement={isMetorialElement}>
         <div>
           <Text size="2" weight="medium">
             Sign in required
@@ -124,17 +54,8 @@ export let OAuthRedirectStep = ({
           Connect Account
         </Button>
 
-        <SecuredBy $isMetorialLayout={isMetorialLayout}>
-          <span>Secured by</span>
-          <SecuredByLink href="https://metorial.com" target="_blank" rel="noopener noreferrer">
-            <SecuredByLogo
-              src="https://cdn.metorial.com/2025-06-13--14-59-55/logos/metorial/primary_logo/raw.svg"
-              alt="Metorial"
-            />
-            Metorial
-          </SecuredByLink>
-        </SecuredBy>
-      </ContentBlock>
-    </Wrapper>
+        <SecuredByFooter isMetorialElement={isMetorialElement} />
+      </StepContentBlock>
+    </StepWrapper>
   );
 };

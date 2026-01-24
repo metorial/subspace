@@ -1,17 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Group, CenteredSpinner, Text, Title, theme } from '@metorial-io/ui';
+import { Group, CenteredSpinner, Title, theme } from '@metorial-io/ui';
 import { useSetupSession } from '../../state/setupSession';
 import { SetupSessionFlow } from './SetupSessionFlow';
 import { SuccessIcon, WarningIcon, ErrorIcon } from './components/StatusIcons';
-
-let getErrorMessage = (err: unknown): string => {
-  if (typeof err === 'string') return err;
-  if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
-    return err.message;
-  }
-  return 'An unexpected error occurred. Please try again.';
-};
+import { SecuredByFooter } from './components/StepLayout';
 
 export let SetupSessionPage = () => {
   let setupSession = useSetupSession();
@@ -21,7 +14,7 @@ export let SetupSessionPage = () => {
       <StatusPageView
         icon={<ErrorIcon />}
         title="Something went wrong"
-        description={getErrorMessage(setupSession.error)}
+        description={(setupSession.error as Error).message}
       />
     );
   }
@@ -34,9 +27,8 @@ export let SetupSessionPage = () => {
   let clientSecret = new URLSearchParams(window.location.search).get('client_secret') || '';
 
   if (session.status === 'completed') {
-    let redirectUrl = typeof session.redirectUrl === 'string' ? session.redirectUrl : null;
-    if (redirectUrl) {
-      window.location.href = redirectUrl;
+    if (session.redirectUrl) {
+      window.location.href = session.redirectUrl;
       return <LoadingPage />;
     }
     return (
@@ -154,29 +146,12 @@ let StatusDescription = styled.p`
 
 let Footer = styled(Group.Footer)`
   justify-content: center;
-  gap: 6px;
   border-top: none;
 
   @media (max-width: 640px) {
     margin-top: auto;
     padding: 24px;
   }
-`;
-
-let FooterLink = styled.a`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #1a1a1a;
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 13px;
-`;
-
-let FooterLogo = styled.img`
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
 `;
 
 interface StatusPageViewProps {
@@ -200,14 +175,7 @@ let StatusPageView = ({ icon, title, description }: StatusPageViewProps) => {
             </StatusContent>
 
             <Footer>
-              <Text color="gray600">Secured by</Text>
-              <FooterLink href="https://metorial.com" target="_blank" rel="noopener noreferrer">
-                <FooterLogo
-                  src="https://cdn.metorial.com/2025-06-13--14-59-55/logos/metorial/primary_logo/raw.svg"
-                  alt="Metorial"
-                />
-                Metorial
-              </FooterLink>
+              <SecuredByFooter logoSize={16} />
             </Footer>
           </Group.Wrapper>
         </Card>

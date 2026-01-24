@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { Spacer, Text, Title, theme } from '@metorial-io/ui';
+import { Title, theme } from '@metorial-io/ui';
+import { SecuredByFooter } from '../components/StepLayout';
+import type { Brand } from '../types';
 
 let Wrapper = styled.div`
   min-height: 100dvh;
@@ -139,32 +141,8 @@ let Footer = styled.div`
   }
 `;
 
-let SecuredBy = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  font-size: 12px;
-  color: ${theme.colors.gray600};
-`;
-
-let SecuredByLink = styled.a`
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  color: ${theme.colors.gray900};
-  text-decoration: none;
-  font-weight: 500;
-`;
-
-let SecuredByLogo = styled.img`
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-`;
-
 interface MetorialElementsLayoutProps {
-  brand: { name: string; image: string | null };
+  brand: Brand;
   providerName: string;
   children: ReactNode;
   hideHeader?: boolean;
@@ -176,10 +154,6 @@ export let MetorialElementsLayout = ({
   children,
   hideHeader = false
 }: MetorialElementsLayoutProps) => {
-  let brandName = typeof brand.name === 'string' ? brand.name : 'App';
-  let brandImage = typeof brand.image === 'string' ? brand.image : null;
-  let displayProviderName = typeof providerName === 'string' ? providerName : 'Provider';
-
   return (
     <Wrapper data-layout="metorial-elements">
       <Inner>
@@ -187,18 +161,18 @@ export let MetorialElementsLayout = ({
           {!hideHeader && (
             <Header>
               <IconsRow>
-                {brandImage && <BrandIcon src={brandImage} alt={brandName} />}
+                {brand.image && <BrandIcon src={brand.image} alt={brand.name} />}
                 <Chevrons>
                   <ChevronIcon delay={0} />
                   <ChevronIcon delay={0.3} />
                   <ChevronIcon delay={0.6} />
                 </Chevrons>
-                <ProviderIcon>{displayProviderName.charAt(0).toUpperCase()}</ProviderIcon>
+                <ProviderIcon>{providerName.charAt(0).toUpperCase()}</ProviderIcon>
               </IconsRow>
 
               <HeaderText>
                 <Title size="5" weight="strong" style={{ textAlign: 'center' }}>
-                  Connect to {displayProviderName}
+                  Connect to {providerName}
                 </Title>
               </HeaderText>
             </Header>
@@ -207,20 +181,7 @@ export let MetorialElementsLayout = ({
           <Content $hideHeader={hideHeader}>{children}</Content>
 
           <Footer>
-            <SecuredBy>
-              <span>Secured by</span>
-              <SecuredByLink
-                href="https://metorial.com"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <SecuredByLogo
-                  src="https://cdn.metorial.com/2025-06-13--14-59-55/logos/metorial/primary_logo/raw.svg"
-                  alt="Metorial"
-                />
-                Metorial
-              </SecuredByLink>
-            </SecuredBy>
+            <SecuredByFooter />
           </Footer>
         </Card>
       </Inner>

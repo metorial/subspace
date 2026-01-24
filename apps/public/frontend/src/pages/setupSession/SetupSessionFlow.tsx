@@ -10,41 +10,12 @@ import { ConfigStep } from './steps/ConfigStep';
 import { OAuthRedirectStep } from './steps/OAuthRedirectStep';
 import { CompletedStep } from './steps/CompletedStep';
 import type { JsonSchema } from '../../lib/jsonSchema';
-
-type SessionType = 'auth_only' | 'config_only' | 'auth_and_config';
-type UiMode = 'metorial_elements' | 'dashboard_embeddable';
-type Step = 'auth_config' | 'oauth_redirect' | 'oauth_loading' | 'config' | 'completed';
-
-interface Session {
-  id: string;
-  type: SessionType;
-  uiMode: UiMode;
-  status: string;
-  authConfig: unknown | null;
-  config: unknown | null;
-  redirectUrl: string | null;
-  providerId: string;
-  authMethod: {
-    id: string;
-    type: string;
-    name: string;
-  };
-}
-
-interface Brand {
-  name: string;
-  image: string | null;
-}
+import type { Session, Brand, OAuthSetup, Step } from './types';
 
 interface SetupSessionFlowProps {
   session: Session;
   brand: Brand;
   clientSecret: string;
-}
-
-interface OAuthSetup {
-  url: string | null;
-  authMethod: { name: string };
 }
 
 let hasSchemaFields = (schema: JsonSchema | null) => {
@@ -92,7 +63,6 @@ export let SetupSessionFlow = ({ session, brand, clientSecret }: SetupSessionFlo
       configInput: data
     });
 
-    // After config, go to auth
     if (needsAuthConfig && hasSchemaFields(authConfigSchema)) {
       setCurrentStep('auth_config');
     } else if (needsAuthConfig && isOAuth) {
@@ -189,25 +159,12 @@ export let SetupSessionFlow = ({ session, brand, clientSecret }: SetupSessionFlo
     if (needsAuthConfig) activeLoaders.authSchema = authSchemaLoader;
     if (needsConfig) activeLoaders.configSchema = configSchemaLoader;
 
-    let getErrorMessage = (err: unknown): string => {
-      if (typeof err === 'string') return err;
-      if (
-        err &&
-        typeof err === 'object' &&
-        'message' in err &&
-        typeof err.message === 'string'
-      ) {
-        return err.message;
-      }
-      return 'Failed to load configuration. Please try again.';
-    };
-
     return renderWithLoader(activeLoaders, {
       spaceTop: 48,
       spaceBottom: 48,
-      error: err => (
+      error: (err: Error) => (
         <Flex direction="column" align="center" gap={16} style={{ padding: '24px 0' }}>
-          <Error>{getErrorMessage(err)}</Error>
+          <Error>{err.message}</Error>
           <Button onClick={() => window.location.reload()} variant="outline" size="2">
             Try Again
           </Button>
@@ -222,7 +179,7 @@ export let SetupSessionFlow = ({ session, brand, clientSecret }: SetupSessionFlo
             schema={authConfigSchema}
             onSubmit={authConfigMutation.mutate}
             isSubmitting={authConfigMutation.isLoading}
-            isMetorialLayout={session.uiMode === 'metorial_elements'}
+            isMetorialElement={session.uiMode === 'metorial_elements'}
           />
         );
       }
@@ -250,7 +207,7 @@ export let SetupSessionFlow = ({ session, brand, clientSecret }: SetupSessionFlo
         return (
           <OAuthRedirectStep
             oauthSetup={oauthSetup}
-            isMetorialLayout={session.uiMode === 'metorial_elements'}
+            isMetorialElement={session.uiMode === 'metorial_elements'}
           />
         );
       }
@@ -261,7 +218,7 @@ export let SetupSessionFlow = ({ session, brand, clientSecret }: SetupSessionFlo
             schema={configSchema}
             onSubmit={configMutation.mutate}
             isSubmitting={configMutation.isLoading}
-            isMetorialLayout={session.uiMode === 'metorial_elements'}
+            isMetorialElement={session.uiMode === 'metorial_elements'}
           />
         );
       }
