@@ -1,9 +1,12 @@
 import './instrument';
 
+import { getSentry } from '@lowerdeck/sentry';
 import { db } from '@metorial-subspace/db';
 import { redis } from 'bun';
 import { api } from './api';
 import { websocket } from './api/metorialIntegrationProtocol';
+
+let Sentry = getSentry();
 
 Bun.serve({
   fetch: api.fetch,
@@ -19,6 +22,7 @@ Bun.serve({
       await redis.ping();
       return new Response('OK');
     } catch (e) {
+      Sentry.captureException(e);
       return new Response('Service Unavailable', { status: 503 });
     }
   },

@@ -1,4 +1,5 @@
 import { generatePlainId } from '@lowerdeck/id';
+import { getSentry } from '@lowerdeck/sentry';
 import type { SessionConnectionMcpConnectionTransport } from '@metorial-subspace/db';
 import { interleave } from '@metorial-subspace/generator';
 import type { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
@@ -11,6 +12,8 @@ import type { SenderMangerProps } from '../sender';
 import { McpControlMessageHandler } from './control';
 import { McpManager } from './manager';
 import { type HandleResponseOpts, McpSender } from './sender';
+
+let Sentry = getSentry();
 
 let id = 0;
 let connectionsWithListeners = new Map<number, McpConnection>();
@@ -122,7 +125,9 @@ setInterval(() => {
 
     let diff = now - conn.lastInteractionAt;
     if (diff > CONNECTION_INACTIVITY_TIMEOUT_MS) {
-      conn.pingTimeout().catch(() => {});
+      conn.pingTimeout().catch(e => {
+        Sentry.captureException(e);
+      });
     }
   }
 }, PING_INTERVAL_MS);

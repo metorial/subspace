@@ -1,4 +1,7 @@
+import { getSentry } from '@lowerdeck/sentry';
 import type { ICoordinationAdapter } from '../adapters/coordination/coordinationAdapter';
+
+let Sentry = getSentry();
 
 export type OwnershipLossCallback = (topic: string) => void;
 
@@ -22,6 +25,7 @@ export class OwnershipManager {
 
     this.renewalInterval = setInterval(() => {
       this.renewOwnerships().catch(err => {
+        Sentry.captureException(err);
         console.error('Error renewing ownerships:', err);
       });
     }, this.renewalIntervalMs);
@@ -100,6 +104,7 @@ export class OwnershipManager {
       try {
         callback(topic);
       } catch (err) {
+        Sentry.captureException(err);
         console.error(`Error in ownership loss callback for topic ${topic}:`, err);
       }
     }

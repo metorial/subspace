@@ -1,4 +1,7 @@
+import { getSentry } from '@lowerdeck/sentry';
 import type { ITransportAdapter, MessageHandler } from './transportAdapter';
+
+let Sentry = getSentry();
 
 interface Subscription {
   id: string;
@@ -36,6 +39,7 @@ export class MemoryTransport implements ITransportAdapter {
     for (let sub of matches) {
       // Don't await - fire and forget
       sub.handler(data).catch(err => {
+        Sentry.captureException(err);
         console.error(`Error in subscription handler for ${subject}:`, err);
       });
     }

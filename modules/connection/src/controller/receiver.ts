@@ -1,4 +1,5 @@
 import { internalServerError } from '@lowerdeck/error';
+import { getSentry } from '@lowerdeck/sentry';
 import { serialize } from '@lowerdeck/serialize';
 import type {
   BroadcastMessage,
@@ -13,6 +14,8 @@ import { topics } from '../lib/topic';
 import { completeMessage } from '../shared/completeMessage';
 import { upsertParticipant } from '../shared/upsertParticipant';
 import { ConnectionState } from './state';
+
+let Sentry = getSentry();
 
 export let startController = () => {
   let receiver = conduit.createConduitReceiver(async ctx => {
@@ -79,6 +82,8 @@ export let startController = () => {
           slateToolCall: result.slateToolCall
         };
       } catch (err) {
+        Sentry.captureException(err);
+
         console.error('Error processing tool invocation:', err);
 
         let error = internalServerError({

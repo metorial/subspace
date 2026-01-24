@@ -1,3 +1,4 @@
+import { getSentry } from '@lowerdeck/sentry';
 import { serialize } from '@lowerdeck/serialize';
 import type { ICoordinationAdapter } from '../adapters/coordination/coordinationAdapter';
 import type { ITransportAdapter } from '../adapters/transport/transportAdapter';
@@ -12,6 +13,8 @@ import type {
   TopicSubscription
 } from '../types/topicListener';
 import { RetryManager } from './retryManager';
+
+let Sentry = getSentry();
 
 interface InFlightMessage {
   resolve: (response: ConduitResponse) => void;
@@ -103,6 +106,7 @@ export class Sender {
           console.error(`Error in topic listener for ${topic}:`, err);
         });
       } catch (err) {
+        Sentry.captureException(err);
         console.error(`Error parsing topic broadcast for ${topic}:`, err);
       }
     });
@@ -161,6 +165,7 @@ export class Sender {
       // Successfully unsubscribed, remove from failed set if it was there
       this.failedUnsubscribes.delete(subscriptionId);
     } catch (err) {
+      Sentry.captureException(err);
       console.warn(`Failed to unsubscribe ${subscriptionId}, will retry later:`, err);
       this.failedUnsubscribes.add(subscriptionId);
       throw err;
@@ -178,6 +183,7 @@ export class Sender {
         await this.transport.unsubscribe(subscriptionId);
         this.failedUnsubscribes.delete(subscriptionId);
       } catch (err) {
+        Sentry.captureException(err);
         // Still failing, keep in set for next retry
         console.warn(`Retry unsubscribe failed for ${subscriptionId}:`, err);
       }
