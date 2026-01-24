@@ -139,7 +139,7 @@ class providerAuthConfigServiceImpl {
 
     providerAuthConfig?: ProviderAuthConfig & { deployment: ProviderDeployment | null };
 
-    authMethodId?: string | bigint;
+    authMethodId?: string;
   }) {
     if (d.providerAuthConfig) {
       let authMethod = await db.providerAuthMethod.findFirstOrThrow({

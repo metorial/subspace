@@ -3,7 +3,6 @@ import { v } from '@lowerdeck/validation';
 
 export let env = createValidatedEnv({
   service: {
-    REDIS_URL: v.string(),
-    SLATES_HUB_URL: v.string()
+    REDIS_URL: v.string()
   }
 });

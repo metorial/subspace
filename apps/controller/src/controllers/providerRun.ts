@@ -83,7 +83,7 @@ export let providerRunController = app.controller({
       providerRunLogsService.getProviderRunLogs({
         tenant: ctx.tenant,
         solution: ctx.solution,
-        providerRunId: ctx.input.providerRunId
+        providerRun: ctx.providerRun
       })
     )
 });
