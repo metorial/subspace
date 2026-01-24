@@ -140,6 +140,7 @@ class providerAuthConfigServiceImpl {
     providerAuthConfig?: ProviderAuthConfig & { deployment: ProviderDeployment | null };
 
     authMethodId?: string;
+    authMethodOid?: bigint;
   }) {
     if (d.providerAuthConfig) {
       let authMethod = await db.providerAuthMethod.findFirstOrThrow({
@@ -179,7 +180,8 @@ class providerAuthConfigServiceImpl {
 
       provider,
       providerDeployment: d.providerDeployment,
-      authMethodId: d.authMethodId
+      authMethodId: d.authMethodId,
+      authMethodOid: d.authMethodOid
     });
 
     return authMethod.value;
@@ -326,7 +328,7 @@ class providerAuthConfigServiceImpl {
           solution: d.solution,
           provider: provider,
           providerDeployment,
-          authMethodId: d.providerAuthConfig.authMethodOid
+          authMethodOid: d.providerAuthConfig.authMethodOid
         });
       if (d.input.authMethodId && d.input.authMethodId !== authMethod.id) {
         throw new ServiceError(

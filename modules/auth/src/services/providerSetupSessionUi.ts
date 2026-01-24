@@ -113,7 +113,7 @@ class providerSetupSessionUiServiceImpl {
 
       provider: fullSession.provider,
       providerDeployment: fullSession.deployment ?? undefined,
-      authMethodId: d.providerSetupSession.authMethodOid?.toString()
+      authMethodOid: d.providerSetupSession.authMethodOid ?? undefined
     });
 
     return {

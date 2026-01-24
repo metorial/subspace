@@ -34,7 +34,8 @@ class providerAuthConfigInternalServiceImpl {
     providerDeployment?: ProviderDeployment & {
       lockedVersion: ProviderVersion | null;
     };
-    authMethodId?: string | bigint;
+    authMethodId?: string;
+    authMethodOid?: bigint;
   }) {
     let version = await providerDeploymentInternalService.getCurrentVersionOptional({
       provider: d.provider,
@@ -48,7 +49,7 @@ class providerAuthConfigInternalServiceImpl {
       );
     }
 
-    if (!d.authMethodId) {
+    if (!d.authMethodId && !d.authMethodOid) {
       let authMethod = await db.providerAuthMethod.findFirst({
         where: {
           providerOid: d.provider.oid,
@@ -72,8 +73,9 @@ class providerAuthConfigInternalServiceImpl {
         providerOid: d.provider.oid,
         specificationOid: version.specificationOid,
 
-        ...(typeof d.authMethodId === 'string'
-          ? {
+        ...(d.authMethodOid
+          ? { oid: d.authMethodOid }
+          : {
               OR: [
                 { id: d.authMethodId },
                 { specId: d.authMethodId },
@@ -87,8 +89,7 @@ class providerAuthConfigInternalServiceImpl {
                   ? [{ type: d.authMethodId as any }]
                   : [])
               ]
-            }
-          : { oid: d.authMethodId })
+            })
       }
     });
     if (!authMethod) {
