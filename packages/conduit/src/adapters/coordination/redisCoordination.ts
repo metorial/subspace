@@ -1,6 +1,9 @@
+import { getSentry } from '@lowerdeck/sentry';
 import Redis from 'ioredis';
 import type { RedisConfig } from '../../types/config';
 import type { ICoordinationAdapter } from './coordinationAdapter';
+
+let Sentry = getSentry();
 
 /**
  * Redis-based coordination adapter for production use
@@ -37,6 +40,7 @@ export class RedisCoordination implements ICoordinationAdapter {
     this.cleanupInterval = setInterval(
       () =>
         this.cleanupExpiredReceivers().catch(err => {
+          Sentry.captureException(err);
           console.error('Error in background cleanup:', err);
         }),
       30000

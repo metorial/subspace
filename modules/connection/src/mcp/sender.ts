@@ -1,5 +1,6 @@
 import { Cases } from '@lowerdeck/case';
 import { internalServerError, isServiceError } from '@lowerdeck/error';
+import { getSentry } from '@lowerdeck/sentry';
 import {
   conduitResultToMcpMessage,
   markdownList,
@@ -24,6 +25,8 @@ import { providerToolPresenter } from '../presenter';
 import { upsertParticipant } from '../shared/upsertParticipant';
 import type { McpControlMessageHandler } from './control';
 import type { McpManager } from './manager';
+
+let Sentry = getSentry();
 
 type ID = string | number;
 
@@ -104,6 +107,10 @@ export class McpSender {
       };
     } catch (e) {
       console.error('Error handling MCP message:', e);
+
+      if (!isServiceError(e)) {
+        Sentry.captureException(e);
+      }
 
       let error = isServiceError(e)
         ? e

@@ -1,3 +1,4 @@
+import { getSentry } from '@lowerdeck/sentry';
 import { serialize } from '@lowerdeck/serialize';
 import type { ICoordinationAdapter } from '../adapters/coordination/coordinationAdapter';
 import type { MemoryTransport } from '../adapters/transport/memoryTransport';
@@ -7,6 +8,8 @@ import type { ConduitMessage, TimeoutExtension } from '../types/message';
 import type { ConduitResponse } from '../types/response';
 import { MessageCache } from './messageCache';
 import { OwnershipManager } from './ownershipManager';
+
+let Sentry = getSentry();
 
 export type MessageHandler = (topic: string, payload: unknown) => Promise<unknown>;
 
@@ -140,6 +143,7 @@ export class Receiver {
       // Send response
       await this.sendResponse(message, response);
     } catch (err) {
+      Sentry.captureException(err);
       console.error('Error handling message:', err);
       // If we can't even parse/decode, we can't respond
     }
@@ -170,6 +174,8 @@ export class Receiver {
         processedAt: Date.now()
       };
     } catch (err) {
+      Sentry.captureException(err);
+
       // Remove from tracking
       this.processingMessages.delete(message.messageId);
 
@@ -316,6 +322,7 @@ export class Receiver {
       this.coordination
         .registerReceiver(this.receiverId, this.config.heartbeatTtl)
         .catch(err => {
+          Sentry.captureException(err);
           console.error('Error sending heartbeat:', err);
         });
     }, this.config.heartbeatInterval);

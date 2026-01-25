@@ -2,10 +2,13 @@ import './instrument';
 
 import { apiMux } from '@lowerdeck/api-mux';
 import { rpcMux } from '@lowerdeck/rpc-server';
+import { getSentry } from '@lowerdeck/sentry';
 import { db } from '@metorial-subspace/db';
 import { redis } from 'bun';
 import { subspaceFrontendRPC } from './api/internal';
 import { app } from './api/public';
+
+let Sentry = getSentry();
 
 let server = Bun.serve({
   fetch: apiMux(
@@ -24,6 +27,7 @@ Bun.serve({
       await redis.ping();
       return new Response('OK');
     } catch (e) {
+      Sentry.captureException(e);
       return new Response('Service Unavailable', { status: 503 });
     }
   },

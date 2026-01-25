@@ -1,6 +1,9 @@
+import { getSentry } from '@lowerdeck/sentry';
 import { connect, type NatsConnection, type Subscription } from 'nats';
 import type { NatsConfig } from '../../types/config';
 import type { ITransportAdapter, MessageHandler } from './transportAdapter';
+
+let Sentry = getSentry();
 
 export class NatsTransport implements ITransportAdapter {
   private nc: Promise<NatsConnection>;
@@ -53,6 +56,7 @@ export class NatsTransport implements ITransportAdapter {
           }
         }
       } catch (err) {
+        Sentry.captureException(err);
         console.error(`Subscription error on ${subject}:`, err);
       }
     })();

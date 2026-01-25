@@ -6,6 +6,7 @@ import {
   ServiceError
 } from '@lowerdeck/error';
 import { createLock } from '@lowerdeck/lock';
+import { getSentry } from '@lowerdeck/sentry';
 import type { ConduitInput, ConduitResult } from '@metorial-subspace/connection-utils';
 import { checkToolAccess } from '@metorial-subspace/connection-utils';
 import {
@@ -38,6 +39,8 @@ import { topics } from '../lib/topic';
 import { completeMessage } from '../shared/completeMessage';
 import { createMessage, type CreateMessageProps } from '../shared/createMessage';
 import { upsertParticipant } from '../shared/upsertParticipant';
+
+let Sentry = getSentry();
 
 let instanceLock = createLock({
   name: 'conn/sess/inst/lock',
@@ -421,6 +424,7 @@ export class SenderManager {
           });
         }
       } catch (err) {
+        Sentry.captureException(err);
         console.error('Error sending tool call message:', err);
       }
     })();
