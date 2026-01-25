@@ -6,7 +6,7 @@ import {
   type SessionConnectionState,
   type SessionConnectionStatus,
   type Solution,
-  type Tenant
+  type Environment, type Tenant
 } from '@metorial-subspace/db';
 import {
   normalizeStatusForGet,
@@ -26,7 +26,7 @@ export let sessionConnectionInclude = include;
 class sessionConnectionServiceImpl {
   async listSessionConnections(d: {
     tenant: Tenant;
-    solution: Solution;
+    solution: Solution; environment: Environment;
 
     status?: SessionConnectionStatus[];
     connectionState?: SessionConnectionState[];
@@ -49,6 +49,7 @@ class sessionConnectionServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
 
               isEphemeral: false,
 
@@ -74,7 +75,7 @@ class sessionConnectionServiceImpl {
 
   async getSessionConnectionById(d: {
     tenant: Tenant;
-    solution: Solution;
+    solution: Solution; environment: Environment;
     sessionConnectionId: string;
     allowDeleted?: boolean;
   }) {
@@ -83,6 +84,7 @@ class sessionConnectionServiceImpl {
         id: d.sessionConnectionId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
         ...normalizeStatusForGet(d).hasParent
       },
       include

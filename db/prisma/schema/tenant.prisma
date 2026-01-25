@@ -13,7 +13,6 @@ model Tenant {
   logRetentionInDays Int @default(30)
 
   providers                                Provider[]
-  tenantProviders                          TenantProvider[]
   providerListingGroups                    ProviderListingGroup[]
   providerListings                         ProviderListing[]
   publishers                               Publisher[]
@@ -45,4 +44,44 @@ model Tenant {
   providerRuns                             ProviderRun[]
   sessionErrorGroups                       SessionErrorGroup[]
   toolCalls                                ToolCall[]
+  environmentProviders                     EnvironmentProvider[]
+  environments                             Environment[]
+}
+
+model Environment {
+  oid BigInt @id
+  id  String @unique
+
+  identifier String @unique
+  name       String
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid], onDelete: Cascade)
+
+  createdAt                                DateTime                                  @default(now())
+  providerAuthConfigs                      ProviderAuthConfig[]
+  providerAuthCredentials                  ProviderAuthCredentials[]
+  providerAuthExports                      ProviderAuthExport[]
+  providerAuthImports                      ProviderAuthImport[]
+  providerOAuthSetups                      ProviderOAuthSetup[]
+  providerConfigs                          ProviderConfig[]
+  providerDeployments                      ProviderDeployment[]
+  providerDeploymentConfigPairs            ProviderDeploymentConfigPair[]
+  environmentProviders                     EnvironmentProvider[]
+  providerConfigVaults                     ProviderConfigVault[]
+  providerListingGroups                    ProviderListingGroup[]
+  providerSpecificationChangeNotifications ProviderSpecificationChangeNotification[]
+  sessionConnections                       SessionConnection[]
+  sessionErrorGroups                       SessionErrorGroup[]
+  sessionErrors                            SessionError[]
+  sessionEvents                            SessionEvent[]
+  sessionMessages                          SessionMessage[]
+  toolCalls                                ToolCall[]
+  sessionParticipants                      SessionParticipant[]
+  sessionProviders                         SessionProvider[]
+  providerRuns                             ProviderRun[]
+  sessions                                 Session[]
+  sessionTemplates                         SessionTemplate[]
+  sessionTemplateProviders                 SessionTemplateProvider[]
+  providerSetupSessions                    ProviderSetupSession[]
 }

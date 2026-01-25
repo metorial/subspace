@@ -1,7 +1,7 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, type ProviderRunStatus, type Solution, type Tenant } from '@metorial-subspace/db';
+import { db, type Environment, type ProviderRunStatus, type Solution, type Tenant } from '@metorial-subspace/db';
 import {
   normalizeStatusForGet,
   normalizeStatusForList,
@@ -24,6 +24,7 @@ class providerRunServiceImpl {
   async listProviderRuns(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     status?: ProviderRunStatus[];
     allowDeleted?: boolean;
@@ -48,6 +49,7 @@ class providerRunServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
+              environmentOid: d.environment.oid,
               solutionOid: d.solution.oid,
 
               ...normalizeStatusForList(d).onlyParent,
@@ -73,6 +75,7 @@ class providerRunServiceImpl {
   async getProviderRunById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerRunId: string;
     allowDeleted?: boolean;
   }) {
@@ -81,6 +84,7 @@ class providerRunServiceImpl {
         id: d.providerRunId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
         ...normalizeStatusForGet(d).onlyParent
       },
       include

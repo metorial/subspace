@@ -12,7 +12,6 @@ model Solution {
   providerOAuthSetups                      ProviderOAuthSetup[]
   providerConfigs                          ProviderConfig[]
   providerDeployments                      ProviderDeployment[]
-  tenantProviders                          TenantProvider[]
   providerConfigVaults                     ProviderConfigVault[]
   providerListings                         ProviderListing[]
   providerListingGroups                    ProviderListingGroup[]
@@ -31,4 +30,5 @@ model Solution {
   sessionEvents                            SessionEvent[]
   providerRuns                             ProviderRun[]
   toolCalls                                ToolCall[]
+  environmentProviders                     EnvironmentProvider[]
 }

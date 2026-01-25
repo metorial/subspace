@@ -10,6 +10,7 @@ import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
   db,
+  type Environment,
   getId,
   type Provider,
   type ProviderConfig,
@@ -65,6 +66,7 @@ class providerConfigServiceImpl {
   async listProviderConfigs(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     search?: string;
 
@@ -99,6 +101,7 @@ class providerConfigServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
               isForVault: false,
               isEphemeral: false,
 
@@ -122,6 +125,7 @@ class providerConfigServiceImpl {
   async getProviderConfigById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerConfigId: string;
     allowDeleted?: boolean;
   }) {
@@ -130,6 +134,7 @@ class providerConfigServiceImpl {
         id: d.providerConfigId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
         ...normalizeStatusForGet(d).noParent
       },
       include
@@ -143,6 +148,7 @@ class providerConfigServiceImpl {
   async getProviderConfigSchema(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     provider?: Provider & { defaultVariant: ProviderVariant | null };
     providerVersion?: ProviderVersion;
@@ -187,6 +193,7 @@ class providerConfigServiceImpl {
   async createProviderConfig(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
@@ -253,6 +260,7 @@ class providerConfigServiceImpl {
         tenantOid: d.tenant.oid,
         providerOid: d.provider.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
 
         deploymentOid: d.providerDeployment?.oid
       };
@@ -406,6 +414,7 @@ class providerConfigServiceImpl {
   async ensureDefaultEmptyProviderConfig(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment: ProviderDeployment;
   }) {
@@ -422,7 +431,8 @@ class providerConfigServiceImpl {
             where: {
               oid: d.providerDeployment.oid,
               tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid
+              solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid
             },
             include: {
               provider: true,
@@ -437,6 +447,7 @@ class providerConfigServiceImpl {
           return await this.createProviderConfig({
             tenant: d.tenant,
             solution: d.solution,
+            environment: d.environment,
             provider: d.provider,
             providerDeployment: deployment,
             input: {
@@ -455,6 +466,7 @@ class providerConfigServiceImpl {
   async updateProviderConfig(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerConfig: ProviderConfig;
     input: {
       name?: string;
@@ -470,7 +482,8 @@ class providerConfigServiceImpl {
         where: {
           oid: d.providerConfig.oid,
           tenantOid: d.tenant.oid,
-          solutionOid: d.solution.oid
+          solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid
         },
         data: {
           name: d.input.name ?? d.providerConfig.name,
@@ -491,6 +504,7 @@ class providerConfigServiceImpl {
   private async getDefaultProviderConfig(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerDeployment: ProviderDeployment;
   }) {
     return withTransaction(db =>
@@ -498,6 +512,7 @@ class providerConfigServiceImpl {
         where: {
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid,
           deploymentOid: d.providerDeployment.oid,
           isDefault: true
         },

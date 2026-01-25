@@ -4,6 +4,7 @@ import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
   db,
+  type Environment,
   getId,
   type Session,
   type SessionStatus,
@@ -45,6 +46,7 @@ class sessionServiceImpl {
   async listSessions(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     status?: SessionStatus[];
     allowDeleted?: boolean;
@@ -72,6 +74,7 @@ class sessionServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
 
               isEphemeral: false,
 
@@ -112,6 +115,7 @@ class sessionServiceImpl {
   async getSessionById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     sessionId: string;
     allowDeleted?: boolean;
   }) {
@@ -120,6 +124,7 @@ class sessionServiceImpl {
         id: d.sessionId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
 
         ...normalizeStatusForGet(d).noParent
       },
@@ -133,6 +138,7 @@ class sessionServiceImpl {
   async createSession(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     input: {
       name?: string;
       description?: string;
@@ -155,13 +161,15 @@ class sessionServiceImpl {
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid,
 
           sessionEvents: {
             create: {
               ...getId('sessionEvent'),
               type: 'session_created',
               tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid
+              solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid
             }
           }
         },
@@ -171,6 +179,7 @@ class sessionServiceImpl {
       session.providers = await sessionProviderInputService.createSessionProvidersForInput({
         tenant: d.tenant,
         solution: d.solution,
+        environment: d.environment,
         session,
 
         providers: d.input.providers
@@ -187,6 +196,7 @@ class sessionServiceImpl {
   async updateSession(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     session: Session;
     input: {
       name?: string;
@@ -202,7 +212,8 @@ class sessionServiceImpl {
         where: {
           oid: d.session.oid,
           tenantOid: d.tenant.oid,
-          solutionOid: d.solution.oid
+          solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid
         },
         data: {
           name: d.input.name ?? d.session.name,
@@ -220,7 +231,7 @@ class sessionServiceImpl {
     });
   }
 
-  async archiveSession(d: { tenant: Tenant; solution: Solution; session: Session }) {
+  async archiveSession(d: { tenant: Tenant; solution: Solution; environment: Environment; session: Session }) {
     checkTenant(d, d.session);
     checkDeletedEdit(d.session, 'archive');
 
@@ -238,7 +249,8 @@ class sessionServiceImpl {
         where: {
           oid: d.session.oid,
           tenantOid: d.tenant.oid,
-          solutionOid: d.solution.oid
+          solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid
         },
         data: { status: 'archived' },
         include
@@ -252,7 +264,7 @@ class sessionServiceImpl {
     });
   }
 
-  async deleteSession(d: { tenant: Tenant; solution: Solution; session: Session }) {
+  async deleteSession(d: { tenant: Tenant; solution: Solution; environment: Environment; session: Session }) {
     checkTenant(d, d.session);
     checkDeletedEdit(d.session, 'delete');
 
@@ -271,7 +283,8 @@ class sessionServiceImpl {
         where: {
           oid: d.session.oid,
           tenantOid: d.tenant.oid,
-          solutionOid: d.solution.oid
+          solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid
         },
         data: { status: 'deleted' },
         include

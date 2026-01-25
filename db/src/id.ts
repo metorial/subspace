@@ -4,6 +4,7 @@ import { Worker as SnowflakeId } from 'snowflake-uuid';
 export let ID = createIdGenerator({
   tenant: idType.sorted('ktn'),
   solution: idType.sorted('kso'),
+  environment: idType.sorted('ken'),
   backend: idType.sorted('kbe'),
   brand: idType.sorted('kbr'),
 
@@ -20,7 +21,7 @@ export let ID = createIdGenerator({
   providerCollection: idType.sorted('pco'),
   providerGroup: idType.sorted('pgr'),
 
-  tenantProvider: idType.sorted('ktp'),
+  environmentProvider: idType.sorted('kep'),
 
   providerDeployment: idType.sorted('pde'),
   providerConfig: idType.sorted('pcf'),

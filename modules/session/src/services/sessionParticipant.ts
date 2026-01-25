@@ -5,7 +5,7 @@ import {
   db,
   type SessionParticipantType,
   type Solution,
-  type Tenant
+  type Environment, type Tenant
 } from '@metorial-subspace/db';
 import {
   resolveSessionConnections,
@@ -19,7 +19,7 @@ export let sessionParticipantInclude = include;
 class sessionParticipantServiceImpl {
   async listSessionParticipants(d: {
     tenant: Tenant;
-    solution: Solution;
+    solution: Solution; environment: Environment;
 
     types?: SessionParticipantType[];
 
@@ -68,7 +68,7 @@ class sessionParticipantServiceImpl {
 
   async getSessionParticipantById(d: {
     tenant: Tenant;
-    solution: Solution;
+    solution: Solution; environment: Environment;
     sessionParticipantId: string;
   }) {
     let sessionParticipant = await db.sessionParticipant.findFirst({

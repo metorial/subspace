@@ -7,7 +7,7 @@ import {
   type SessionProvider,
   type SessionProviderStatus,
   type Solution,
-  type Tenant
+  type Environment, type Tenant
 } from '@metorial-subspace/db';
 import {
   checkDeletedEdit,
@@ -42,7 +42,7 @@ export let sessionProviderInclude = include;
 class sessionProviderServiceImpl {
   async listSessionProviders(d: {
     tenant: Tenant;
-    solution: Solution;
+    solution: Solution; environment: Environment;
 
     status?: SessionProviderStatus[];
     allowDeleted?: boolean;
@@ -70,6 +70,7 @@ class sessionProviderServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
 
               ...normalizeStatusForList(d).noParent,
 
@@ -91,7 +92,7 @@ class sessionProviderServiceImpl {
 
   async getSessionProviderById(d: {
     tenant: Tenant;
-    solution: Solution;
+    solution: Solution; environment: Environment;
     sessionProviderId: string;
 
     allowDeleted?: boolean;
@@ -101,6 +102,7 @@ class sessionProviderServiceImpl {
         id: d.sessionProviderId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
         ...normalizeStatusForGet(d).noParent
       },
       include
@@ -113,7 +115,7 @@ class sessionProviderServiceImpl {
 
   async createSessionProvider(d: {
     tenant: Tenant;
-    solution: Solution;
+    solution: Solution; environment: Environment;
 
     session: Session;
     input: SessionProviderInput;
@@ -123,6 +125,7 @@ class sessionProviderServiceImpl {
     let [res] = await sessionProviderInputService.createSessionProvidersForInput({
       tenant: d.tenant,
       solution: d.solution,
+      environment: d.environment,
 
       session: d.session,
       providers: [d.input]
@@ -133,7 +136,7 @@ class sessionProviderServiceImpl {
 
   async updateSessionProvider(d: {
     tenant: Tenant;
-    solution: Solution;
+    solution: Solution; environment: Environment;
     sessionProvider: SessionProvider;
     input: {
       toolFilters?: SessionProviderInputToolFilters;
@@ -162,7 +165,7 @@ class sessionProviderServiceImpl {
 
   async archiveSessionProvider(d: {
     tenant: Tenant;
-    solution: Solution;
+    solution: Solution; environment: Environment;
     sessionProvider: SessionProvider;
   }) {
     checkTenant(d, d.sessionProvider);

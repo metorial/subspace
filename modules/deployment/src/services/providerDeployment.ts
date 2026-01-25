@@ -5,6 +5,7 @@ import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
   db,
+  type Environment,
   getId,
   ID,
   type Provider,
@@ -52,6 +53,7 @@ class providerDeploymentServiceImpl {
   async listProviderDeployments(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     search?: string;
 
@@ -82,6 +84,7 @@ class providerDeploymentServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
               isEphemeral: false,
 
               ...normalizeStatusForList(d).noParent,
@@ -102,6 +105,7 @@ class providerDeploymentServiceImpl {
   async getProviderDeploymentById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerDeploymentId: string;
     allowDeleted?: boolean;
   }) {
@@ -110,6 +114,7 @@ class providerDeploymentServiceImpl {
         id: d.providerDeploymentId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
 
         ...normalizeStatusForGet(d).noParent
       },
@@ -124,6 +129,7 @@ class providerDeploymentServiceImpl {
   async createProviderDeployment(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     lockedVersion?: ProviderVersion;
     input: {
@@ -159,11 +165,11 @@ class providerDeploymentServiceImpl {
         throw new Error('Provider has no default variant');
       }
 
-      let tenantProvider = await db.tenantProvider.findFirst({
+      let environmentProvider = await db.environmentProvider.findFirst({
         where: { tenantOid: d.tenant.oid, providerOid: d.provider.oid }
       });
-      if (!tenantProvider) {
-        await db.tenantProvider.upsert({
+      if (!environmentProvider) {
+        await db.environmentProvider.upsert({
           where: {
             tenantOid_providerOid: {
               tenantOid: d.tenant.oid,
@@ -172,9 +178,10 @@ class providerDeploymentServiceImpl {
           },
           create: {
             oid: snowflake.nextId(),
-            id: `${ID.idPrefixes.tenantProvider}_1${d.tenant.oid.toString(36).padStart(16, '0')}${d.provider.oid.toString(36).padStart(16, '0')}`,
+            id: `${ID.idPrefixes.environmentProvider}_1${d.tenant.oid.toString(36).padStart(16, '0')}${d.environment.oid.toString(36).padStart(16, '0')}${d.provider.oid.toString(36).padStart(16, '0')}`,
             tenantOid: d.tenant.oid,
             solutionOid: d.solution.oid,
+            environmentOid: d.environment.oid,
             providerOid: d.provider.oid
           },
           update: {}
@@ -208,6 +215,7 @@ class providerDeploymentServiceImpl {
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid,
           providerOid: d.provider.oid,
           providerVariantOid: d.provider.defaultVariant.oid,
           lockedVersionOid: d.lockedVersion?.oid,
@@ -227,6 +235,7 @@ class providerDeploymentServiceImpl {
           providerDeployment,
           provider: d.provider,
           solution: d.solution,
+          environment: d.environment,
           input: {
             name: `Default Config for ${d.input.name}`,
             isEphemeral: d.input.isEphemeral,
@@ -264,6 +273,7 @@ class providerDeploymentServiceImpl {
   async ensureDefaultProviderDeployment(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
   }) {
     let currentDefault = await this.getDefaultProviderDeployment(d);
@@ -276,6 +286,7 @@ class providerDeploymentServiceImpl {
       return await this.createProviderDeployment({
         tenant: d.tenant,
         solution: d.solution,
+        environment: d.environment,
         provider: d.provider,
         input: {
           name: `Default Deployment for ${d.provider.name}`,
@@ -290,6 +301,7 @@ class providerDeploymentServiceImpl {
   async updateProviderDeployment(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerDeployment: ProviderDeployment;
     input: {
       name?: string;
@@ -304,7 +316,8 @@ class providerDeploymentServiceImpl {
         where: {
           oid: d.providerDeployment.oid,
           tenantOid: d.tenant.oid,
-          solutionOid: d.solution.oid
+          solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid
         },
         data: {
           name: d.input.name ?? d.providerDeployment.name,
@@ -325,6 +338,7 @@ class providerDeploymentServiceImpl {
   private async getDefaultProviderDeployment(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider;
   }) {
     return await withTransaction(
@@ -333,6 +347,7 @@ class providerDeploymentServiceImpl {
           where: {
             tenantOid: d.tenant.oid,
             solutionOid: d.solution.oid,
+            environmentOid: d.environment.oid,
             providerOid: d.provider.oid,
             isDefault: true
           },
