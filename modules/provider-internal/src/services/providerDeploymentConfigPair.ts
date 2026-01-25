@@ -4,7 +4,7 @@ import {
   addAfterTransactionHook,
   db,
   getId,
-  ProviderAuthConfig,
+  type ProviderAuthConfig,
   type ProviderConfig,
   type ProviderDeployment,
   type ProviderVersion,

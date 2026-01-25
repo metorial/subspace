@@ -21,6 +21,10 @@ export abstract class IProviderToolInvocation extends IProviderFunctionality {
   abstract createToolInvocation(
     data: ToolInvocationCreateParam
   ): Promise<ToolInvocationCreateRes>;
+
+  abstract getToolInvocationLogs(
+    data: ToolInvocationLogsParam
+  ): Promise<ToolInvocationLogsRes>;
 }
 
 export interface ProviderRunCreateParam {
@@ -69,4 +73,18 @@ export interface ToolInvocationCreateRes {
           message: string;
         };
       };
+}
+
+export interface ToolInvocationLogsParam {
+  tenant: Tenant;
+  slateToolCallId: string;
+}
+
+export interface ToolInvocationLog {
+  timestamp: number;
+  message: string;
+}
+
+export interface ToolInvocationLogsRes {
+  logs: ToolInvocationLog[];
 }

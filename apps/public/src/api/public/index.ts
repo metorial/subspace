@@ -1,4 +1,3 @@
-import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { createHono } from '@lowerdeck/hono';
 import path from 'path';
 import { oauthSetupApp } from './oauthSetup';
@@ -27,14 +26,14 @@ export let app = createHono()
   })
   .route('/oauth-setup', oauthSetupApp)
   .route('/setup-session', setupSessionApp)
-  .get('/:key*', async c => {
+  .get('/assets/:key*', async c => {
     let key = c.req.param('key*');
 
     let targetPath = path.resolve(assetsDir, key);
     if (!targetPath.startsWith(assetsDir)) return c.text('Forbidden', 403);
 
     let bunFile = Bun.file(targetPath);
-    if (!(await bunFile.exists())) throw new ServiceError(notFoundError('endpoint'));
+    if (!(await bunFile.exists())) return c.text('Not Found', 404);
 
     return c.body(await bunFile.arrayBuffer(), {
       headers: {

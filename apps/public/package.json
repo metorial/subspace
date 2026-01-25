@@ -8,6 +8,7 @@
     "start:dev:vite": "bun run dev",
     "start:dev": "bun run start:dev:server",
     "dev": "vite build --watch ./frontend",
+    "dev:hmr": "vite ./frontend",
     "start": "bun ./src/server.ts",
     "build": "vite build ./frontend"
   },
@@ -18,6 +19,12 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@aws-sdk/client-cloudwatch-logs": "^3.957.0",
+    "@aws-sdk/client-iam": "^3.957.0",
+    "@aws-sdk/client-lambda": "^3.958.0",
+    "@hono/zod-validator": "^0.7.6",
+    "@hookform/resolvers": "^5.2.2",
+    "@lowerdeck/api-key": "^1.0.1",
     "@lowerdeck/api-mux": "^1.0.1",
     "@lowerdeck/error": "^1.0.10",
     "@lowerdeck/hono": "^1.0.6",
@@ -30,9 +37,15 @@
     "@metorial-subspace/presenters": "^1.0.0",
     "@sentry/bun": "^10.34.0",
     "@vitejs/plugin-react": "^5.1.2",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "react-router-dom": "^7.12.0",
-    "vite": "^5.4.1"
+    "semver": "^7.7.3",
+    "snowflake-uuid": "^1.0.0",
+    "styled-components": "^6.1.13",
+    "unzipper": "^0.12.3",
+    "vite": "^5.4.1",
+    "yaml": "^2.8.2",
+    "yup": "^1.7.1"
   }
 }

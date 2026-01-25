@@ -8,7 +8,7 @@ import {
   type Provider,
   type ProviderAuthConfigSource,
   type ProviderAuthConfigType,
-  ProviderAuthCredentials,
+  type ProviderAuthCredentials,
   type ProviderAuthImport,
   type ProviderAuthMethod,
   ProviderAuthMethodType,
@@ -34,7 +34,7 @@ class providerAuthConfigInternalServiceImpl {
     providerDeployment?: ProviderDeployment & {
       lockedVersion: ProviderVersion | null;
     };
-    authMethodId?: string | bigint;
+    authMethodId?: string;
   }) {
     let version = await providerDeploymentInternalService.getCurrentVersionOptional({
       provider: d.provider,
@@ -71,24 +71,16 @@ class providerAuthConfigInternalServiceImpl {
       where: {
         providerOid: d.provider.oid,
         specificationOid: version.specificationOid,
-
-        ...(typeof d.authMethodId === 'string'
-          ? {
-              OR: [
-                { id: d.authMethodId },
-                { specId: d.authMethodId },
-                { specUniqueIdentifier: d.authMethodId },
-                { key: d.authMethodId },
-                { callableId: d.authMethodId },
-
-                ...(ProviderAuthMethodType[
-                  d.authMethodId as keyof typeof ProviderAuthMethodType
-                ]
-                  ? [{ type: d.authMethodId as any }]
-                  : [])
-              ]
-            }
-          : { oid: d.authMethodId })
+        OR: [
+          { id: d.authMethodId },
+          { specId: d.authMethodId },
+          { specUniqueIdentifier: d.authMethodId },
+          { key: d.authMethodId },
+          { callableId: d.authMethodId },
+          ...(ProviderAuthMethodType[d.authMethodId as keyof typeof ProviderAuthMethodType]
+            ? [{ type: d.authMethodId as any }]
+            : [])
+        ]
       }
     });
     if (!authMethod) {

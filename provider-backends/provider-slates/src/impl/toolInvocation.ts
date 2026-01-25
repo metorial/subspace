@@ -3,7 +3,9 @@ import type {
   ProviderRunCreateParam,
   ProviderRunCreateRes,
   ToolInvocationCreateParam,
-  ToolInvocationCreateRes
+  ToolInvocationCreateRes,
+  ToolInvocationLogsParam,
+  ToolInvocationLogsRes
 } from '@metorial-subspace/provider-utils';
 import { IProviderToolInvocation } from '@metorial-subspace/provider-utils';
 import { getTenantForSlates, slates } from '../client';
@@ -102,6 +104,24 @@ export class ProviderToolInvocation extends IProviderToolInvocation {
         res.status === 'error'
           ? { type: 'error', error: res.error }
           : { type: 'success', data: res.output }
+    };
+  }
+
+  override async getToolInvocationLogs(
+    data: ToolInvocationLogsParam
+  ): Promise<ToolInvocationLogsRes> {
+    let tenant = await getTenantForSlates(data.tenant);
+
+    let res = await slates.slateSessionToolCall.getLogs({
+      tenantId: tenant.id,
+      slateSessionToolCallId: data.slateToolCallId
+    });
+
+    return {
+      logs: res.invocation.logs.map(log => ({
+        timestamp: log.timestamp,
+        message: log.message
+      }))
     };
   }
 }

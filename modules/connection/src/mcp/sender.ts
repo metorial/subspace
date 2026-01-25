@@ -208,7 +208,7 @@ export class McpSender {
       case 'tools/call': {
         let toolCall = mcpValidate(id, CallToolRequestSchema, msg);
         if (!toolCall.success) return { mcp: toolCall.error, store: true };
-        return this.handleToolCallMessage(id, toolCall.data as any, opts);
+        return this.handleToolCallMessage(id, { ...toolCall.data, id }, opts);
       }
     }
 

@@ -40,7 +40,7 @@ export interface ProviderAuthImportParams {
     providerVariant: ProviderVariant;
     lockedVersion: ProviderVersion | null;
   };
-  providerAuthConfig?: ProviderAuthConfig;
+  providerAuthConfig?: ProviderAuthConfig & { authMethod: { id: string } };
 }
 
 class providerAuthImportServiceImpl {
