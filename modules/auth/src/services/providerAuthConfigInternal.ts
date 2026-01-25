@@ -35,7 +35,6 @@ class providerAuthConfigInternalServiceImpl {
       lockedVersion: ProviderVersion | null;
     };
     authMethodId?: string;
-    authMethodOid?: bigint;
   }) {
     let version = await providerDeploymentInternalService.getCurrentVersionOptional({
       provider: d.provider,
@@ -49,7 +48,7 @@ class providerAuthConfigInternalServiceImpl {
       );
     }
 
-    if (!d.authMethodId && !d.authMethodOid) {
+    if (!d.authMethodId) {
       let authMethod = await db.providerAuthMethod.findFirst({
         where: {
           providerOid: d.provider.oid,
@@ -72,24 +71,16 @@ class providerAuthConfigInternalServiceImpl {
       where: {
         providerOid: d.provider.oid,
         specificationOid: version.specificationOid,
-
-        ...(d.authMethodOid
-          ? { oid: d.authMethodOid }
-          : {
-              OR: [
-                { id: d.authMethodId },
-                { specId: d.authMethodId },
-                { specUniqueIdentifier: d.authMethodId },
-                { key: d.authMethodId },
-                { callableId: d.authMethodId },
-
-                ...(ProviderAuthMethodType[
-                  d.authMethodId as keyof typeof ProviderAuthMethodType
-                ]
-                  ? [{ type: d.authMethodId as any }]
-                  : [])
-              ]
-            })
+        OR: [
+          { id: d.authMethodId },
+          { specId: d.authMethodId },
+          { specUniqueIdentifier: d.authMethodId },
+          { key: d.authMethodId },
+          { callableId: d.authMethodId },
+          ...(ProviderAuthMethodType[d.authMethodId as keyof typeof ProviderAuthMethodType]
+            ? [{ type: d.authMethodId as any }]
+            : [])
+        ]
       }
     });
     if (!authMethod) {

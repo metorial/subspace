@@ -154,82 +154,80 @@ export let SetupSessionFlow = ({ session, brand, clientSecret }: SetupSessionFlo
     return stepLabels.length;
   }, [currentStep, determineStep, stepLabels]);
 
-  let renderContent = () => {
-    let activeLoaders: Record<string, typeof authSchemaLoader> = {};
-    if (needsAuthConfig) activeLoaders.authSchema = authSchemaLoader;
-    if (needsConfig) activeLoaders.configSchema = configSchemaLoader;
+  let activeLoaders: Record<string, typeof authSchemaLoader> = {};
+  if (needsAuthConfig) activeLoaders.authSchema = authSchemaLoader;
+  if (needsConfig) activeLoaders.configSchema = configSchemaLoader;
 
-    return renderWithLoader(activeLoaders, {
-      spaceTop: 48,
-      spaceBottom: 48,
-      error: (err: Error) => (
-        <Flex direction="column" align="center" gap={16} style={{ padding: '24px 0' }}>
-          <Error>{err.message}</Error>
-          <Button onClick={() => window.location.reload()} variant="outline" size="2">
-            Try Again
-          </Button>
-        </Flex>
-      )
-    })(() => {
-      let step = currentStep ?? determineStep();
+  let innerContent = renderWithLoader(activeLoaders, {
+    spaceTop: 48,
+    spaceBottom: 48,
+    error: (err: Error) => (
+      <Flex direction="column" align="center" gap={16} style={{ padding: '24px 0' }}>
+        <Error>{err.message}</Error>
+        <Button onClick={() => window.location.reload()} variant="outline" size="2">
+          Try Again
+        </Button>
+      </Flex>
+    )
+  })(() => {
+    let step = currentStep ?? determineStep();
 
-      if (step === 'auth_config' && authConfigSchema) {
+    if (step === 'auth_config' && authConfigSchema) {
+      return (
+        <AuthConfigStep
+          schema={authConfigSchema}
+          onSubmit={authConfigMutation.mutate}
+          isSubmitting={authConfigMutation.isLoading}
+          isMetorialElement={session.uiMode === 'metorial_elements'}
+        />
+      );
+    }
+
+    if (step === 'oauth_loading') {
+      if (oauthError) {
         return (
-          <AuthConfigStep
-            schema={authConfigSchema}
-            onSubmit={authConfigMutation.mutate}
-            isSubmitting={authConfigMutation.isLoading}
-            isMetorialElement={session.uiMode === 'metorial_elements'}
-          />
-        );
-      }
-
-      if (step === 'oauth_loading') {
-        if (oauthError) {
-          return (
-            <Flex direction="column" align="center" gap={16} style={{ padding: '24px 0' }}>
-              <Error>{oauthError}</Error>
-              <Button onClick={() => window.location.reload()} variant="outline" size="2">
-                Try Again
-              </Button>
-            </Flex>
-          );
-        }
-        return (
-          <Flex direction="column" align="center" gap={16} style={{ padding: '48px 0' }}>
-            <Spinner size="3" />
-            <Text>Preparing authentication...</Text>
+          <Flex direction="column" align="center" gap={16} style={{ padding: '24px 0' }}>
+            <Error>{oauthError}</Error>
+            <Button onClick={() => window.location.reload()} variant="outline" size="2">
+              Try Again
+            </Button>
           </Flex>
         );
       }
+      return (
+        <Flex direction="column" align="center" gap={16} style={{ padding: '48px 0' }}>
+          <Spinner size="3" />
+          <Text>Preparing authentication...</Text>
+        </Flex>
+      );
+    }
 
-      if (step === 'oauth_redirect' && oauthSetup) {
-        return (
-          <OAuthRedirectStep
-            oauthSetup={oauthSetup}
-            isMetorialElement={session.uiMode === 'metorial_elements'}
-          />
-        );
-      }
+    if (step === 'oauth_redirect' && oauthSetup) {
+      return (
+        <OAuthRedirectStep
+          oauthSetup={oauthSetup}
+          isMetorialElement={session.uiMode === 'metorial_elements'}
+        />
+      );
+    }
 
-      if (step === 'config' && configSchema) {
-        return (
-          <ConfigStep
-            schema={configSchema}
-            onSubmit={configMutation.mutate}
-            isSubmitting={configMutation.isLoading}
-            isMetorialElement={session.uiMode === 'metorial_elements'}
-          />
-        );
-      }
+    if (step === 'config' && configSchema) {
+      return (
+        <ConfigStep
+          schema={configSchema}
+          onSubmit={configMutation.mutate}
+          isSubmitting={configMutation.isLoading}
+          isMetorialElement={session.uiMode === 'metorial_elements'}
+        />
+      );
+    }
 
-      if (step === 'completed') {
-        return <CompletedStep redirectUrl={session.redirectUrl} />;
-      }
+    if (step === 'completed') {
+      return <CompletedStep redirectUrl={session.redirectUrl} />;
+    }
 
-      return null;
-    });
-  };
+    return null;
+  });
 
   let isCompleted = (currentStep ?? determineStep()) === 'completed';
 
@@ -242,7 +240,7 @@ export let SetupSessionFlow = ({ session, brand, clientSecret }: SetupSessionFlo
         currentStep={currentStepIndex}
         stepLabels={stepLabels}
       >
-        {renderContent()}
+        {innerContent}
       </MetorialElementsLayout>
     );
   }
@@ -253,7 +251,7 @@ export let SetupSessionFlow = ({ session, brand, clientSecret }: SetupSessionFlo
       totalSteps={stepLabels.length}
       stepLabels={stepLabels}
     >
-      {renderContent()}
+      {innerContent}
     </DashboardEmbeddableLayout>
   );
 };

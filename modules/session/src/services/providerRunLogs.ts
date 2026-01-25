@@ -18,7 +18,10 @@ class providerRunLogsServiceImpl {
         providerVersion: true,
         slateSessions: {
           include: {
-            slateToolInvocations: true
+            slateToolInvocations: {
+              take: 100,
+              orderBy: { oid: 'desc' }
+            }
           }
         }
       }

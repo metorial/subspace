@@ -91,6 +91,7 @@ class providerSetupSessionUiServiceImpl {
         tenant: true,
         solution: true,
         provider: { include: { defaultVariant: true } },
+        authMethod: true,
         deployment: {
           include: {
             provider: true,
@@ -113,7 +114,7 @@ class providerSetupSessionUiServiceImpl {
 
       provider: fullSession.provider,
       providerDeployment: fullSession.deployment ?? undefined,
-      authMethodOid: d.providerSetupSession.authMethodOid ?? undefined
+      authMethodId: fullSession.authMethod?.id
     });
 
     return {
