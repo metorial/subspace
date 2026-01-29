@@ -13,11 +13,12 @@ export let useValidation = <Target extends keyof ValidationTargets, T extends z.
       return c.json(
         validationError({
           entity: 'query',
-          errors: error?.issues.map(e => ({
-            code: e.code,
-            message: e.message,
-            path: e.path.map(p => p.toString())
-          })) ?? []
+          errors:
+            error?.issues.map(e => ({
+              code: e.code,
+              message: e.message,
+              path: e.path.map(p => p.toString())
+            })) ?? []
         }).toResponse(),
         400
       ) as never;
