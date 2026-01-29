@@ -18,6 +18,7 @@ export let providerSetupSessionApp = tenantApp.use(async ctx => {
   let providerSetupSession = await providerSetupSessionService.getProviderSetupSessionById({
     providerSetupSessionId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
@@ -32,6 +33,7 @@ export let providerSetupSessionController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           status: v.optional(
             v.array(v.enumOf(['archived', 'failed', 'completed', 'expired', 'pending']))
@@ -50,6 +52,7 @@ export let providerSetupSessionController = app.controller({
     .do(async ctx => {
       let paginator = await providerSetupSessionService.listProviderSetupSessions({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         status: ctx.input.status,
@@ -73,6 +76,7 @@ export let providerSetupSessionController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerSetupSessionId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })
@@ -84,6 +88,7 @@ export let providerSetupSessionController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         name: v.string(),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
@@ -110,12 +115,14 @@ export let providerSetupSessionController = app.controller({
       let provider = await providerService.getProviderById({
         providerId: ctx.input.providerId,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution
       });
 
       let providerDeployment = ctx.input.providerDeploymentId
         ? await providerDeploymentService.getProviderDeploymentById({
             tenant: ctx.tenant,
+            environment: ctx.environment,
             solution: ctx.solution,
             providerDeploymentId: ctx.input.providerDeploymentId
           })
@@ -125,6 +132,7 @@ export let providerSetupSessionController = app.controller({
         ? await providerAuthCredentialsService.getProviderAuthCredentialsById({
             providerAuthCredentialsId: ctx.input.providerAuthCredentialsId,
             tenant: ctx.tenant,
+            environment: ctx.environment,
             solution: ctx.solution
           })
         : undefined;
@@ -135,6 +143,7 @@ export let providerSetupSessionController = app.controller({
 
       let providerSetupSession = await providerSetupSessionService.createProviderSetupSession({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         provider,
@@ -171,6 +180,7 @@ export let providerSetupSessionController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerSetupSessionId: v.string(),
         allowDeleted: v.optional(v.boolean()),
 
@@ -183,6 +193,7 @@ export let providerSetupSessionController = app.controller({
       let providerSetupSession = await providerSetupSessionService.updateProviderSetupSession({
         providerSetupSession: ctx.providerSetupSession,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         input: {

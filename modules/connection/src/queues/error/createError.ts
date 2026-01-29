@@ -54,6 +54,7 @@ export let createErrorQueueProcessor = createErrorQueue.process(async data => {
         code: error.code,
         message: error.message,
         tenantOid: error.session.tenantOid,
+        environmentOid: error.session.environmentOid,
         providerOid: error.providerRun?.providerOid,
         firstOccurrenceOid: error.oid
       },
@@ -94,6 +95,7 @@ export let createErrorQueueProcessor = createErrorQueue.process(async data => {
       providerRunOid: error.providerRunOid,
       errorOid: error.oid,
       tenantOid: error.tenantOid,
+      environmentOid: error.environmentOid,
       solutionOid: error.solutionOid
     }
   });

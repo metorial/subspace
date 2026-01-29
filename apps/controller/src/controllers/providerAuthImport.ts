@@ -1,6 +1,6 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import type { Solution, Tenant } from '@metorial-subspace/db';
+import type { Environment, Solution, Tenant } from '@metorial-subspace/db';
 import {
   providerAuthConfigService,
   providerAuthImportService
@@ -18,6 +18,7 @@ export let providerAuthImportApp = tenantApp.use(async ctx => {
   let providerAuthImport = await providerAuthImportService.getProviderAuthImportById({
     providerAuthImportId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
@@ -28,6 +29,7 @@ export let providerAuthImportApp = tenantApp.use(async ctx => {
 let getCreateData = async (d: {
   tenant: Tenant;
   solution: Solution;
+  environment: Environment;
   providerId?: string;
   providerDeploymentId?: string;
   providerAuthConfigId?: string;
@@ -36,13 +38,15 @@ let getCreateData = async (d: {
     ? await providerService.getProviderById({
         providerId: d.providerId,
         tenant: d.tenant,
-        solution: d.solution
+        solution: d.solution,
+        environment: d.environment
       })
     : undefined;
   let providerDeployment = d.providerDeploymentId
     ? await providerDeploymentService.getProviderDeploymentById({
         tenant: d.tenant,
         solution: d.solution,
+        environment: d.environment,
         providerDeploymentId: d.providerDeploymentId
       })
     : undefined;
@@ -50,6 +54,7 @@ let getCreateData = async (d: {
     ? await providerAuthConfigService.getProviderAuthConfigById({
         tenant: d.tenant,
         solution: d.solution,
+        environment: d.environment,
         providerAuthConfigId: d.providerAuthConfigId
       })
     : undefined;
@@ -64,6 +69,7 @@ export let providerAuthImportController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           allowDeleted: v.optional(v.boolean()),
 
@@ -78,6 +84,7 @@ export let providerAuthImportController = app.controller({
     .do(async ctx => {
       let paginator = await providerAuthImportService.listProviderAuthImports({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         allowDeleted: ctx.input.allowDeleted,
@@ -99,6 +106,7 @@ export let providerAuthImportController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerId: v.optional(v.string()),
         providerDeploymentId: v.optional(v.string()),
         providerAuthConfigId: v.optional(v.string()),
@@ -108,6 +116,7 @@ export let providerAuthImportController = app.controller({
     .do(async ctx => {
       let { provider, providerDeployment, providerAuthConfig } = await getCreateData({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
         providerId: ctx.input.providerId,
         providerDeploymentId: ctx.input.providerDeploymentId,
@@ -116,6 +125,7 @@ export let providerAuthImportController = app.controller({
 
       let schema = await providerAuthImportService.getProviderAuthImportSchema({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         provider,
@@ -137,6 +147,7 @@ export let providerAuthImportController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerAuthImportId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })
@@ -148,6 +159,7 @@ export let providerAuthImportController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerId: v.optional(v.string()),
         providerDeploymentId: v.optional(v.string()),
         providerAuthConfigId: v.optional(v.string()),
@@ -165,6 +177,7 @@ export let providerAuthImportController = app.controller({
     .do(async ctx => {
       let { provider, providerDeployment, providerAuthConfig } = await getCreateData({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
         providerId: ctx.input.providerId,
         providerDeploymentId: ctx.input.providerDeploymentId,
@@ -173,6 +186,7 @@ export let providerAuthImportController = app.controller({
 
       let providerAuthImport = await providerAuthImportService.createProviderAuthImport({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         provider,

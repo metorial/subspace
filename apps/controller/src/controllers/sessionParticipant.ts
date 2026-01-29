@@ -12,6 +12,7 @@ export let sessionParticipantApp = tenantApp.use(async ctx => {
   let sessionParticipant = await sessionParticipantService.getSessionParticipantById({
     sessionParticipantId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution
   });
 
@@ -25,6 +26,7 @@ export let sessionParticipantController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           types: v.optional(
             v.array(
@@ -49,6 +51,7 @@ export let sessionParticipantController = app.controller({
     .do(async ctx => {
       let paginator = await sessionParticipantService.listSessionParticipants({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         types: ctx.input.types,
@@ -69,6 +72,7 @@ export let sessionParticipantController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         sessionParticipantId: v.string()
       })
     )

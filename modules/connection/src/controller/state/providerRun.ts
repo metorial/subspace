@@ -17,7 +17,8 @@ export let createProviderRun = async ({
       connectionOid: connection.oid,
       sessionProviderOid: instance.sessionProvider.oid,
       tenantOid: session.tenantOid,
-      solutionOid: session.solutionOid
+      solutionOid: session.solutionOid,
+      environmentOid: session.environmentOid
     }
   });
 
@@ -30,7 +31,8 @@ export let createProviderRun = async ({
         connectionOid: connection.oid,
         providerRunOid: providerRun.oid,
         tenantOid: session.tenantOid,
-        solutionOid: session.solutionOid
+        solutionOid: session.solutionOid,
+        environmentOid: session.environmentOid
       }
     })
     .catch(() => {});

@@ -12,6 +12,7 @@ export let sessionProviderApp = tenantApp.use(async ctx => {
   let sessionProvider = await sessionProviderService.getSessionProviderById({
     sessionProviderId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
@@ -34,6 +35,7 @@ export let sessionProviderController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           allowDeleted: v.optional(v.boolean()),
           status: v.optional(v.array(v.enumOf(['active', 'archived']))),
@@ -51,6 +53,7 @@ export let sessionProviderController = app.controller({
     .do(async ctx => {
       let paginator = await sessionProviderService.listSessionProviders({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution
       });
 
@@ -64,6 +67,7 @@ export let sessionProviderController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         sessionProviderId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })
@@ -75,6 +79,7 @@ export let sessionProviderController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
 
         sessionId: v.string(),
 
@@ -88,12 +93,14 @@ export let sessionProviderController = app.controller({
     .do(async ctx => {
       let session = await sessionService.getSessionById({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
         sessionId: ctx.input.sessionId
       });
 
       let sessionProvider = await sessionProviderService.createSessionProvider({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
         session,
 
@@ -114,6 +121,7 @@ export let sessionProviderController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         sessionProviderId: v.string(),
         allowDeleted: v.optional(v.boolean()),
 
@@ -124,6 +132,7 @@ export let sessionProviderController = app.controller({
       let sessionProvider = await sessionProviderService.updateSessionProvider({
         sessionProvider: ctx.sessionProvider,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         input: {
@@ -139,6 +148,7 @@ export let sessionProviderController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         sessionProviderId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })
@@ -147,6 +157,7 @@ export let sessionProviderController = app.controller({
       let sessionProvider = await sessionProviderService.archiveSessionProvider({
         sessionProvider: ctx.sessionProvider,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution
       });
 

@@ -4,6 +4,7 @@ import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
   db,
+  Environment,
   getId,
   type Provider,
   type ProviderAuthConfig,
@@ -46,6 +47,7 @@ class providerAuthConfigServiceImpl {
   async listProviderAuthConfigs(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     status?: ProviderAuthConfigStatus[];
     allowDeleted?: boolean;
@@ -80,6 +82,7 @@ class providerAuthConfigServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
               isEphemeral: false,
 
               ...normalizeStatusForList(d).hasParent,
@@ -102,6 +105,7 @@ class providerAuthConfigServiceImpl {
   async getProviderAuthConfigById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerAuthConfigId: string;
     allowDeleted?: boolean;
   }) {
@@ -109,6 +113,7 @@ class providerAuthConfigServiceImpl {
       where: {
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
 
         OR: [
           { id: d.providerAuthConfigId },
@@ -128,6 +133,7 @@ class providerAuthConfigServiceImpl {
   async getProviderAuthConfigSchema(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     provider?: Provider & { defaultVariant: ProviderVariant | null };
     providerVersion?: ProviderVersion;
@@ -176,6 +182,7 @@ class providerAuthConfigServiceImpl {
     let { authMethod } = await providerAuthConfigInternalService.getVersionAndAuthMethod({
       tenant: d.tenant,
       solution: d.solution,
+      environment: d.environment,
 
       provider,
       providerDeployment: d.providerDeployment,
@@ -188,6 +195,7 @@ class providerAuthConfigServiceImpl {
   async createProviderAuthConfig(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
@@ -241,6 +249,7 @@ class providerAuthConfigServiceImpl {
         await providerAuthConfigInternalService.getVersionAndAuthMethod({
           tenant: d.tenant,
           solution: d.solution,
+          environment: d.environment,
           provider: d.provider,
           providerDeployment: d.providerDeployment,
           authMethodId: d.input.authMethodId
@@ -250,6 +259,7 @@ class providerAuthConfigServiceImpl {
         {
           tenant: d.tenant,
           solution: d.solution,
+          environment: d.environment,
 
           provider: d.provider,
           providerVersion: version,
@@ -262,6 +272,7 @@ class providerAuthConfigServiceImpl {
       return await providerAuthConfigInternalService.createProviderAuthConfigInternal({
         tenant: d.tenant,
         solution: d.solution,
+        environment: d.environment,
         provider: d.provider,
         providerDeployment: d.providerDeployment,
         source: d.source,
@@ -279,6 +290,7 @@ class providerAuthConfigServiceImpl {
   async updateProviderAuthConfig(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerAuthConfig: ProviderAuthConfig & { authMethod: { id: string } };
 
     input: {
@@ -324,6 +336,7 @@ class providerAuthConfigServiceImpl {
         await providerAuthConfigInternalService.getVersionAndAuthMethod({
           tenant: d.tenant,
           solution: d.solution,
+          environment: d.environment,
           provider: provider,
           providerDeployment,
           authMethodId: d.providerAuthConfig.authMethod.id
@@ -342,6 +355,7 @@ class providerAuthConfigServiceImpl {
         ? await providerAuthConfigInternalService.createBackendProviderAuthConfig({
             tenant: d.tenant,
             solution: d.solution,
+            environment: d.environment,
 
             provider,
             providerVersion: version,
@@ -392,6 +406,8 @@ class providerAuthConfigServiceImpl {
 
             tenantOid: d.tenant.oid,
             solutionOid: d.solution.oid,
+            environmentOid: d.environment.oid,
+
             authConfigOid: config.oid,
             authConfigUpdateOid: update.oid,
             deploymentOid: d.providerAuthConfig.deploymentOid,

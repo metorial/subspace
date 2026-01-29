@@ -12,6 +12,7 @@ export let providerSpecificationApp = tenantApp.use(async ctx => {
   let providerSpecification = await providerSpecificationService.getProviderSpecificationById({
     providerSpecificationId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution
   });
 
@@ -25,6 +26,7 @@ export let providerSpecificationController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           ids: v.optional(v.array(v.string())),
           providerIds: v.optional(v.array(v.string())),
@@ -37,6 +39,7 @@ export let providerSpecificationController = app.controller({
     .do(async ctx => {
       let paginator = await providerSpecificationService.listProviderSpecifications({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         ids: ctx.input.ids,
@@ -56,6 +59,7 @@ export let providerSpecificationController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerSpecificationId: v.string()
       })
     )

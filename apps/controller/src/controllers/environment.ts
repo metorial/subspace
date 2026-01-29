@@ -1,9 +1,9 @@
 import { v } from '@lowerdeck/validation';
 import { environmentService } from '@metorial-subspace/module-tenant';
 import { environmentPresenter } from '@metorial-subspace/presenters';
-import { tenantApp } from './tenant';
+import { tenantWithoutEnvironmentApp } from './tenant';
 
-export let environmentApp = tenantApp.use(async ctx => {
+export let environmentApp = tenantWithoutEnvironmentApp.use(async ctx => {
   let environmentId = ctx.body.environmentId;
   if (!environmentId) throw new Error('Environment ID is required');
 
@@ -15,12 +15,13 @@ export let environmentApp = tenantApp.use(async ctx => {
   return { environment };
 });
 
-export let environmentController = tenantApp.controller({
-  upsert: tenantApp
+export let environmentController = tenantWithoutEnvironmentApp.controller({
+  upsert: tenantWithoutEnvironmentApp
     .handler()
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         name: v.string(),
         identifier: v.string()
       })

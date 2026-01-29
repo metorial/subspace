@@ -14,6 +14,7 @@ export let providerAuthConfigApp = tenantApp.use(async ctx => {
   let providerAuthConfig = await providerAuthConfigService.getProviderAuthConfigById({
     providerAuthConfigId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
@@ -28,6 +29,7 @@ export let providerAuthConfigController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           status: v.optional(v.array(v.enumOf(['active', 'archived']))),
           allowDeleted: v.optional(v.boolean()),
@@ -43,6 +45,7 @@ export let providerAuthConfigController = app.controller({
     .do(async ctx => {
       let paginator = await providerAuthConfigService.listProviderAuthConfigs({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         status: ctx.input.status,
@@ -65,6 +68,7 @@ export let providerAuthConfigController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerAuthConfigId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })
@@ -76,6 +80,7 @@ export let providerAuthConfigController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         name: v.string(),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
@@ -96,12 +101,14 @@ export let providerAuthConfigController = app.controller({
       let provider = await providerService.getProviderById({
         providerId: ctx.input.providerId,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution
       });
 
       let providerDeployment = ctx.input.providerDeploymentId
         ? await providerDeploymentService.getProviderDeploymentById({
             tenant: ctx.tenant,
+            environment: ctx.environment,
             solution: ctx.solution,
             providerDeploymentId: ctx.input.providerDeploymentId
           })
@@ -109,6 +116,7 @@ export let providerAuthConfigController = app.controller({
 
       let providerAuthConfig = await providerAuthConfigService.createProviderAuthConfig({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         source: 'manual',
@@ -140,6 +148,7 @@ export let providerAuthConfigController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerAuthConfigId: v.string(),
         allowDeleted: v.optional(v.boolean()),
 
@@ -155,6 +164,7 @@ export let providerAuthConfigController = app.controller({
       let providerAuthConfig = await providerAuthConfigService.updateProviderAuthConfig({
         providerAuthConfig: ctx.providerAuthConfig,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         import: {

@@ -91,6 +91,7 @@ export let upsertParticipant = async (d: {
       name: participantData.name,
       payload: participantData,
       tenantOid: d.session.tenantOid,
+      environmentOid: d.session.environmentOid,
       providerOid: d.from.type === 'provider' ? d.from.provider.oid : undefined
     },
     update: {}

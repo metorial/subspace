@@ -12,6 +12,7 @@ export let sessionErrorApp = tenantApp.use(async ctx => {
   let sessionError = await sessionErrorService.getSessionErrorById({
     sessionErrorId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
@@ -26,6 +27,7 @@ export let sessionErrorController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           allowDeleted: v.optional(v.boolean()),
 
@@ -53,6 +55,7 @@ export let sessionErrorController = app.controller({
     .do(async ctx => {
       let paginator = await sessionErrorService.listSessionErrors({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         allowDeleted: ctx.input.allowDeleted,
@@ -79,6 +82,7 @@ export let sessionErrorController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         sessionErrorId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })

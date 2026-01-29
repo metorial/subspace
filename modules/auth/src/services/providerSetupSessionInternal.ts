@@ -2,6 +2,7 @@ import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
+  Environment,
   getId,
   type Provider,
   type ProviderAuthCredentials,
@@ -24,6 +25,7 @@ class providerSetupSessionInternalServiceImpl {
   async createProviderAuthConfig(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
@@ -57,6 +59,7 @@ class providerSetupSessionInternalServiceImpl {
       let setup = await providerOAuthSetupService.createProviderOAuthSetup({
         tenant: d.tenant,
         solution: d.solution,
+        environment: d.environment,
         provider: d.provider,
         providerDeployment: d.providerDeployment,
         credentials: d.credentials!,
@@ -81,6 +84,7 @@ class providerSetupSessionInternalServiceImpl {
       let config = await providerAuthConfigService.createProviderAuthConfig({
         tenant: d.tenant,
         solution: d.solution,
+        environment: d.environment,
         provider: d.provider,
         providerDeployment: d.providerDeployment,
         import: d.import,
@@ -107,6 +111,7 @@ class providerSetupSessionInternalServiceImpl {
   async createProviderConfig(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
@@ -123,6 +128,7 @@ class providerSetupSessionInternalServiceImpl {
     let config = await providerConfigService.createProviderConfig({
       tenant: d.tenant,
       solution: d.solution,
+      environment: d.environment,
       provider: d.provider,
       providerDeployment: d.providerDeployment,
       input: {

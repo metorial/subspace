@@ -4,6 +4,7 @@ import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
   db,
+  Environment,
   getId,
   type Provider,
   type ProviderAuthCredentials,
@@ -35,6 +36,7 @@ class providerAuthCredentialsServiceImpl {
   async listProviderAuthCredentials(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     status?: ProviderAuthCredentialsStatus[];
     allowDeleted?: boolean;
@@ -63,6 +65,7 @@ class providerAuthCredentialsServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
               isEphemeral: false,
 
               ...normalizeStatusForList(d).noParent,
@@ -82,6 +85,7 @@ class providerAuthCredentialsServiceImpl {
   async getProviderAuthCredentialsById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerAuthCredentialsId: string;
     allowDeleted?: boolean;
   }) {
@@ -90,6 +94,7 @@ class providerAuthCredentialsServiceImpl {
         id: d.providerAuthCredentialsId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
 
         ...normalizeStatusForGet(d).noParent
       },
@@ -104,6 +109,7 @@ class providerAuthCredentialsServiceImpl {
   async createProviderAuthCredentials(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     input: {
       name: string;
@@ -155,6 +161,7 @@ class providerAuthCredentialsServiceImpl {
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid,
           providerOid: d.provider.oid
         },
         include
@@ -165,6 +172,7 @@ class providerAuthCredentialsServiceImpl {
           where: {
             tenantOid: d.tenant.oid,
             solutionOid: d.solution.oid,
+            environmentOid: d.environment.oid,
             providerOid: d.provider.oid,
             oid: {
               not: providerAuthCredentials.oid
@@ -188,6 +196,7 @@ class providerAuthCredentialsServiceImpl {
   async updateProviderAuthCredentials(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerAuthCredentials: ProviderAuthCredentials;
     input: {
       name?: string;

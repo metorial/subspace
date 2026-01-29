@@ -18,6 +18,7 @@ class providerAuthMethodServiceImpl {
   async listProviderAuthMethods(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     provider?: Provider;
     providerVersion?: ProviderVersion;
@@ -94,6 +95,7 @@ class providerAuthMethodServiceImpl {
   async getProviderAuthMethodById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerAuthMethodId: string;
   }) {
     let providerAuthMethod = await db.providerAuthMethod.findFirst({

@@ -13,7 +13,6 @@ import {
   type ProviderVariant,
   type ProviderVersion,
   type Solution,
-  type Environment,
   type Tenant,
   withTransaction
 } from '@metorial-subspace/db';

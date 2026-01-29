@@ -1,13 +1,14 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, type Solution, type Tenant } from '@metorial-subspace/db';
+import { db, Environment, type Solution, type Tenant } from '@metorial-subspace/db';
 import { resolveProviders } from '@metorial-subspace/list-utils';
 
 class providerSpecificationServiceImpl {
   async listProviderSpecifications(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     ids?: string[];
     providerIds?: string[];
@@ -80,6 +81,7 @@ class providerSpecificationServiceImpl {
   async getProviderSpecificationById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerSpecificationId: string;
   }) {
     let providerSpecification = await db.providerSpecification.findFirst({

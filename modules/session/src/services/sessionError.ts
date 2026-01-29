@@ -1,7 +1,13 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, type SessionErrorType, type Solution, type Environment, type Tenant } from '@metorial-subspace/db';
+import {
+  db,
+  type Environment,
+  type SessionErrorType,
+  type Solution,
+  type Tenant
+} from '@metorial-subspace/db';
 import {
   normalizeStatusForGet,
   normalizeStatusForList,
@@ -25,7 +31,8 @@ export let sessionErrorInclude = include;
 class sessionErrorServiceImpl {
   async listSessionErrors(d: {
     tenant: Tenant;
-    solution: Solution; environment: Environment;
+    solution: Solution;
+    environment: Environment;
 
     types?: SessionErrorType[];
     allowDeleted?: boolean;
@@ -55,7 +62,7 @@ class sessionErrorServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
-        environmentOid: d.environment.oid,
+              environmentOid: d.environment.oid,
 
               ...normalizeStatusForList(d).onlyParent,
 
@@ -82,7 +89,8 @@ class sessionErrorServiceImpl {
 
   async getSessionErrorById(d: {
     tenant: Tenant;
-    solution: Solution; environment: Environment;
+    solution: Solution;
+    environment: Environment;
     sessionErrorId: string;
     allowDeleted?: boolean;
   }) {
