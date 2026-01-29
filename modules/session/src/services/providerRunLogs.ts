@@ -1,5 +1,11 @@
 import { Service } from '@lowerdeck/service';
-import { db, type ProviderRun, type Solution, type Tenant } from '@metorial-subspace/db';
+import {
+  db,
+  Environment,
+  type ProviderRun,
+  type Solution,
+  type Tenant
+} from '@metorial-subspace/db';
 import { getBackend } from '@metorial-subspace/provider';
 import PQueue from 'p-queue';
 
