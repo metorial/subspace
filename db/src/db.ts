@@ -75,7 +75,7 @@ declare global {
     };
 
     type ProviderTypeAttributes = {
-      provider: 'metorial-slates' | 'metorial-subspace';
+      provider: 'metorial-slates' | 'metorial-shuttle';
       backend: 'slates' | 'mcp.container' | 'mcp.function' | 'mcp.remote';
 
       triggers:

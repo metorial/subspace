@@ -12,6 +12,7 @@ export let sessionMessageApp = tenantApp.use(async ctx => {
   let sessionMessage = await sessionMessageService.getSessionMessageById({
     sessionMessageId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
@@ -26,6 +27,7 @@ export let sessionMessageController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           types: v.optional(v.array(v.enumOf(['unknown', 'tool_call', 'mcp_control']))),
           allowDeleted: v.optional(v.boolean()),
@@ -43,6 +45,7 @@ export let sessionMessageController = app.controller({
     .do(async ctx => {
       let paginator = await sessionMessageService.listSessionMessages({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         allowDeleted: ctx.input.allowDeleted,
@@ -68,6 +71,7 @@ export let sessionMessageController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         sessionMessageId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })

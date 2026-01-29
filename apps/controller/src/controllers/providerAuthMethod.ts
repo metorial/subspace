@@ -21,6 +21,7 @@ export let providerAuthMethodApp = tenantApp.use(async ctx => {
   let providerAuthMethod = await providerAuthMethodService.getProviderAuthMethodById({
     providerAuthMethodId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution
   });
 
@@ -34,6 +35,7 @@ export let providerAuthMethodController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           providerId: v.optional(v.string()),
           providerVersion: v.optional(v.string()),
@@ -48,6 +50,7 @@ export let providerAuthMethodController = app.controller({
         ? await providerService.getProviderById({
             providerId: ctx.input.providerId,
             tenant: ctx.tenant,
+            environment: ctx.environment,
             solution: ctx.solution
           })
         : undefined;
@@ -55,6 +58,7 @@ export let providerAuthMethodController = app.controller({
         ? await providerVersionService.getProviderVersionById({
             providerVersionId: ctx.input.providerVersion,
             tenant: ctx.tenant,
+            environment: ctx.environment,
             solution: ctx.solution
           })
         : undefined;
@@ -62,6 +66,7 @@ export let providerAuthMethodController = app.controller({
         ? await providerDeploymentService.getProviderDeploymentById({
             providerDeploymentId: ctx.input.providerDeployment,
             tenant: ctx.tenant,
+            environment: ctx.environment,
             solution: ctx.solution
           })
         : undefined;
@@ -69,6 +74,7 @@ export let providerAuthMethodController = app.controller({
         ? await providerConfigService.getProviderConfigById({
             providerConfigId: ctx.input.providerConfig,
             tenant: ctx.tenant,
+            environment: ctx.environment,
             solution: ctx.solution
           })
         : undefined;
@@ -76,12 +82,14 @@ export let providerAuthMethodController = app.controller({
         ? await providerAuthConfigService.getProviderAuthConfigById({
             providerAuthConfigId: ctx.input.providerAuthConfig,
             tenant: ctx.tenant,
+            environment: ctx.environment,
             solution: ctx.solution
           })
         : undefined;
 
       let paginator = await providerAuthMethodService.listProviderAuthMethods({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         provider,
@@ -101,6 +109,7 @@ export let providerAuthMethodController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerAuthMethodId: v.string()
       })
     )

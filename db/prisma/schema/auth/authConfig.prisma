@@ -89,6 +89,9 @@ model ProviderAuthConfigVersion {
   slateAuthConfigOid BigInt?          @unique
   slateAuthConfig    SlateAuthConfig? @relation(fields: [slateAuthConfigOid], references: [oid])
 
+  shuttleAuthConfigOid BigInt?            @unique
+  shuttleAuthConfig    ShuttleAuthConfig? @relation(fields: [shuttleAuthConfigOid], references: [oid])
+
   authCredentialsOid BigInt?
   authCredentials    ProviderAuthCredentials? @relation(fields: [authCredentialsOid], references: [oid])
 
@@ -118,4 +121,5 @@ model ProviderAuthConfigUpdate {
 
   providerAuthImports ProviderAuthImport[]
   slateAuthConfigs    SlateAuthConfig[]
+  shuttleAuthConfigs  ShuttleAuthConfig[]
 }

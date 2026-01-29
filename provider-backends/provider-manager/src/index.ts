@@ -1,5 +1,6 @@
 import { createLocallyCachedFunction } from '@lowerdeck/cache';
 import { db } from '@metorial-subspace/db';
+import { shuttleProvider } from '@metorial-subspace/provider-shuttle';
 import { slatesProvider } from '@metorial-subspace/provider-slates';
 
 let getBackendRecord = createLocallyCachedFunction({
@@ -15,6 +16,7 @@ export let getBackend = async ({ entity }: { entity: { backendOid: bigint } }) =
   let backend = await getBackendRecord(entity.backendOid);
 
   if (backend.type === 'slates') return slatesProvider.create({ backend });
+  if (backend.type === 'shuttle') return shuttleProvider.create({ backend });
 
   throw new Error(`Unsupported backend type: ${backend.type}`);
 };

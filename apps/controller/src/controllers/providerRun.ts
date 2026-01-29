@@ -12,6 +12,7 @@ export let providerRunApp = tenantApp.use(async ctx => {
   let providerRun = await providerRunService.getProviderRunById({
     providerRunId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
@@ -26,6 +27,7 @@ export let providerRunController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           status: v.optional(v.array(v.enumOf(['running', 'stopped']))),
           allowDeleted: v.optional(v.boolean()),
@@ -42,6 +44,7 @@ export let providerRunController = app.controller({
     .do(async ctx => {
       let paginator = await providerRunService.listProviderRuns({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         status: ctx.input.status,
@@ -65,6 +68,7 @@ export let providerRunController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerRunId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })
@@ -76,12 +80,14 @@ export let providerRunController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerRunId: v.string()
       })
     )
     .do(async ctx =>
       providerRunLogsService.getProviderRunLogs({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
         providerRun: ctx.providerRun
       })

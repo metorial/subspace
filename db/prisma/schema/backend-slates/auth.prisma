@@ -38,9 +38,10 @@ model SlateAuthConfig {
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
 
-  createdAt DateTime @default(now())
-
-  providerAuthConfigUpdate    ProviderAuthConfigUpdate?  @relation(fields: [providerAuthConfigUpdateOid], references: [oid])
-  providerAuthConfigVersion   ProviderAuthConfigVersion?
   providerAuthConfigUpdateOid BigInt?
+  providerAuthConfigUpdate    ProviderAuthConfigUpdate? @relation(fields: [providerAuthConfigUpdateOid], references: [oid])
+
+  providerAuthConfigVersion ProviderAuthConfigVersion?
+
+  createdAt DateTime @default(now())
 }

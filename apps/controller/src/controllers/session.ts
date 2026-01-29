@@ -13,6 +13,7 @@ export let sessionApp = tenantApp.use(async ctx => {
   let session = await sessionService.getSessionById({
     sessionId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
@@ -27,6 +28,7 @@ export let sessionController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           status: v.optional(v.array(v.enumOf(['active', 'archived']))),
           allowDeleted: v.optional(v.boolean()),
@@ -44,6 +46,7 @@ export let sessionController = app.controller({
     .do(async ctx => {
       let paginator = await sessionService.listSessions({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         status: ctx.input.status,
@@ -68,6 +71,7 @@ export let sessionController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         sessionId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })
@@ -79,6 +83,7 @@ export let sessionController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         name: v.string(),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
@@ -98,6 +103,7 @@ export let sessionController = app.controller({
     .do(async ctx => {
       let session = await sessionService.createSession({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         input: {
@@ -123,6 +129,7 @@ export let sessionController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         sessionId: v.string(),
 
         allowDeleted: v.optional(v.boolean()),
@@ -136,6 +143,7 @@ export let sessionController = app.controller({
       let session = await sessionService.updateSession({
         session: ctx.session,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         input: {

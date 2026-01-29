@@ -95,16 +95,13 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
       readmeNames.some(n => d.path.toLocaleLowerCase().endsWith(n))
     )?.content;
 
-    let publisher = await publisherInternalService.upsertPublisher({
-      owner: {
-        type: isMetorialHosted ? 'metorial' : 'external'
-      },
-      input: {
-        identifier: `slates::${slate.registryId}::${slate.scope.id}`,
-        name: registryRecord.name,
-        description: registryRecord.description ?? undefined
-      }
-    });
+    let publisher = isMetorialHosted
+      ? await publisherInternalService.upsertPublisherForMetorial()
+      : await publisherInternalService.upsertPublisherForExternal({
+          identifier: `slates::${slate.registryId}::${slate.scope.id}`,
+          name: registryRecord.name,
+          description: registryRecord.description ?? undefined
+        });
 
     let spec = version.specification?.id
       ? await slates.slateSpecification.get({
@@ -116,6 +113,43 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
     let hasAuthConfig = !!(spec && spec.authMethods.length > 0);
     let hasOAuth = spec?.authMethods.some(am => am.type === 'oauth');
     let hasTriggers = !!(spec ? spec.triggers.length > 0 : false);
+
+    let type = {
+      name: 'Slates',
+
+      attributes: {
+        provider: 'metorial-slates',
+        backend: 'slates',
+
+        triggers: hasTriggers
+          ? {
+              status: 'enabled',
+              receiverUrl: `${env.service.SLATES_HUB_PUBLIC_URL}/slates-hub/triggers/webhook/{callback.slatesTriggerId}`
+            }
+          : { status: 'disabled' },
+
+        auth: hasAuthConfig
+          ? {
+              status: 'enabled',
+
+              oauth: hasOAuth
+                ? {
+                    status: 'enabled',
+                    oauthCallbackUrl: `${env.service.SLATES_HUB_PUBLIC_URL}/slates-hub/callback`
+                  }
+                : { status: 'disabled' },
+
+              export: { status: 'enabled' },
+
+              import: { status: 'enabled' }
+            }
+          : { status: 'disabled' },
+
+        config: hasConfig
+          ? { status: 'enabled', read: { status: 'enabled' } }
+          : { status: 'disabled' }
+      } satisfies PrismaJson.ProviderTypeAttributes
+    };
 
     let provider = await providerInternalService.upsertProvider({
       publisher,
@@ -133,42 +167,7 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
         readme: readme,
         categories: registryRecord.categories.map((c: any) => c.identifier)
       },
-      type: {
-        name: 'Slates',
-
-        attributes: {
-          provider: 'metorial-slates',
-          backend: 'slates',
-
-          triggers: hasTriggers
-            ? {
-                status: 'enabled',
-                receiverUrl: `${env.service.SLATES_HUB_PUBLIC_URL}/slates-hub/triggers/webhook/{callback.slatesTriggerId}`
-              }
-            : { status: 'disabled' },
-
-          auth: hasAuthConfig
-            ? {
-                status: 'enabled',
-
-                oauth: hasOAuth
-                  ? {
-                      status: 'enabled',
-                      oauthCallbackUrl: `${env.service.SLATES_HUB_PUBLIC_URL}/slates-hub/callback`
-                    }
-                  : { status: 'disabled' },
-
-                export: { status: 'enabled' },
-
-                import: { status: 'enabled' }
-              }
-            : { status: 'disabled' },
-
-          config: hasConfig
-            ? { status: 'enabled', read: { status: 'enabled' } }
-            : { status: 'disabled' }
-        }
-      }
+      type
     });
     if (!provider?.defaultVariant) {
       throw new Error(`No default variant after upserting provider for slate ${slate.id}`);
@@ -185,7 +184,8 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
       },
       info: {
         name: `v${version.version}`
-      }
+      },
+      type
     });
   });
 });

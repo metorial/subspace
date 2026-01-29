@@ -95,7 +95,8 @@ export let completeMessage = async (
         providerRunOid: message.providerRunOid,
         messageOid: message.oid,
         tenantOid: message.tenantOid,
-        solutionOid: message.solutionOid
+        solutionOid: message.solutionOid,
+        environmentOid: message.environmentOid
       }
     });
   })().catch(() => {});

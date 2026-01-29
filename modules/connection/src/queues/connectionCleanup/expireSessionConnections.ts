@@ -71,10 +71,15 @@ let expireSessionConnectionQueueProcessor = expireSessionConnectionQueue.process
         sessionOid: connection.sessionOid,
         connectionOid: connection.oid,
         tenantOid: connection.tenantOid,
-        solutionOid: connection.solutionOid
+        solutionOid: connection.solutionOid,
+        environmentOid: connection.environmentOid
       }
     });
   }
 );
 
-export let expireSessionConnectionsQueues = combineQueueProcessors([]);
+export let expireSessionConnectionsQueues = combineQueueProcessors([
+  expireSessionConnectionsCron,
+  expireSessionConnectionsQueueProcessor,
+  expireSessionConnectionQueueProcessor
+]);

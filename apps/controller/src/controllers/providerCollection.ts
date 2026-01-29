@@ -14,6 +14,7 @@ export let providerListingCollectionApp = tenantApp.use(async ctx => {
     await providerListingCollectionService.getProviderListingCollectionById({
       providerListingCollectionId,
       tenant: ctx.tenant,
+      environment: ctx.environment,
       solution: ctx.solution
     });
 
@@ -27,6 +28,7 @@ export let providerListingCollectionController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           ids: v.optional(v.array(v.string())),
           providerIds: v.optional(v.array(v.string())),
@@ -37,6 +39,7 @@ export let providerListingCollectionController = app.controller({
     .do(async ctx => {
       let paginator = await providerListingCollectionService.listProviderListingCollections({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         ids: ctx.input.ids,
@@ -54,6 +57,7 @@ export let providerListingCollectionController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerListingCollectionId: v.string()
       })
     )
@@ -64,6 +68,7 @@ export let providerListingCollectionController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         name: v.string(),
         slug: v.string(),
         description: v.string()

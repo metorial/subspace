@@ -1,0 +1,245 @@
+import { slugify } from '@lowerdeck/slugify';
+import { db } from '@metorial-subspace/db';
+import {
+  IProviderCapabilities,
+  type ProviderSpecificationBehaviorParam,
+  type ProviderSpecificationGetForPairParam,
+  type ProviderSpecificationGetForProviderParam,
+  type ProviderSpecificationGetRes
+} from '@metorial-subspace/provider-utils';
+import { UriTemplate } from '@modelcontextprotocol/sdk/shared/uriTemplate.js';
+import z from 'zod';
+import { getTenantForShuttle, shuttle } from '../client';
+
+let emptyConfigSchema = z.object({}).toJSONSchema();
+
+let shuttleOAuthOutputSchema = z.object({
+  accessToken: z.string(),
+  expiresAt: z.string().optional().nullable()
+});
+
+let promptArgumentsToZod = (
+  args: {
+    name: string;
+    description?: string | undefined;
+    required?: boolean | undefined;
+  }[]
+): z.ZodTypeAny => {
+  let inner: Record<string, z.ZodTypeAny> = {};
+  for (let arg of args) {
+    let schema: z.ZodTypeAny = z.string();
+    if (!arg.required) schema = schema.optional();
+    inner[arg.name] = schema;
+  }
+  return z.object(inner);
+};
+
+let resourceTemplateUriToZod = (uriTemplate: string): z.ZodTypeAny => {
+  let template = new UriTemplate(uriTemplate);
+
+  let inner: Record<string, z.ZodTypeAny> = {};
+  for (let varName of template.variableNames) {
+    inner[varName] = z.string();
+  }
+  return z.object(inner);
+};
+
+export class ProviderCapabilities extends IProviderCapabilities {
+  override async getSpecificationBehavior(_data: ProviderSpecificationBehaviorParam) {
+    return {
+      supportsVersionSpecification: false,
+      supportsDeploymentSpecification: true
+    };
+  }
+
+  override async getSpecificationForProviderVersion(
+    data: ProviderSpecificationGetForProviderParam
+  ): Promise<ProviderSpecificationGetRes> {
+    if (!data.providerVersion.shuttleServerVersionOid) {
+      throw new Error('Provider version does not have a server associated with it');
+    }
+
+    let shuttleServerVersion = await db.shuttleServerVersion.findUniqueOrThrow({
+      where: { oid: data.providerVersion.shuttleServerVersionOid },
+      include: { server: true }
+    });
+
+    let tenant = await getTenantForShuttle(data.tenant);
+
+    let discovery = await shuttle.serverDiscovery.getForVersion({
+      tenantId: tenant.id,
+      serverVersionId: shuttleServerVersion.id
+    });
+    if (!discovery) return null;
+
+    let version = await shuttle.serverVersion.get({
+      serverVersionId: shuttleServerVersion.id,
+      tenantId: tenant.id
+    });
+    let server = await shuttle.server.get({
+      serverId: shuttleServerVersion.server.id,
+      tenantId: tenant.id
+    });
+
+    return this.mapDiscovery(server, version, discovery);
+  }
+
+  override async getSpecificationForProviderPair(
+    data: ProviderSpecificationGetForPairParam
+  ): Promise<ProviderSpecificationGetRes> {
+    if (!data.providerVersion.shuttleServerVersionOid) {
+      throw new Error('Provider version does not have a server associated with it');
+    }
+    if (!data.configVersion.shuttleConfigOid) {
+      throw new Error('Config version does not have a shuttle config associated with it');
+    }
+    if (data.authConfigVersion && !data.authConfigVersion.shuttleAuthConfigOid) {
+      throw new Error(
+        'Auth config version does not have a shuttle auth config associated with it'
+      );
+    }
+
+    let tenant = await getTenantForShuttle(data.tenant);
+
+    let shuttleServerVersion = await db.shuttleServerVersion.findUniqueOrThrow({
+      where: { oid: data.providerVersion.shuttleServerVersionOid },
+      include: { server: true }
+    });
+    let config = await db.shuttleServerConfig.findUniqueOrThrow({
+      where: { oid: data.configVersion.shuttleConfigOid }
+    });
+    let authConfig = data.authConfigVersion?.shuttleAuthConfigOid
+      ? await db.shuttleAuthConfig.findUniqueOrThrow({
+          where: { oid: data.authConfigVersion.shuttleAuthConfigOid }
+        })
+      : null;
+
+    let version = await shuttle.serverVersion.get({
+      serverVersionId: shuttleServerVersion.id,
+      tenantId: tenant.id
+    });
+    let server = await shuttle.server.get({
+      serverId: shuttleServerVersion.server.id,
+      tenantId: tenant.id
+    });
+    let discovery = await shuttle.serverDiscovery.create({
+      tenantId: tenant.id,
+      serverConfigId: config.id,
+      serverAuthConfigId: authConfig?.id,
+      serverVersionId: shuttleServerVersion.id
+    });
+
+    return this.mapDiscovery(server, version, discovery);
+  }
+
+  private async mapDiscovery(
+    server: Awaited<ReturnType<typeof shuttle.server.get>>,
+    version: Awaited<ReturnType<typeof shuttle.serverVersion.get>>,
+    discovery: Awaited<ReturnType<typeof shuttle.serverDiscovery.create>>
+  ): Promise<ProviderSpecificationGetRes> {
+    return {
+      features: {
+        supportsAuthMethod: !!server.oauthConfig,
+        configContainsAuth: !server.oauthConfig
+      },
+
+      specification: {
+        specId: discovery.id,
+        specUniqueIdentifier: discovery.id,
+        key: slugify(server.name),
+        name: discovery.info.title ?? `${discovery.info.name}@${discovery.info.version}`,
+        metadata: {},
+        configJsonSchema: version.configSchema || emptyConfigSchema,
+        configVisibility: 'encrypted',
+
+        mcp: {
+          serverInfo: discovery.info,
+          capabilities: discovery.capabilities,
+          instructions: discovery.instructions ?? undefined
+        }
+      },
+
+      authMethods: server.oauthConfig
+        ? [
+            {
+              specId: `shuttle::${server.id}::oauth`,
+              specUniqueIdentifier: `shuttle::${server.id}::oauth`,
+              callableId: 'oauth',
+              key: 'oauth',
+              name: 'OAuth',
+              inputJsonSchema: server.oauthConfig.authConfigSchema ?? emptyConfigSchema,
+              outputJsonSchema: shuttleOAuthOutputSchema,
+              scopes: [],
+              type: 'oauth',
+              capabilities: {},
+              metadata: {}
+            }
+          ]
+        : [],
+
+      tools: [
+        ...discovery.tools.map(t => ({
+          specId: `shuttle::${server.id}::tool::${t.name}`,
+          specUniqueIdentifier: `shuttle::${server.id}::tool::${t.name}`,
+          callableId: `tool_${slugify(t.name)}`,
+          key: `tool_${slugify(t.name)}`,
+          name: t.name,
+          description: t.description,
+          inputJsonSchema: t.inputSchema,
+          outputJsonSchema: t.outputSchema,
+          constraints: [],
+          instructions: [],
+          capabilities: {},
+          mcpToolType: {
+            type: 'mcp.tool' as const,
+            key: t.name
+          },
+          tags: {},
+          metadata: {}
+        })),
+
+        ...discovery.prompts.map(t => ({
+          specId: `shuttle::${server.id}::tool::${t.name}`,
+          specUniqueIdentifier: `shuttle::${server.id}::tool::${t.name}`,
+          callableId: `prompt_${slugify(t.name)}`,
+          key: `prompt_${slugify(t.name)}`,
+          name: t.name,
+          description: t.description,
+          inputJsonSchema: t.arguments
+            ? promptArgumentsToZod(t.arguments).toJSONSchema()
+            : emptyConfigSchema,
+          constraints: [],
+          instructions: [],
+          capabilities: {},
+          mcpToolType: {
+            type: 'mcp.prompt' as const,
+            key: t.name,
+            arguments: t.arguments || []
+          },
+          tags: {},
+          metadata: {}
+        })),
+
+        ...discovery.resourceTemplates.map(t => ({
+          specId: `shuttle::${server.id}::tool::${t.name}`,
+          specUniqueIdentifier: `shuttle::${server.id}::tool::${t.name}`,
+          callableId: `resource_${slugify(t.name)}`,
+          key: `resource_${slugify(t.name)}`,
+          name: t.name,
+          description: t.description,
+          inputJsonSchema: resourceTemplateUriToZod(t.uriTemplate).toJSONSchema(),
+          constraints: [],
+          instructions: [],
+          capabilities: {},
+          mcpToolType: {
+            type: 'mcp.resource_template' as const,
+            uriTemplate: t.uriTemplate,
+            variableNames: new UriTemplate(t.uriTemplate).variableNames
+          },
+          tags: {},
+          metadata: {}
+        }))
+      ]
+    };
+  }
+}

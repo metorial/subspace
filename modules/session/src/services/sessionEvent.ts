@@ -1,7 +1,13 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, type SessionEventType, type Solution, type Environment, type Tenant } from '@metorial-subspace/db';
+import {
+  db,
+  type Environment,
+  type SessionEventType,
+  type Solution,
+  type Tenant
+} from '@metorial-subspace/db';
 import {
   normalizeStatusForGet,
   normalizeStatusForList,
@@ -28,7 +34,8 @@ let include = {
 class sessionEventServiceImpl {
   async listSessionEvents(d: {
     tenant: Tenant;
-    solution: Solution; environment: Environment;
+    solution: Solution;
+    environment: Environment;
 
     types?: SessionEventType[];
     allowDeleted?: boolean;
@@ -56,7 +63,7 @@ class sessionEventServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
-        environmentOid: d.environment.oid,
+              environmentOid: d.environment.oid,
 
               ...normalizeStatusForList(d).onlyParent,
 
@@ -82,7 +89,8 @@ class sessionEventServiceImpl {
 
   async getSessionEventById(d: {
     tenant: Tenant;
-    solution: Solution; environment: Environment;
+    solution: Solution;
+    environment: Environment;
     sessionEventId: string;
     allowDeleted?: boolean;
   }) {

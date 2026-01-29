@@ -36,6 +36,7 @@ export let solutionController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         solutionId: v.string()
       })
     )

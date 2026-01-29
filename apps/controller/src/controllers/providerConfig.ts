@@ -20,6 +20,7 @@ export let providerConfigApp = tenantApp.use(async ctx => {
   let providerConfig = await providerConfigService.getProviderConfigById({
     providerConfigId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
@@ -34,6 +35,7 @@ export let providerConfigController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           status: v.optional(v.array(v.enumOf(['active', 'archived']))),
           allowDeleted: v.optional(v.boolean()),
@@ -49,6 +51,7 @@ export let providerConfigController = app.controller({
     .do(async ctx => {
       let paginator = await providerConfigService.listProviderConfigs({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         status: ctx.input.status,
@@ -71,6 +74,7 @@ export let providerConfigController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerId: v.optional(v.string()),
         providerConfigId: v.optional(v.string()),
         providerVersionId: v.optional(v.string()),
@@ -78,7 +82,7 @@ export let providerConfigController = app.controller({
       })
     )
     .do(async ctx => {
-      let ts = { tenant: ctx.tenant, solution: ctx.solution };
+      let ts = { tenant: ctx.tenant, environment: ctx.environment, solution: ctx.solution };
       let provider = ctx.input.providerId
         ? await providerService.getProviderById({
             ...ts,
@@ -106,6 +110,7 @@ export let providerConfigController = app.controller({
 
       let config = await providerConfigService.getProviderConfigSchema({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         provider,
@@ -122,6 +127,7 @@ export let providerConfigController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerConfigId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })
@@ -133,6 +139,7 @@ export let providerConfigController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         name: v.string(),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
@@ -158,6 +165,7 @@ export let providerConfigController = app.controller({
       let provider = await providerService.getProviderById({
         providerId: ctx.input.providerId,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution
       });
 
@@ -165,12 +173,14 @@ export let providerConfigController = app.controller({
         ? await providerDeploymentService.getProviderDeploymentById({
             providerDeploymentId: ctx.input.providerDeploymentId,
             tenant: ctx.tenant,
+            environment: ctx.environment,
             solution: ctx.solution
           })
         : undefined;
 
       let providerConfig = await providerConfigService.createProviderConfig({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         provider,
@@ -190,6 +200,7 @@ export let providerConfigController = app.controller({
                   vault: await providerConfigVaultService.getProviderConfigVaultById({
                     providerConfigVaultId: ctx.input.config.providerConfigVaultId,
                     tenant: ctx.tenant,
+                    environment: ctx.environment,
                     solution: ctx.solution
                   })
                 }
@@ -208,6 +219,7 @@ export let providerConfigController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerConfigId: v.string(),
         allowDeleted: v.optional(v.boolean()),
 
@@ -220,6 +232,7 @@ export let providerConfigController = app.controller({
       let providerConfig = await providerConfigService.updateProviderConfig({
         providerConfig: ctx.providerConfig,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         input: {

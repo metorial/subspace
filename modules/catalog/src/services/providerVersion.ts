@@ -1,7 +1,7 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, type Solution, type Tenant } from '@metorial-subspace/db';
+import { db, Environment, type Solution, type Tenant } from '@metorial-subspace/db';
 import { resolveProviders } from '@metorial-subspace/list-utils';
 import { getProviderTenantFilter } from './provider';
 import { providerVariantInclude } from './providerVariant';
@@ -18,6 +18,7 @@ class providerVersionServiceImpl {
   async listProviderVersions(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     ids?: string[];
     providerIds?: string[];
@@ -47,6 +48,7 @@ class providerVersionServiceImpl {
     providerVersionId: string;
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
   }) {
     let providerVersion = await db.providerVersion.findFirst({
       where: {

@@ -2,12 +2,13 @@ import { db, messageInputToToolCall, snowflake } from '@metorial-subspace/db';
 import type {
   ProviderRunCreateParam,
   ProviderRunCreateRes,
+  ProviderRunLogsParam,
+  ProviderRunLogsRes,
   ToolInvocationCreateParam,
-  ToolInvocationCreateRes,
-  ToolInvocationLogsParam,
-  ToolInvocationLogsRes
+  ToolInvocationCreateRes
 } from '@metorial-subspace/provider-utils';
 import { IProviderToolInvocation } from '@metorial-subspace/provider-utils';
+import PQueue from 'p-queue';
 import { getTenantForSlates, slates } from '../client';
 
 export class ProviderToolInvocation extends IProviderToolInvocation {
@@ -107,21 +108,36 @@ export class ProviderToolInvocation extends IProviderToolInvocation {
     };
   }
 
-  override async getToolInvocationLogs(
-    data: ToolInvocationLogsParam
-  ): Promise<ToolInvocationLogsRes> {
+  override async getProviderRunLogs(data: ProviderRunLogsParam): Promise<ProviderRunLogsRes> {
     let tenant = await getTenantForSlates(data.tenant);
 
-    let res = await slates.slateSessionToolCall.getLogs({
-      tenantId: tenant.id,
-      slateSessionToolCallId: data.slateToolCallId
+    let toolCalls = await db.slateToolCall.findMany({
+      where: { session: { providerRunOid: data.providerRun.oid } },
+      take: 100,
+      orderBy: { createdAt: 'desc' } // Get the latest 100 tool calls
     });
 
+    let queue = new PQueue({ concurrency: 5 });
+
+    let logs = await queue.addAll(
+      toolCalls.map(call => async () => {
+        let res = await slates.slateSessionToolCall.getLogs({
+          tenantId: tenant.id,
+          slateSessionToolCallId: call.id
+        });
+
+        return res.invocation.logs.map(log => ({
+          outputType: 'stdout' as const,
+          timestamp: new Date(log.timestamp),
+          message: log.message
+        }));
+      })
+    );
+
+    let sorted = logs.flat().sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
     return {
-      logs: res.invocation.logs.map(log => ({
-        timestamp: log.timestamp,
-        message: log.message
-      }))
+      logs: sorted
     };
   }
 }

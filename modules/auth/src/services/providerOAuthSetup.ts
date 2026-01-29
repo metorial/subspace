@@ -4,6 +4,7 @@ import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
   db,
+  Environment,
   getId,
   ID,
   type Provider,
@@ -46,6 +47,7 @@ class providerOAuthSetupServiceImpl {
   async listProviderOAuthSetups(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     allowDeleted?: boolean;
   }) {
     return Paginator.create(({ prisma }) =>
@@ -56,6 +58,7 @@ class providerOAuthSetupServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
               isEphemeral: false,
               ...normalizeStatusForList(d).onlyParent
             },
@@ -68,6 +71,7 @@ class providerOAuthSetupServiceImpl {
   async getProviderOAuthSetupById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerOAuthSetupId: string;
     allowDeleted?: boolean;
   }) {
@@ -76,6 +80,7 @@ class providerOAuthSetupServiceImpl {
         id: d.providerOAuthSetupId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
         ...normalizeStatusForGet(d).onlyParent
       },
       include
@@ -89,6 +94,7 @@ class providerOAuthSetupServiceImpl {
   async createProviderOAuthSetup(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
@@ -228,6 +234,7 @@ class providerOAuthSetupServiceImpl {
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid,
           providerOid: d.provider.oid,
           authCredentialsOid: d.credentials.oid,
           authMethodOid: authMethod.oid,
@@ -250,6 +257,7 @@ class providerOAuthSetupServiceImpl {
   async updateProviderOAuthSetup(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerOAuthSetup: ProviderOAuthSetup;
     input: {
       name?: string;

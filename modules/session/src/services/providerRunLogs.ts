@@ -1,5 +1,11 @@
 import { Service } from '@lowerdeck/service';
-import { db, type ProviderRun, type Solution, type Tenant } from '@metorial-subspace/db';
+import {
+  db,
+  Environment,
+  type ProviderRun,
+  type Solution,
+  type Tenant
+} from '@metorial-subspace/db';
 import { getBackend } from '@metorial-subspace/provider';
 import PQueue from 'p-queue';
 
@@ -11,7 +17,12 @@ export type ProviderRunLog = {
 };
 
 class providerRunLogsServiceImpl {
-  async getProviderRunLogs(d: { tenant: Tenant; solution: Solution; providerRun: ProviderRun }) {
+  async getProviderRunLogs(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    providerRun: ProviderRun;
+  }) {
     let fullProviderRun = await db.providerRun.findFirstOrThrow({
       where: { oid: d.providerRun.oid },
       include: {

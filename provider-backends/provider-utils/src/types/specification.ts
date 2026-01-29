@@ -1,3 +1,5 @@
+import type { InitializeResult } from '@modelcontextprotocol/sdk/types.js';
+
 export type SpecificationAuthMethodType = 'oauth' | 'token' | 'service_account' | 'custom';
 
 export interface SpecificationTool {
@@ -16,10 +18,28 @@ export interface SpecificationTool {
   constraints: string[];
   instructions: string[];
 
-  mcpToolType: {
-    // TODO: @herber add support for other tool types
-    type: 'tool.callable';
-  };
+  mcpToolType:
+    | {
+        type: 'tool.callable';
+      }
+    | {
+        type: 'mcp.tool';
+        key: string;
+      }
+    | {
+        type: 'mcp.prompt';
+        key: string;
+        arguments: {
+          name: string;
+          description?: string | undefined;
+          required?: boolean | undefined;
+        }[];
+      }
+    | {
+        type: 'mcp.resource_template';
+        uriTemplate: string;
+        variableNames: string[];
+      };
 
   capabilities: {
     [key: string]: any;
@@ -74,6 +94,12 @@ export interface Specification {
   configVisibility: 'encrypted' | 'plain';
 
   metadata: Record<string, any>;
+
+  mcp: {
+    serverInfo: InitializeResult['serverInfo'];
+    capabilities: InitializeResult['capabilities'];
+    instructions: InitializeResult['instructions'];
+  } | null;
 }
 
 export interface SpecificationFeatures {

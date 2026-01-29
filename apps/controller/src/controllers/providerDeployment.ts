@@ -17,6 +17,7 @@ export let providerDeploymentApp = tenantApp.use(async ctx => {
   let providerDeployment = await providerDeploymentService.getProviderDeploymentById({
     providerDeploymentId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
@@ -31,6 +32,7 @@ export let providerDeploymentController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           status: v.optional(v.array(v.enumOf(['active', 'archived']))),
           allowDeleted: v.optional(v.boolean()),
@@ -44,6 +46,7 @@ export let providerDeploymentController = app.controller({
     .do(async ctx => {
       let paginator = await providerDeploymentService.listProviderDeployments({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         status: ctx.input.status,
@@ -64,6 +67,7 @@ export let providerDeploymentController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerDeploymentId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })
@@ -75,6 +79,7 @@ export let providerDeploymentController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
 
         name: v.string(),
         description: v.optional(v.string()),
@@ -108,6 +113,7 @@ export let providerDeploymentController = app.controller({
       let provider = await providerService.getProviderById({
         providerId: ctx.input.providerId,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution
       });
 
@@ -115,12 +121,14 @@ export let providerDeploymentController = app.controller({
         ? await providerVersionService.getProviderVersionById({
             providerVersionId: ctx.input.lockedProviderVersionId,
             tenant: ctx.tenant,
+            environment: ctx.environment,
             solution: ctx.solution
           })
         : undefined;
 
       let providerDeployment = await providerDeploymentService.createProviderDeployment({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         provider,
@@ -140,6 +148,7 @@ export let providerDeploymentController = app.controller({
                 vault: await providerConfigVaultService.getProviderConfigVaultById({
                   providerConfigVaultId: ctx.input.config.providerConfigVaultId,
                   tenant: ctx.tenant,
+                  environment: ctx.environment,
                   solution: ctx.solution
                 })
               };
@@ -150,6 +159,7 @@ export let providerDeploymentController = app.controller({
                 config: await providerConfigService.getProviderConfigById({
                   providerConfigId: ctx.input.config.providerConfigId,
                   tenant: ctx.tenant,
+                  environment: ctx.environment,
                   solution: ctx.solution
                 })
               };
@@ -170,6 +180,7 @@ export let providerDeploymentController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerDeploymentId: v.string(),
         allowDeleted: v.optional(v.boolean()),
 
@@ -182,6 +193,7 @@ export let providerDeploymentController = app.controller({
       let providerDeployment = await providerDeploymentService.updateProviderDeployment({
         providerDeployment: ctx.providerDeployment,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         input: {

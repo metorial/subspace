@@ -3,6 +3,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  Environment,
   type Provider,
   type ProviderAuthConfig,
   type ProviderDeployment,
@@ -33,6 +34,7 @@ let include = {
 export interface ProviderAuthImportParams {
   tenant: Tenant;
   solution: Solution;
+  environment: Environment;
 
   provider?: Provider & { defaultVariant: ProviderVariant | null };
   providerDeployment?: ProviderDeployment & {
@@ -47,6 +49,7 @@ class providerAuthImportServiceImpl {
   async listProviderAuthImports(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     allowDeleted?: boolean;
 
     ids?: string[];
@@ -71,6 +74,7 @@ class providerAuthImportServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
 
               ...normalizeStatusForList(d).onlyParent,
 
@@ -93,6 +97,7 @@ class providerAuthImportServiceImpl {
   async getProviderAuthImportById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerAuthImportId: string;
     allowDeleted?: boolean;
   }) {
@@ -101,6 +106,7 @@ class providerAuthImportServiceImpl {
         id: d.providerAuthImportId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
         ...normalizeStatusForGet(d).onlyParent
       },
       include
@@ -127,6 +133,7 @@ class providerAuthImportServiceImpl {
     let { authMethod } = await providerAuthConfigInternalService.getVersionAndAuthMethod({
       tenant: d.tenant,
       solution: d.solution,
+      environment: d.environment,
       provider: checkRes.provider,
       providerDeployment: checkRes.providerDeployment,
       authMethodId: d.input.authMethodId
@@ -158,6 +165,7 @@ class providerAuthImportServiceImpl {
       let authConfigRes = await providerAuthConfigService.updateProviderAuthConfig({
         tenant: d.tenant,
         solution: d.solution,
+        environment: d.environment,
         providerAuthConfig: checkRes.providerAuthConfig,
 
         import: {
@@ -177,6 +185,7 @@ class providerAuthImportServiceImpl {
       let authConfigRes = await providerAuthConfigService.createProviderAuthConfig({
         tenant: d.tenant,
         solution: d.solution,
+        environment: d.environment,
 
         provider: checkRes.provider,
         providerDeployment: checkRes.providerDeployment,

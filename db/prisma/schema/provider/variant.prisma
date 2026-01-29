@@ -25,6 +25,9 @@ model ProviderVariant {
   slateOid BigInt?
   slate    Slate?  @relation(fields: [slateOid], references: [oid])
 
+  shuttleServerOid BigInt?
+  shuttleServer    ShuttleServer? @relation(fields: [shuttleServerOid], references: [oid])
+
   currentVersionOid BigInt?
   currentVersion    ProviderVersion? @relation(fields: [currentVersionOid], references: [oid], name: "defaultVersion")
 

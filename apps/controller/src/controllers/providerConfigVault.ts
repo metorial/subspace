@@ -16,6 +16,7 @@ export let providerConfigVaultApp = tenantApp.use(async ctx => {
   let providerConfigVault = await providerConfigVaultService.getProviderConfigVaultById({
     providerConfigVaultId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
@@ -30,6 +31,7 @@ export let providerConfigVaultController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           status: v.optional(v.array(v.enumOf(['active', 'archived']))),
           allowDeleted: v.optional(v.boolean()),
@@ -44,6 +46,7 @@ export let providerConfigVaultController = app.controller({
     .do(async ctx => {
       let paginator = await providerConfigVaultService.listProviderConfigVaults({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         status: ctx.input.status,
@@ -65,6 +68,7 @@ export let providerConfigVaultController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerConfigVaultId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })
@@ -76,6 +80,7 @@ export let providerConfigVaultController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         name: v.string(),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
@@ -93,6 +98,7 @@ export let providerConfigVaultController = app.controller({
       let provider = await providerService.getProviderById({
         providerId: ctx.input.providerId,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution
       });
 
@@ -100,12 +106,14 @@ export let providerConfigVaultController = app.controller({
         ? await providerDeploymentService.getProviderDeploymentById({
             providerDeploymentId: ctx.input.providerDeploymentId,
             tenant: ctx.tenant,
+            environment: ctx.environment,
             solution: ctx.solution
           })
         : undefined;
 
       let providerConfigVault = await providerConfigVaultService.createProviderConfigVault({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         provider,
@@ -131,6 +139,7 @@ export let providerConfigVaultController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerConfigVaultId: v.string(),
         allowDeleted: v.optional(v.boolean()),
 
@@ -143,6 +152,7 @@ export let providerConfigVaultController = app.controller({
       let providerConfigVault = await providerConfigVaultService.updateProviderConfigVault({
         providerConfigVault: ctx.providerConfigVault,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         input: {

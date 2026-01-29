@@ -8,6 +8,9 @@ model Tenant {
   slateTenantId         String?
   slateTenantIdentifier String?
 
+  shuttleTenantId         String?
+  shuttleTenantIdentifier String?
+
   createdAt DateTime @default(now())
 
   logRetentionInDays Int @default(30)
@@ -46,6 +49,10 @@ model Tenant {
   toolCalls                                ToolCall[]
   environmentProviders                     EnvironmentProvider[]
   environments                             Environment[]
+  shuttleOAuthCredentials                  ShuttleOAuthCredentials[]
+  shuttleOAuthSetups                       ShuttleOAuthSetup[]
+  shuttleAuthConfigs                       ShuttleAuthConfig[]
+  shuttleServerConfigs                     ShuttleServerConfig[]
 }
 
 model Environment {

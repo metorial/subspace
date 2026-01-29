@@ -23,9 +23,9 @@ import {
 } from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import {
+  sessionProviderInputService,
   type SessionProviderInput,
-  type SessionProviderInputToolFilters,
-  sessionProviderInputService
+  type SessionProviderInputToolFilters
 } from './sessionProviderInput';
 
 let include = {

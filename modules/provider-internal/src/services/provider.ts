@@ -5,6 +5,7 @@ import {
   getId,
   type Provider,
   type Publisher,
+  ShuttleServer,
   type Slate,
   withTransaction
 } from '@metorial-subspace/db';
@@ -17,20 +18,26 @@ class providerInternalServiceImpl {
   async upsertProvider(d: {
     publisher: Publisher;
 
-    source: {
-      type: 'slates';
-      slate: Slate;
-      backend: Backend;
-    };
+    source:
+      | {
+          type: 'slates';
+          slate: Slate;
+          backend: Backend;
+        }
+      | {
+          type: 'shuttle';
+          shuttleServer: ShuttleServer;
+          backend: Backend;
+        };
 
     info: {
       name: string;
       description?: string;
       slug: string;
-      image: PrismaJson.EntityImage | null;
+      image?: PrismaJson.EntityImage | null;
       skills?: string[];
       readme?: string;
-      categories: string[];
+      categories?: string[];
     };
 
     type: {
@@ -39,7 +46,15 @@ class providerInternalServiceImpl {
     };
   }) {
     return withTransaction(async db => {
-      let identifier = `provider::${d.source.type}::${d.source.slate.id}`;
+      let identifier = `provider::${d.source.type}::`;
+
+      if (d.source.type === 'slates') {
+        identifier += `${d.source.slate.oid}`;
+      } else if (d.source.type === 'shuttle') {
+        identifier += `${d.source.shuttleServer.oid}`;
+      } else {
+        throw new Error('Unknown provider source type');
+      }
 
       let providerEntryData = {
         identifier: `${identifier}::entry`,
@@ -106,12 +121,16 @@ class providerInternalServiceImpl {
 
         backendOid: d.source.backend.oid,
         providerOid: provider.oid,
-        slateOid: d.source.slate.oid,
-        publisherOid: d.publisher.oid
+        publisherOid: d.publisher.oid,
+
+        slateOid: d.source.type === 'slates' ? d.source.slate.oid : null,
+        shuttleServerOid: d.source.type === 'shuttle' ? d.source.shuttleServer.oid : null
       };
+
       let existingVariant = await db.providerVariant.findFirst({
         where: { identifier: variantData.identifier }
       });
+
       let variant = existingVariant
         ? await db.providerVariant.update({
             where: { identifier: variantData.identifier },
@@ -179,19 +198,21 @@ class providerInternalServiceImpl {
         });
       }
 
-      let categories = await db.providerListingCategory.findMany({
-        where: {
-          slug: { in: d.info.categories }
-        }
-      });
-      await db.providerListing.update({
-        where: { id: listing.id },
-        data: {
-          categories: {
-            set: categories.map(c => ({ oid: c.oid }))
+      if (d.info.categories) {
+        let categories = await db.providerListingCategory.findMany({
+          where: {
+            slug: { in: d.info.categories }
           }
-        }
-      });
+        });
+        await db.providerListing.update({
+          where: { id: listing.id },
+          data: {
+            categories: {
+              set: categories.map(c => ({ oid: c.oid }))
+            }
+          }
+        });
+      }
 
       await addAfterTransactionHook(async () => {
         if (provider.id === newProviderId.id) {

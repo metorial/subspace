@@ -2,17 +2,20 @@ import type {
   Provider,
   ProviderAuthConfig,
   ProviderAuthConfigVersion,
-  ProviderConfig,
   ProviderConfigVersion,
   ProviderRun,
   ProviderVariant,
   ProviderVersion,
+  Session,
+  SessionConnection,
   SessionMessage,
   SessionParticipant,
+  ShuttleConnection,
   SlateSession,
   SlateToolCall,
   Tenant
 } from '@metorial-subspace/db';
+import type { InitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { IProviderFunctionality } from '../providerFunctionality';
 
 export abstract class IProviderToolInvocation extends IProviderFunctionality {
@@ -22,9 +25,7 @@ export abstract class IProviderToolInvocation extends IProviderFunctionality {
     data: ToolInvocationCreateParam
   ): Promise<ToolInvocationCreateRes>;
 
-  abstract getToolInvocationLogs(
-    data: ToolInvocationLogsParam
-  ): Promise<ToolInvocationLogsRes>;
+  abstract getProviderRunLogs(data: ProviderRunLogsParam): Promise<ProviderRunLogsRes>;
 }
 
 export interface ProviderRunCreateParam {
@@ -33,13 +34,23 @@ export interface ProviderRunCreateParam {
   providerRun: ProviderRun;
 
   providerVariant: ProviderVariant;
-  providerConfig: ProviderConfig;
-  providerConfigVersion: ProviderConfigVersion;
   providerVersion: ProviderVersion;
+  providerConfigVersion: ProviderConfigVersion;
+  providerAuthConfigVersion: ProviderAuthConfigVersion | null;
+
+  session: Session;
+  connection: SessionConnection;
+  participant: SessionParticipant;
+
+  mcp: {
+    clientInfo: InitializeRequest['params']['clientInfo'];
+    capabilities: InitializeRequest['params']['capabilities'];
+  } | null;
 }
 
 export interface ProviderRunCreateRes {
   slateSession?: SlateSession;
+  shuttleConnection?: ShuttleConnection;
   runState: any;
 }
 
@@ -53,6 +64,7 @@ export interface ToolInvocationCreateParam {
   providerAuthConfigVersion: ProviderAuthConfigVersion | null;
 
   slateSession?: SlateSession;
+  shuttleConnection?: ShuttleConnection;
 
   runState: any;
   input: PrismaJson.SessionMessageInput;
@@ -75,16 +87,17 @@ export interface ToolInvocationCreateRes {
       };
 }
 
-export interface ToolInvocationLogsParam {
+export interface ProviderRunLogsParam {
   tenant: Tenant;
-  slateToolCallId: string;
+  providerRun: ProviderRun;
 }
 
-export interface ToolInvocationLog {
-  timestamp: number;
+export interface ProviderRunLog {
+  timestamp: Date;
   message: string;
+  outputType: 'stdout' | 'stderr' | 'debug.info' | 'debug.warning' | 'debug.error';
 }
 
-export interface ToolInvocationLogsRes {
-  logs: ToolInvocationLog[];
+export interface ProviderRunLogsRes {
+  logs: ProviderRunLog[];
 }

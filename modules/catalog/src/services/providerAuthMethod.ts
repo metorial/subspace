@@ -3,6 +3,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  Environment,
   type Provider,
   type ProviderAuthConfig,
   type ProviderConfig,
@@ -18,6 +19,7 @@ class providerAuthMethodServiceImpl {
   async listProviderAuthMethods(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     provider?: Provider;
     providerVersion?: ProviderVersion;
@@ -94,6 +96,7 @@ class providerAuthMethodServiceImpl {
   async getProviderAuthMethodById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerAuthMethodId: string;
   }) {
     let providerAuthMethod = await db.providerAuthMethod.findFirst({

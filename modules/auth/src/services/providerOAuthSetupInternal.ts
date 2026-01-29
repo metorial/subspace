@@ -54,7 +54,8 @@ class providerOAuthSetupInternalServiceImpl {
             provider: true,
             deployment: true,
             solution: true,
-            providerSetupSession: true
+            providerSetupSession: true,
+            environment: true
           }
         });
 
@@ -80,8 +81,9 @@ class providerOAuthSetupInternalServiceImpl {
                 source: providerOAuthSetup.providerSetupSession ? 'setup_session' : 'system',
                 type: 'oauth_automated',
                 tenant: providerOAuthSetup.tenant,
-                provider: providerOAuthSetup.provider,
+                environment: providerOAuthSetup.environment,
                 solution: providerOAuthSetup.solution,
+                provider: providerOAuthSetup.provider,
                 providerDeployment: providerOAuthSetup.deployment ?? undefined,
                 credentials: providerOAuthSetup.authCredentials,
                 input: {
