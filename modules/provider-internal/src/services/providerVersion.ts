@@ -9,6 +9,7 @@ import {
   type SlateVersion,
   withTransaction
 } from '@metorial-subspace/db';
+import { ensureProviderType } from '@metorial-subspace/provider-utils';
 import { env } from '../env';
 import { createTag } from '../lib/createTag';
 import {
@@ -37,6 +38,11 @@ class providerVersionInternalServiceImpl {
     info: {
       name: string;
     };
+
+    type: {
+      name: string;
+      attributes: PrismaJson.ProviderTypeAttributes;
+    };
   }) {
     return versionCreateLock.usingLock(
       [String(d.variant.oid), String(d.variant.slateOid)],
@@ -48,6 +54,8 @@ class providerVersionInternalServiceImpl {
             where: { oid: d.variant.oid }
           });
 
+          let type = await ensureProviderType(d.type.name, d.type.attributes);
+
           let versionData = {
             identifier,
 
@@ -56,14 +64,18 @@ class providerVersionInternalServiceImpl {
             providerOid: d.variant.providerOid,
             providerVariantOid: d.variant.oid,
 
+            typeOid: type.oid,
+
             slateOid: d.source.slate.oid,
             slateVersionOid: d.source.slateVersion.oid,
 
             isCurrent: d.isCurrent
           };
+
           let existingVersion = await db.providerVersion.findFirst({
             where: { identifier: versionData.identifier }
           });
+
           let newId = getId('providerVersion');
           let providerVersion = existingVersion
             ? await db.providerVersion.update({

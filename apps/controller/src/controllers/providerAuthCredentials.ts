@@ -14,6 +14,7 @@ export let providerAuthCredentialsApp = tenantApp.use(async ctx => {
     await providerAuthCredentialsService.getProviderAuthCredentialsById({
       providerAuthCredentialsId,
       tenant: ctx.tenant,
+      environment: ctx.environment,
       solution: ctx.solution,
       allowDeleted: ctx.body.allowDeleted
     });
@@ -28,6 +29,7 @@ export let providerAuthCredentialsController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           status: v.optional(v.array(v.enumOf(['active', 'archived']))),
           allowDeleted: v.optional(v.boolean()),
@@ -40,6 +42,7 @@ export let providerAuthCredentialsController = app.controller({
     .do(async ctx => {
       let paginator = await providerAuthCredentialsService.listProviderAuthCredentials({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         status: ctx.input.status,
@@ -59,6 +62,7 @@ export let providerAuthCredentialsController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerAuthCredentialsId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })
@@ -70,6 +74,7 @@ export let providerAuthCredentialsController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         name: v.string(),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
@@ -90,12 +95,14 @@ export let providerAuthCredentialsController = app.controller({
       let provider = await providerService.getProviderById({
         providerId: ctx.input.providerId,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution
       });
 
       let providerAuthCredentials =
         await providerAuthCredentialsService.createProviderAuthCredentials({
           tenant: ctx.tenant,
+          environment: ctx.environment,
           solution: ctx.solution,
 
           provider,
@@ -117,6 +124,7 @@ export let providerAuthCredentialsController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerAuthCredentialsId: v.string(),
         allowDeleted: v.optional(v.boolean()),
 
@@ -130,6 +138,7 @@ export let providerAuthCredentialsController = app.controller({
         await providerAuthCredentialsService.updateProviderAuthCredentials({
           providerAuthCredentials: ctx.providerAuthCredentials,
           tenant: ctx.tenant,
+          environment: ctx.environment,
           solution: ctx.solution,
 
           input: {

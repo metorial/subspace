@@ -3,10 +3,11 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  type Environment,
   type SessionConnectionState,
   type SessionConnectionStatus,
   type Solution,
-  type Environment, type Tenant
+  type Tenant
 } from '@metorial-subspace/db';
 import {
   normalizeStatusForGet,
@@ -26,7 +27,8 @@ export let sessionConnectionInclude = include;
 class sessionConnectionServiceImpl {
   async listSessionConnections(d: {
     tenant: Tenant;
-    solution: Solution; environment: Environment;
+    solution: Solution;
+    environment: Environment;
 
     status?: SessionConnectionStatus[];
     connectionState?: SessionConnectionState[];
@@ -49,7 +51,7 @@ class sessionConnectionServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
-        environmentOid: d.environment.oid,
+              environmentOid: d.environment.oid,
 
               isEphemeral: false,
 
@@ -75,7 +77,8 @@ class sessionConnectionServiceImpl {
 
   async getSessionConnectionById(d: {
     tenant: Tenant;
-    solution: Solution; environment: Environment;
+    solution: Solution;
+    environment: Environment;
     sessionConnectionId: string;
     allowDeleted?: boolean;
   }) {

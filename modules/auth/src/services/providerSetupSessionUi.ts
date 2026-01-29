@@ -46,6 +46,7 @@ class providerSetupSessionUiServiceImpl {
       include: {
         tenant: true,
         solution: true,
+        environment: true,
         provider: { include: { defaultVariant: true } },
         deployment: true
       }
@@ -60,6 +61,7 @@ class providerSetupSessionUiServiceImpl {
     let schema = await providerConfigService.getProviderConfigSchema({
       tenant: fullSession.tenant,
       solution: fullSession.solution,
+      environment: fullSession.environment,
 
       provider: fullSession.provider,
       providerDeployment: fullSession.deployment ?? undefined
@@ -90,6 +92,7 @@ class providerSetupSessionUiServiceImpl {
       include: {
         tenant: true,
         solution: true,
+        environment: true,
         provider: { include: { defaultVariant: true } },
         authMethod: true,
         deployment: {
@@ -111,6 +114,7 @@ class providerSetupSessionUiServiceImpl {
     let schema = await providerAuthConfigService.getProviderAuthConfigSchema({
       tenant: fullSession.tenant,
       solution: fullSession.solution,
+      environment: fullSession.environment,
 
       provider: fullSession.provider,
       providerDeployment: fullSession.deployment ?? undefined,
@@ -165,6 +169,7 @@ class providerSetupSessionUiServiceImpl {
           include: {
             tenant: true,
             solution: true,
+            environment: true,
             authCredentials: true,
             provider: { include: { defaultVariant: true } },
             authMethod: true,
@@ -190,6 +195,7 @@ class providerSetupSessionUiServiceImpl {
             tenant: currentSession.tenant,
             solution: currentSession.solution,
             provider: currentSession.provider,
+            environment: currentSession.environment,
             providerDeployment: currentSession.deployment ?? undefined,
             credentials: currentSession.authCredentials ?? undefined,
             authMethod: currentSession.authMethod,
@@ -274,6 +280,7 @@ class providerSetupSessionUiServiceImpl {
             authCredentials: true,
             provider: { include: { defaultVariant: true } },
             authMethod: true,
+            environment: true,
             deployment: {
               include: {
                 provider: true,
@@ -296,6 +303,7 @@ class providerSetupSessionUiServiceImpl {
           tenant: currentSession.tenant,
           solution: currentSession.solution,
           provider: currentSession.provider,
+          environment: currentSession.environment,
           providerDeployment: currentSession.deployment ?? undefined,
           input: {
             name: currentSession.name ?? undefined,

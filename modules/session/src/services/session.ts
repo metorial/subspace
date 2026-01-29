@@ -231,7 +231,12 @@ class sessionServiceImpl {
     });
   }
 
-  async archiveSession(d: { tenant: Tenant; solution: Solution; environment: Environment; session: Session }) {
+  async archiveSession(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    session: Session;
+  }) {
     checkTenant(d, d.session);
     checkDeletedEdit(d.session, 'archive');
 
@@ -264,7 +269,12 @@ class sessionServiceImpl {
     });
   }
 
-  async deleteSession(d: { tenant: Tenant; solution: Solution; environment: Environment; session: Session }) {
+  async deleteSession(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    session: Session;
+  }) {
     checkTenant(d, d.session);
     checkDeletedEdit(d.session, 'delete');
 

@@ -166,7 +166,8 @@ export class SenderManager {
               sessionOid: session.oid,
               connectionOid: connection.oid,
               tenantOid: session.tenantOid,
-              solutionOid: session.solutionOid
+              solutionOid: session.solutionOid,
+              environmentOid: session.environmentOid
             }
           });
         })().catch(() => {});
@@ -469,6 +470,7 @@ export class SenderManager {
           sessionOid: this.session.oid,
           tenantOid: this.session.tenantOid,
           solutionOid: this.session.solutionOid,
+          environmentOid: this.session.environmentOid,
 
           mcpData: {},
 
@@ -506,7 +508,8 @@ export class SenderManager {
         sessionOid: this.session.oid,
         connectionOid: this.connection.oid,
         tenantOid: this.session.tenantOid,
-        solutionOid: this.session.solutionOid
+        solutionOid: this.session.solutionOid,
+        environmentOid: this.session.environmentOid
       }
     });
   }
@@ -563,6 +566,7 @@ export class SenderManager {
           status: 'active',
           tenantOid: this.tenant.oid,
           solutionOid: this.solution.oid,
+          environmentOid: this.session.environmentOid,
           token: await ID.generateId('sessionConnection_token')
         }
       });
@@ -584,7 +588,8 @@ export class SenderManager {
           sessionOid: this.session.oid,
           connectionOid: connection.oid,
           tenantOid: this.session.tenantOid,
-          solutionOid: this.session.solutionOid
+          solutionOid: this.session.solutionOid,
+          environmentOid: this.session.environmentOid
         },
         {
           ...getId('sessionEvent'),
@@ -592,7 +597,8 @@ export class SenderManager {
           sessionOid: this.session.oid,
           connectionOid: connection.oid,
           tenantOid: this.session.tenantOid,
-          solutionOid: this.session.solutionOid
+          solutionOid: this.session.solutionOid,
+          environmentOid: this.session.environmentOid
         }
       ]
     });
@@ -609,7 +615,8 @@ export class SenderManager {
             type: 'session_started',
             sessionOid: this.session.oid,
             tenantOid: this.session.tenantOid,
-            solutionOid: this.session.solutionOid
+            solutionOid: this.session.solutionOid,
+            environmentOid: this.session.environmentOid
           }
         });
       }

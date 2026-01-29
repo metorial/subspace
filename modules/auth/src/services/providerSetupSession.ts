@@ -5,6 +5,7 @@ import {
   addAfterTransactionHook,
   type Brand,
   db,
+  Environment,
   getId,
   ID,
   type Provider,
@@ -62,6 +63,7 @@ class providerSetupSessionServiceImpl {
   async listProviderSetupSessions(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     status?: ProviderSetupSessionStatus[];
     allowDeleted?: boolean;
@@ -90,6 +92,7 @@ class providerSetupSessionServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
 
               ...normalizeStatusForList(d).onlyParent,
 
@@ -111,6 +114,7 @@ class providerSetupSessionServiceImpl {
   async getProviderSetupSessionById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerSetupSessionId: string;
     allowDeleted?: boolean;
   }) {
@@ -119,6 +123,7 @@ class providerSetupSessionServiceImpl {
         id: d.providerSetupSessionId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
         ...normalizeStatusForGet(d).onlyParent
       },
       include
@@ -134,6 +139,7 @@ class providerSetupSessionServiceImpl {
   async createProviderSetupSession(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
@@ -199,6 +205,7 @@ class providerSetupSessionServiceImpl {
         await providerAuthConfigInternalService.getVersionAndAuthMethod({
           tenant: d.tenant,
           solution: d.solution,
+          environment: d.environment,
           provider: d.provider,
           providerDeployment: d.providerDeployment,
           authMethodId: d.input.authMethodId ?? (d.credentials ? 'oauth' : undefined)
@@ -211,6 +218,7 @@ class providerSetupSessionServiceImpl {
             providerOid: d.provider.oid,
             tenantOid: d.tenant.oid,
             solutionOid: d.solution.oid,
+            environmentOid: d.environment.oid,
             isDefault: true
           }
         });
@@ -238,6 +246,7 @@ class providerSetupSessionServiceImpl {
           await providerSetupSessionInternalService.createProviderAuthConfig({
             tenant: d.tenant,
             solution: d.solution,
+            environment: d.environment,
             provider: d.provider,
             providerDeployment: d.providerDeployment,
             credentials: d.credentials,
@@ -262,6 +271,7 @@ class providerSetupSessionServiceImpl {
         let configInner = await providerSetupSessionInternalService.createProviderConfig({
           tenant: d.tenant,
           solution: d.solution,
+          environment: d.environment,
           provider: d.provider,
           providerDeployment: d.providerDeployment,
           input: {
@@ -292,6 +302,7 @@ class providerSetupSessionServiceImpl {
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid,
           providerOid: d.provider.oid,
           brandOid: d.brand?.oid,
           authCredentialsOid: d.credentials?.oid,
@@ -338,6 +349,7 @@ class providerSetupSessionServiceImpl {
   async updateProviderSetupSession(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerSetupSession: ProviderSetupSession;
     input: {
       name?: string;

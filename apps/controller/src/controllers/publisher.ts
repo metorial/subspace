@@ -23,7 +23,8 @@ export let publisherController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+          environmentId: v.string()
         })
       )
     )
@@ -42,6 +43,7 @@ export let publisherController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         publisherId: v.string()
       })
     )

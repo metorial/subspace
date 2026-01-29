@@ -117,6 +117,43 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
     let hasOAuth = spec?.authMethods.some(am => am.type === 'oauth');
     let hasTriggers = !!(spec ? spec.triggers.length > 0 : false);
 
+    let type = {
+      name: 'Slates',
+
+      attributes: {
+        provider: 'metorial-slates',
+        backend: 'slates',
+
+        triggers: hasTriggers
+          ? {
+              status: 'enabled',
+              receiverUrl: `${env.service.SLATES_HUB_PUBLIC_URL}/slates-hub/triggers/webhook/{callback.slatesTriggerId}`
+            }
+          : { status: 'disabled' },
+
+        auth: hasAuthConfig
+          ? {
+              status: 'enabled',
+
+              oauth: hasOAuth
+                ? {
+                    status: 'enabled',
+                    oauthCallbackUrl: `${env.service.SLATES_HUB_PUBLIC_URL}/slates-hub/callback`
+                  }
+                : { status: 'disabled' },
+
+              export: { status: 'enabled' },
+
+              import: { status: 'enabled' }
+            }
+          : { status: 'disabled' },
+
+        config: hasConfig
+          ? { status: 'enabled', read: { status: 'enabled' } }
+          : { status: 'disabled' }
+      } satisfies PrismaJson.ProviderTypeAttributes
+    };
+
     let provider = await providerInternalService.upsertProvider({
       publisher,
       source: {
@@ -133,42 +170,7 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
         readme: readme,
         categories: registryRecord.categories.map((c: any) => c.identifier)
       },
-      type: {
-        name: 'Slates',
-
-        attributes: {
-          provider: 'metorial-slates',
-          backend: 'slates',
-
-          triggers: hasTriggers
-            ? {
-                status: 'enabled',
-                receiverUrl: `${env.service.SLATES_HUB_PUBLIC_URL}/slates-hub/triggers/webhook/{callback.slatesTriggerId}`
-              }
-            : { status: 'disabled' },
-
-          auth: hasAuthConfig
-            ? {
-                status: 'enabled',
-
-                oauth: hasOAuth
-                  ? {
-                      status: 'enabled',
-                      oauthCallbackUrl: `${env.service.SLATES_HUB_PUBLIC_URL}/slates-hub/callback`
-                    }
-                  : { status: 'disabled' },
-
-                export: { status: 'enabled' },
-
-                import: { status: 'enabled' }
-              }
-            : { status: 'disabled' },
-
-          config: hasConfig
-            ? { status: 'enabled', read: { status: 'enabled' } }
-            : { status: 'disabled' }
-        }
-      }
+      type
     });
     if (!provider?.defaultVariant) {
       throw new Error(`No default variant after upserting provider for slate ${slate.id}`);
@@ -185,7 +187,8 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
       },
       info: {
         name: `v${version.version}`
-      }
+      },
+      type
     });
   });
 });

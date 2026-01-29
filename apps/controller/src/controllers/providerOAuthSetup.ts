@@ -17,6 +17,7 @@ export let providerOAuthSetupApp = tenantApp.use(async ctx => {
   let providerOAuthSetup = await providerOAuthSetupService.getProviderOAuthSetupById({
     providerOAuthSetupId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution
   });
 
@@ -29,13 +30,15 @@ export let providerOAuthSetupController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+          environmentId: v.string()
         })
       )
     )
     .do(async ctx => {
       let paginator = await providerOAuthSetupService.listProviderOAuthSetups({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution
       });
 
@@ -49,6 +52,7 @@ export let providerOAuthSetupController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerOAuthSetupId: v.string()
       })
     )
@@ -59,6 +63,7 @@ export let providerOAuthSetupController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
 
         name: v.string(),
         description: v.optional(v.string()),
@@ -79,18 +84,21 @@ export let providerOAuthSetupController = app.controller({
       let provider = await providerService.getProviderById({
         providerId: ctx.input.providerId,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution
       });
 
       let credentials = await providerAuthCredentialsService.getProviderAuthCredentialsById({
         providerAuthCredentialsId: ctx.input.providerAuthCredentialsId,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution
       });
 
       let providerDeployment = ctx.input.providerDeploymentId
         ? await providerDeploymentService.getProviderDeploymentById({
             tenant: ctx.tenant,
+            environment: ctx.environment,
             solution: ctx.solution,
             providerDeploymentId: ctx.input.providerDeploymentId
           })
@@ -98,6 +106,7 @@ export let providerOAuthSetupController = app.controller({
 
       let providerOAuthSetup = await providerOAuthSetupService.createProviderOAuthSetup({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         provider,
@@ -124,6 +133,7 @@ export let providerOAuthSetupController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerOAuthSetupId: v.string(),
 
         name: v.optional(v.string()),
@@ -135,6 +145,7 @@ export let providerOAuthSetupController = app.controller({
       let providerOAuthSetup = await providerOAuthSetupService.updateProviderOAuthSetup({
         providerOAuthSetup: ctx.providerOAuthSetup,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         input: {

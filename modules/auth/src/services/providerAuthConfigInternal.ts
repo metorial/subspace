@@ -4,6 +4,7 @@ import {
   addAfterTransactionHook,
   type Backend,
   db,
+  Environment,
   getId,
   type Provider,
   type ProviderAuthConfigSource,
@@ -30,6 +31,7 @@ class providerAuthConfigInternalServiceImpl {
   async getVersionAndAuthMethod(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment?: ProviderDeployment & {
       lockedVersion: ProviderVersion | null;
@@ -98,6 +100,7 @@ class providerAuthConfigInternalServiceImpl {
   async createProviderAuthConfigInternal(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider;
     providerDeployment?: ProviderDeployment;
     backend: Backend;
@@ -177,6 +180,7 @@ class providerAuthConfigInternalServiceImpl {
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid,
           providerOid: d.provider.oid,
           authMethodOid: d.authMethod.oid,
           deploymentOid: d.providerDeployment?.oid,
@@ -219,6 +223,7 @@ class providerAuthConfigInternalServiceImpl {
 
             tenantOid: d.tenant.oid,
             solutionOid: d.solution.oid,
+            environmentOid: d.environment.oid,
             authConfigOid: providerAuthConfig.oid,
             authConfigUpdateOid: update.oid,
             deploymentOid: d.providerDeployment?.oid,
@@ -265,6 +270,7 @@ class providerAuthConfigInternalServiceImpl {
   async createBackendProviderAuthConfig(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerVersion: ProviderVersion;
     authMethod: ProviderAuthMethod;

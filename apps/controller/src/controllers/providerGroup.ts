@@ -12,6 +12,7 @@ export let providerListingGroupApp = tenantApp.use(async ctx => {
   let providerListingGroup = await providerListingGroupService.getProviderListingGroupById({
     providerListingGroupId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution
   });
 
@@ -25,6 +26,7 @@ export let providerListingGroupController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           ids: v.optional(v.array(v.string())),
           providerIds: v.optional(v.array(v.string())),
@@ -35,6 +37,7 @@ export let providerListingGroupController = app.controller({
     .do(async ctx => {
       let paginator = await providerListingGroupService.listProviderListingGroups({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         ids: ctx.input.ids,
@@ -52,6 +55,7 @@ export let providerListingGroupController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerListingGroupId: v.string()
       })
     )
@@ -62,6 +66,7 @@ export let providerListingGroupController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
 
         name: v.string(),
         description: v.optional(v.string())
@@ -70,6 +75,7 @@ export let providerListingGroupController = app.controller({
     .do(async ctx => {
       let providerListingGroup = await providerListingGroupService.createProviderListingGroup({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
         input: {
           name: ctx.input.name,
@@ -85,6 +91,7 @@ export let providerListingGroupController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerListingGroupId: v.string(),
 
         name: v.optional(v.string()),

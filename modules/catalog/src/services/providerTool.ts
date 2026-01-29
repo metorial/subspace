@@ -3,6 +3,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  Environment,
   type Provider,
   type ProviderAuthConfig,
   type ProviderConfig,
@@ -17,6 +18,7 @@ class providerToolServiceImpl {
   async listProviderTools(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     provider?: Provider;
     providerVersion?: ProviderVersion;
@@ -103,6 +105,7 @@ class providerToolServiceImpl {
   async getProviderToolById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerToolId: string;
   }) {
     let providerTool = await db.providerTool.findFirst({

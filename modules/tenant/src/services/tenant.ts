@@ -31,6 +31,26 @@ class tenantServiceImpl {
     if (!tenant) throw new ServiceError(notFoundError('tenant'));
     return tenant;
   }
+
+  async getTenantAndEnvironmentById(d: { tenantId: string; environmentId: string }) {
+    let tenant = await db.tenant.findFirst({
+      where: { OR: [{ id: d.tenantId }, { identifier: d.tenantId }] },
+      include: {
+        environments: {
+          where: { OR: [{ id: d.environmentId }, { identifier: d.environmentId }] }
+        }
+      }
+    });
+    let environment = tenant?.environments[0];
+
+    if (!tenant) throw new ServiceError(notFoundError('tenant'));
+    if (!environment) throw new ServiceError(notFoundError('environment'));
+
+    return {
+      tenant,
+      environment
+    };
+  }
 }
 
 export let tenantService = Service.create(

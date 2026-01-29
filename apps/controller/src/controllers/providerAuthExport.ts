@@ -15,6 +15,7 @@ export let providerAuthExportApp = tenantApp.use(async ctx => {
   let providerAuthExport = await providerAuthExportService.getProviderAuthExportById({
     providerAuthExportId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
@@ -29,6 +30,7 @@ export let providerAuthExportController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           allowDeleted: v.optional(v.boolean()),
 
@@ -42,6 +44,7 @@ export let providerAuthExportController = app.controller({
     .do(async ctx => {
       let paginator = await providerAuthExportService.listProviderAuthExports({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         allowDeleted: ctx.input.allowDeleted,
@@ -62,6 +65,7 @@ export let providerAuthExportController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerAuthExportId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })
@@ -73,6 +77,7 @@ export let providerAuthExportController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         note: v.string(),
         metadata: v.optional(v.record(v.any())),
 
@@ -85,12 +90,14 @@ export let providerAuthExportController = app.controller({
     .do(async ctx => {
       let providerAuthConfig = await providerAuthConfigService.getProviderAuthConfigById({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
         providerAuthConfigId: ctx.input.providerAuthConfigId
       });
 
       let providerAuthExport = await providerAuthExportService.createProviderAuthExport({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
         authConfig: providerAuthConfig,
 

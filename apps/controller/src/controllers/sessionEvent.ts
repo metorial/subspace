@@ -13,6 +13,7 @@ export let sessionEventApp = tenantApp.use(async ctx => {
   let sessionEvent = await sessionEventService.getSessionEventById({
     sessionEventId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
@@ -27,6 +28,7 @@ export let sessionEventController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           allowDeleted: v.optional(v.boolean()),
 
@@ -45,6 +47,7 @@ export let sessionEventController = app.controller({
     .do(async ctx => {
       let paginator = await sessionEventService.listSessionEvents({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         allowDeleted: ctx.input.allowDeleted,
@@ -70,6 +73,7 @@ export let sessionEventController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         sessionEventId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })

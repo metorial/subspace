@@ -3,12 +3,12 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  type Environment,
   getId,
   type SessionProviderStatus,
   type SessionTemplate,
   type Solution,
   type Tenant,
-  type Environment,
   withTransaction
 } from '@metorial-subspace/db';
 import {
@@ -38,7 +38,8 @@ let include = {
 class sessionTemplateServiceImpl {
   async listSessionTemplates(d: {
     tenant: Tenant;
-    solution: Solution; environment: Environment;
+    solution: Solution;
+    environment: Environment;
 
     status?: SessionProviderStatus[];
     allowDeleted?: boolean;
@@ -66,7 +67,7 @@ class sessionTemplateServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
-        environmentOid: d.environment.oid,
+              environmentOid: d.environment.oid,
 
               ...normalizeStatusForList(d).noParent,
 
@@ -100,7 +101,8 @@ class sessionTemplateServiceImpl {
 
   async getSessionTemplateById(d: {
     tenant: Tenant;
-    solution: Solution; environment: Environment;
+    solution: Solution;
+    environment: Environment;
     sessionTemplateId: string;
     allowDeleted?: boolean;
   }) {
@@ -122,7 +124,8 @@ class sessionTemplateServiceImpl {
 
   async createSessionTemplate(d: {
     tenant: Tenant;
-    solution: Solution; environment: Environment;
+    solution: Solution;
+    environment: Environment;
     input: {
       name?: string;
       description?: string;
@@ -164,7 +167,8 @@ class sessionTemplateServiceImpl {
 
   async updateSessionTemplate(d: {
     tenant: Tenant;
-    solution: Solution; environment: Environment;
+    solution: Solution;
+    environment: Environment;
     template: SessionTemplate;
     input: {
       name?: string;
@@ -196,7 +200,8 @@ class sessionTemplateServiceImpl {
 
   async archiveSessionTemplate(d: {
     tenant: Tenant;
-    solution: Solution; environment: Environment;
+    solution: Solution;
+    environment: Environment;
     sessionTemplate: SessionTemplate;
   }) {
     checkTenant(d, d.sessionTemplate);

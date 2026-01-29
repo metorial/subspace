@@ -266,6 +266,7 @@ class providerDeploymentServiceImpl {
           where: {
             tenantOid: d.tenant.oid,
             solutionOid: d.solution.oid,
+            environmentOid: d.environment.oid,
             providerOid: d.provider.oid,
             oid: { not: providerDeployment.oid },
             isDefault: true

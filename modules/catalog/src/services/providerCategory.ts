@@ -2,13 +2,14 @@ import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import { slugify } from '@lowerdeck/slugify';
-import { db, getId, type Solution, type Tenant } from '@metorial-subspace/db';
+import { db, Environment, getId, type Solution, type Tenant } from '@metorial-subspace/db';
 import { resolveProviderListings, resolveProviders } from '@metorial-subspace/list-utils';
 
 class providerListingCategoryServiceImpl {
   async listProviderListingCategories(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     ids?: string[];
     providerIds?: string[];
@@ -40,6 +41,7 @@ class providerListingCategoryServiceImpl {
   async getProviderListingCategoryById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerListingCategoryId: string;
   }) {
     let providerListingCategory = await db.providerListingCategory.findFirst({

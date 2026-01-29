@@ -3,9 +3,10 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  type Environment,
   type SessionMessageType,
   type Solution,
-  type Environment, type Tenant
+  type Tenant
 } from '@metorial-subspace/db';
 import {
   normalizeStatusForGet,
@@ -43,7 +44,8 @@ export let sessionMessageInclude = include;
 class sessionMessageServiceImpl {
   async listSessionMessages(d: {
     tenant: Tenant;
-    solution: Solution; environment: Environment;
+    solution: Solution;
+    environment: Environment;
 
     types?: SessionMessageType[];
     allowDeleted?: boolean;
@@ -71,7 +73,7 @@ class sessionMessageServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
-        environmentOid: d.environment.oid,
+              environmentOid: d.environment.oid,
 
               AND: [
                 normalizeStatusForList(d).onlyParent,
@@ -105,7 +107,8 @@ class sessionMessageServiceImpl {
 
   async getSessionMessageById(d: {
     tenant: Tenant;
-    solution: Solution; environment: Environment;
+    solution: Solution;
+    environment: Environment;
     sessionMessageId: string;
     allowDeleted?: boolean;
   }) {
