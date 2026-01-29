@@ -8,6 +8,7 @@ import {
   type Slate,
   withTransaction
 } from '@metorial-subspace/db';
+import { ensureProviderType } from '@metorial-subspace/provider-utils';
 import { createTag } from '../lib/createTag';
 import { listingCreatedQueue, listingUpdatedQueue } from '../queues/lifecycle/listing';
 import { providerCreatedQueue, providerUpdatedQueue } from '../queues/lifecycle/provider';
@@ -29,6 +30,12 @@ class providerInternalServiceImpl {
       image: PrismaJson.EntityImage | null;
       skills?: string[];
       readme?: string;
+      categories: string[];
+    };
+
+    type: {
+      name: string;
+      attributes: PrismaJson.ProviderTypeAttributes;
     };
   }) {
     return withTransaction(async db => {
@@ -51,6 +58,8 @@ class providerInternalServiceImpl {
         update: providerEntryData
       });
 
+      let type = await ensureProviderType(d.type.name, d.type.attributes);
+
       let providerData = {
         identifier: `${identifier}::provider`,
 
@@ -61,7 +70,8 @@ class providerInternalServiceImpl {
         description: d.info.description,
 
         entryOid: entry.oid,
-        publisherOid: d.publisher.oid
+        publisherOid: d.publisher.oid,
+        typeOid: type.oid
       };
       let existingProvider = await db.provider.findFirst({
         where: { identifier }
@@ -168,6 +178,20 @@ class providerInternalServiceImpl {
           data: allData
         });
       }
+
+      let categories = await db.providerListingCategory.findMany({
+        where: {
+          slug: { in: d.info.categories }
+        }
+      });
+      await db.providerListing.update({
+        where: { id: listing.id },
+        data: {
+          categories: {
+            set: categories.map(c => ({ oid: c.oid }))
+          }
+        }
+      });
 
       await addAfterTransactionHook(async () => {
         if (provider.id === newProviderId.id) {

@@ -30,6 +30,9 @@ model ProviderVersion {
   providerVariantOid BigInt
   providerVariant    ProviderVariant @relation(fields: [providerVariantOid], references: [oid])
 
+  typeOid Int
+  type    ProviderType @relation(fields: [typeOid], references: [oid])
+
   previousVersionOid BigInt?
   previousVersion    ProviderVersion?  @relation("ProviderVersionPreviousNext", fields: [previousVersionOid], references: [oid])
   nextVersions       ProviderVersion[] @relation("ProviderVersionPreviousNext")

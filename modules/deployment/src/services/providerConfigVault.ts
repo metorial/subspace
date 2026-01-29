@@ -4,6 +4,7 @@ import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
   db,
+  type Environment,
   getId,
   type Provider,
   type ProviderConfigVault,
