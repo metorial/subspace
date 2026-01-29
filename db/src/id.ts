@@ -13,6 +13,7 @@ export let ID = createIdGenerator({
   provider: idType.sorted('pro'),
   providerEntry: idType.sorted('pre'),
   providerVersion: idType.sorted('prv'),
+  providerType: idType.sorted('pty'),
 
   providerListing: idType.sorted('plg'),
   providerListingUpdate: idType.sorted('plu'),
@@ -97,3 +98,9 @@ export let getId = <K extends Parameters<typeof ID.generateIdSync>[0]>(model: K)
   oid: snowflake.nextId(),
   id: ID.generateIdSync(model)
 });
+
+export let get4ByteIntId = (): number => {
+  let buffer = new Uint32Array(1);
+  crypto.getRandomValues(buffer);
+  return buffer[0];
+};

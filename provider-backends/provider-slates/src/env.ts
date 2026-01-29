@@ -5,6 +5,7 @@ export let env = createValidatedEnv({
   service: {
     REDIS_URL: v.string(),
 
-    SLATES_HUB_URL: v.string()
+    SLATES_HUB_URL: v.string(),
+    SLATES_HUB_PUBLIC_URL: v.string()
   }
 });

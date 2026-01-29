@@ -8,6 +8,7 @@ import {
   providerVersionInternalService,
   publisherInternalService
 } from '@metorial-subspace/module-provider-internal';
+import { normalizeJsonSchema } from '@metorial-subspace/provider-utils';
 import { backend } from '../../backend';
 import { slates } from '../../client';
 import { env } from '../../env';
@@ -90,7 +91,7 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
       slateVersionId: version.id
     });
     let readmeNames = ['readme.md'];
-    let readme = registryVersionRecord.documents.find(d =>
+    let readme = registryVersionRecord.documents.find((d: any) =>
       readmeNames.some(n => d.path.toLocaleLowerCase().endsWith(n))
     )?.content;
 
@@ -105,6 +106,17 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
       }
     });
 
+    let spec = version.specification?.id
+      ? await slates.slateSpecification.get({
+          slateSpecificationId: version.specification?.id
+        })
+      : null;
+
+    let hasConfig = !!(spec ? normalizeJsonSchema(spec.configSchema) : null);
+    let hasAuthConfig = !!(spec && spec.authMethods.length > 0);
+    let hasOAuth = spec?.authMethods.some(am => am.type === 'oauth');
+    let hasTriggers = !!(spec ? spec.triggers.length > 0 : false);
+
     let provider = await providerInternalService.upsertProvider({
       publisher,
       source: {
@@ -118,7 +130,44 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
         slug: slugify(`${registryRecord.fullIdentifier}-${generateCode(5)}`),
         image: registryRecord.logoUrl ? { type: 'url', url: registryRecord.logoUrl } : null,
         skills: registryRecord.skills,
-        readme: readme
+        readme: readme,
+        categories: registryRecord.categories.map((c: any) => c.identifier)
+      },
+      type: {
+        name: 'Slates',
+
+        attributes: {
+          provider: 'metorial-slates',
+          backend: 'slates',
+
+          triggers: hasTriggers
+            ? {
+                status: 'enabled',
+                receiverUrl: `${env.service.SLATES_HUB_PUBLIC_URL}/slates-hub/triggers/webhook/{callback.slatesTriggerId}`
+              }
+            : { status: 'disabled' },
+
+          auth: hasAuthConfig
+            ? {
+                status: 'enabled',
+
+                oauth: hasOAuth
+                  ? {
+                      status: 'enabled',
+                      oauthCallbackUrl: `${env.service.SLATES_HUB_PUBLIC_URL}/slates-hub/callback`
+                    }
+                  : { status: 'disabled' },
+
+                export: { status: 'enabled' },
+
+                import: { status: 'enabled' }
+              }
+            : { status: 'disabled' },
+
+          config: hasConfig
+            ? { status: 'enabled', read: { status: 'enabled' } }
+            : { status: 'disabled' }
+        }
       }
     });
     if (!provider?.defaultVariant) {

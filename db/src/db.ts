@@ -73,5 +73,42 @@ declare global {
       name: string;
       [key: string]: any;
     };
+
+    type ProviderTypeAttributes = {
+      provider: 'metorial-slates' | 'metorial-subspace';
+      backend: 'slates' | 'mcp.container' | 'mcp.function' | 'mcp.remote';
+
+      triggers:
+        | {
+            status: 'enabled';
+            receiverUrl: string;
+          }
+        | { status: 'disabled' };
+
+      auth:
+        | {
+            status: 'enabled';
+
+            oauth:
+              | {
+                  status: 'enabled';
+                  oauthCallbackUrl: string;
+                }
+              | { status: 'disabled' };
+
+            export: { status: 'enabled' | 'disabled' };
+            import: { status: 'enabled' | 'disabled' };
+          }
+        | { status: 'disabled' };
+
+      config:
+        | {
+            status: 'enabled';
+            read: { status: 'enabled' | 'disabled' };
+          }
+        | { status: 'disabled' };
+
+      [key: string]: any;
+    };
   }
 }

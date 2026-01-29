@@ -60,6 +60,9 @@ model Provider {
   defaultVariantOid BigInt?
   defaultVariant    ProviderVariant? @relation(fields: [defaultVariantOid], references: [oid], name: "defaultVariant")
 
+  typeOid Int
+  type    ProviderType @relation(fields: [typeOid], references: [oid])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
