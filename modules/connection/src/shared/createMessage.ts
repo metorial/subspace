@@ -36,7 +36,7 @@ export interface CreateMessageProps {
 
   isProductive: boolean;
 
-  clientMcpId?: PrismaJson.SessionMessageClientMcpId;
+  mcpMessageId?: PrismaJson.SessionMessageClientMcpId;
 
   completedAt?: Date;
 }
@@ -61,6 +61,13 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
 
   if (data.status === 'failed' && (!data.failureReason || data.failureReason === 'none')) {
     data.failureReason = 'provider_error';
+  }
+
+  if (data.status === 'failed' && !data.output) {
+    data.output = {
+      type: 'error',
+      data: { code: 'unknown', message: 'An unknown error occurred' }
+    };
   }
 
   let error: SessionError | undefined;
@@ -101,7 +108,7 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
       output: data.output,
 
       methodOrToolKey: data.tool?.key ?? data.methodOrToolKey ?? null,
-      clientMcpId: data.clientMcpId ?? null,
+      mcpMessageId: data.mcpMessageId ?? null,
 
       toolCall: data.tool
         ? {

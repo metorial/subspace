@@ -7,11 +7,13 @@ enum SessionMessageStatus {
 enum SessionMessageType {
   tool_call
   mcp_control
+  mcp_message
   unknown
 }
 
 enum SessionMessageSource {
   client
+  provider
 }
 
 enum SessionMessageFailureReason {
@@ -36,7 +38,7 @@ model SessionMessage {
   methodOrToolKey String?
 
   /// [SessionMessageClientMcpId]
-  clientMcpId Json
+  mcpMessageId Json
 
   /// [SessionMessageInput]
   input Json?

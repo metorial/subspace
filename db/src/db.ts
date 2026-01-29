@@ -5,7 +5,7 @@ import type {
   SpecificationFeatures,
   SpecificationTool
 } from '@metorial-subspace/provider-utils';
-import type { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
+import type { InitializeRequest, JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../prisma/generated/client';
 import { env } from './env';
@@ -50,8 +50,9 @@ declare global {
         };
 
     type SessionConnectionMcpData = {
-      capabilities?: any;
-      protocolVersion?: string;
+      capabilities?: InitializeRequest['params']['capabilities'];
+      protocolVersion?: InitializeRequest['params']['protocolVersion'];
+      clientInfo?: InitializeRequest['params']['clientInfo'];
     };
 
     type SessionMessageOutput =

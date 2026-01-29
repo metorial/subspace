@@ -65,7 +65,7 @@ export interface CallToolProps {
   input: PrismaJson.SessionMessageInput;
   waitForResponse: boolean;
   transport: SessionConnectionTransport;
-  clientMcpId?: PrismaJson.SessionMessageClientMcpId;
+  mcpMessageId?: PrismaJson.SessionMessageClientMcpId;
 }
 
 export interface SenderMangerProps {
@@ -371,11 +371,11 @@ export class SenderManager {
 
     let message = await this.createMessage({
       status: 'waiting_for_response',
-      type: 'tool_call',
+      type: d.transport == 'mcp' ? 'mcp_message' : 'tool_call',
       source: 'client',
       input: d.input,
       senderParticipant: connection.participant,
-      clientMcpId: d.clientMcpId,
+      mcpMessageId: d.mcpMessageId,
       transport: d.transport,
       tool,
       isProductive: true,
@@ -536,6 +536,10 @@ export class SenderManager {
       participantOid: participant.oid,
 
       mcpData: {
+        clientInfo: {
+          ...d.client,
+          version: d.client.version ?? '1.0.0'
+        },
         capabilities: d.mcpCapabilities,
         protocolVersion: d.mcpProtocolVersion
       },

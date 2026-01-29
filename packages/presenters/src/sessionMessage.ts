@@ -66,7 +66,7 @@ export let sessionMessagePresenter = async (message: SessionMessagePresenterProp
           ? {
               object: 'session.message.transport#mcp',
 
-              id: message.input?.data?.id ?? message.clientMcpId ?? message.id,
+              id: message.input?.data?.id ?? message.mcpMessageId ?? message.id,
               protocolVersion: message.connection?.mcpProtocolVersion ?? 'unknown',
 
               transport: {

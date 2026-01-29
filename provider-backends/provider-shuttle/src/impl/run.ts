@@ -200,6 +200,16 @@ class ProviderRunConnection extends IProviderRunConnection {
       },
       onMessage: async data => {
         if (data.type == 'mcp.message') {
+          let id = 'id' in data.data && data.data.id ? data.data.id : undefined;
+
+          if (id !== undefined) {
+            let listener = this.#mcpMessageListeners.get(id);
+            if (listener) {
+              await listener(data.data);
+              this.#mcpMessageListeners.delete(id);
+            }
+          }
+
           await this.emitMessage({
             output: {
               type: 'mcp',

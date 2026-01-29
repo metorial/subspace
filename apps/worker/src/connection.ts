@@ -1,3 +1,3 @@
-import { startController } from '@metorial-subspace/module-connection';
+import { startReceiver } from '@metorial-subspace/module-connection';
 
-startController();
+startReceiver();

@@ -6,18 +6,19 @@ import type {
   ConduitInput,
   ConduitResult
 } from '@metorial-subspace/connection-utils';
-import { db } from '@metorial-subspace/db';
-import { getBackend } from '@metorial-subspace/provider';
+import { db, messageOutputToMcp } from '@metorial-subspace/db';
 import { conduit } from '../lib/conduit';
 import { broadcastNats } from '../lib/nats';
 import { topics } from '../lib/topic';
 import { completeMessage } from '../shared/completeMessage';
+import { createMessage } from '../shared/createMessage';
 import { upsertParticipant } from '../shared/upsertParticipant';
 import { ConnectionState } from './state';
+import { getConnectionBackendConnection } from './state/backend';
 
 let Sentry = getSentry();
 
-export let startController = () => {
+export let startReceiver = () => {
   let receiver = conduit.createConduitReceiver(async ctx => {
     ctx.extendTtl(1000 * 60);
 
@@ -36,17 +37,56 @@ export let startController = () => {
       return;
     }
 
-    let backend = await getBackend({ entity: state.version });
-    let backendProviderRun = await backend.toolInvocation.createProviderRun({
-      tenant: state.instance.sessionProvider.tenant,
-      providerConfig: state.instance.sessionProvider.config,
-      providerConfigVersion: state.instance.sessionProvider.config.currentVersion!,
+    let providerParticipantProm = upsertParticipant({
+      session: state.session,
+      from: {
+        type: 'provider',
+        provider: state.provider
+      }
+    });
 
-      providerVersion: state.version,
-      provider: state.version.provider,
-      providerVariant: state.version.providerVariant,
+    let backend = await getConnectionBackendConnection(state);
 
-      providerRun: state.providerRun
+    backend.onMessage(async data => {
+      let mcpMessage = await messageOutputToMcp(data.output, null);
+      if (!mcpMessage) return;
+
+      let id = 'id' in mcpMessage ? mcpMessage.id : undefined;
+      if (id) {
+        // TODO: @herber handle mcp message requests from the server
+        return;
+      }
+
+      let message = await createMessage({
+        status: id ? 'waiting_for_response' : 'succeeded',
+        type: 'mcp_message',
+        session: state.session,
+        connection: state.connection,
+        source: 'provider',
+        provider: state.sessionProvider,
+        senderParticipant: await providerParticipantProm,
+        transport: 'mcp',
+        input: { type: 'mcp', data: mcpMessage },
+        isProductive: true
+      });
+
+      await broadcastNats.publish(
+        topics.sessionConnection.encode({
+          session: state.session,
+          connection: state.connection
+        }),
+        serialize.encode({
+          type: 'message_processed',
+          sessionId: state.session.id,
+          result: {
+            message,
+            output: data.output,
+            status: 'succeeded',
+            completedAt: new Date()
+          } satisfies ConduitResult,
+          channel: 'broadcast_response_or_notification'
+        } satisfies BroadcastMessage)
+      );
     });
 
     let processMessage = async (data: ConduitInput) => {
@@ -55,20 +95,22 @@ export let startController = () => {
       });
 
       try {
-        let result = await backend.toolInvocation.createToolInvocation({
-          tenant: state.instance.sessionProvider.tenant,
-          provider: state.version.provider,
-          providerRun: state.providerRun,
+        let result = await backend.send({
           tool: { callableId: data.toolCallableId },
-          slateSession: backendProviderRun.slateSession,
-          runState: backendProviderRun.runState,
-          providerAuthConfig: state.instance.sessionProvider.authConfig,
-          providerAuthConfigVersion:
-            state.instance.sessionProvider.authConfig?.currentVersion ?? null,
-          input: data.input,
           sender: state.participant,
+          input: data.input,
           message
         });
+
+        if (!result.output) {
+          return {
+            isSystemError: false,
+            status: 'succeeded' as const,
+            output: null,
+            completedAt: new Date(),
+            slateToolCall: result.slateToolCall
+          };
+        }
 
         let status =
           result.output.type === 'success' ? ('succeeded' as const) : ('failed' as const);
@@ -110,14 +152,6 @@ export let startController = () => {
           ? { type: 'error' as const, data: res.output as any }
           : { type: 'tool.result' as const, data: res.output };
 
-      let participant = await upsertParticipant({
-        session: state.session,
-        from: {
-          type: 'provider',
-          provider: state.provider
-        }
-      });
-
       let message = await completeMessage(
         { messageId: data.sessionMessageId },
         {
@@ -126,7 +160,7 @@ export let startController = () => {
           providerRun: state.providerRun,
           completedAt: res.completedAt,
           slateToolCall: res.slateToolCall,
-          responderParticipant: participant,
+          responderParticipant: await providerParticipantProm,
           failureReason: res.isSystemError ? 'system_error' : undefined
         }
       );
@@ -138,25 +172,38 @@ export let startController = () => {
         completedAt: res.completedAt
       } satisfies ConduitResult;
 
-      await broadcastNats.publish(
-        topics.sessionConnection.encode({
-          session: state.session,
-          connection: state.connection
-        }),
-        serialize.encode({
-          type: 'message_processed',
-          sessionId: state.session.id,
-          result,
-          channel: 'targeted_response'
-        } satisfies BroadcastMessage)
-      );
+      if (result.output) {
+        await broadcastNats.publish(
+          topics.sessionConnection.encode({
+            session: state.session,
+            connection: state.connection
+          }),
+          serialize.encode({
+            type: 'message_processed',
+            sessionId: state.session.id,
+            channel: 'targeted_response',
+            result
+          } satisfies BroadcastMessage)
+        );
+      }
 
       return result;
     });
 
     ctx.onClose(async () => {
       console.log(`Closing provider instance receiver for instance id: ${state.instance.id}`);
-      await state.dispose();
+      try {
+        await state.dispose();
+      } catch (err) {
+        console.error('Error disposing connection state:', err);
+        Sentry.captureException(err);
+      }
+      try {
+        await backend.close();
+      } catch (err) {
+        console.error('Error closing connection backend:', err);
+        Sentry.captureException(err);
+      }
     });
   });
 

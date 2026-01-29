@@ -33,6 +33,13 @@ export let completeMessage = async (
     data.failureReason = 'provider_error';
   }
 
+  if (data.status === 'failed' && !data.output) {
+    data.output = {
+      type: 'error',
+      data: { code: 'unknown', message: 'An unknown error occurred' }
+    };
+  }
+
   let error: SessionError | undefined;
   if (data.status === 'failed') {
     let message = await db.sessionMessage.findFirstOrThrow({
