@@ -62,7 +62,7 @@ export let providerDeploymentConfigPairSyncSpecificationQueueProcessor =
       }
 
       let capabilities =
-        await backend.capabilities.getSpecificationForProviderDeployment(discoverParams);
+        await backend.capabilities.getSpecificationForProviderPair(discoverParams);
 
       // Some backends might need a config to be able to discover specifications
       if (!capabilities) {

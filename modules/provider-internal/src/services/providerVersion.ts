@@ -5,6 +5,8 @@ import {
   type Backend,
   getId,
   type ProviderVariant,
+  ShuttleServer,
+  ShuttleServerVersion,
   type Slate,
   type SlateVersion,
   withTransaction
@@ -28,12 +30,19 @@ class providerVersionInternalServiceImpl {
 
     isCurrent: boolean;
 
-    source: {
-      type: 'slates';
-      slate: Slate;
-      slateVersion: SlateVersion;
-      backend: Backend;
-    };
+    source:
+      | {
+          type: 'slates';
+          slate: Slate;
+          slateVersion: SlateVersion;
+          backend: Backend;
+        }
+      | {
+          type: 'shuttle';
+          shuttleServer: ShuttleServer;
+          shuttleServerVersion: ShuttleServerVersion;
+          backend: Backend;
+        };
 
     info: {
       name: string;
@@ -48,7 +57,14 @@ class providerVersionInternalServiceImpl {
       [String(d.variant.oid), String(d.variant.slateOid)],
       () =>
         withTransaction(async db => {
-          let identifier = `provider::${d.source.type}::${d.source.slate.id}::version::${d.source.slateVersion.id}`;
+          let identifier = `provider::${d.source.type}::`;
+          if (d.source.type === 'slates') {
+            identifier += `${d.source.slate.oid}::${d.source.slateVersion.oid}`;
+          } else if (d.source.type === 'shuttle') {
+            identifier += `${d.source.shuttleServer.oid}::${d.source.shuttleServerVersion.oid}`;
+          } else {
+            throw new Error('Unknown provider source type');
+          }
 
           let currentVariant = await db.providerVariant.findFirst({
             where: { oid: d.variant.oid }
@@ -66,8 +82,12 @@ class providerVersionInternalServiceImpl {
 
             typeOid: type.oid,
 
-            slateOid: d.source.slate.oid,
-            slateVersionOid: d.source.slateVersion.oid,
+            slateOid: d.source.type === 'slates' ? d.source.slate.oid : null,
+            slateVersionOid: d.source.type === 'slates' ? d.source.slateVersion.oid : null,
+
+            shuttleServerOid: d.source.type === 'shuttle' ? d.source.shuttleServer.oid : null,
+            shuttleServerVersionOid:
+              d.source.type === 'shuttle' ? d.source.shuttleServerVersion.oid : null,
 
             isCurrent: d.isCurrent
           };

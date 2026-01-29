@@ -10,10 +10,53 @@ import {
 import { createTag } from '../lib/createTag';
 import { publisherCreatedQueue, publisherUpdatedQueue } from '../queues/lifecycle/publisher';
 
-let include = {};
-
 class publisherInternalServiceImpl {
-  async upsertPublisher(d: {
+  async upsertPublisherForTenant(d: { tenant: Tenant }) {
+    return this.upsertPublisher({
+      owner: { type: 'tenant', tenant: d.tenant },
+      input: {
+        identifier: `tenant::${d.tenant.identifier}`,
+        name: d.tenant.name
+      }
+    });
+  }
+
+  async upsertPublisherForMetorial() {
+    return this.upsertPublisher({
+      owner: { type: 'metorial' },
+      input: {
+        identifier: `metorial`,
+        name: `Metorial`
+      }
+    });
+  }
+
+  async upsertPublisherForExternal(d: {
+    identifier: string;
+    name: string;
+    description?: string;
+  }) {
+    return this.upsertPublisher({
+      owner: { type: 'external' },
+      input: {
+        identifier: `ext::${d.identifier}`,
+        name: d.name,
+        description: d.description
+      }
+    });
+  }
+
+  async upsertUnknownPublisher() {
+    return this.upsertPublisher({
+      owner: { type: 'external' },
+      input: {
+        identifier: `int::unknown`,
+        name: `Unknown Publisher`
+      }
+    });
+  }
+
+  private async upsertPublisher(d: {
     owner: { type: 'tenant'; tenant: Tenant } | { type: 'metorial' } | { type: 'external' };
     input: {
       name: string;

@@ -1,5 +1,7 @@
 import type {
   Provider,
+  ProviderAuthConfigVersion,
+  ProviderConfigVersion,
   ProviderDeployment,
   ProviderVariant,
   ProviderVersion,
@@ -18,35 +20,44 @@ export abstract class IProviderCapabilities extends IProviderFunctionality {
     data: ProviderSpecificationGetForProviderParam
   ): Promise<ProviderSpecificationGetRes | null>;
 
-  abstract getSpecificationForProviderDeployment(
-    data: ProviderSpecificationGetForDeploymentParam
+  abstract getSpecificationForProviderPair(
+    data: ProviderSpecificationGetForPairParam
   ): Promise<ProviderSpecificationGetRes>;
 
-  // If we already have the spec for the provider version, is it the same as what we'd get
-  // for the deployment version?
-  abstract isSpecificationForProviderDeploymentVersionSameAsForVersion(
-    data: ProviderSpecificationGetForDeploymentParam
-  ): Promise<boolean>;
+  abstract getSpecificationBehavior(
+    data: ProviderSpecificationBehaviorParam
+  ): Promise<ProviderSpecificationBehaviorRes>;
 }
 
 export interface ProviderSpecificationGetForProviderParam {
-  provider: Provider;
-  providerVariant: ProviderVariant;
-  providerVersion: ProviderVersion;
-}
-
-export interface ProviderSpecificationGetForDeploymentParam {
   tenant: Tenant;
+  provider: Provider;
+  providerVariant: ProviderVariant;
+  providerVersion: ProviderVersion;
+}
+
+export interface ProviderSpecificationGetForPairParam {
+  tenant: Tenant;
+
   deployment: (ProviderDeployment & { lockedVersion: ProviderVersion | null }) | null;
+  configVersion: ProviderConfigVersion;
+  authConfigVersion: ProviderAuthConfigVersion | null;
 
   provider: Provider;
   providerVariant: ProviderVariant;
   providerVersion: ProviderVersion;
 }
 
-export interface ProviderSpecificationGetRes {
+export type ProviderSpecificationGetRes = {
   specification: Specification;
   features: SpecificationFeatures;
   tools: SpecificationTool[];
   authMethods: SpecificationAuthMethod[];
+} | null;
+
+export interface ProviderSpecificationBehaviorParam {}
+
+export interface ProviderSpecificationBehaviorRes {
+  supportsVersionSpecification: boolean;
+  supportsDeploymentSpecification: boolean;
 }
