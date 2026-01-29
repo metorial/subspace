@@ -95,16 +95,13 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
       readmeNames.some(n => d.path.toLocaleLowerCase().endsWith(n))
     )?.content;
 
-    let publisher = await publisherInternalService.upsertPublisher({
-      owner: {
-        type: isMetorialHosted ? 'metorial' : 'external'
-      },
-      input: {
-        identifier: `slates::${slate.registryId}::${slate.scope.id}`,
-        name: registryRecord.name,
-        description: registryRecord.description ?? undefined
-      }
-    });
+    let publisher = isMetorialHosted
+      ? await publisherInternalService.upsertPublisherForMetorial()
+      : await publisherInternalService.upsertPublisherForExternal({
+          identifier: `slates::${slate.registryId}::${slate.scope.id}`,
+          name: registryRecord.name,
+          description: registryRecord.description ?? undefined
+        });
 
     let spec = version.specification?.id
       ? await slates.slateSpecification.get({
