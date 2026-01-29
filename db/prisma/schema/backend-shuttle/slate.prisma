@@ -1,0 +1,34 @@
+model ShuttleServer {
+  oid BigInt @id
+  id  String @unique
+
+  identifier String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  version                 ShuttleServerVersion[]
+  providerVersions        ProviderVersion[]
+  providerVariants        ProviderVariant[]
+  shuttleOAuthCredentials ShuttleOAuthCredentials[]
+  shuttleOAuthSetups      ShuttleOAuthSetup[]
+  shuttleAuthConfigs      ShuttleAuthConfig[]
+  shuttleConnections      ShuttleConnection[]
+}
+
+model ShuttleServerVersion {
+  oid BigInt @id
+  id  String @unique
+
+  version    String
+  identifier String @unique
+
+  slateOid BigInt
+  slate    ShuttleServer @relation(fields: [slateOid], references: [oid])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  providerVersions   ProviderVersion[]
+  shuttleConnections ShuttleConnection[]
+}

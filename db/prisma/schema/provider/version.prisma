@@ -43,6 +43,12 @@ model ProviderVersion {
   slateVersionOid BigInt?
   slateVersion    SlateVersion? @relation(fields: [slateVersionOid], references: [oid])
 
+  shuttleServerOid BigInt?
+  shuttleServer    ShuttleServer? @relation(fields: [shuttleServerOid], references: [oid])
+
+  shuttleServerVersionOid BigInt?
+  shuttleServerVersion    ShuttleServerVersion? @relation(fields: [shuttleServerVersionOid], references: [oid])
+
   specificationOid BigInt?
   specification    ProviderSpecification? @relation(fields: [specificationOid], references: [oid])
 
