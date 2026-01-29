@@ -66,6 +66,7 @@ export let ID = createIdGenerator({
   sessionProvider: idType.sorted('spv'),
   sessionProviderInstance: idType.sorted('spi'),
   sessionMessage: idType.sorted('smg'),
+  sessionMessage_mcp: idType.sorted('smg_mcp'),
   sessionParticipant: idType.sorted('spar'),
   sessionEvent: idType.sorted('sev'),
   sessionClientConnection: idType.sorted('scc'),

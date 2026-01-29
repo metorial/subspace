@@ -65,7 +65,7 @@ export interface CallToolProps {
   input: PrismaJson.SessionMessageInput;
   waitForResponse: boolean;
   transport: SessionConnectionTransport;
-  mcpMessageId?: PrismaJson.SessionMessageClientMcpId;
+  clientMcpId?: PrismaJson.SessionMessageClientMcpId;
 }
 
 export interface SenderMangerProps {
@@ -375,7 +375,7 @@ export class SenderManager {
       source: 'client',
       input: d.input,
       senderParticipant: connection.participant,
-      mcpMessageId: d.mcpMessageId,
+      clientMcpId: d.clientMcpId,
       transport: d.transport,
       tool,
       isProductive: true,

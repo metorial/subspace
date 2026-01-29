@@ -36,7 +36,8 @@ export interface CreateMessageProps {
 
   isProductive: boolean;
 
-  mcpMessageId?: PrismaJson.SessionMessageClientMcpId;
+  clientMcpId?: PrismaJson.SessionMessageClientMcpId;
+  providerMcpId?: string;
 
   completedAt?: Date;
 }
@@ -108,7 +109,8 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
       output: data.output,
 
       methodOrToolKey: data.tool?.key ?? data.methodOrToolKey ?? null,
-      mcpMessageId: data.mcpMessageId ?? null,
+      clientMcpId: data.clientMcpId ?? null,
+      providerMcpId: data.providerMcpId ?? null,
 
       toolCall: data.tool
         ? {

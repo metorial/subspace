@@ -38,7 +38,8 @@ model SessionMessage {
   methodOrToolKey String?
 
   /// [SessionMessageClientMcpId]
-  mcpMessageId Json
+  clientMcpId   Json
+  providerMcpId String? @unique
 
   /// [SessionMessageInput]
   input Json?

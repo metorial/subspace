@@ -83,7 +83,7 @@ export class McpSender {
           output: { type: 'mcp', data: res.mcp },
 
           methodOrToolKey: method,
-          mcpMessageId: id ?? null,
+          clientMcpId: id ?? null,
           transport: 'mcp'
         });
       }
@@ -144,7 +144,7 @@ export class McpSender {
         },
 
         methodOrToolKey: method,
-        mcpMessageId: id,
+        clientMcpId: id,
         transport: 'mcp'
       });
 
@@ -258,7 +258,7 @@ export class McpSender {
     opts: { waitForResponse: boolean }
   ) {
     let result = await this.manager.callTool({
-      mcpMessageId: id,
+      clientMcpId: id,
       toolId: msg.params.name,
       input: {
         type: 'mcp',
