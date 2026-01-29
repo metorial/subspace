@@ -4,6 +4,8 @@ model ShuttleServer {
 
   identifier String @unique
 
+  shuttleTenantId String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
@@ -14,6 +16,7 @@ model ShuttleServer {
   shuttleOAuthSetups      ShuttleOAuthSetup[]
   shuttleAuthConfigs      ShuttleAuthConfig[]
   shuttleConnections      ShuttleConnection[]
+  shuttleServerConfigs    ShuttleServerConfig[]
 }
 
 model ShuttleServerVersion {
@@ -23,12 +26,13 @@ model ShuttleServerVersion {
   version    String
   identifier String @unique
 
-  slateOid BigInt
-  slate    ShuttleServer @relation(fields: [slateOid], references: [oid])
+  serverOid BigInt
+  server    ShuttleServer @relation(fields: [serverOid], references: [oid])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  providerVersions   ProviderVersion[]
-  shuttleConnections ShuttleConnection[]
+  providerVersions     ProviderVersion[]
+  shuttleConnections   ShuttleConnection[]
+  shuttleServerConfigs ShuttleServerConfig[]
 }

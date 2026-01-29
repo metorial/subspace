@@ -13,10 +13,11 @@ model Backend {
 
   createdAt DateTime @default(now())
 
-  providerVersions                     ProviderVersion[]
-  slatesSyncChangeNotificationCursor   SlatesSyncChangeNotificationCursor?
-  providerVariants                     ProviderVariant[]
-  providerAuthCredentials              ProviderAuthCredentials[]
-  providerAuthConfigs                  ProviderAuthConfig[]
-  shuttleSyncChangeNotificationCursors ShuttleSyncChangeNotificationCursor[]
+  slatesSyncChangeNotificationCursor  SlatesSyncChangeNotificationCursor?
+  shuttleSyncChangeNotificationCursor ShuttleSyncChangeNotificationCursor?
+
+  providerVersions        ProviderVersion[]
+  providerVariants        ProviderVariant[]
+  providerAuthCredentials ProviderAuthCredentials[]
+  providerAuthConfigs     ProviderAuthConfig[]
 }

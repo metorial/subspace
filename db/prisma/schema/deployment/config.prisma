@@ -72,6 +72,9 @@ model ProviderConfigVersion {
   slateInstanceOid BigInt?
   slateInstance    SlateInstance? @relation(fields: [slateInstanceOid], references: [oid])
 
+  shuttleConfigOid BigInt?
+  shuttleConfig    ShuttleServerConfig? @relation(fields: [shuttleConfigOid], references: [oid])
+
   createdAt DateTime @default(now())
 
   configUpdatesFrom ProviderConfigUpdate[] @relation("fromVersion")

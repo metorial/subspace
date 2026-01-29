@@ -52,6 +52,7 @@ model Tenant {
   shuttleOAuthCredentials                  ShuttleOAuthCredentials[]
   shuttleOAuthSetups                       ShuttleOAuthSetup[]
   shuttleAuthConfigs                       ShuttleAuthConfig[]
+  shuttleServerConfigs                     ShuttleServerConfig[]
 }
 
 model Environment {
