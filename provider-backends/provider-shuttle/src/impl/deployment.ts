@@ -6,7 +6,7 @@ import {
   type ProviderDeploymentCreateParam,
   type ProviderDeploymentCreateRes
 } from '@metorial-subspace/provider-utils';
-import { getTenantForSlates, slates } from '../client';
+import { getTenantForShuttle, shuttle } from '../client';
 
 export class ProviderDeployment extends IProviderDeployment {
   override async createProviderDeployment(
@@ -19,41 +19,32 @@ export class ProviderDeployment extends IProviderDeployment {
     data: ProviderConfigCreateParam
   ): Promise<ProviderConfigCreateRes> {
     return withTransaction(async db => {
-      if (!data.providerVariant.slateOid) {
-        throw new Error('Provider variant does not have a slate associated with it');
+      if (!data.providerVariant.shuttleServerOid) {
+        throw new Error('Provider variant does not have a shuttleServer associated with it');
       }
 
-      let slate = await db.slate.findUniqueOrThrow({
-        where: { oid: data.providerVariant.slateOid }
+      let shuttleServer = await db.shuttleServer.findUniqueOrThrow({
+        where: { oid: data.providerVariant.shuttleServerOid }
       });
 
-      let lockedVersion = data.deployment?.lockedVersionOid
-        ? await db.providerVersion.findUniqueOrThrow({
-            where: { oid: data.deployment.lockedVersionOid },
-            include: { slateVersion: true }
-          })
-        : undefined;
-
-      let tenant = await getTenantForSlates(data.tenant);
-      let res = await slates.slateInstance.create({
+      let tenant = await getTenantForShuttle(data.tenant);
+      let res = await shuttle.serverConfig.create({
         tenantId: tenant.id,
-        slateId: slate.id,
-        config: data.config,
-        lockedVersionId: lockedVersion?.slateVersion?.id
+        serverId: shuttleServer.id,
+        config: data.config
       });
 
-      let slateInstance = await db.slateInstance.create({
+      let shuttleServerConfig = await db.shuttleServerConfig.create({
         data: {
           oid: snowflake.nextId(),
           id: res.id,
 
-          slateOid: slate.oid,
-          tenantOid: data.tenant.oid,
-          lockedSlateVersionOid: lockedVersion?.oid
+          shuttleServerOid: shuttleServer.oid,
+          tenantOid: data.tenant.oid
         }
       });
 
-      return { slateInstance };
+      return { shuttleServerConfig };
     });
   }
 }

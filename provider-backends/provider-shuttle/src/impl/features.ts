@@ -6,7 +6,7 @@ import {
 export class ProviderFeatures extends IProviderFeatures {
   override getFeatures(): ProviderFeatureSpec {
     return {
-      customProviders: { enabled: false }
+      customProviders: { enabled: true }
     };
   }
 }

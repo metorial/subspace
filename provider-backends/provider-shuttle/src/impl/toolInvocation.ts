@@ -1,127 +1,112 @@
-import { db, messageInputToToolCall, snowflake } from '@metorial-subspace/db';
+import { db, snowflake } from '@metorial-subspace/db';
 import type {
   ProviderRunCreateParam,
   ProviderRunCreateRes,
+  ProviderRunLogsParam,
+  ProviderRunLogsRes,
   ToolInvocationCreateParam,
-  ToolInvocationCreateRes,
-  ToolInvocationLogsParam,
-  ToolInvocationLogsRes
+  ToolInvocationCreateRes
 } from '@metorial-subspace/provider-utils';
 import { IProviderToolInvocation } from '@metorial-subspace/provider-utils';
-import { getTenantForSlates, slates } from '../client';
+import PQueue from 'p-queue';
+import { getTenantForShuttle, shuttle } from '../client';
 
 export class ProviderToolInvocation extends IProviderToolInvocation {
   override async createProviderRun(
     data: ProviderRunCreateParam
   ): Promise<ProviderRunCreateRes> {
     if (
-      !data.providerVariant.slateOid ||
-      !data.providerConfigVersion.slateInstanceOid ||
-      !data.providerVersion.slateVersionOid
+      !data.providerVariant.shuttleServerOid ||
+      !data.providerConfigVersion.shuttleConfigOid ||
+      !data.providerVersion.shuttleServerVersionOid ||
+      (data.providerAuthConfigVersion && !data.providerAuthConfigVersion.shuttleAuthConfigOid)
     ) {
       throw new Error('Provider data is missing required slate associations');
     }
 
-    let tenant = await getTenantForSlates(data.tenant);
+    let tenant = await getTenantForShuttle(data.tenant);
 
-    let slate = await db.slate.findUniqueOrThrow({
-      where: { oid: data.providerVariant.slateOid }
+    let shuttleServer = await db.shuttleServer.findUniqueOrThrow({
+      where: { oid: data.providerVariant.shuttleServerOid }
     });
-    let slateInstance = await db.slateInstance.findUniqueOrThrow({
-      where: { oid: data.providerConfigVersion.slateInstanceOid }
+    let shuttleConfig = await db.shuttleServerConfig.findUniqueOrThrow({
+      where: { oid: data.providerConfigVersion.shuttleConfigOid }
     });
-    let slateVersion = await db.slateVersion.findUniqueOrThrow({
-      where: { oid: data.providerVersion.slateVersionOid }
+    let shuttleVersion = await db.shuttleServerVersion.findUniqueOrThrow({
+      where: { oid: data.providerVersion.shuttleServerVersionOid }
     });
+    let shuttleAuthConfig = data.providerAuthConfigVersion?.shuttleAuthConfigOid
+      ? await db.shuttleAuthConfig.findUniqueOrThrow({
+          where: { oid: data.providerAuthConfigVersion.shuttleAuthConfigOid }
+        })
+      : null;
 
-    let res = await slates.slateSession.create({
+    let res = await shuttle.serverConnection.create({
       tenantId: tenant.id,
-      slateId: slate.id,
-      slateInstanceId: slateInstance.id,
-      lockedSlateVersion: slateVersion.id
+      serverVersionId: shuttleVersion.id,
+      serverConfigId: shuttleConfig.id,
+      serverAuthConfigId: shuttleAuthConfig?.id,
+
+      client: data.mcp?.clientInfo ?? {
+        name: data.participant.name,
+        version: '1.0.0'
+      },
+      capabilities: data.mcp?.capabilities ?? {}
+
+      // TODO: @herber add networkRulesetIds
     });
 
-    let slateSession = await db.slateSession.create({
+    let shuttleConnection = await db.shuttleConnection.create({
       data: {
         oid: snowflake.nextId(),
         id: res.id,
+        shuttleServerOid: shuttleServer.oid,
+        shuttleServerVersionOid: shuttleVersion.oid,
         providerRunOid: data.providerRun.oid
       }
     });
 
     return {
-      slateSession,
-      runState: { sessionId: slateSession.id }
+      shuttleConnection,
+      runState: { sessionId: shuttleConnection.id }
     };
   }
 
   override async createToolInvocation(
     data: ToolInvocationCreateParam
   ): Promise<ToolInvocationCreateRes> {
-    if (data.providerAuthConfigVersion && !data.providerAuthConfigVersion.slateAuthConfigOid) {
-      throw new Error('Provider auth config is missing slate auth config association');
-    }
-
-    let tenant = await getTenantForSlates(data.tenant);
-
-    let slateAuthConfig = data.providerAuthConfigVersion?.slateAuthConfigOid
-      ? await db.slateAuthConfig.findUniqueOrThrow({
-          where: { oid: data.providerAuthConfigVersion.slateAuthConfigOid }
-        })
-      : null;
-
-    let input = await messageInputToToolCall(data.input, data.message);
-
-    let res = await slates.slateSessionToolCall.call({
-      tenantId: tenant.id,
-      toolId: data.tool.callableId,
-      sessionId: data.slateSession!.id,
-      authConfigId: slateAuthConfig?.id,
-
-      input,
-
-      participants: [
-        {
-          type: 'consumer',
-          id: data.sender.id,
-          name: data.sender.name,
-          description: (data.sender.payload as any).description
-        }
-      ]
-    });
-
-    let slateToolCall = await db.slateToolCall.create({
-      data: {
-        oid: snowflake.nextId(),
-        id: res.toolCallId,
-        sessionOid: data.slateSession!.oid
-      }
-    });
-
-    return {
-      slateToolCall,
-      output:
-        res.status === 'error'
-          ? { type: 'error', error: res.error }
-          : { type: 'success', data: res.output }
-    };
+    throw new Error('Method not implemented.');
   }
 
-  override async getToolInvocationLogs(
-    data: ToolInvocationLogsParam
-  ): Promise<ToolInvocationLogsRes> {
-    let tenant = await getTenantForSlates(data.tenant);
+  override async getProviderRunLogs(data: ProviderRunLogsParam): Promise<ProviderRunLogsRes> {
+    let tenant = await getTenantForShuttle(data.tenant);
 
-    let res = await slates.slateSessionToolCall.getLogs({
-      tenantId: tenant.id,
-      slateSessionToolCallId: data.slateToolCallId
+    let connections = await db.shuttleConnection.findMany({
+      where: { providerRunOid: data.providerRun.oid },
+      take: 10
     });
 
+    let queue = new PQueue({ concurrency: 5 });
+
+    let logs = await queue.addAll(
+      connections.map(conn => async () => {
+        let res = await shuttle.serverConnection.getLogs({
+          tenantId: tenant.id,
+          serverConnectionId: conn.id
+        });
+
+        return (res ?? []).map(log => ({
+          outputType: log.outputType,
+          timestamp: log.timestamp,
+          message: log.message
+        }));
+      })
+    );
+
+    let sorted = logs.flat().sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
     return {
-      logs: res.invocation.logs.map(log => ({
-        timestamp: log.timestamp,
-        message: log.message
-      }))
+      logs: sorted
     };
   }
 }

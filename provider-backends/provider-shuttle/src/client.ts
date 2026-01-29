@@ -6,6 +6,11 @@ export let shuttle = createShuttleClient({
   endpoint: env.service.SHUTTLE_URL
 });
 
+export let shuttleDefaultReaderTenant = await shuttle.tenant.upsert({
+  name: 'Subspace Default Reader',
+  identifier: 'subspace-default-reader'
+});
+
 export let getTenantForShuttle = async (tenant: Tenant) => {
   if (!tenant.shuttleTenantId) {
     let shuttleTenant = await shuttle.tenant.upsert({

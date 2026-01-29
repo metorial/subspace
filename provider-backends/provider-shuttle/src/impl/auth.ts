@@ -1,4 +1,5 @@
 import { badRequestError, ServiceError } from '@lowerdeck/error';
+import { v } from '@lowerdeck/validation';
 import { db, snowflake } from '@metorial-subspace/db';
 import type {
   GetDecryptedAuthConfigParam,
@@ -13,7 +14,7 @@ import type {
   ProviderOAuthSetupRetrieveRes
 } from '@metorial-subspace/provider-utils';
 import { IProviderAuth } from '@metorial-subspace/provider-utils';
-import { getTenantForSlates, slates } from '../client';
+import { getTenantForShuttle, shuttle } from '../client';
 
 export class ProviderAuth extends IProviderAuth {
   override async createProviderAuthCredentials(
@@ -27,36 +28,36 @@ export class ProviderAuth extends IProviderAuth {
       );
     }
 
-    if (!data.provider.defaultVariant?.slateOid) {
-      throw new Error('Provider default variant does not have a slate associated with it');
+    if (!data.provider.defaultVariant?.shuttleServerOid) {
+      throw new Error('Provider default variant does not have a shuttle associated with it');
     }
 
-    let slate = await db.slate.findFirstOrThrow({
-      where: { oid: data.provider.defaultVariant.slateOid }
+    let shuttleServer = await db.shuttleServer.findFirstOrThrow({
+      where: { oid: data.provider.defaultVariant.shuttleServerOid }
     });
 
-    let tenant = await getTenantForSlates(data.tenant);
+    let tenant = await getTenantForShuttle(data.tenant);
 
-    let creds = await slates.slateOAuthCredentials.create({
+    let creds = await shuttle.serverOAuthCredentials.create({
       tenantId: tenant.id,
-      slateId: slate.id,
+      serverId: shuttleServer.id,
 
       scopes: data.input.scopes,
       clientId: data.input.clientId,
       clientSecret: data.input.clientSecret
     });
 
-    let slateOAuthCredentials = await db.slateOAuthCredentials.create({
+    let shuttleOAuthCredentials = await db.shuttleOAuthCredentials.create({
       data: {
         oid: snowflake.nextId(),
         id: creds.id,
-        slateOid: slate.oid,
+        shuttleServerOid: shuttleServer.oid,
         tenantOid: data.tenant.oid
       }
     });
 
     return {
-      slateOAuthCredentials,
+      shuttleOAuthCredentials,
       type: 'oauth'
     };
   }
@@ -64,43 +65,41 @@ export class ProviderAuth extends IProviderAuth {
   override async createProviderOAuthSetup(
     data: ProviderOAuthSetupCreateParam
   ): Promise<ProviderOAuthSetupCreateRes> {
-    if (!data.credentials.slateCredentialsOid) {
-      throw new Error('Credentials do not have associated slate credentials');
+    if (!data.credentials.shuttleCredentialsOid) {
+      throw new Error('Credentials do not have associated shuttle credentials');
     }
-    if (!data.provider.defaultVariant?.slateOid) {
-      throw new Error('Provider default variant does not have a slate associated with it');
+    if (!data.provider.defaultVariant?.shuttleServerOid) {
+      throw new Error('Provider default variant does not have a shuttle associated with it');
     }
-    if (!data.providerVersion?.slateVersionOid) {
-      throw new Error('Provider version does not have a slate version associated with it');
+    if (!data.providerVersion?.shuttleServerVersionOid) {
+      throw new Error('Provider version does not have a shuttle version associated with it');
     }
 
-    let tenant = await getTenantForSlates(data.tenant);
+    let tenant = await getTenantForShuttle(data.tenant);
 
-    let slate = await db.slate.findFirstOrThrow({
-      where: { oid: data.provider.defaultVariant.slateOid }
+    let shuttleServer = await db.shuttleServer.findFirstOrThrow({
+      where: { oid: data.provider.defaultVariant.shuttleServerOid }
     });
-    let slateVersion = await db.slateVersion.findFirstOrThrow({
-      where: { oid: data.providerVersion.slateVersionOid }
-    });
-    let slateOAuthCredentials = await db.slateOAuthCredentials.findUniqueOrThrow({
-      where: { oid: data.credentials.slateCredentialsOid }
+    // let shuttleVersion = await db.shuttleServerVersion.findFirstOrThrow({
+    //   where: { oid: data.providerVersion.shuttleServerVersionOid }
+    // });
+    let shuttleOAuthCredentials = await db.shuttleOAuthCredentials.findUniqueOrThrow({
+      where: { oid: data.credentials.shuttleCredentialsOid }
     });
 
-    let oauthSetup = await slates.slateOAuthSetup.create({
+    let oauthSetup = await shuttle.serverOAuthSetup.create({
       tenantId: tenant.id,
-      slateId: slate.id,
-      slateVersionId: slateVersion.id,
-
+      serverId: shuttleServer.id,
       input: data.input,
       redirectUrl: data.redirectUrl,
-      slateOAuthCredentialsId: slateOAuthCredentials.id
+      serverCredentialsId: shuttleOAuthCredentials.id
     });
 
-    let slateOAuthSetup = await db.slateOAuthSetup.create({
+    let shuttleOAuthSetup = await db.shuttleOAuthSetup.create({
       data: {
         oid: snowflake.nextId(),
         id: oauthSetup.id,
-        slateOid: slate.oid,
+        shuttleServerOid: shuttleServer.oid,
         tenantOid: data.tenant.oid
       }
     });
@@ -111,76 +110,92 @@ export class ProviderAuth extends IProviderAuth {
 
     return {
       url: oauthSetup.url,
-      slateOAuthSetup
+      shuttleOAuthSetup
     };
   }
 
   override async createProviderAuthConfig(
     data: ProviderAuthConfigCreateParam
   ): Promise<ProviderAuthConfigCreateRes> {
-    if (!data.provider.defaultVariant?.slateOid) {
-      throw new Error('Provider default variant does not have a slate associated with it');
+    if (!data.provider.defaultVariant?.shuttleServerOid) {
+      throw new Error('Provider default variant does not have a shuttle associated with it');
     }
-    if (!data.providerVersion?.slateVersionOid) {
-      throw new Error('Provider version does not have a slate version associated with it');
+    if (!data.providerVersion?.shuttleServerVersionOid) {
+      throw new Error('Provider version does not have a shuttle version associated with it');
     }
 
-    let tenant = await getTenantForSlates(data.tenant);
+    let tenant = await getTenantForShuttle(data.tenant);
 
-    let slate = await db.slate.findFirstOrThrow({
-      where: { oid: data.provider.defaultVariant.slateOid }
+    let shuttleServer = await db.shuttleServer.findFirstOrThrow({
+      where: { oid: data.provider.defaultVariant.shuttleServerOid }
     });
-    let slateVersion = await db.slateVersion.findFirstOrThrow({
-      where: { oid: data.providerVersion.slateVersionOid }
-    });
+    // let shuttleVersion = await db.shuttleServerVersion.findFirstOrThrow({
+    //   where: { oid: data.providerVersion.shuttleServerVersionOid }
+    // });
 
-    let config = await slates.slateAuthConfig.create({
+    let validatedAuthConfig = v
+      .object({
+        accessToken: v.string(),
+        expiresAt: v.optional(v.nullable(v.date()))
+      })
+      .validate(data.input);
+    if (!validatedAuthConfig.success) {
+      throw new ServiceError(
+        badRequestError({
+          message:
+            'Invalid auth config input. Must include `accessToken` and optional `expiresAt`.'
+        })
+      );
+    }
+
+    let config = await shuttle.serverAuthConfig.create({
       tenantId: tenant.id,
-      slateId: slate.id,
-      slateVersionId: slateVersion.id,
-      authMethodId: data.authMethod.value.callableId,
-      authConfig: data.input
+      serverId: shuttleServer.id,
+      config: {
+        accessToken: validatedAuthConfig.value.accessToken,
+        expiresAt: validatedAuthConfig.value.expiresAt?.toISOString()
+      }
     });
 
-    let slateAuthConfig = await db.slateAuthConfig.create({
+    let shuttleAuthConfig = await db.shuttleAuthConfig.create({
       data: {
         oid: snowflake.nextId(),
         id: config.id,
-        slateOid: slate.oid,
+        shuttleServerOid: shuttleServer.oid,
         tenantOid: data.tenant.oid
       }
     });
 
     return {
-      slateAuthConfig,
-      expiresAt: config.tokenExpiresAt
+      shuttleAuthConfig,
+      expiresAt: validatedAuthConfig.value.expiresAt ?? null
     };
   }
 
   override async retrieveProviderOAuthSetup(
     data: ProviderOAuthSetupRetrieveParam
   ): Promise<ProviderOAuthSetupRetrieveRes> {
-    if (!data.setup.slateOAuthSetupOid) {
-      throw new Error('Setup does not have associated slate OAuth setup');
+    if (!data.setup.shuttleOAuthSetupOid) {
+      throw new Error('Setup does not have associated shuttle OAuth setup');
     }
 
-    let tenant = await getTenantForSlates(data.tenant);
-    let setup = await db.slateOAuthSetup.findUniqueOrThrow({
-      where: { oid: data.setup.slateOAuthSetupOid }
+    let tenant = await getTenantForShuttle(data.tenant);
+    let setup = await db.shuttleOAuthSetup.findUniqueOrThrow({
+      where: { oid: data.setup.shuttleOAuthSetupOid }
     });
 
-    let record = await slates.slateOAuthSetup.get({
+    let record = await shuttle.serverOAuthSetup.get({
       tenantId: tenant.id,
-      slateOAuthSetupId: setup.id
+      serverOAuthSetupId: setup.id
     });
 
-    let slateAuthConfig = record.authConfig
-      ? await db.slateAuthConfig.upsert({
+    let shuttleAuthConfig = record.authConfig
+      ? await db.shuttleAuthConfig.upsert({
           where: { id: record.authConfig.id },
           create: {
             oid: snowflake.nextId(),
             id: record.authConfig.id,
-            slateOid: setup.slateOid,
+            shuttleServerOid: setup.shuttleServerOid,
             tenantOid: data.tenant.oid
           },
           update: {}
@@ -188,41 +203,40 @@ export class ProviderAuth extends IProviderAuth {
       : null;
 
     return {
-      slateOAuthSetup: setup,
-      slateAuthConfig,
+      shuttleOAuthSetup: setup,
+      shuttleAuthConfig,
       status: {
         completed: 'completed' as const,
-        opened: 'pending' as const,
-        unused: 'pending' as const,
+        pending: 'pending' as const,
         failed: 'failed' as const
       }[record.status],
       url: record.url,
-      error: record.error
+      error: null
     };
   }
 
   override async getDecryptedAuthConfig(
     data: GetDecryptedAuthConfigParam
   ): Promise<GetDecryptedAuthConfigRes> {
-    let tenant = await getTenantForSlates(data.tenant);
+    let tenant = await getTenantForShuttle(data.tenant);
 
-    if (!data.authConfigVersion.slateAuthConfigOid) {
-      throw new Error('Auth config does not have associated slate auth config');
+    if (!data.authConfigVersion.shuttleAuthConfigOid) {
+      throw new Error('Auth config does not have associated shuttle auth config');
     }
 
-    let slateAuthConfig = await db.slateAuthConfig.findUniqueOrThrow({
-      where: { oid: data.authConfigVersion.slateAuthConfigOid }
+    let shuttleAuthConfig = await db.shuttleAuthConfig.findUniqueOrThrow({
+      where: { oid: data.authConfigVersion.shuttleAuthConfigOid }
     });
 
-    let record = await slates.slateAuthConfig.decrypt({
+    let record = await shuttle.serverAuthConfig.decrypt({
       tenantId: tenant.id,
-      slateAuthConfigId: slateAuthConfig.id,
+      serverAuthConfigId: shuttleAuthConfig.id,
       note: data.note
     });
 
     return {
       decryptedConfigData: record.decryptedAuthConfig,
-      expiresAt: record.authConfig.tokenExpiresAt
+      expiresAt: record.decryptedAuthConfig.expiresAt
     };
   }
 }
