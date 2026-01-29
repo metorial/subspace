@@ -72,8 +72,6 @@ export class ConnectionState {
       return 1000 * 30;
     }
 
-    // TODO: @herber add handling for non-slates providers
-
     return 1000 * 60 * 2;
   }
 
@@ -103,6 +101,10 @@ export class ConnectionState {
 
   get backend() {
     return this.baseState.backend;
+  }
+
+  get sessionProvider() {
+    return this.baseState.sessionProvider;
   }
 
   #isDisposed = false;

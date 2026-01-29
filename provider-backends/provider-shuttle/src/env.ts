@@ -6,6 +6,7 @@ export let env = createValidatedEnv({
     REDIS_URL: v.string(),
 
     SHUTTLE_URL: v.string(),
+    SHUTTLE_LIVE_URL: v.string(),
     SHUTTLE_PUBLIC_URL: v.string()
   }
 });

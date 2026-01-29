@@ -10,17 +10,17 @@ export let messageOutputToMcp = async (
   if (output.type === 'mcp') {
     return {
       jsonrpc: '2.0',
-      id: message?.clientMcpId,
+      id: message?.mcpMessageId,
       ...(output.data as any)
     };
   }
 
-  if (!message?.clientMcpId) return null;
+  if (!message?.mcpMessageId) return null;
 
   if (output.type === 'tool.result') {
     return {
       jsonrpc: '2.0',
-      id: message.clientMcpId,
+      id: message.mcpMessageId,
       result: {
         content: [
           {
@@ -35,7 +35,7 @@ export let messageOutputToMcp = async (
 
   return {
     jsonrpc: '2.0',
-    id: message.clientMcpId,
+    id: message.mcpMessageId,
     error: {
       code: -32000,
       message: output.data.message,
@@ -58,7 +58,7 @@ export let messageInputToMcp = async (
   if (input.type === 'mcp') {
     return {
       jsonrpc: '2.0',
-      id: message?.clientMcpId ?? message?.id,
+      id: message?.mcpMessageId ?? message?.id,
       ...(input.data as any)
     };
   }
@@ -68,7 +68,7 @@ export let messageInputToMcp = async (
   if (input.type === 'tool.call') {
     return {
       jsonrpc: '2.0',
-      id: message.clientMcpId ?? message.id,
+      id: message.mcpMessageId ?? message.id,
       method: message.methodOrToolKey ?? 'unknown_method',
       params: input.data
     };

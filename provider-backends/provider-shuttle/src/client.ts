@@ -1,9 +1,16 @@
-import { createShuttleClient } from '@metorial-services/shuttle-client';
+import {
+  createLiveConnectionClient,
+  createShuttleClient
+} from '@metorial-services/shuttle-client';
 import { db, type Tenant } from '@metorial-subspace/db';
 import { env } from './env';
 
 export let shuttle = createShuttleClient({
   endpoint: env.service.SHUTTLE_URL
+});
+
+export let shuttleLiveClient = await createLiveConnectionClient({
+  endpoint: env.service.SHUTTLE_LIVE_URL
 });
 
 export let shuttleDefaultReaderTenant = await shuttle.tenant.upsert({
