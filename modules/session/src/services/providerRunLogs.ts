@@ -29,7 +29,7 @@ class providerRunLogsServiceImpl {
 
     let backend = await getBackend({ entity: fullProviderRun.providerVersion });
 
-    let allLogs = await backend.toolInvocation.getProviderRunLogs({
+    let allLogs = await backend.providerRun.getProviderRunLogs({
       providerRun: fullProviderRun,
       tenant: d.tenant
     });

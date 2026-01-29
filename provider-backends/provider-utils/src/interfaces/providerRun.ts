@@ -1,6 +1,5 @@
 import type {
   Provider,
-  ProviderAuthConfig,
   ProviderAuthConfigVersion,
   ProviderConfigVersion,
   ProviderRun,
@@ -18,14 +17,58 @@ import type {
 import type { InitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { IProviderFunctionality } from '../providerFunctionality';
 
-export abstract class IProviderToolInvocation extends IProviderFunctionality {
-  abstract createProviderRun(data: ProviderRunCreateParam): Promise<ProviderRunCreateRes>;
+export abstract class IProviderRun extends IProviderFunctionality {
+  abstract createProviderRun(
+    data: ProviderRunCreateParam
+  ): Promise<ProviderRunCreateRes & { connection: IProviderRunConnection }>;
 
-  abstract createToolInvocation(
+  abstract getProviderRunLogs(data: ProviderRunLogsParam): Promise<ProviderRunLogsRes>;
+}
+
+export abstract class IProviderRunConnection {
+  #closeListeners = new Set<() => Promise<void>>();
+  #messageListeners = new Set<
+    (data: { output: PrismaJson.SessionMessageOutput }) => Promise<void>
+  >();
+  #isClosed = false;
+
+  public onClose(listener: () => Promise<void>) {
+    if (this.#isClosed) {
+      listener();
+      return () => {};
+    }
+
+    this.#closeListeners.add(listener);
+    return () => this.#closeListeners.delete(listener);
+  }
+
+  public onMessage(
+    listener: (data: { output: PrismaJson.SessionMessageOutput }) => Promise<void>
+  ) {
+    this.#messageListeners.add(listener);
+    return () => this.#messageListeners.delete(listener);
+  }
+
+  protected async emitClose() {
+    if (this.#isClosed) return;
+    this.#isClosed = true;
+
+    for (let listener of this.#closeListeners) {
+      await listener();
+    }
+  }
+
+  protected async emitMessage(data: { output: PrismaJson.SessionMessageOutput }) {
+    for (let listener of this.#messageListeners) {
+      await listener(data);
+    }
+  }
+
+  abstract handleToolInvocation(
     data: ToolInvocationCreateParam
   ): Promise<ToolInvocationCreateRes>;
 
-  abstract getProviderRunLogs(data: ProviderRunLogsParam): Promise<ProviderRunLogsRes>;
+  abstract close(): Promise<void>;
 }
 
 export interface ProviderRunCreateParam {
@@ -51,32 +94,22 @@ export interface ProviderRunCreateParam {
 export interface ProviderRunCreateRes {
   slateSession?: SlateSession;
   shuttleConnection?: ShuttleConnection;
-  runState: any;
 }
 
 export interface ToolInvocationCreateParam {
-  tenant: Tenant;
-  provider: Provider;
-  providerRun: ProviderRun;
   tool: { callableId: string };
   sender: SessionParticipant;
-  providerAuthConfig: ProviderAuthConfig | null;
-  providerAuthConfigVersion: ProviderAuthConfigVersion | null;
 
-  slateSession?: SlateSession;
-  shuttleConnection?: ShuttleConnection;
-
-  runState: any;
   input: PrismaJson.SessionMessageInput;
   message: SessionMessage;
 }
 
 export interface ToolInvocationCreateRes {
   slateToolCall?: SlateToolCall;
-  output:
+  output?:
     | {
         type: 'success';
-        data: Record<string, any>;
+        data: PrismaJson.SessionMessageOutput;
       }
     | {
         type: 'error';

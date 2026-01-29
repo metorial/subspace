@@ -477,6 +477,7 @@
         "@lowerdeck/error": "^1.0.10",
         "@lowerdeck/id": "^1.0.5",
         "@lowerdeck/lock": "^1.0.3",
+        "@lowerdeck/programmable-promise": "^1.0.6",
         "@lowerdeck/queue": "^1.0.4",
         "@lowerdeck/slugify": "^1.0.4",
         "@lowerdeck/validation": "^1.0.4",
@@ -812,6 +813,8 @@
     "@lowerdeck/memo": ["@lowerdeck/memo@1.0.4", "", {}, "sha512-Fyhi14j1EocQeAjZ6sqeYZaydPlCt23P+CEv99QVPb46Y6n77RGrslbHE7HDPgV0f9CJi4UWxSbfhk+Spmmj5g=="],
 
     "@lowerdeck/pagination": ["@lowerdeck/pagination@1.0.5", "", { "dependencies": { "@lowerdeck/base62": "^1.0.4", "@lowerdeck/error": "^1.0.10", "@lowerdeck/validation": "^1.0.4" } }, "sha512-QrDhQAmWmSG5NTNUci/hYnSc1mAF5Rglxvt2RPrOoLuMzMBtbGYxal8l24nuPLCxeO9MGui14wWUcyHzzZJSig=="],
+
+    "@lowerdeck/programmable-promise": ["@lowerdeck/programmable-promise@1.0.6", "", {}, "sha512-37ZWpHNSbjQgrHoGEcgFVa72D5db7tPFwc5glECFBszy+LN9/8uC5zzEHg7t9+0QIlnz2ET+wFmmckxXlWwa7Q=="],
 
     "@lowerdeck/proxy": ["@lowerdeck/proxy@1.0.4", "", {}, "sha512-29S6bDAtkeD0Iww6RiMiwok4eCPWLfoyJW9XIfJxcpvRhQov/GIKtaix9W9lkZvqlt7u78X4LkLmWFc6QA/BjA=="],
 
