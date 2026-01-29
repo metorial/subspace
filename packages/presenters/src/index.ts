@@ -5,6 +5,7 @@ export * from './authImport';
 export * from './brand';
 export * from './config';
 export * from './deployment';
+export * from './environment';
 export * from './oauthSetup';
 export * from './provider';
 export * from './providerAuthMethod';

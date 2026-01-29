@@ -54,12 +54,10 @@ class providerDeploymentConfigPairInternalServiceImpl {
           ...newId,
           providerDeploymentOid: d.deployment.oid,
           providerConfigOid: d.config.oid,
-          tenantOid: d.deployment.tenantOid
+          tenantOid: d.deployment.tenantOid,
+          environmentOid: d.deployment.environmentOid
         },
-        update: {},
-        include: {
-          versions: d.version ? { where: { versionOid: d.version.oid } } : false
-        }
+        update: {}
       });
 
       let created = pair.id === newId.id;
@@ -72,10 +70,19 @@ class providerDeploymentConfigPairInternalServiceImpl {
         );
       }
 
+      let version = d.version
+        ? await db.providerDeploymentConfigPairProviderVersion.findFirst({
+            where: {
+              pairOid: pair.oid,
+              versionOid: d.version.oid
+            }
+          })
+        : null;
+
       return {
         pair,
         created,
-        version: pair.versions?.[0]
+        version: version ?? undefined
       };
     });
   }

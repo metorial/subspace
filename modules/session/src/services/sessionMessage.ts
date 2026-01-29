@@ -5,7 +5,7 @@ import {
   db,
   type SessionMessageType,
   type Solution,
-  type Tenant
+  type Environment, type Tenant
 } from '@metorial-subspace/db';
 import {
   normalizeStatusForGet,
@@ -43,7 +43,7 @@ export let sessionMessageInclude = include;
 class sessionMessageServiceImpl {
   async listSessionMessages(d: {
     tenant: Tenant;
-    solution: Solution;
+    solution: Solution; environment: Environment;
 
     types?: SessionMessageType[];
     allowDeleted?: boolean;
@@ -71,6 +71,7 @@ class sessionMessageServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
 
               AND: [
                 normalizeStatusForList(d).onlyParent,
@@ -104,7 +105,7 @@ class sessionMessageServiceImpl {
 
   async getSessionMessageById(d: {
     tenant: Tenant;
-    solution: Solution;
+    solution: Solution; environment: Environment;
     sessionMessageId: string;
     allowDeleted?: boolean;
   }) {
@@ -113,6 +114,7 @@ class sessionMessageServiceImpl {
         id: d.sessionMessageId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
 
         AND: [normalizeStatusForGet(d).onlyParent, { status: { not: 'waiting_for_response' } }]
       },

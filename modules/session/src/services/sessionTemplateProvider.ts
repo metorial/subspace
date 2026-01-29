@@ -3,6 +3,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  type Environment,
   type SessionTemplate,
   type SessionTemplateProvider,
   type SessionTemplateProviderStatus,
@@ -40,6 +41,7 @@ class sessionTemplateProviderServiceImpl {
   async listSessionTemplateProviders(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     status?: SessionTemplateProviderStatus[];
     allowDeleted?: boolean;
@@ -65,6 +67,7 @@ class sessionTemplateProviderServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
 
               ...normalizeStatusForList(d).noParent,
 
@@ -86,6 +89,7 @@ class sessionTemplateProviderServiceImpl {
   async getSessionTemplateProviderById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     sessionTemplateProviderId: string;
     allowDeleted?: boolean;
   }) {
@@ -94,6 +98,7 @@ class sessionTemplateProviderServiceImpl {
         id: d.sessionTemplateProviderId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
         ...normalizeStatusForGet(d).noParent
       },
       include
@@ -109,6 +114,7 @@ class sessionTemplateProviderServiceImpl {
   async createSessionTemplateProvider(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     template: SessionTemplate;
     input: SessionProviderInput;
@@ -118,6 +124,7 @@ class sessionTemplateProviderServiceImpl {
     let [res] = await sessionProviderInputService.createSessionTemplateProvidersForInput({
       tenant: d.tenant,
       solution: d.solution,
+      environment: d.environment,
 
       template: d.template,
       providers: [d.input]
@@ -129,6 +136,7 @@ class sessionTemplateProviderServiceImpl {
   async updateSessionTemplateProvider(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     sessionTemplateProvider: SessionTemplateProvider;
     input: {
       toolFilters?: SessionProviderInputToolFilters;
@@ -141,7 +149,8 @@ class sessionTemplateProviderServiceImpl {
       where: {
         oid: d.sessionTemplateProvider.oid,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid
       },
       data: {
         toolFilter:
@@ -158,6 +167,7 @@ class sessionTemplateProviderServiceImpl {
   async archiveSessionTemplateProvider(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     sessionTemplateProvider: SessionTemplateProvider;
   }) {
     checkTenant(d, d.sessionTemplateProvider);
@@ -165,7 +175,10 @@ class sessionTemplateProviderServiceImpl {
 
     return await db.sessionTemplateProvider.update({
       where: {
-        oid: d.sessionTemplateProvider.oid
+        oid: d.sessionTemplateProvider.oid,
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid
       },
       data: {
         status: 'archived' as const

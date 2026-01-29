@@ -68,7 +68,6 @@ model Provider {
 
   variants                  ProviderVariant[]
   providerVersions          ProviderVersion[]
-  tenantProviders           TenantProvider[]
   deployment                ProviderDeployment[]
   listing                   ProviderListing?
   providerConfigs           ProviderConfig[]
@@ -87,6 +86,7 @@ model Provider {
   sessionTemplateProviders  SessionTemplateProvider[]
   sessionParticipants       SessionParticipant[]
   sessionErrorGroups        SessionErrorGroup[]
+  environmentProviders      EnvironmentProvider[]
 
   @@index([status])
 }

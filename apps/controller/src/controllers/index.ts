@@ -1,6 +1,7 @@
 import { apiMux } from '@lowerdeck/api-mux';
 import { createServer, type InferClient, rpcMux } from '@lowerdeck/rpc-server';
 import { app } from './_app';
+import { environmentController } from './environment';
 import { providerController } from './provider';
 import { providerAuthConfigController } from './providerAuthConfig';
 import { providerAuthCredentialsController } from './providerAuthCredentials';
@@ -35,6 +36,7 @@ import { solutionController } from './solution';
 import { tenantController } from './tenant';
 
 export let rootController = app.controller({
+  environment: environmentController,
   provider: providerController,
   providerAuthConfig: providerAuthConfigController,
   providerAuthCredentials: providerAuthCredentialsController,

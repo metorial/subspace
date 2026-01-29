@@ -2,6 +2,7 @@ import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { generateCode } from '@lowerdeck/id';
 import { Service } from '@lowerdeck/service';
 import {
+  type Environment,
   getId,
   type Provider,
   type ProviderVariant,
@@ -52,6 +53,7 @@ class sessionProviderInputServiceImpl {
   async createProviderSessionInput(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     providers: SessionProviderInput[];
 
@@ -61,7 +63,8 @@ class sessionProviderInputServiceImpl {
       async db => {
         let ts = {
           solutionOid: d.solution.oid,
-          tenantOid: d.tenant.oid
+          tenantOid: d.tenant.oid,
+          environmentOid: d.environment.oid
         };
 
         for (let s of d.providers) {
@@ -181,6 +184,7 @@ class sessionProviderInputServiceImpl {
               deployment = await providerDeploymentService.ensureDefaultProviderDeployment({
                 tenant: d.tenant,
                 solution: d.solution,
+                environment: d.environment,
                 provider
               });
             }
@@ -240,6 +244,7 @@ class sessionProviderInputServiceImpl {
                 config = await providerConfigService.ensureDefaultEmptyProviderConfig({
                   tenant: d.tenant,
                   solution: d.solution,
+                  environment: d.environment,
                   provider,
                   providerDeployment: deployment
                 });
@@ -313,6 +318,7 @@ class sessionProviderInputServiceImpl {
   async createSessionProvidersForInput(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     providers: SessionProviderInput[];
     session: Session;
@@ -320,6 +326,7 @@ class sessionProviderInputServiceImpl {
     let providerSessions = await this.createProviderSessionInput({
       tenant: d.tenant,
       solution: d.solution,
+      environment: d.environment,
       providers: d.providers
     });
 
@@ -347,6 +354,7 @@ class sessionProviderInputServiceImpl {
 
             tenantOid: d.tenant.oid,
             solutionOid: d.solution.oid,
+            environmentOid: d.environment.oid,
 
             sessionOid: d.session.oid,
             providerOid: ps.provider.oid,
@@ -368,6 +376,7 @@ class sessionProviderInputServiceImpl {
   async createSessionTemplateProvidersForInput(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     providers: SessionProviderInput[];
     template: SessionTemplate;
@@ -375,6 +384,7 @@ class sessionProviderInputServiceImpl {
     let providerSessions = await this.createProviderSessionInput({
       tenant: d.tenant,
       solution: d.solution,
+      environment: d.environment,
       providers: d.providers
     });
 
@@ -403,6 +413,7 @@ class sessionProviderInputServiceImpl {
 
             tenantOid: d.tenant.oid,
             solutionOid: d.solution.oid,
+            environmentOid: d.environment.oid,
 
             sessionTemplateOid: d.template.oid,
             providerOid: ps.provider.oid,
