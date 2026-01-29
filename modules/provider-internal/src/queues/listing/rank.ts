@@ -53,7 +53,7 @@ let startRankQueueProcessor = startRankQueue.process(async () => {
       }))
     );
 
-    afterId = providers[providers.length - 1].id as string;
+    afterId = providers[providers.length - 1]!.id as string;
   }
 });
 

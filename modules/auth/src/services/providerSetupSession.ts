@@ -294,6 +294,7 @@ class providerSetupSessionServiceImpl {
           solutionOid: d.solution.oid,
           providerOid: d.provider.oid,
           brandOid: d.brand?.oid,
+          authCredentialsOid: d.credentials?.oid,
 
           expiresAt
         },

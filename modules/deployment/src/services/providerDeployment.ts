@@ -9,6 +9,7 @@ import {
   getId,
   ID,
   type Provider,
+  type ProviderConfig,
   type ProviderConfigVault,
   type ProviderDeployment,
   type ProviderDeploymentStatus,
@@ -150,6 +151,10 @@ class providerDeploymentServiceImpl {
         | {
             type: 'inline';
             data: Record<string, any>;
+          }
+        | {
+            type: 'config';
+            config: ProviderConfig;
           };
     };
   }) {
@@ -158,6 +163,11 @@ class providerDeploymentServiceImpl {
     if (d.input.config.type === 'vault') {
       checkTenant(d, d.input.config.vault);
       checkDeletedRelation(d.input.config.vault, { allowEphemeral: d.input.isEphemeral });
+    }
+
+    if (d.input.config.type === 'config') {
+      checkTenant(d, d.input.config.config);
+      checkDeletedRelation(d.input.config.config, { allowEphemeral: d.input.isEphemeral });
     }
 
     return withTransaction(async db => {
@@ -229,7 +239,12 @@ class providerDeploymentServiceImpl {
         }
       });
 
-      if (d.input.config.type !== 'none') {
+      if (d.input.config.type === 'config') {
+        await db.providerDeployment.update({
+          where: { oid: providerDeployment.oid },
+          data: { defaultConfigOid: d.input.config.config.oid }
+        });
+      } else if (d.input.config.type !== 'none') {
         await providerConfigService.createProviderConfig({
           tenant: d.tenant,
           providerDeployment,

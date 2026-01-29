@@ -1,4 +1,5 @@
 export * from './providerRun';
+export * from './providerRunLogs';
 export * from './session';
 export * from './sessionConnection';
 export * from './sessionError';

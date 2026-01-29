@@ -40,7 +40,10 @@ RUN bun install
 COPY . .
 
 # In case we forgot to copy some package.json files
-RUN bun install 
+RUN bun install
+
+# Build frontend
+RUN cd apps/public && bun run build
 
 # Run in dev mode with hot reloading
-CMD ["sh", "-c", "cd db && bun prisma db push --accept-data-loss && cd ../apps/public && bun start:dev"]
+CMD ["sh", "-c", "cd db && bun prisma db push --accept-data-loss && bun prisma generate && cd ../apps/public && bun run start:dev"]

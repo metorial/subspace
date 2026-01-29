@@ -28,7 +28,7 @@ export let ID = createIdGenerator({
   providerConfig: idType.sorted('pcf'),
   providerConfigVersion: idType.sorted('pcv'),
   providerConfigUpdate: idType.sorted('pcu'),
-  providerConfigVault: idType.sorted('pcva'),
+  providerConfigVault: idType.sorted('pcvt'),
   providerDeploymentConfigPair: idType.sorted('pdcp'),
   providerDeploymentConfigPairProviderVersion: idType.sorted('pdcpv'),
 

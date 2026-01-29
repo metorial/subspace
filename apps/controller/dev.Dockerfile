@@ -25,6 +25,7 @@ COPY packages/generator/package.json ./packages/generator/package.json
 COPY provider-backends/provider-slates/package.json ./provider-backends/provider-slates/package.json
 COPY provider-backends/provider-utils/package.json ./provider-backends/provider-utils/package.json
 COPY provider-backends/provider-manager/package.json ./provider-backends/provider-manager/package.json
+COPY packages/conduit/package.json ./packages/conduit/package.json
 
 COPY modules/auth/package.json ./modules/auth/package.json
 COPY modules/catalog/package.json ./modules/catalog/package.json
@@ -43,4 +44,4 @@ COPY . .
 RUN bun install 
 
 # Run in dev mode with hot reloading
-CMD ["sh", "-c", "cd db && bun prisma db push --accept-data-loss && cd ../apps/controller && bun start:dev"]
+CMD ["sh", "-c", "cd db && bun prisma db push --accept-data-loss && bun prisma generate && cd ../apps/controller && bun start:dev"]

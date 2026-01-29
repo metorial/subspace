@@ -9,7 +9,7 @@ import {
   type ProviderAuthConfig,
   type ProviderAuthConfigSource,
   type ProviderAuthConfigStatus,
-  ProviderAuthCredentials,
+  type ProviderAuthCredentials,
   type ProviderAuthImport,
   type ProviderDeployment,
   type ProviderVariant,
@@ -279,7 +279,7 @@ class providerAuthConfigServiceImpl {
   async updateProviderAuthConfig(d: {
     tenant: Tenant;
     solution: Solution;
-    providerAuthConfig: ProviderAuthConfig;
+    providerAuthConfig: ProviderAuthConfig & { authMethod: { id: string } };
 
     input: {
       name?: string;
@@ -326,8 +326,9 @@ class providerAuthConfigServiceImpl {
           solution: d.solution,
           provider: provider,
           providerDeployment,
-          authMethodId: d.providerAuthConfig.authMethodOid
+          authMethodId: d.providerAuthConfig.authMethod.id
         });
+
       if (d.input.authMethodId && d.input.authMethodId !== authMethod.id) {
         throw new ServiceError(
           badRequestError({

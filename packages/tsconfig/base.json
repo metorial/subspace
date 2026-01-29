@@ -9,6 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "inlineSources": false,
     "isolatedModules": true,
+    "module": "ESNext",
     "moduleResolution": "node",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "target": "ESNext",
