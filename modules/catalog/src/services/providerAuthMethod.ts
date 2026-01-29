@@ -3,6 +3,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  Environment,
   type Provider,
   type ProviderAuthConfig,
   type ProviderConfig,

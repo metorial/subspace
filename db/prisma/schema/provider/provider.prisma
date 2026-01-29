@@ -35,15 +35,15 @@ model Provider {
   access ProviderAccess
   status ProviderStatus
 
-  tag    String      @unique
-  tagRef ProviderTag @relation(fields: [tag], references: [tag])
-
   identifier  String  @unique
   slug        String  @unique
   name        String
   description String?
 
   metadata Json?
+
+  tag    String      @unique
+  tagRef ProviderTag @relation(fields: [tag], references: [tag])
 
   entryOid BigInt        @unique
   entry    ProviderEntry @relation(fields: [entryOid], references: [oid])
