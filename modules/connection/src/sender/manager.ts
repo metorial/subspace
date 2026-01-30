@@ -229,6 +229,9 @@ export class SenderManager {
         deployment: fullProvider.deployment,
         provider: fullProvider.provider
       });
+      if (!version?.specificationOid) {
+        throw new ServiceError(badRequestError({ message: 'Provider has no usable version' }));
+      }
 
       let pair = await providerDeploymentConfigPairInternalService.useDeploymentConfigPair({
         deployment: fullProvider.deployment,

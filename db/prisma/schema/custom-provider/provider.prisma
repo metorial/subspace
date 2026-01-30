@@ -43,4 +43,6 @@ model CustomProvider {
 
   customProviderDeployments CustomProviderDeployment[]
   customProviderVersions    CustomProviderVersion[]
+
+  @@index([status])
 }

@@ -207,8 +207,10 @@ class sessionProviderInputServiceImpl {
               deployment,
               provider
             });
-            if (!version.specificationOid) {
-              throw new ServiceError(badRequestError({ message: 'Provider cannot be run' }));
+            if (!version?.specificationOid) {
+              throw new ServiceError(
+                badRequestError({ message: 'Provider has no usable version' })
+              );
             }
 
             let spec = await db.providerSpecification.findFirstOrThrow({

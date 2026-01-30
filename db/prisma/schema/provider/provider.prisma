@@ -94,4 +94,5 @@ model Provider {
   customProviderEnvironments CustomProviderEnvironment[]
 
   @@index([status])
+  @@index([access])
 }

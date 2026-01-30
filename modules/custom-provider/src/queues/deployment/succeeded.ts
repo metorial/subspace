@@ -105,7 +105,8 @@ export let customDeploymentSucceededQueueProcessor = customDeploymentSucceededQu
           create: {
             ...getId('customProviderEnvironmentVersion'),
             customProviderEnvironmentOid: deployment.sourceEnvironment.oid,
-            customProviderVersionOid: customProviderVersion.oid
+            customProviderVersionOid: customProviderVersion.oid,
+            environmentOid: deployment.sourceEnvironment.environmentOid
           },
           update: {},
           include: { customProviderEnvironment: { include: { providerEnvironment: true } } }
@@ -125,7 +126,8 @@ export let customDeploymentSucceededQueueProcessor = customDeploymentSucceededQu
             create: {
               ...getId('providerEnvironmentVersion'),
               providerEnvironmentOid: res.customProviderEnvironment.providerEnvironment.oid,
-              providerVersionOid: version.oid
+              providerVersionOid: version.oid,
+              environmentOid: res.customProviderEnvironment.environmentOid
             },
             update: {}
           });

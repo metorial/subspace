@@ -107,4 +107,6 @@ model Environment {
   providerSetupSessions                    ProviderSetupSession[]
   providerEnvironments                     ProviderEnvironment[]
   customProviderEnvironments               CustomProviderEnvironment[]
+  customProviderEnvironmentVersions        CustomProviderEnvironmentVersion[]
+  providerEnvironmentVersions              ProviderEnvironmentVersion[]
 }

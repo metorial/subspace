@@ -5,6 +5,7 @@ import {
   addAfterTransactionHook,
   type CustomProvider,
   type CustomProviderStatus,
+  CustomProviderType,
   db,
   type Environment,
   getId,
@@ -40,6 +41,7 @@ class customProviderServiceImpl {
     search?: string;
 
     status?: CustomProviderStatus[];
+    type?: CustomProviderType[];
     allowDeleted?: boolean;
 
     ids?: string[];
@@ -68,6 +70,7 @@ class customProviderServiceImpl {
               ...normalizeStatusForList(d).noParent,
 
               AND: [
+                d.type ? { type: { in: d.type } } : undefined!,
                 d.ids ? { id: { in: d.ids } } : undefined!,
                 search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
                 providers ? { providerOid: providers.in } : undefined!

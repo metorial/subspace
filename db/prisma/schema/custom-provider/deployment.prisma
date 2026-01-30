@@ -44,4 +44,7 @@ model CustomProviderDeployment {
   endedAt   DateTime?
 
   customProviderVersion CustomProviderVersion?
+
+  @@index([status])
+  @@index([trigger])
 }

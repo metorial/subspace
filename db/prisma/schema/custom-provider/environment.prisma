@@ -36,6 +36,9 @@ model CustomProviderEnvironmentVersion {
   providerEnvironmentVersionOid BigInt?
   providerEnvironmentVersion    ProviderEnvironmentVersion? @relation(fields: [providerEnvironmentVersionOid], references: [oid])
 
+  environmentOid BigInt
+  environment    Environment @relation(fields: [environmentOid], references: [oid])
+
   createdAt DateTime @default(now())
 
   @@unique([customProviderEnvironmentOid, customProviderVersionOid])

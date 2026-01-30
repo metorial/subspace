@@ -41,4 +41,6 @@ model CustomProviderVersion {
   updatedAt DateTime @default(now()) @updatedAt
 
   customProviderEnvironmentVersions CustomProviderEnvironmentVersion[]
+
+  @@index([status])
 }

@@ -79,7 +79,8 @@ export let createVersion = (d: {
       data: {
         ...getId('customProviderEnvironmentVersion'),
         customProviderEnvironmentOid: env.oid,
-        customProviderVersionOid: version.oid
+        customProviderVersionOid: version.oid,
+        environmentOid: d.environment.oid
       }
     });
 
