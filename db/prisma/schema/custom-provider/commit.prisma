@@ -13,7 +13,7 @@ enum CustomProviderCommitTrigger {
 enum CustomProviderCommitType {
   create_version
   merge_version_into_environment
-  rollback_commit
+  rollback_to_version
 }
 
 model CustomProviderCommit {

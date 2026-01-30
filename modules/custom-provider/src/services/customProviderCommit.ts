@@ -5,6 +5,7 @@ import {
   Actor,
   CustomProviderCommit,
   CustomProviderEnvironment,
+  CustomProviderVersion,
   db,
   getId,
   type Environment,
@@ -82,18 +83,12 @@ class customProviderCommitServiceImpl {
             toEnvironment: CustomProviderEnvironment;
           }
         | {
-            type: 'rollback_commit';
-            commit: CustomProviderCommit;
+            type: 'rollback_to_version';
+            environment: CustomProviderEnvironment;
+            version: CustomProviderVersion;
           };
     };
   }) {
-    if (d.input.action.type === 'merge_version_into_environment') {
-      checkTenant(d, d.input.action.fromEnvironment);
-      checkTenant(d, d.input.action.toEnvironment);
-    } else if (d.input.action.type === 'rollback_commit') {
-      checkTenant(d, d.input.action.commit);
-    }
-
     let dataBase = {
       ...getId('customProviderCommit'),
 
@@ -111,12 +106,23 @@ class customProviderCommitServiceImpl {
 
     let commit: CustomProviderCommit;
 
-    if (d.input.action.type === 'rollback_commit') {
+    if (d.input.action.type === 'rollback_to_version') {
+      checkTenant(d, d.input.action.environment);
+      checkTenant(d, d.input.action.version);
+
       let action = d.input.action;
-      if (!action.commit.toEnvironmentVersionBeforeOid) {
+      if (action.environment.customProviderOid !== action.version.customProviderOid) {
         throw new ServiceError(
           badRequestError({
-            message: 'Initial commit cannot be rolled back.'
+            message: 'Environment and version must belong to the same custom provider.'
+          })
+        );
+      }
+
+      if (action.version.status != 'deployment_succeeded') {
+        throw new ServiceError(
+          badRequestError({
+            message: 'Can only rollback to a version that has been successfully deployed.'
           })
         );
       }
@@ -125,16 +131,19 @@ class customProviderCommitServiceImpl {
         data: {
           ...dataBase,
 
-          toEnvironmentOid: d.input.action.commit.toEnvironmentOid,
+          toEnvironmentOid: d.input.action.environment.oid,
 
           // Flip the versions
-          toEnvironmentVersionBeforeOid: action.commit.targetCustomProviderVersionOid,
-          targetCustomProviderVersionOid: action.commit.toEnvironmentVersionBeforeOid,
+          toEnvironmentVersionBeforeOid: action.version.oid,
+          targetCustomProviderVersionOid: action.version.oid,
 
-          customProviderOid: action.commit.customProviderOid
+          customProviderOid: action.version.customProviderOid
         }
       });
     } else if (d.input.action.type === 'merge_version_into_environment') {
+      checkTenant(d, d.input.action.fromEnvironment);
+      checkTenant(d, d.input.action.toEnvironment);
+
       let action = d.input.action;
 
       if (action.toEnvironment.oid === action.fromEnvironment.oid) {

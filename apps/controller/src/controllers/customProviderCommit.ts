@@ -2,7 +2,8 @@ import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
 import {
   customProviderCommitService,
-  customProviderEnvironmentService
+  customProviderEnvironmentService,
+  customProviderVersionService
 } from '@metorial-subspace/module-custom-provider';
 import { actorService } from '@metorial-subspace/module-tenant';
 import { customProviderCommitPresenter } from '@metorial-subspace/presenters';
@@ -87,7 +88,8 @@ export let customProviderCommitController = app.controller({
           }),
           v.object({
             type: v.literal('rollback_commit'),
-            commitId: v.string()
+            environmentId: v.string(),
+            versionId: v.string()
           })
         ])
       })
@@ -127,12 +129,19 @@ export let customProviderCommitController = app.controller({
                     })
                 }
               : {
-                  type: 'rollback_commit' as const,
-                  commit: await customProviderCommitService.getCustomProviderCommitById({
+                  type: 'rollback_to_version' as const,
+                  environment:
+                    await customProviderEnvironmentService.getCustomProviderEnvironmentById({
+                      tenant: ctx.tenant,
+                      environment: ctx.environment,
+                      solution: ctx.solution,
+                      customProviderEnvironmentId: ctx.input.action.environmentId
+                    }),
+                  version: await customProviderVersionService.getCustomProviderVersionById({
                     tenant: ctx.tenant,
                     environment: ctx.environment,
                     solution: ctx.solution,
-                    customProviderCommitId: ctx.input.action.commitId
+                    customProviderVersionId: ctx.input.action.versionId
                   })
                 }
         }
