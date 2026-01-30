@@ -28,6 +28,8 @@ export let customProviderEnvironmentPresenter = (
   providerId: customProviderEnvironment.customProvider.provider?.id,
   currentProviderVersionId: customProviderEnvironment.providerEnvironment?.currentVersion?.id,
 
+  instanceId: customProviderEnvironment.environment.identifier,
+
   createdAt: customProviderEnvironment.createdAt,
   updatedAt: customProviderEnvironment.updatedAt
 });

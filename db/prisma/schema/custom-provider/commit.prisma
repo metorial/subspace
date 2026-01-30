@@ -1,0 +1,61 @@
+enum CustomProviderCommitStatus {
+  pending
+  applied
+  failed
+}
+
+enum CustomProviderCommitTrigger {
+  manual
+  system
+  // git
+}
+
+enum CustomProviderCommitType {
+  create_version
+  merge_version_into_environment
+  rollback_commit
+}
+
+model CustomProviderCommit {
+  oid BigInt @id
+  id  String @unique
+
+  status  CustomProviderCommitStatus
+  trigger CustomProviderCommitTrigger
+  type    CustomProviderCommitType
+
+  message String?
+
+  errorCode    String?
+  errorMessage String?
+
+  creatorActorOid BigInt
+  creatorActor    Actor  @relation(fields: [creatorActorOid], references: [oid])
+
+  fromEnvironmentOid BigInt?
+  fromEnvironment    CustomProviderEnvironment? @relation(fields: [fromEnvironmentOid], references: [oid], name: "CustomProviderCommitFromEnvironment")
+
+  toEnvironmentOid BigInt
+  toEnvironment    CustomProviderEnvironment @relation(fields: [toEnvironmentOid], references: [oid], name: "CustomProviderCommitToEnvironment")
+
+  toEnvironmentVersionBeforeOid BigInt?
+  toEnvironmentVersionBefore    CustomProviderVersion? @relation(fields: [toEnvironmentVersionBeforeOid], references: [oid], name: "CustomProviderCommitToEnvVersionBefore")
+
+  targetCustomProviderVersionOid BigInt
+  targetCustomProviderVersion    CustomProviderVersion @relation(fields: [targetCustomProviderVersionOid], references: [oid])
+
+  customProviderOid BigInt
+  customProvider    CustomProvider @relation(fields: [customProviderOid], references: [oid])
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid Int
+  solution    Solution @relation(fields: [solutionOid], references: [oid])
+
+  createdAt DateTime  @default(now())
+  appliedAt DateTime?
+
+  customProviderDeployments         CustomProviderDeployment[]
+  customProviderEnvironmentVersions CustomProviderEnvironmentVersion[]
+}

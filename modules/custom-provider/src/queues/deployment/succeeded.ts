@@ -1,8 +1,9 @@
 import { createQueue, QueueRetryError } from '@lowerdeck/queue';
-import { db, getId, withTransaction } from '@metorial-subspace/db';
+import { addAfterTransactionHook, db, getId, withTransaction } from '@metorial-subspace/db';
 import { getTenantForShuttle, shuttle } from '@metorial-subspace/provider-shuttle/src/client';
 import { upsertShuttleServerVersion } from '@metorial-subspace/provider-shuttle/src/lib/upsertShuttleVersion';
 import { env } from '../../env';
+import { commitApplyQueue } from '../commit/apply';
 
 export let customDeploymentSucceededQueue = createQueue<{
   customProviderDeploymentId: string;
@@ -27,8 +28,17 @@ export let customDeploymentSucceededQueueProcessor = customDeploymentSucceededQu
     let customProviderVersion = deployment?.customProviderVersion;
     let shuttleServerRecord = deployment?.shuttleCustomServer?.server;
     let shuttleServerVersionRecord = deployment?.shuttleServerVersion;
+    let sourceEnvironment = deployment?.sourceEnvironment;
+    let commit = deployment?.commit;
     if (!deployment) throw new QueueRetryError();
-    if (!customProviderVersion || !shuttleServerRecord || !shuttleServerVersionRecord) return;
+    if (
+      !customProviderVersion ||
+      !shuttleServerRecord ||
+      !shuttleServerVersionRecord ||
+      !sourceEnvironment ||
+      !commit
+    )
+      return;
 
     let tenant = await getTenantForShuttle(deployment.tenant);
 
@@ -59,7 +69,6 @@ export let customDeploymentSucceededQueueProcessor = customDeploymentSucceededQu
         shuttleServerVersionRecord
       });
       let provider = versionRes.provider;
-      let version = versionRes.providerVersion;
 
       await db.customProviderVersion.updateMany({
         where: { oid: customProviderVersion.oid },
@@ -100,84 +109,31 @@ export let customDeploymentSucceededQueueProcessor = customDeploymentSucceededQu
         });
       }
 
-      let isEnvironmentLocked = false;
-
-      if (deployment.commit && deployment.sourceEnvironment) {
-        isEnvironmentLocked = true;
-
-        let res = await db.customProviderEnvironmentVersion.upsert({
-          where: {
-            customProviderEnvironmentOid_customProviderVersionOid: {
-              customProviderEnvironmentOid: deployment.sourceEnvironment.oid,
-              customProviderVersionOid: customProviderVersion.oid
-            }
-          },
-          create: {
-            ...getId('customProviderEnvironmentVersion'),
-            customProviderEnvironmentOid: deployment.sourceEnvironment.oid,
-            customProviderVersionOid: customProviderVersion.oid,
-            environmentOid: deployment.sourceEnvironment.environmentOid,
-            commitOid: deployment.commit.oid
-          },
-          update: {}
-        });
-        let sourceEnvFull = await db.customProviderEnvironment.findUniqueOrThrow({
-          where: { oid: deployment.sourceEnvironment.oid },
-          include: {
-            providerEnvironment: {
-              include: {
-                currentVersion: {
-                  include: { customProviderVersion: true }
-                }
+      let sourceEnvFull = await db.customProviderEnvironment.findUniqueOrThrow({
+        where: { oid: sourceEnvironment.oid },
+        include: {
+          providerEnvironment: {
+            include: {
+              currentVersion: {
+                include: { customProviderVersion: true }
               }
             }
           }
-        });
+        }
+      });
 
-        await db.customProviderCommit.updateMany({
-          where: { oid: deployment.commit.oid },
-          data: {
-            status: 'applied',
-            appliedAt: new Date(),
-            toEnvironmentOid: sourceEnvFull.oid,
-            toEnvironmentVersionBeforeOid:
-              sourceEnvFull.providerEnvironment?.currentVersion?.customProviderVersion?.oid
-          }
-        });
+      await db.customProviderCommit.updateMany({
+        where: { oid: commit.oid },
+        data: {
+          toEnvironmentOid: sourceEnvFull.oid,
+          toEnvironmentVersionBeforeOid:
+            sourceEnvFull.providerEnvironment?.currentVersion?.customProviderVersion?.oid
+        }
+      });
 
-        await db.providerEnvironmentVersion.upsert({
-          where: {
-            providerEnvironmentOid_providerVersionOid: {
-              providerEnvironmentOid: sourceEnvFull.providerEnvironment!.oid,
-              providerVersionOid: version.oid
-            }
-          },
-          create: {
-            ...getId('providerEnvironmentVersion'),
-            providerEnvironmentOid: sourceEnvFull.providerEnvironment!.oid,
-            providerVersionOid: version.oid,
-            environmentOid: sourceEnvFull.environmentOid
-          },
-          update: {}
-        });
-
-        await db.providerEnvironment.updateMany({
-          where: { oid: sourceEnvFull.providerEnvironment!.oid },
-          data: { currentVersionOid: version.oid }
-        });
-      }
-
-      if (isEnvironmentLocked) {
-        await db.providerVersion.updateMany({
-          where: { oid: provider.oid },
-          data: { isEnvironmentLocked: true }
-        });
-
-        await db.provider.updateMany({
-          where: { oid: provider.oid },
-          data: { hasEnvironments: true }
-        });
-      }
+      await addAfterTransactionHook(() =>
+        commitApplyQueue.add({ customProviderCommitId: commit.id })
+      );
     });
   }
 );

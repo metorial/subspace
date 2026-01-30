@@ -129,7 +129,7 @@ export let createVersion = (d: {
         toEnvironmentVersionBeforeOid:
           env.providerEnvironment?.currentVersion?.customProviderVersion?.oid || null,
 
-        customProviderVersionOid: version.oid,
+        targetCustomProviderVersionOid: version.oid,
         customProviderOid: d.customProvider.oid
       }
     });

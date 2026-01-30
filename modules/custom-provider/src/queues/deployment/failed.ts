@@ -34,5 +34,16 @@ export let customDeploymentFailedQueueProcessor = customDeploymentFailedQueue.pr
         status: 'deployment_failed'
       }
     });
+
+    if (deployment.commitOid) {
+      await db.customProviderCommit.updateMany({
+        where: { oid: deployment.commitOid },
+        data: {
+          status: 'failed',
+          errorCode: 'deployment_failed',
+          message: 'Deployment failed during execution.'
+        }
+      });
+    }
   }
 );
