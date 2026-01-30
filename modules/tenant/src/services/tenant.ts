@@ -1,6 +1,6 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
-import { db, getId } from '@metorial-subspace/db';
+import { db, EnvironmentType, getId } from '@metorial-subspace/db';
 
 let include = {};
 
@@ -9,15 +9,43 @@ class tenantServiceImpl {
     input: {
       name: string;
       identifier: string;
+      environments: {
+        name: string;
+        identifier: string;
+        type: EnvironmentType;
+      }[];
     };
   }) {
     return await db.tenant.upsert({
       where: { identifier: d.input.identifier },
-      update: { name: d.input.name },
+      update: {
+        name: d.input.name,
+        environments: {
+          upsert: d.input.environments.map(env => ({
+            where: { identifier: env.identifier },
+            update: { name: env.name },
+            create: {
+              ...getId('environment'),
+              name: env.name,
+              identifier: env.identifier,
+              type: env.type
+            }
+          }))
+        }
+      },
       create: {
         ...getId('tenant'),
         name: d.input.name,
-        identifier: d.input.identifier
+        identifier: d.input.identifier,
+
+        environments: {
+          create: d.input.environments.map(env => ({
+            ...getId('environment'),
+            name: env.name,
+            identifier: env.identifier,
+            type: env.type
+          }))
+        }
       },
       include
     });

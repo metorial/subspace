@@ -1,6 +1,6 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
-import { db, getId, type Tenant } from '@metorial-subspace/db';
+import { db, EnvironmentType, getId, type Tenant } from '@metorial-subspace/db';
 
 let include = {};
 
@@ -10,6 +10,7 @@ class environmentServiceImpl {
     input: {
       name: string;
       identifier: string;
+      type: EnvironmentType;
     };
   }) {
     return await db.environment.upsert({
@@ -19,6 +20,7 @@ class environmentServiceImpl {
         ...getId('environment'),
         name: d.input.name,
         identifier: d.input.identifier,
+        type: d.input.type,
         tenantOid: d.tenant.oid
       },
       include

@@ -93,6 +93,7 @@ export let sessionController = app.controller({
             providerDeploymentId: v.optional(v.string()),
             providerConfigId: v.optional(v.string()),
             providerAuthConfigId: v.optional(v.string()),
+
             sessionTemplateId: v.optional(v.string()),
 
             toolFilters: toolFiltersValidator
