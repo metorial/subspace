@@ -181,9 +181,10 @@ export class ProviderCapabilities extends IProviderCapabilities {
         ...discovery.tools.map(t => ({
           specId: `shuttle::${server.id}::tool::${t.name}`,
           specUniqueIdentifier: `shuttle::${server.id}::tool::${t.name}`,
-          callableId: `tool_${slugify(t.name)}`,
+          callableId: t.name,
           key: `tool_${slugify(t.name)}`,
           name: t.name,
+          title: t.title,
           description: t.description,
           inputJsonSchema: t.inputSchema,
           outputJsonSchema: t.outputSchema,
@@ -192,18 +193,26 @@ export class ProviderCapabilities extends IProviderCapabilities {
           capabilities: {},
           mcpToolType: {
             type: 'mcp.tool' as const,
-            key: t.name
+            key: t.name,
+            icons: t.icons,
+            annotations: t.annotations,
+            execution: t.execution,
+            _meta: t._meta
           },
-          tags: {},
+          tags: {
+            readOnly: t.annotations?.readOnlyHint,
+            destructive: t.annotations?.destructiveHint
+          },
           metadata: {}
         })),
 
         ...discovery.prompts.map(t => ({
           specId: `shuttle::${server.id}::tool::${t.name}`,
           specUniqueIdentifier: `shuttle::${server.id}::tool::${t.name}`,
-          callableId: `prompt_${slugify(t.name)}`,
+          callableId: t.name,
           key: `prompt_${slugify(t.name)}`,
           name: t.name,
+          title: t.title,
           description: t.description,
           inputJsonSchema: t.arguments
             ? promptArgumentsToZod(t.arguments).toJSONSchema()
@@ -214,7 +223,9 @@ export class ProviderCapabilities extends IProviderCapabilities {
           mcpToolType: {
             type: 'mcp.prompt' as const,
             key: t.name,
-            arguments: t.arguments || []
+            arguments: t.arguments || [],
+            icons: t.icons,
+            _meta: t._meta
           },
           tags: {},
           metadata: {}
@@ -223,9 +234,10 @@ export class ProviderCapabilities extends IProviderCapabilities {
         ...discovery.resourceTemplates.map(t => ({
           specId: `shuttle::${server.id}::tool::${t.name}`,
           specUniqueIdentifier: `shuttle::${server.id}::tool::${t.name}`,
-          callableId: `resource_${slugify(t.name)}`,
+          callableId: t.uriTemplate,
           key: `resource_${slugify(t.name)}`,
           name: t.name,
+          title: t.title,
           description: t.description,
           inputJsonSchema: resourceTemplateUriToZod(t.uriTemplate).toJSONSchema(),
           constraints: [],
@@ -234,7 +246,11 @@ export class ProviderCapabilities extends IProviderCapabilities {
           mcpToolType: {
             type: 'mcp.resource_template' as const,
             uriTemplate: t.uriTemplate,
-            variableNames: new UriTemplate(t.uriTemplate).variableNames
+            variableNames: new UriTemplate(t.uriTemplate).variableNames,
+            annotations: t.annotations,
+            icons: t.icons,
+            mimeType: t.mimeType,
+            _meta: t._meta
           },
           tags: {},
           metadata: {}

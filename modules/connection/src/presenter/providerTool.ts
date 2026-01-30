@@ -18,6 +18,7 @@ export let providerToolPresenter = (
   internalToolId: providerTool.id,
 
   name: providerTool.name,
+  title: providerTool.value.title,
   description: providerTool.description,
 
   capabilities: providerTool.value.capabilities,

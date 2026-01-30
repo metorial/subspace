@@ -1,4 +1,10 @@
-import type { InitializeResult } from '@modelcontextprotocol/sdk/types.js';
+import type {
+  Annotations,
+  Icons,
+  InitializeResult,
+  ToolAnnotations,
+  ToolExecution
+} from '@modelcontextprotocol/sdk/types.js';
 
 export type SpecificationAuthMethodType = 'oauth' | 'token' | 'service_account' | 'custom';
 
@@ -10,6 +16,7 @@ export interface SpecificationTool {
   key: string;
 
   name: string;
+  title?: string;
   description?: string;
 
   inputJsonSchema: Record<string, any>;
@@ -25,20 +32,30 @@ export interface SpecificationTool {
     | {
         type: 'mcp.tool';
         key: string;
+        icons: Icons['icons'] | undefined;
+        annotations: ToolAnnotations | undefined;
+        execution: ToolExecution | undefined;
+        _meta: { [key: string]: any } | undefined;
       }
     | {
         type: 'mcp.prompt';
         key: string;
+        icons: Icons['icons'] | undefined;
         arguments: {
           name: string;
           description?: string | undefined;
           required?: boolean | undefined;
         }[];
+        _meta: { [key: string]: any } | undefined;
       }
     | {
         type: 'mcp.resource_template';
         uriTemplate: string;
+        mimeType: string | undefined;
         variableNames: string[];
+        icons: Icons['icons'] | undefined;
+        annotations: Annotations | undefined;
+        _meta: { [key: string]: any } | undefined;
       };
 
   capabilities: {

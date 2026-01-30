@@ -271,6 +271,7 @@ export class SenderManager {
       .filter(tool => checkToolAccess(tool, provider, 'list').allowed)
       .map(t => ({
         ...t,
+        key: `${provider.tag}_${t.key}`,
         sessionProvider: provider,
         sessionProviderInstance: instance
       }));
@@ -304,6 +305,10 @@ export class SenderManager {
 
   async getToolById(d: { toolId: string }) {
     let [providerTag, ...toolKeyParts] = d.toolId.split('_');
+    if (toolKeyParts.length === 0 || !providerTag?.trim()) {
+      throw new ServiceError(badRequestError({ message: 'Invalid tool ID format' }));
+    }
+
     let toolKey = toolKeyParts.join('_');
 
     let provider = await this.getProviderByTag({ tag: providerTag! });
@@ -312,8 +317,11 @@ export class SenderManager {
     let instance = await this.ensureProviderInstance(provider);
     if (!instance) throw new ServiceError(notFoundError('provider.instance'));
 
-    if (!instance.pairVersion.specificationOid)
-      throw new Error('Instance pair version missing specification OID');
+    if (!instance.pairVersion.specificationOid) {
+      throw new ServiceError(
+        badRequestError({ message: 'Tool not callable (not discovered yet)' })
+      );
+    }
 
     // Find the tool by key in the specification of the current instance
     let tool = await db.providerTool.findFirst({
