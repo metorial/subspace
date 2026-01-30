@@ -1,6 +1,14 @@
+enum ShuttleServerType {
+  container
+  function
+  remote
+}
+
 model ShuttleServer {
   oid BigInt @id
   id  String @unique
+
+  type ShuttleServerType
 
   identifier String @unique
 
@@ -9,14 +17,16 @@ model ShuttleServer {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  version                 ShuttleServerVersion[]
-  providerVersions        ProviderVersion[]
-  providerVariants        ProviderVariant[]
-  shuttleOAuthCredentials ShuttleOAuthCredentials[]
-  shuttleOAuthSetups      ShuttleOAuthSetup[]
-  shuttleAuthConfigs      ShuttleAuthConfig[]
-  shuttleConnections      ShuttleConnection[]
-  shuttleServerConfigs    ShuttleServerConfig[]
+  version                        ShuttleServerVersion[]
+  providerVersions               ProviderVersion[]
+  providerVariants               ProviderVariant[]
+  shuttleOAuthCredentials        ShuttleOAuthCredentials[]
+  shuttleOAuthSetups             ShuttleOAuthSetup[]
+  shuttleAuthConfigs             ShuttleAuthConfig[]
+  shuttleConnections             ShuttleConnection[]
+  shuttleServerConfigs           ShuttleServerConfig[]
+  shuttleCustomServers           ShuttleCustomServer[]
+  shuttleCustomServerDeployments ShuttleCustomServerDeployment[]
 }
 
 model ShuttleServerVersion {
@@ -32,7 +42,10 @@ model ShuttleServerVersion {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  providerVersions     ProviderVersion[]
-  shuttleConnections   ShuttleConnection[]
-  shuttleServerConfigs ShuttleServerConfig[]
+  providerVersions               ProviderVersion[]
+  shuttleConnections             ShuttleConnection[]
+  shuttleServerConfigs           ShuttleServerConfig[]
+  customProviderDeployment       CustomProviderDeployment?
+  customProviderVersion          CustomProviderVersion?
+  shuttleCustomServerDeployments ShuttleCustomServerDeployment[]
 }

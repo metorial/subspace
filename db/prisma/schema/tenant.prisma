@@ -53,11 +53,25 @@ model Tenant {
   shuttleOAuthSetups                       ShuttleOAuthSetup[]
   shuttleAuthConfigs                       ShuttleAuthConfig[]
   shuttleServerConfigs                     ShuttleServerConfig[]
+  customProviderDeployments                CustomProviderDeployment[]
+  customProviderVersions                   CustomProviderVersion[]
+  customProviders                          CustomProvider[]
+  shuttleCustomServers                     ShuttleCustomServer[]
+  shuttleCustomServerDeployments           ShuttleCustomServerDeployment[]
+  providerEnvironments                     ProviderEnvironment[]
+  customProviderEnvironments               CustomProviderEnvironment[]
+}
+
+enum EnvironmentType {
+  development
+  production
 }
 
 model Environment {
   oid BigInt @id
   id  String @unique
+
+  type EnvironmentType
 
   identifier String @unique
   name       String
@@ -91,4 +105,6 @@ model Environment {
   sessionTemplates                         SessionTemplate[]
   sessionTemplateProviders                 SessionTemplateProvider[]
   providerSetupSessions                    ProviderSetupSession[]
+  providerEnvironments                     ProviderEnvironment[]
+  customProviderEnvironments               CustomProviderEnvironment[]
 }

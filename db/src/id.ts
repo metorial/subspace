@@ -24,6 +24,9 @@ export let ID = createIdGenerator({
 
   environmentProvider: idType.sorted('kep'),
 
+  providerEnvironment: idType.sorted('pen'),
+  providerEnvironmentVersion: idType.sorted('pev'),
+
   providerDeployment: idType.sorted('pde'),
   providerConfig: idType.sorted('pcf'),
   providerConfigVersion: idType.sorted('pcv'),
@@ -59,6 +62,12 @@ export let ID = createIdGenerator({
 
   providerAuthConfigUsedForConfig: idType.sorted('pacufc'),
   providerAuthConfigUsedForDeployment: idType.sorted('pacufd'),
+
+  customProvider: idType.sorted('cpr'),
+  customProviderVersion: idType.sorted('cpv'),
+  customProviderDeployment: idType.sorted('cpd'),
+  customProviderEnvironment: idType.sorted('cpe'),
+  customProviderEnvironmentVersion: idType.sorted('cpev'),
 
   session: idType.sorted('ses'),
   sessionTemplate: idType.sorted('set'),

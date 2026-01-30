@@ -36,8 +36,10 @@ model ProviderVariant {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  providerVersions    ProviderVersion[]
-  providerDeployments ProviderDeployment[]
+  providerVersions     ProviderVersion[]
+  providerDeployments  ProviderDeployment[]
+  customProvider       CustomProvider?
+  providerEnvironments ProviderEnvironment[]
 
   @@index([isDefault])
 }

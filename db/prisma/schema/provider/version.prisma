@@ -15,7 +15,8 @@ model ProviderVersion {
   name        String
   description String?
 
-  isCurrent Boolean @default(false)
+  isCurrent           Boolean @default(false)
+  isEnvironmentLocked Boolean @default(false)
 
   metadata Json?
 
@@ -62,4 +63,7 @@ model ProviderVersion {
   providerVersionSpecificationChangesTo        ProviderVersionSpecificationChange[]          @relation("SpecChangeToVersion")
   providerSpecificationChangeNotifications     ProviderSpecificationChangeNotification[]
   providerRuns                                 ProviderRun[]
+  customProviderVersion                        CustomProviderVersion?
+  providerEnvironmentVersions                  ProviderEnvironmentVersion[]
+  providerEnvironments                         ProviderEnvironment[]
 }

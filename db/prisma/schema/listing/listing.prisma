@@ -5,7 +5,7 @@ enum ProviderListingStatus {
 }
 
 model ProviderListing {
-  oid    BigInt                @id @default(autoincrement())
+  oid    BigInt                @id
   id     String                @unique
   status ProviderListingStatus
 
@@ -60,7 +60,7 @@ model ProviderListing {
 }
 
 model ProviderListingUpdate {
-  oid BigInt @id @default(autoincrement())
+  oid BigInt @id
   id  String @unique
 
   before Json

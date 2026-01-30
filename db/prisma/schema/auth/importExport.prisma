@@ -1,5 +1,5 @@
 model ProviderAuthExport {
-  oid BigInt @id @default(autoincrement())
+  oid BigInt @id
   id  String @unique
 
   note     String?
@@ -26,7 +26,7 @@ model ProviderAuthExport {
 }
 
 model ProviderAuthImport {
-  oid BigInt @id @default(autoincrement())
+  oid BigInt @id
   id  String @unique
 
   ip       String?

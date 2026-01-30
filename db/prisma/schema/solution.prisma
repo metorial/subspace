@@ -31,4 +31,7 @@ model Solution {
   providerRuns                             ProviderRun[]
   toolCalls                                ToolCall[]
   environmentProviders                     EnvironmentProvider[]
+  customProviders                          CustomProvider[]
+  customProviderDeployments                CustomProviderDeployment[]
+  customProviderVersions                   CustomProviderVersion[]
 }

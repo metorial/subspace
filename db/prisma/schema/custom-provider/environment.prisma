@@ -1,0 +1,42 @@
+model CustomProviderEnvironment {
+  oid BigInt @id
+  id  String @unique
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  environmentOid BigInt
+  environment    Environment @relation(fields: [environmentOid], references: [oid])
+
+  providerEnvironmentOid BigInt?
+  providerEnvironment    ProviderEnvironment? @relation(fields: [providerEnvironmentOid], references: [oid])
+
+  customProviderOid BigInt
+  customProvider    Provider @relation(fields: [customProviderOid], references: [oid])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  customProviderEnvironmentVersions CustomProviderEnvironmentVersion[]
+  customProviderDeployments         CustomProviderDeployment[]
+
+  @@unique([environmentOid, customProviderOid])
+}
+
+model CustomProviderEnvironmentVersion {
+  oid BigInt @id
+  id  String @unique
+
+  customProviderEnvironmentOid BigInt
+  customProviderEnvironment    CustomProviderEnvironment @relation(fields: [customProviderEnvironmentOid], references: [oid])
+
+  customProviderVersionOid BigInt
+  customProviderVersion    CustomProviderVersion @relation(fields: [customProviderVersionOid], references: [oid])
+
+  providerEnvironmentVersionOid BigInt?
+  providerEnvironmentVersion    ProviderEnvironmentVersion? @relation(fields: [providerEnvironmentVersionOid], references: [oid])
+
+  createdAt DateTime @default(now())
+
+  @@unique([customProviderEnvironmentOid, customProviderVersionOid])
+}

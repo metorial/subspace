@@ -128,6 +128,8 @@ class providerVersionInternalServiceImpl {
               await providerVersionUpdatedQueue.add({ providerVersionId: providerVersion.id });
             }
           });
+
+          return providerVersion;
         })
     );
   }

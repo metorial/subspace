@@ -35,6 +35,8 @@ model Provider {
   access ProviderAccess
   status ProviderStatus
 
+  hasEnvironments Boolean @default(false)
+
   identifier  String  @unique
   slug        String  @unique
   name        String
@@ -66,27 +68,30 @@ model Provider {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  variants                  ProviderVariant[]
-  providerVersions          ProviderVersion[]
-  deployment                ProviderDeployment[]
-  listing                   ProviderListing?
-  providerConfigs           ProviderConfig[]
-  tools                     ProviderTool[]
-  authMethods               ProviderAuthMethod[]
-  providerSpecifications    ProviderSpecification[]
-  providerConfigVaults      ProviderConfigVault[]
-  providerAuthCredentials   ProviderAuthCredentials[]
-  providerOAuthSetups       ProviderOAuthSetup[]
-  providerAuthConfigs       ProviderAuthConfig[]
-  providerToolGlobals       ProviderToolGlobal[]
-  providerAuthMethodGlobals ProviderAuthMethodGlobal[]
-  providerSetupSessions     ProviderSetupSession[]
-  sessionProviders          SessionProvider[]
-  providerRuns              ProviderRun[]
-  sessionTemplateProviders  SessionTemplateProvider[]
-  sessionParticipants       SessionParticipant[]
-  sessionErrorGroups        SessionErrorGroup[]
-  environmentProviders      EnvironmentProvider[]
+  variants                   ProviderVariant[]
+  providerVersions           ProviderVersion[]
+  deployment                 ProviderDeployment[]
+  listing                    ProviderListing?
+  providerConfigs            ProviderConfig[]
+  tools                      ProviderTool[]
+  authMethods                ProviderAuthMethod[]
+  providerSpecifications     ProviderSpecification[]
+  providerConfigVaults       ProviderConfigVault[]
+  providerAuthCredentials    ProviderAuthCredentials[]
+  providerOAuthSetups        ProviderOAuthSetup[]
+  providerAuthConfigs        ProviderAuthConfig[]
+  providerToolGlobals        ProviderToolGlobal[]
+  providerAuthMethodGlobals  ProviderAuthMethodGlobal[]
+  providerSetupSessions      ProviderSetupSession[]
+  sessionProviders           SessionProvider[]
+  providerRuns               ProviderRun[]
+  sessionTemplateProviders   SessionTemplateProvider[]
+  sessionParticipants        SessionParticipant[]
+  sessionErrorGroups         SessionErrorGroup[]
+  environmentProviders       EnvironmentProvider[]
+  customProvider             CustomProvider?
+  providerEnvironments       ProviderEnvironment[]
+  customProviderEnvironments CustomProviderEnvironment[]
 
   @@index([status])
 }
