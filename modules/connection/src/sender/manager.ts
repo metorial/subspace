@@ -206,6 +206,7 @@ export class SenderManager {
       let fullProvider = await db.sessionProvider.findFirstOrThrow({
         where: { oid: provider.oid },
         include: {
+          environment: true,
           deployment: true,
           config: true,
           authConfig: true,
@@ -226,6 +227,7 @@ export class SenderManager {
       }
 
       let version = await providerDeploymentInternalService.getCurrentVersion({
+        environment: fullProvider.environment,
         deployment: fullProvider.deployment,
         provider: fullProvider.provider
       });

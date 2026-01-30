@@ -3,6 +3,7 @@ import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  Environment,
   type Provider,
   type ProviderDeployment,
   type ProviderVariant,
@@ -11,6 +12,7 @@ import {
 
 class providerDeploymentInternalServiceImpl {
   async getCurrentVersion(d: {
+    environment: Environment;
     deployment: ProviderDeployment;
     provider: Provider & {
       defaultVariant?:
@@ -21,13 +23,15 @@ class providerDeploymentInternalServiceImpl {
     };
   }) {
     return this.getCurrentVersionOptional({
+      environment: d.environment,
       deployment: d.deployment,
       provider: d.provider
     });
   }
 
   async getCurrentVersionOptional(d: {
-    deployment: ProviderDeployment;
+    environment: Environment;
+    deployment?: ProviderDeployment;
     provider: Provider & {
       defaultVariant?:
         | (ProviderVariant & {
@@ -51,7 +55,8 @@ class providerDeploymentInternalServiceImpl {
   }
 
   private async getCurrentVersionInner(d: {
-    deployment: ProviderDeployment;
+    environment: Environment;
+    deployment?: ProviderDeployment;
     provider: Provider & {
       defaultVariant?:
         | (ProviderVariant & {
@@ -60,6 +65,10 @@ class providerDeploymentInternalServiceImpl {
         | null;
     };
   }) {
+    if (d.deployment && d.deployment.environmentOid !== d.environment.oid) {
+      throw new Error('Environment mismatch between deployment and environment');
+    }
+
     if (!d.provider.defaultVariantOid) return null;
 
     if (d.deployment?.lockedVersionOid) {
@@ -75,7 +84,7 @@ class providerDeploymentInternalServiceImpl {
       let env = await db.providerEnvironment.findUnique({
         where: {
           environmentOid_providerOid: {
-            environmentOid: d.deployment.environmentOid,
+            environmentOid: d.environment.oid,
             providerOid: d.provider.oid
           }
         },

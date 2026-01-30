@@ -204,6 +204,7 @@ class sessionProviderInputServiceImpl {
               throw new ServiceError(deploymentMismatchError);
 
             let version = await providerDeploymentInternalService.getCurrentVersion({
+              environment: d.environment,
               deployment,
               provider
             });

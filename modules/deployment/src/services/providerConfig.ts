@@ -322,9 +322,10 @@ class providerConfigServiceImpl {
 
         let version = await providerDeploymentInternalService.getCurrentVersionOptional({
           provider: d.provider,
+          environment: d.environment,
           deployment: d.providerDeployment
         });
-        if (!version.specificationOid) {
+        if (!version?.specificationOid) {
           throw new ServiceError(
             badRequestError({
               message: 'Cannot create config without a discovered specification'
