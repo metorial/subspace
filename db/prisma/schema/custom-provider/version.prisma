@@ -14,6 +14,9 @@ model CustomProviderVersion {
   versionIndex      Int
   versionIdentifier String
 
+  creatorActorOid BigInt
+  creatorActor    Actor  @relation(fields: [creatorActorOid], references: [oid])
+
   customProviderOid BigInt
   customProvider    CustomProvider @relation(fields: [customProviderOid], references: [oid])
 
@@ -42,6 +45,8 @@ model CustomProviderVersion {
   updatedAt DateTime @default(now()) @updatedAt
 
   customProviderEnvironmentVersions CustomProviderEnvironmentVersion[]
+  customProviderCommits             CustomProviderCommit[]
+  customProviderCommitsBefore       CustomProviderCommit[]             @relation("CustomProviderCommitToEnvVersionBefore")
 
   @@unique([customProviderOid, versionIndex])
   @@unique([customProviderOid, versionIdentifier])

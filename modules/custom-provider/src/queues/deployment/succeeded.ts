@@ -20,7 +20,8 @@ export let customDeploymentSucceededQueueProcessor = customDeploymentSucceededQu
         customProviderVersion: true,
         shuttleCustomServer: { include: { server: true } },
         shuttleServerVersion: true,
-        sourceEnvironment: true
+        sourceEnvironment: true,
+        commit: true
       }
     });
     let customProviderVersion = deployment?.customProviderVersion;
@@ -101,7 +102,9 @@ export let customDeploymentSucceededQueueProcessor = customDeploymentSucceededQu
 
       let isEnvironmentLocked = false;
 
-      if (deployment.sourceEnvironment) {
+      if (deployment.commit && deployment.sourceEnvironment) {
+        isEnvironmentLocked = true;
+
         let res = await db.customProviderEnvironmentVersion.upsert({
           where: {
             customProviderEnvironmentOid_customProviderVersionOid: {
@@ -113,37 +116,55 @@ export let customDeploymentSucceededQueueProcessor = customDeploymentSucceededQu
             ...getId('customProviderEnvironmentVersion'),
             customProviderEnvironmentOid: deployment.sourceEnvironment.oid,
             customProviderVersionOid: customProviderVersion.oid,
-            environmentOid: deployment.sourceEnvironment.environmentOid
+            environmentOid: deployment.sourceEnvironment.environmentOid,
+            commitOid: deployment.commit.oid
           },
-          update: {},
-          include: { customProviderEnvironment: { include: { providerEnvironment: true } } }
+          update: {}
+        });
+        let sourceEnvFull = await db.customProviderEnvironment.findUniqueOrThrow({
+          where: { oid: deployment.sourceEnvironment.oid },
+          include: {
+            providerEnvironment: {
+              include: {
+                currentVersion: {
+                  include: { customProviderVersion: true }
+                }
+              }
+            }
+          }
         });
 
-        // Should always be the case but might change in the future
-        if (res.customProviderEnvironment.providerEnvironment) {
-          isEnvironmentLocked = true;
+        await db.customProviderCommit.updateMany({
+          where: { oid: deployment.commit.oid },
+          data: {
+            status: 'applied',
+            appliedAt: new Date(),
+            toEnvironmentOid: sourceEnvFull.oid,
+            toEnvironmentVersionBeforeOid:
+              sourceEnvFull.providerEnvironment?.currentVersion?.customProviderVersion?.oid
+          }
+        });
 
-          await db.providerEnvironmentVersion.upsert({
-            where: {
-              providerEnvironmentOid_providerVersionOid: {
-                providerEnvironmentOid: res.customProviderEnvironment.providerEnvironment.oid,
-                providerVersionOid: version.oid
-              }
-            },
-            create: {
-              ...getId('providerEnvironmentVersion'),
-              providerEnvironmentOid: res.customProviderEnvironment.providerEnvironment.oid,
-              providerVersionOid: version.oid,
-              environmentOid: res.customProviderEnvironment.environmentOid
-            },
-            update: {}
-          });
+        await db.providerEnvironmentVersion.upsert({
+          where: {
+            providerEnvironmentOid_providerVersionOid: {
+              providerEnvironmentOid: sourceEnvFull.providerEnvironment!.oid,
+              providerVersionOid: version.oid
+            }
+          },
+          create: {
+            ...getId('providerEnvironmentVersion'),
+            providerEnvironmentOid: sourceEnvFull.providerEnvironment!.oid,
+            providerVersionOid: version.oid,
+            environmentOid: sourceEnvFull.environmentOid
+          },
+          update: {}
+        });
 
-          await db.providerEnvironment.updateMany({
-            where: { oid: res.customProviderEnvironment.providerEnvironment.oid },
-            data: { currentVersionOid: version.oid }
-          });
-        }
+        await db.providerEnvironment.updateMany({
+          where: { oid: sourceEnvFull.providerEnvironment!.oid },
+          data: { currentVersionOid: version.oid }
+        });
       }
 
       if (isEnvironmentLocked) {

@@ -2,6 +2,7 @@ import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
+  Actor,
   addAfterTransactionHook,
   type CustomProvider,
   type CustomProviderStatus,
@@ -105,9 +106,11 @@ class customProviderServiceImpl {
   }
 
   async createCustomProvider(d: {
+    actor: Actor;
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
+
     input: {
       name: string;
       description?: string;
@@ -159,12 +162,15 @@ class customProviderServiceImpl {
       });
 
       await createVersion({
+        actor: d.actor,
         tenant: d.tenant,
         solution: d.solution,
         environment: d.environment,
 
         trigger: 'manual',
         customProvider,
+
+        message: 'Initial commit',
 
         shuttleServer: backendProvider.shuttleServer,
         shuttleCustomServer: backendProvider.shuttleCustomServer,

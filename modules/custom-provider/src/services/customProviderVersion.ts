@@ -2,6 +2,7 @@ import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
+  Actor,
   CustomProvider,
   db,
   getId,
@@ -26,12 +27,15 @@ let include = {};
 
 class customProviderVersionServiceImpl {
   async createCustomProvider(d: {
+    actor: Actor;
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
 
     customProvider: CustomProvider;
     input: {
+      message?: string;
+
       from: CustomProviderFrom;
       config?: CustomProviderConfig;
     };
@@ -62,9 +66,12 @@ class customProviderVersionServiceImpl {
       });
 
       let versionRes = await createVersion({
+        actor: d.actor,
         tenant: d.tenant,
         solution: d.solution,
         environment: d.environment,
+
+        message: d.input.message,
 
         trigger: 'manual',
         customProvider: d.customProvider,

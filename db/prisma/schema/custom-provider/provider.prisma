@@ -44,6 +44,7 @@ model CustomProvider {
   customProviderDeployments  CustomProviderDeployment[]
   customProviderVersions     CustomProviderVersion[]
   customProviderEnvironments CustomProviderEnvironment[]
+  customProviderCommits      CustomProviderCommit[]
 
   @@index([status])
 }

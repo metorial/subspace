@@ -1,5 +1,6 @@
 import { generatePlainId } from '@lowerdeck/id';
 import {
+  Actor,
   addAfterTransactionHook,
   CustomProvider,
   CustomProviderDeploymentTrigger,
@@ -15,9 +16,12 @@ import {
 import { customProviderDeploymentCreatedQueue } from '../queues/lifecycle/customProviderDeployment';
 
 export let createVersion = (d: {
+  actor: Actor;
   tenant: Tenant;
   solution: Solution;
   environment: Environment;
+
+  message: string | undefined;
 
   trigger: CustomProviderDeploymentTrigger;
 
@@ -36,6 +40,8 @@ export let createVersion = (d: {
 
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        creatorActorOid: d.actor.oid,
+
         customProviderOid: d.customProvider.oid,
 
         shuttleCustomServerOid: d.shuttleCustomServer.oid,
@@ -65,24 +71,76 @@ export let createVersion = (d: {
         shuttleCustomServerDeploymentOid: d.shuttleCustomDeployment.oid,
 
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+        creatorActorOid: d.actor.oid
       }
     });
 
-    let env = await db.customProviderEnvironment.findUniqueOrThrow({
+    let env = await db.customProviderEnvironment.findUnique({
       where: {
         environmentOid_customProviderOid: {
           environmentOid: d.environment.oid,
           customProviderOid: d.customProvider.oid
         }
+      },
+      include: {
+        providerEnvironment: {
+          include: { currentVersion: { include: { customProviderVersion: true } } }
+        }
       }
     });
+    if (!env) {
+      env = await db.customProviderEnvironment.upsert({
+        where: {
+          environmentOid_customProviderOid: {
+            environmentOid: d.environment.oid,
+            customProviderOid: d.customProvider.oid
+          }
+        },
+        create: {
+          ...getId('customProviderEnvironment'),
+          tenantOid: d.tenant.oid,
+          environmentOid: d.environment.oid,
+          customProviderOid: d.customProvider.oid
+        },
+        update: {},
+        include: {
+          providerEnvironment: {
+            include: { currentVersion: { include: { customProviderVersion: true } } }
+          }
+        }
+      });
+    }
+
+    let commit = await db.customProviderCommit.create({
+      data: {
+        ...getId('customProviderCommit'),
+        status: 'pending',
+        trigger: d.trigger,
+        type: 'create_version',
+
+        message: d.message,
+
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid,
+        creatorActorOid: d.actor.oid,
+
+        toEnvironmentOid: env.oid,
+        toEnvironmentVersionBeforeOid:
+          env.providerEnvironment?.currentVersion?.customProviderVersion?.oid || null,
+
+        customProviderVersionOid: version.oid,
+        customProviderOid: d.customProvider.oid
+      }
+    });
+
     await db.customProviderEnvironmentVersion.create({
       data: {
         ...getId('customProviderEnvironmentVersion'),
         customProviderEnvironmentOid: env.oid,
         customProviderVersionOid: version.oid,
-        environmentOid: d.environment.oid
+        environmentOid: d.environment.oid,
+        commitOid: commit.oid
       }
     });
 

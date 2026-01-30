@@ -7,6 +7,7 @@ enum CustomProviderDeploymentStatus {
 
 enum CustomProviderDeploymentTrigger {
   manual
+  system
   // git
 }
 
@@ -16,6 +17,9 @@ model CustomProviderDeployment {
 
   status  CustomProviderDeploymentStatus
   trigger CustomProviderDeploymentTrigger
+
+  creatorActorOid BigInt
+  creatorActor    Actor  @relation(fields: [creatorActorOid], references: [oid])
 
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
@@ -28,6 +32,9 @@ model CustomProviderDeployment {
 
   sourceEnvironmentOid BigInt?
   sourceEnvironment    CustomProviderEnvironment? @relation(fields: [sourceEnvironmentOid], references: [oid])
+
+  commitOid BigInt?
+  commit    CustomProviderCommit? @relation(fields: [commitOid], references: [oid])
 
   shuttleServerVersionOid BigInt?               @unique
   shuttleServerVersion    ShuttleServerVersion? @relation(fields: [shuttleServerVersionOid], references: [oid])

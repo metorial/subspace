@@ -64,6 +64,7 @@ export let ID = createIdGenerator({
   providerAuthConfigUsedForDeployment: idType.sorted('pacufd'),
 
   customProvider: idType.sorted('cpr'),
+  customProviderCommit: idType.sorted('cpc'),
   customProviderVersion: idType.sorted('cpv'),
   customProviderDeployment: idType.sorted('cpd'),
   customProviderEnvironment: idType.sorted('cpe'),

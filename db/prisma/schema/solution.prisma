@@ -34,4 +34,5 @@ model Solution {
   customProviders                          CustomProvider[]
   customProviderDeployments                CustomProviderDeployment[]
   customProviderVersions                   CustomProviderVersion[]
+  customProviderCommits                    CustomProviderCommit[]
 }
