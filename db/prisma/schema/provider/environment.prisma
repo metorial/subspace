@@ -15,12 +15,12 @@ model ProviderEnvironment {
   providerVariant    ProviderVariant @relation(fields: [providerVariantOid], references: [oid])
 
   currentVersionOid BigInt?
-  currentVersion    ProviderVersion? @relation(fields: [currentVersionOid], references: [oid])
+  currentVersion    ProviderVersion? @relation(fields: [currentVersionOid], references: [oid], name: "ProviderEnvironmentCurrentVersion")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  customProviderEnvironments  CustomProviderEnvironment[]
+  customProviderEnvironment   CustomProviderEnvironment?
   providerEnvironmentVersions ProviderEnvironmentVersion[]
 
   @@unique([environmentOid, providerOid])

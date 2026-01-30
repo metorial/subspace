@@ -67,6 +67,13 @@ export let customDeploymentSucceededQueueProcessor = customDeploymentSucceededQu
           providerVersionOid: versionRes.providerVersion.oid
         }
       });
+      await db.customProvider.updateMany({
+        where: { oid: customProviderVersion.customProviderOid },
+        data: {
+          providerOid: provider.oid,
+          providerVariantOid: provider.defaultVariantOid
+        }
+      });
 
       let environments = await db.customProviderEnvironment.findMany({
         where: { customProviderOid: customProviderVersion.customProviderOid }

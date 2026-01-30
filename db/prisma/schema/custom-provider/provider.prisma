@@ -41,8 +41,9 @@ model CustomProvider {
   updatedAt DateTime  @default(now()) @updatedAt
   deletedAt DateTime?
 
-  customProviderDeployments CustomProviderDeployment[]
-  customProviderVersions    CustomProviderVersion[]
+  customProviderDeployments  CustomProviderDeployment[]
+  customProviderVersions     CustomProviderVersion[]
+  customProviderEnvironments CustomProviderEnvironment[]
 
   @@index([status])
 }

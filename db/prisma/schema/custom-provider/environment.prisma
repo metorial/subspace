@@ -8,11 +8,11 @@ model CustomProviderEnvironment {
   environmentOid BigInt
   environment    Environment @relation(fields: [environmentOid], references: [oid])
 
-  providerEnvironmentOid BigInt?
+  providerEnvironmentOid BigInt?              @unique
   providerEnvironment    ProviderEnvironment? @relation(fields: [providerEnvironmentOid], references: [oid])
 
   customProviderOid BigInt
-  customProvider    Provider @relation(fields: [customProviderOid], references: [oid])
+  customProvider    CustomProvider @relation(fields: [customProviderOid], references: [oid])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt

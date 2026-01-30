@@ -1,3 +1,4 @@
+import { generatePlainId } from '@lowerdeck/id';
 import {
   addAfterTransactionHook,
   CustomProvider,
@@ -55,6 +56,7 @@ export let createVersion = (d: {
         status: 'queued',
 
         versionIndex: maxVersionIndex,
+        versionIdentifier: generatePlainId(8),
 
         deploymentOid: deployment.oid,
         customProviderOid: d.customProvider.oid,

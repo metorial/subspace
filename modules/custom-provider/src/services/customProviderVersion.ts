@@ -1,17 +1,86 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, type Environment, type Solution, type Tenant } from '@metorial-subspace/db';
 import {
+  CustomProvider,
+  db,
+  getId,
+  withTransaction,
+  type Environment,
+  type Solution,
+  type Tenant
+} from '@metorial-subspace/db';
+import {
+  checkDeletedRelation,
   resolveCustomProviderDeployments,
   resolveCustomProviderEnvironments,
   resolveCustomProviders,
   resolveProviders
 } from '@metorial-subspace/list-utils';
+import { checkTenant } from '@metorial-subspace/module-tenant';
+import { backend } from '../_shuttle/backend';
+import { CustomProviderConfig, CustomProviderFrom } from '../_shuttle/types';
+import { createVersion } from '../internal/createVersion';
 
 let include = {};
 
 class customProviderVersionServiceImpl {
+  async createCustomProvider(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+
+    customProvider: CustomProvider;
+    input: {
+      from: CustomProviderFrom;
+      config?: CustomProviderConfig;
+    };
+  }) {
+    checkTenant(d, d.customProvider);
+    checkDeletedRelation(d.customProvider);
+
+    let backendProvider = await backend.createCustomProviderVersion({
+      tenant: d.tenant,
+
+      from: d.input.from,
+      config: d.input.config!,
+
+      customProvider: d.customProvider
+    });
+
+    return withTransaction(async db => {
+      let environments = await db.environment.findMany({
+        where: { tenantOid: d.tenant.oid }
+      });
+      await db.customProviderEnvironment.createMany({
+        data: environments.map(env => ({
+          ...getId('customProviderEnvironment'),
+          tenantOid: d.tenant.oid,
+          environmentOid: env.oid,
+          customProviderOid: d.customProvider.oid
+        }))
+      });
+
+      let versionRes = await createVersion({
+        tenant: d.tenant,
+        solution: d.solution,
+        environment: d.environment,
+
+        trigger: 'manual',
+        customProvider: d.customProvider,
+
+        shuttleServer: backendProvider.shuttleServer,
+        shuttleCustomServer: backendProvider.shuttleCustomServer,
+        shuttleCustomDeployment: backendProvider.shuttleCustomDeployment
+      });
+
+      return await db.customProviderVersion.findUniqueOrThrow({
+        where: { oid: versionRes.version.oid, tenantOid: d.tenant.oid },
+        include
+      });
+    });
+  }
+
   async listCustomProviderVersions(d: {
     tenant: Tenant;
     solution: Solution;

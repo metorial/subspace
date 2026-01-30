@@ -11,7 +11,8 @@ model CustomProviderVersion {
 
   status CustomProviderVersionStatus
 
-  versionIndex Int
+  versionIndex      Int
+  versionIdentifier String
 
   customProviderOid BigInt
   customProvider    CustomProvider @relation(fields: [customProviderOid], references: [oid])
@@ -42,5 +43,7 @@ model CustomProviderVersion {
 
   customProviderEnvironmentVersions CustomProviderEnvironmentVersion[]
 
+  @@unique([customProviderOid, versionIndex])
+  @@unique([customProviderOid, versionIdentifier])
   @@index([status])
 }

@@ -65,5 +65,5 @@ model ProviderVersion {
   providerRuns                                 ProviderRun[]
   customProviderVersion                        CustomProviderVersion?
   providerEnvironmentVersions                  ProviderEnvironmentVersion[]
-  providerEnvironments                         ProviderEnvironment[]
+  currentVersionForEnvironments                ProviderEnvironment[]                         @relation("ProviderEnvironmentCurrentVersion")
 }
