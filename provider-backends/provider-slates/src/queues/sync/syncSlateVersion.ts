@@ -71,10 +71,11 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
       update: {}
     });
 
+    let newVersionOid = snowflake.nextId();
     let slateVersionRecord = await db.slateVersion.upsert({
       where: { id: data.slateVersionId },
       create: {
-        oid: snowflake.nextId(),
+        oid: newVersionOid,
         id: data.slateVersionId,
         version: version.version,
         identifier: `${slate.identifier}::${version.version}`,
@@ -82,6 +83,11 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
       },
       update: {}
     });
+
+    // Abort if the version already existed
+    if (slateVersionRecord.oid != newVersionOid) {
+      return;
+    }
 
     let registryRecord = await slates.slate.getRegistryRecord({
       slateId: slate.id
