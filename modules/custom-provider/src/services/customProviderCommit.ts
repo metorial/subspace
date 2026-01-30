@@ -19,10 +19,54 @@ import {
 } from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 
-let include = {};
+let envInclude = {
+  include: {
+    environment: true,
+    providerEnvironment: {
+      include: {
+        currentVersion: true
+      }
+    }
+  }
+};
+
+let verInclude = {
+  include: {
+    deployment: true,
+    providerVersion: true,
+    customProviderEnvironmentVersions: {
+      include: {
+        customProviderEnvironment: {
+          include: {
+            environment: true,
+            providerEnvironment: {
+              include: {
+                currentVersion: true
+              }
+            }
+          }
+        }
+      }
+    },
+    creatorActor: true
+  }
+};
+
+let include = {
+  customProvider: {
+    include: {
+      provider: true
+    }
+  },
+  toEnvironment: envInclude,
+  fromEnvironment: envInclude,
+  targetCustomProviderVersion: verInclude,
+  toEnvironmentVersionBefore: verInclude,
+  creatorActor: true
+};
 
 class customProviderCommitServiceImpl {
-  async createCustomProvider(d: {
+  async createCustomProviderCommit(d: {
     actor: Actor;
     tenant: Tenant;
     solution: Solution;
@@ -172,7 +216,10 @@ class customProviderCommitServiceImpl {
       throw new Error('Unhandled action type');
     }
 
-    return commit;
+    return await db.customProviderCommit.findUniqueOrThrow({
+      where: { oid: commit.oid },
+      include
+    });
   }
 
   async listCustomProviderCommits(d: {
@@ -183,7 +230,6 @@ class customProviderCommitServiceImpl {
     ids?: string[];
     providerIds?: string[];
     customProviderIds?: string[];
-
     customProviderVersionIds?: string[];
     customProviderEnvironmentIds?: string[];
   }) {

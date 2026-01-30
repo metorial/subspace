@@ -1,3 +1,4 @@
+export * from './actor';
 export * from './authConfig';
 export * from './authCredentials';
 export * from './authExport';

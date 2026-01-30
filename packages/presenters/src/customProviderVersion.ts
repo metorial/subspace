@@ -1,4 +1,5 @@
 import type {
+  Actor,
   CustomProvider,
   CustomProviderDeployment,
   CustomProviderEnvironment,
@@ -9,6 +10,7 @@ import type {
   ProviderEnvironment,
   ProviderVersion
 } from '@metorial-subspace/db';
+import { actorPresenter } from './actor';
 import { customProviderDeploymentPresenter } from './customProviderDeployment';
 import { customProviderEnvironmentPresenter } from './customProviderEnvironment';
 
@@ -32,6 +34,8 @@ export let customProviderVersionPresenter = (
           | null;
       };
     })[];
+
+    creatorActor: Actor;
   }
 ) => {
   let customEnvironments = customProviderVersion.customProviderEnvironmentVersions.map(
@@ -49,7 +53,8 @@ export let customProviderVersionPresenter = (
 
     deployment: customProviderDeploymentPresenter({
       ...customProviderVersion.deployment,
-      customProvider: customProviderVersion.customProvider
+      customProvider: customProviderVersion.customProvider,
+      creatorActor: customProviderVersion.creatorActor
     }),
 
     environments: customEnvironments.map(cev => ({
@@ -69,6 +74,8 @@ export let customProviderVersionPresenter = (
 
     customProviderId: customProviderVersion.customProvider.id,
     providerId: customProviderVersion.customProvider.provider?.id,
+
+    actor: actorPresenter(customProviderVersion.creatorActor),
 
     createdAt: customProviderVersion.createdAt,
     updatedAt: customProviderVersion.updatedAt

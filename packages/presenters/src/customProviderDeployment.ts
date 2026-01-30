@@ -1,14 +1,18 @@
 import type {
+  Actor,
   CustomProvider,
   CustomProviderDeployment,
   Provider
 } from '@metorial-subspace/db';
+import { actorPresenter } from './actor';
 
 export let customProviderDeploymentPresenter = (
   customProviderDeployment: CustomProviderDeployment & {
     customProvider: CustomProvider & {
       provider: Provider | null;
     };
+
+    creatorActor: Actor;
   }
 ) => ({
   object: 'custom_provider.deployment',
@@ -19,6 +23,8 @@ export let customProviderDeploymentPresenter = (
 
   customProviderId: customProviderDeployment.customProvider.id,
   providerId: customProviderDeployment.customProvider.provider?.id,
+
+  actor: actorPresenter(customProviderDeployment.creatorActor),
 
   createdAt: customProviderDeployment.createdAt,
   updatedAt: customProviderDeployment.updatedAt

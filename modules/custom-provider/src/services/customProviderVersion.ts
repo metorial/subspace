@@ -4,6 +4,7 @@ import { Service } from '@lowerdeck/service';
 import {
   Actor,
   CustomProvider,
+  CustomProviderVersionStatus,
   db,
   getId,
   withTransaction,
@@ -23,10 +24,34 @@ import { backend } from '../_shuttle/backend';
 import { CustomProviderConfig, CustomProviderFrom } from '../_shuttle/types';
 import { createVersion } from '../internal/createVersion';
 
-let include = {};
+let include = {
+  customProvider: {
+    include: {
+      provider: true
+    }
+  },
+  deployment: true,
+  providerVersion: true,
+
+  customProviderEnvironmentVersions: {
+    include: {
+      customProviderEnvironment: {
+        include: {
+          environment: true,
+          providerEnvironment: {
+            include: {
+              currentVersion: true
+            }
+          }
+        }
+      }
+    }
+  },
+  creatorActor: true
+};
 
 class customProviderVersionServiceImpl {
-  async createCustomProvider(d: {
+  async createCustomProviderVersion(d: {
     actor: Actor;
     tenant: Tenant;
     solution: Solution;
@@ -93,6 +118,8 @@ class customProviderVersionServiceImpl {
     solution: Solution;
     environment: Environment;
 
+    status?: CustomProviderVersionStatus[];
+
     ids?: string[];
     providerIds?: string[];
     providerVersionIds?: string[];
@@ -123,6 +150,8 @@ class customProviderVersionServiceImpl {
 
               AND: [
                 d.ids ? { id: { in: d.ids } } : undefined!,
+
+                d.status ? { status: { in: d.status } } : undefined!,
 
                 providers ? { customProvider: { providerOid: providers.in } } : undefined!,
                 providerVersions ? { providerVersionOid: providerVersions.in } : undefined!,

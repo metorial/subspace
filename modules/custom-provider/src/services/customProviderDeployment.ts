@@ -1,21 +1,38 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, type Environment, type Solution, type Tenant } from '@metorial-subspace/db';
+import {
+  CustomProviderDeployment,
+  CustomProviderDeploymentStatus,
+  db,
+  type Environment,
+  type Solution,
+  type Tenant
+} from '@metorial-subspace/db';
 import {
   resolveCustomProviderDeployments,
   resolveCustomProviderEnvironments,
   resolveCustomProviders,
   resolveProviders
 } from '@metorial-subspace/list-utils';
+import { getTenantForShuttle, shuttle } from '@metorial-subspace/provider-shuttle/src/client';
 
-let include = {};
+let include = {
+  customProvider: {
+    include: {
+      provider: true
+    }
+  },
+  creatorActor: true
+};
 
 class customProviderDeploymentServiceImpl {
   async listCustomProviderDeployments(d: {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
+
+    status?: CustomProviderDeploymentStatus[];
 
     ids?: string[];
     providerIds?: string[];
@@ -47,6 +64,8 @@ class customProviderDeploymentServiceImpl {
 
               AND: [
                 d.ids ? { id: { in: d.ids } } : undefined!,
+
+                d.status ? { status: { in: d.status } } : undefined!,
 
                 providers ? { customProvider: { providerOid: providers.in } } : undefined!,
                 providerVersions
@@ -102,6 +121,32 @@ class customProviderDeploymentServiceImpl {
       );
 
     return customProviderDeployment;
+  }
+
+  async getLogs(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    customProviderDeployment: CustomProviderDeployment;
+  }) {
+    if (!d.customProviderDeployment.shuttleCustomServerDeploymentOid) {
+      return [];
+    }
+
+    let shuttleDeployment = await db.shuttleCustomServerDeployment.findFirstOrThrow({
+      where: {
+        oid: d.customProviderDeployment.shuttleCustomServerDeploymentOid
+      }
+    });
+
+    let tenant = await getTenantForShuttle(d.tenant);
+
+    let logs = await shuttle.serverDeployment.getOutput({
+      tenantId: tenant.id,
+      serverDeploymentId: shuttleDeployment.id
+    });
+
+    return logs;
   }
 }
 

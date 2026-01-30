@@ -11,6 +11,7 @@ import type {
   ProviderEnvironment,
   ProviderVersion
 } from '@metorial-subspace/db';
+import { actorPresenter } from './actor';
 import { customProviderEnvironmentPresenter } from './customProviderEnvironment';
 import { customProviderVersionPresenter } from './customProviderVersion';
 
@@ -53,6 +54,7 @@ export let customProviderCommitPresenter = (
             | null;
         };
       })[];
+      creatorActor: Actor;
     };
 
     toEnvironmentVersionBefore:
@@ -69,10 +71,11 @@ export let customProviderCommitPresenter = (
                 | null;
             };
           })[];
+          creatorActor: Actor;
         })
       | null;
 
-    creatorActor: Actor | null;
+    creatorActor: Actor;
   }
 ) => ({
   object: 'custom_provider.deployment',
@@ -112,6 +115,8 @@ export let customProviderCommitPresenter = (
         customProvider: customProviderCommit.customProvider
       })
     : null,
+
+  actor: actorPresenter(customProviderCommit.creatorActor),
 
   createdAt: customProviderCommit.createdAt,
   appliedAt: customProviderCommit.appliedAt

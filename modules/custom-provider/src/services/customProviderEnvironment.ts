@@ -7,7 +7,19 @@ import {
   resolveCustomProviderVersions
 } from '@metorial-subspace/list-utils';
 
-let include = {};
+let include = {
+  customProvider: {
+    include: {
+      provider: true
+    }
+  },
+  environment: true,
+  providerEnvironment: {
+    include: {
+      currentVersion: true
+    }
+  }
+};
 
 class customProviderEnvironmentServiceImpl {
   async listCustomProviderEnvironments(d: {

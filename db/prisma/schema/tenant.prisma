@@ -81,7 +81,8 @@ model Environment {
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid], onDelete: Cascade)
 
-  createdAt                                DateTime                                  @default(now())
+  createdAt DateTime @default(now())
+
   providerAuthConfigs                      ProviderAuthConfig[]
   providerAuthCredentials                  ProviderAuthCredentials[]
   providerAuthExports                      ProviderAuthExport[]
@@ -124,12 +125,14 @@ model Actor {
 
   type ActorType
 
-  identifier          String @unique
+  identifier          String  @unique
   name                String
-  organizationActorId String
+  organizationActorId String?
 
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 
   customProviderVersions    CustomProviderVersion[]
   customProviderDeployments CustomProviderDeployment[]

@@ -37,7 +37,8 @@ export let tenantController = app.controller({
         environments: v.array(
           v.object({
             name: v.string(),
-            identifier: v.string()
+            identifier: v.string(),
+            type: v.enumOf(['development', 'production'])
           })
         )
       })

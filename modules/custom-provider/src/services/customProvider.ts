@@ -31,7 +31,28 @@ import {
   customProviderUpdatedQueue
 } from '../queues/lifecycle/customProvider';
 
-let include = {};
+let include = {
+  provider: {
+    include: {
+      entry: true,
+      publisher: true,
+      ownerTenant: true,
+
+      defaultVariant: {
+        include: {
+          provider: true,
+          currentVersion: {
+            include: {
+              specification: {
+                omit: { value: true }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+};
 
 class customProviderServiceImpl {
   async listCustomProviders(d: {

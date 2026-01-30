@@ -1,6 +1,12 @@
 import { apiMux } from '@lowerdeck/api-mux';
 import { createServer, type InferClient, rpcMux } from '@lowerdeck/rpc-server';
 import { app } from './_app';
+import { actorController } from './actor';
+import { customProviderController } from './customProvider';
+import { customProviderCommitController } from './customProviderCommit';
+import { customProviderDeploymentController } from './customProviderDeployment';
+import { customProviderEnvironmentController } from './customProviderEnvironment';
+import { customProviderVersionController } from './customProviderVersion';
 import { environmentController } from './environment';
 import { providerController } from './provider';
 import { providerAuthConfigController } from './providerAuthConfig';
@@ -37,6 +43,12 @@ import { tenantController } from './tenant';
 
 export let rootController = app.controller({
   environment: environmentController,
+  actor: actorController,
+  solution: solutionController,
+  tenant: tenantController,
+
+  publisher: publisherController,
+
   provider: providerController,
   providerAuthConfig: providerAuthConfigController,
   providerAuthCredentials: providerAuthCredentialsController,
@@ -56,8 +68,7 @@ export let rootController = app.controller({
   providerTool: providerToolController,
   providerVariant: providerVariantController,
   providerVersion: providerVersionController,
-  publisher: publisherController,
-  solution: solutionController,
+
   session: sessionController,
   sessionProvider: sessionProviderController,
   sessionConnection: sessionConnectionController,
@@ -67,8 +78,14 @@ export let rootController = app.controller({
   sessionParticipant: sessionParticipantController,
   sessionTemplate: sessionTemplateController,
   sessionTemplateProvider: sessionTemplateProviderController,
-  providerRun: providerRunController,
-  tenant: tenantController
+
+  customProvider: customProviderController,
+  customProviderCommit: customProviderCommitController,
+  customProviderDeployment: customProviderDeploymentController,
+  customProviderVersion: customProviderVersionController,
+  customProviderEnvironment: customProviderEnvironmentController,
+
+  providerRun: providerRunController
 });
 
 export let subspaceControllerRPC = createServer({})(rootController);
