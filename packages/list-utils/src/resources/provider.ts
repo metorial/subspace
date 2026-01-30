@@ -132,3 +132,46 @@ export let resolvePublishers = createResolver(async ({ ts, ids }) =>
     select: { oid: true }
   })
 );
+
+export let resolveCustomProviders = createResolver(async ({ ts, ids }) =>
+  db.customProvider.findMany({
+    where: {
+      id: { in: ids },
+      solutionOid: ts.solutionOid,
+      tenantOid: ts.tenantOid
+    },
+    select: { oid: true }
+  })
+);
+
+export let resolveCustomProviderDeployments = createResolver(async ({ ts, ids }) =>
+  db.customProviderDeployment.findMany({
+    where: {
+      id: { in: ids },
+      solutionOid: ts.solutionOid,
+      tenantOid: ts.tenantOid
+    },
+    select: { oid: true }
+  })
+);
+
+export let resolveCustomProviderVersions = createResolver(async ({ ts, ids }) =>
+  db.customProviderVersion.findMany({
+    where: {
+      id: { in: ids },
+      solutionOid: ts.solutionOid,
+      tenantOid: ts.tenantOid
+    },
+    select: { oid: true }
+  })
+);
+
+export let resolveCustomProviderEnvironments = createResolver(async ({ ts, ids }) =>
+  db.customProviderEnvironment.findMany({
+    where: {
+      id: { in: ids },
+      tenantOid: ts.tenantOid
+    },
+    select: { oid: true }
+  })
+);
