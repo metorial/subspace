@@ -2,6 +2,7 @@ enum ProviderVersionSpecificationDiscoveryStatus {
   discovering
   discovered
   not_discoverable
+  waiting_for_pair
 }
 
 model ProviderVersion {
@@ -56,7 +57,6 @@ model ProviderVersion {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  providerDeployments                          ProviderDeployment[]
   defaultFor                                   ProviderVariant[]                             @relation("defaultVersion")
   providerDeploymentConfigPairProviderVersions ProviderDeploymentConfigPairProviderVersion[]
   providerVersionSpecificationChangesFrom      ProviderVersionSpecificationChange[]          @relation("SpecChangeFromVersion")
@@ -66,4 +66,5 @@ model ProviderVersion {
   customProviderVersion                        CustomProviderVersion?
   providerEnvironmentVersions                  ProviderEnvironmentVersion[]
   currentVersionForEnvironments                ProviderEnvironment[]                         @relation("ProviderEnvironmentCurrentVersion")
+  providerDeploymentVersions                   ProviderDeploymentVersion[]
 }

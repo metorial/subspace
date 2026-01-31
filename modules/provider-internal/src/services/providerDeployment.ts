@@ -4,6 +4,7 @@ import { Service } from '@lowerdeck/service';
 import {
   db,
   Environment,
+  ProviderDeploymentVersion,
   type Provider,
   type ProviderDeployment,
   type ProviderVariant,
@@ -13,7 +14,7 @@ import {
 class providerDeploymentInternalServiceImpl {
   async getCurrentVersion(d: {
     environment: Environment;
-    deployment: ProviderDeployment;
+    deployment: ProviderDeployment & { currentVersion: ProviderDeploymentVersion | null };
     provider: Provider & {
       defaultVariant?:
         | (ProviderVariant & {
@@ -31,7 +32,7 @@ class providerDeploymentInternalServiceImpl {
 
   async getCurrentVersionOptional(d: {
     environment: Environment;
-    deployment?: ProviderDeployment;
+    deployment?: ProviderDeployment & { currentVersion: ProviderDeploymentVersion | null };
     provider: Provider & {
       defaultVariant?:
         | (ProviderVariant & {
@@ -56,7 +57,7 @@ class providerDeploymentInternalServiceImpl {
 
   private async getCurrentVersionInner(d: {
     environment: Environment;
-    deployment?: ProviderDeployment;
+    deployment?: ProviderDeployment & { currentVersion: ProviderDeploymentVersion | null };
     provider: Provider & {
       defaultVariant?:
         | (ProviderVariant & {
@@ -71,10 +72,10 @@ class providerDeploymentInternalServiceImpl {
 
     if (!d.provider.defaultVariantOid) return null;
 
-    if (d.deployment?.lockedVersionOid) {
+    if (d.deployment?.currentVersion?.lockedVersionOid) {
       return await db.providerVersion.findFirstOrThrow({
         where: {
-          oid: d.deployment.lockedVersionOid,
+          oid: d.deployment?.currentVersion.lockedVersionOid,
           providerOid: d.provider.oid
         }
       });

@@ -27,19 +27,21 @@ export let providerDeploymentConfigPairSetSpecificationQueueProcessor =
   providerDeploymentConfigPairSetSpecificationQueue.process(async data => {
     let pair = await db.providerDeploymentConfigPair.findFirst({
       where: { oid: data.providerDeploymentConfigPairOid },
-      include: { providerDeployment: true }
+      include: { providerDeploymentVersion: { include: { deployment: true } } }
     });
     if (!pair) throw new QueueRetryError();
+
+    let providerDeployment = pair.providerDeploymentVersion.deployment;
 
     let version = await db.providerVersion.findFirst({
       where: {
         oid: data.versionOid,
-        providerVariantOid: pair.providerDeployment.providerVariantOid
+        providerVariantOid: providerDeployment.providerVariantOid
       }
     });
     if (!version) throw new QueueRetryError();
 
-    let pairVersion = await db.providerDeploymentConfigPairProviderVersion.findUnique({
+    let existingPairVersion = await db.providerDeploymentConfigPairProviderVersion.findUnique({
       where: {
         pairOid_versionOid: {
           pairOid: data.providerDeploymentConfigPairOid,
@@ -48,6 +50,17 @@ export let providerDeploymentConfigPairSetSpecificationQueueProcessor =
       },
       include: { previousPairVersion: true }
     });
+    let previousPairVersion = existingPairVersion?.previousPairVersion;
+    if (!previousPairVersion && version.previousVersionOid) {
+      previousPairVersion = await db.providerDeploymentConfigPairProviderVersion.findUnique({
+        where: {
+          pairOid_versionOid: {
+            pairOid: data.providerDeploymentConfigPairOid,
+            versionOid: version.previousVersionOid
+          }
+        }
+      });
+    }
 
     let filter = {
       pairOid: data.providerDeploymentConfigPairOid,
@@ -78,9 +91,13 @@ export let providerDeploymentConfigPairSetSpecificationQueueProcessor =
       create: {
         ...getId('providerDeploymentConfigPairProviderVersion'),
         ...filter,
-        ...result
+        ...result,
+        previousPairVersionOid: previousPairVersion?.oid
       },
-      update: result
+      update: {
+        ...result,
+        previousPairVersionOid: previousPairVersion?.oid
+      }
     });
 
     if (newPairVersion.specificationOid) {
@@ -89,14 +106,15 @@ export let providerDeploymentConfigPairSetSpecificationQueueProcessor =
           versionOid: version.oid,
           result: {
             status: 'success',
-            specificationOid: newPairVersion.specificationOid
+            specificationOid: newPairVersion.specificationOid,
+            source: 'pair'
           }
         });
       }
 
       if (
-        pairVersion?.previousPairVersion?.specificationOid &&
-        newPairVersion.specificationOid !== pairVersion.previousPairVersion.specificationOid
+        previousPairVersion?.specificationOid &&
+        newPairVersion.specificationOid !== previousPairVersion.specificationOid
       ) {
         try {
           let change = await db.providerDeploymentConfigPairSpecificationChange.create({
@@ -104,18 +122,18 @@ export let providerDeploymentConfigPairSetSpecificationQueueProcessor =
               ...getId('providerDeploymentConfigPairSpecificationChange'),
 
               toPairVersionOid: newPairVersion.oid,
-              fromPairVersionOid: pairVersion.previousPairVersion.oid,
+              fromPairVersionOid: previousPairVersion.oid,
 
               toSpecificationOid: newPairVersion.specificationOid,
-              fromSpecificationOid: pairVersion.previousPairVersion.specificationOid
+              fromSpecificationOid: previousPairVersion.specificationOid
             }
           });
           await db.providerSpecificationChangeNotification.create({
             data: {
               ...getId('providerSpecificationChangeNotification'),
 
-              tenantOid: pair.providerDeployment.tenantOid,
-              solutionOid: pair.providerDeployment.solutionOid,
+              tenantOid: providerDeployment.tenantOid,
+              solutionOid: providerDeployment.solutionOid,
 
               target: 'deployment_config_pair',
               versionOid: version.oid,

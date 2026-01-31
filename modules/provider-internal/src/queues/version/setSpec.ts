@@ -12,9 +12,13 @@ export let providerVersionSetSpecificationQueue = createQueue<{
     | {
         status: 'success';
         specificationOid: bigint;
+        source: 'version' | 'pair';
       }
     | {
         status: 'not_discoverable';
+      }
+    | {
+        status: 'waiting_for_pair';
       };
 }>({
   name: 'sub/pint/pver/spec/set',
@@ -40,7 +44,7 @@ export let providerVersionSetSpecificationQueueProcessor =
       };
     } else {
       result = {
-        specificationDiscoveryStatus: 'not_discoverable',
+        specificationDiscoveryStatus: data.result.status,
         specificationOid: null
       };
     }

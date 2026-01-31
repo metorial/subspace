@@ -19,16 +19,23 @@ export let providerDeploymentConfigPairSyncSpecificationQueueProcessor =
       where: { id: data.providerDeploymentConfigPairId },
       include: {
         tenant: true,
-        providerConfig: true,
-        providerDeployment: {
-          include: { providerVariant: true, provider: true, lockedVersion: true }
+        providerConfigVersion: true,
+        providerAuthConfigVersion: true,
+        providerDeploymentVersion: {
+          include: {
+            deployment: {
+              include: { providerVariant: true, provider: true }
+            }
+          }
         }
       }
     });
     if (!pair) throw new QueueRetryError();
 
+    let providerDeployment = pair.providerDeploymentVersion.deployment;
+
     let backend = await getBackend({
-      entity: pair.providerDeployment.providerVariant
+      entity: providerDeployment.providerVariant
     });
 
     let version = await db.providerVersion.findFirstOrThrow({
@@ -38,18 +45,17 @@ export let providerDeploymentConfigPairSyncSpecificationQueueProcessor =
     try {
       let discoverParams = {
         tenant: pair.tenant,
-        deployment: pair.providerDeployment,
+        provider: providerDeployment.provider,
+        providerVariant: providerDeployment.providerVariant,
+        providerVersion: version,
 
-        provider: pair.providerDeployment.provider,
-        providerVariant: pair.providerDeployment.providerVariant,
-        providerVersion: version
+        deploymentVersion: pair.providerDeploymentVersion,
+        configVersion: pair.providerConfigVersion,
+        authConfigVersion: pair.providerAuthConfigVersion
       };
 
       if (version.specificationOid) {
-        let isNeeded =
-          await backend.capabilities.isSpecificationForProviderDeploymentVersionSameAsForVersion(
-            discoverParams
-          );
+        let isNeeded = false; // @herber: maybe we have providers where we always want to re-discover specs?
 
         if (!isNeeded) {
           await providerDeploymentConfigPairSetSpecificationQueue.add({
@@ -75,7 +81,7 @@ export let providerDeploymentConfigPairSyncSpecificationQueueProcessor =
       }
 
       let spec = await providerSpecificationInternalService.ensureProviderSpecification({
-        provider: pair.providerDeployment.provider,
+        provider: providerDeployment.provider,
         providerVersion: version,
 
         specification: capabilities.specification,

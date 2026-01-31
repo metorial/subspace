@@ -23,6 +23,15 @@ export let providerVersionSyncSpecificationQueueProcessor =
     });
 
     try {
+      let behavior = await backend.capabilities.getSpecificationBehavior({});
+      if (!behavior.supportsVersionSpecification) {
+        await providerVersionSetSpecificationQueue.add({
+          versionOid: version.oid,
+          result: { status: 'waiting_for_pair' }
+        });
+        return;
+      }
+
       let capabilities = await backend.capabilities.getSpecificationForProviderVersion({
         providerVersion: version,
         provider: version.provider,
@@ -52,7 +61,8 @@ export let providerVersionSyncSpecificationQueueProcessor =
         versionOid: version.oid,
         result: {
           status: 'success',
-          specificationOid: spec.oid
+          specificationOid: spec.oid,
+          source: 'version'
         }
       });
     } catch (e) {

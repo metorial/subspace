@@ -8,11 +8,16 @@ model ProviderDeploymentConfigPair {
   oid BigInt @id
   id  String @unique
 
-  providerConfigOid BigInt
-  providerConfig    ProviderConfig @relation(fields: [providerConfigOid], references: [oid])
+  identifier String @unique
 
-  providerDeploymentOid BigInt
-  providerDeployment    ProviderDeployment @relation(fields: [providerDeploymentOid], references: [oid])
+  providerDeploymentVersionOid BigInt
+  providerDeploymentVersion    ProviderDeploymentVersion @relation(fields: [providerDeploymentVersionOid], references: [oid])
+
+  providerConfigVersionOid BigInt
+  providerConfigVersion    ProviderConfigVersion @relation(fields: [providerConfigVersionOid], references: [oid])
+
+  providerAuthConfigVersionOid BigInt?
+  providerAuthConfigVersion    ProviderAuthConfigVersion? @relation(fields: [providerAuthConfigVersionOid], references: [oid])
 
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
@@ -29,23 +34,6 @@ model ProviderDeploymentConfigPair {
   versions                                 ProviderDeploymentConfigPairProviderVersion[]
   providerSpecificationChangeNotifications ProviderSpecificationChangeNotification[]
   sessionProviderInstances                 SessionProviderInstance[]
-  providerDeploymentConfigPairAuthConfigs  ProviderDeploymentConfigPairAuthConfig[]
-
-  @@unique([providerConfigOid, providerDeploymentOid])
-}
-
-model ProviderDeploymentConfigPairAuthConfig {
-  oid BigInt @id
-
-  pairOid BigInt
-  pair    ProviderDeploymentConfigPair @relation(fields: [pairOid], references: [oid])
-
-  authConfigVersionOid BigInt
-  authConfigVersion    ProviderAuthConfigVersion @relation(fields: [authConfigVersionOid], references: [oid])
-
-  createdAt DateTime @default(now())
-
-  @@unique([pairOid, authConfigVersionOid])
 }
 
 model ProviderDeploymentConfigPairProviderVersion {
