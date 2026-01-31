@@ -6,6 +6,7 @@ import type {
   ProviderListingCollection,
   ProviderListingGroup,
   ProviderSpecification,
+  ProviderType,
   ProviderVariant,
   ProviderVersion,
   Publisher,
@@ -33,6 +34,8 @@ export let providerListingPresenter = (
               | null;
           })
         | null;
+
+      type: ProviderType;
     };
 
     categories: ProviderListingCategory[];

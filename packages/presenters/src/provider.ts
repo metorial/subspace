@@ -2,12 +2,14 @@ import type {
   Provider,
   ProviderEntry,
   ProviderSpecification,
+  ProviderType,
   ProviderVariant,
   ProviderVersion,
   Publisher,
   Tenant
 } from '@metorial-subspace/db';
 import { providerEntryPresenter } from './providerEntry';
+import { providerTypePresenter } from './providerType';
 import { providerVariantPresenter } from './providerVariant';
 import { providerVersionPresenter } from './providerVersion';
 import { publisherPresenter } from './publisher';
@@ -29,6 +31,8 @@ export let providerPresenter = (
             | null;
         })
       | null;
+
+    type: ProviderType;
   }
 ) => ({
   object: 'provider',
@@ -53,6 +57,8 @@ export let providerPresenter = (
         provider
       })
     : null,
+
+  type: providerTypePresenter(provider.type),
 
   identifier: provider.identifier,
 
