@@ -40,6 +40,17 @@ class actorServiceImpl {
     if (!actor) throw new ServiceError(notFoundError('actor'));
     return actor;
   }
+
+  async getSystemActor(d: { tenant: Tenant }) {
+    return this.upsertActor({
+      tenant: d.tenant,
+      input: {
+        name: 'System',
+        identifier: `system::${d.tenant.identifier}`,
+        type: 'system'
+      }
+    });
+  }
 }
 
 export let actorService = Service.create('actorService', () => new actorServiceImpl()).build();
