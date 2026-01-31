@@ -17,7 +17,7 @@ export let syncSlateVersionQueue = createQueue<{
   slateId: string;
   slateVersionId: string;
 }>({
-  name: 'kst/sltv/sync',
+  name: 'sub/sltv/sync',
   redisUrl: env.service.REDIS_URL,
   workerOpts: {
     concurrency: 1,
@@ -111,7 +111,7 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
 
     let spec = version.specification?.id
       ? await slates.slateSpecification.get({
-          slateSpecificationId: version.specification?.id
+          slateSpecificationId: version.specification?.specificationId
         })
       : null;
 
@@ -171,7 +171,7 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
         image: registryRecord.logoUrl ? { type: 'url', url: registryRecord.logoUrl } : null,
         skills: registryRecord.skills,
         readme: readme,
-        categories: registryRecord.categories.map((c: any) => c.identifier)
+        categories: registryRecord.categories?.map((c: any) => c.identifier) ?? []
       },
       type
     });

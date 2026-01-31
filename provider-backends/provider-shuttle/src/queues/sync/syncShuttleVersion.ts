@@ -1,5 +1,6 @@
 import { createQueue } from '@lowerdeck/queue';
 import { snowflake, withTransaction } from '@metorial-subspace/db';
+import { syncVersionToCustomProvider } from '@metorial-subspace/module-custom-provider';
 import { shuttle, shuttleDefaultReaderTenant } from '../../client';
 import { env } from '../../env';
 import { upsertShuttleServerVersion } from '../../lib/upsertShuttleVersion';
@@ -9,7 +10,7 @@ export let syncShuttleVersionQueue = createQueue<{
   serverVersionId: string;
   tenantId: string | undefined;
 }>({
-  name: 'kst/shut/sync',
+  name: 'sub/shut/sync',
   redisUrl: env.service.REDIS_URL,
   workerOpts: {
     concurrency: 1,
@@ -29,6 +30,11 @@ export let syncShuttleVersionQueueProcessor = syncShuttleVersionQueue.process(as
   let server = await shuttle.server.get({
     serverId: version.serverId,
     tenantId: version.tenantId ?? shuttleDefaultReaderTenant.id
+  });
+
+  let deployment = await shuttle.serverDeployment.get({
+    tenantId: data.tenantId ?? shuttleDefaultReaderTenant.id,
+    serverDeploymentId: version.deploymentId
   });
 
   await withTransaction(async db => {
@@ -57,17 +63,109 @@ export let syncShuttleVersionQueueProcessor = syncShuttleVersionQueue.process(as
       update: {}
     });
 
-    // Abort if the version already existed
+    // Avoid race conditions with custom servers,
+    // i.e., servers owned by another tenant
+    let timeSinceCreation = Date.now() - version.createdAt.getTime();
+    if (timeSinceCreation < 1000 * 120 && server.tenantId) {
+      await syncShuttleVersionQueue.add(data, { delay: 1000 * 120 });
+      return;
+    }
+
+    // Abort if the version already existed -> was created using a custom server
     if (shuttleServerVersionRecord.oid != newShuttleServerVersionRecord) {
       return;
     }
 
-    await upsertShuttleServerVersion({
-      shuttleServer: server,
-      shuttleServerVersion: version,
+    let tenant = server.tenantId
+      ? await db.tenant.findFirst({
+          where: { shuttleTenantId: server.tenantId }
+        })
+      : null;
 
-      shuttleServerRecord,
-      shuttleServerVersionRecord
-    });
+    // We don't know who owns this server, but it's certainly not us
+    if (server.tenantId && !tenant) return;
+
+    if (!tenant) {
+      await upsertShuttleServerVersion({
+        shuttleServer: server,
+        shuttleServerVersion: version,
+
+        shuttleServerRecord,
+        shuttleServerVersionRecord
+      });
+    } else {
+      let variant = await db.providerVariant.findFirst({
+        where: {
+          shuttleServerOid: shuttleServerRecord.oid
+        },
+        include: {
+          provider: {
+            include: {
+              customProvider: true
+            }
+          }
+        }
+      });
+      let customProvider = variant?.provider?.customProvider;
+      if (!customProvider) {
+        throw new Error('No custom provider found for tenant-specific shuttle server');
+      }
+      if (tenant.oid != customProvider.tenantOid) {
+        throw new Error('Tenant mismatch for custom provider shuttle server');
+      }
+      if (!customProvider.shuttleCustomServerOid) {
+        throw new Error('Custom provider has no associated custom shuttle server');
+      }
+
+      let shuttleCustomServerRecord = await db.shuttleCustomServer.upsert({
+        where: { id: server.id },
+        create: {
+          oid: snowflake.nextId(),
+          id: server.id,
+          identifier: deployment.id,
+          serverOid: shuttleServerRecord.oid,
+          tenantOid: tenant.oid,
+          shuttleTenantId: server.tenantId!
+        },
+        update: {}
+      });
+
+      let shuttleCustomDeploymentRecord = await db.shuttleCustomServerDeployment.upsert({
+        where: { id: deployment.id },
+        create: {
+          oid: snowflake.nextId(),
+          id: deployment.id,
+          identifier: deployment.id,
+          serverVersionOid: shuttleServerVersionRecord.oid,
+          serverOid: shuttleServerRecord.oid,
+          tenantOid: tenant.oid,
+          customServerOid: shuttleCustomServerRecord.oid
+        },
+        update: {}
+      });
+
+      await withTransaction(async db => {
+        let versionRes = await upsertShuttleServerVersion({
+          shuttleServer: server,
+          shuttleServerVersion: version,
+
+          shuttleServerRecord,
+          shuttleServerVersionRecord
+        });
+
+        await syncVersionToCustomProvider({
+          providerVersion: versionRes.providerVersion,
+
+          message:
+            version.repositoryTag && version.repositoryVersion
+              ? `Digest of ${version.repositoryTag.name} was updated to ${version.repositoryVersion}`
+              : 'System built new version',
+
+          shuttleServer: shuttleServerRecord,
+          shuttleCustomServer: shuttleCustomServerRecord,
+          shuttleCustomDeployment: shuttleCustomDeploymentRecord
+        });
+      });
+    }
   });
 });
