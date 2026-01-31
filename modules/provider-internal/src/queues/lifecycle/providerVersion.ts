@@ -3,7 +3,7 @@ import { env } from '../../env';
 import { providerVersionSyncSpecificationQueue } from '../version/syncSpec';
 
 export let providerVersionCreatedQueue = createQueue<{ providerVersionId: string }>({
-  name: 'pint/lc/providerVersion/created',
+  name: 'sub/pint/lc/providerVersion/created',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -16,7 +16,7 @@ export let providerVersionCreatedQueueProcessor = providerVersionCreatedQueue.pr
 );
 
 export let providerVersionUpdatedQueue = createQueue<{ providerVersionId: string }>({
-  name: 'pint/lc/providerVersion/updated',
+  name: 'sub/pint/lc/providerVersion/updated',
   redisUrl: env.service.REDIS_URL
 });
 

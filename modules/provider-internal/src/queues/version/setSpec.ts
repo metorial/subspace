@@ -17,7 +17,7 @@ export let providerVersionSetSpecificationQueue = createQueue<{
         status: 'not_discoverable';
       };
 }>({
-  name: 'pint/pver/spec/set',
+  name: 'sub/pint/pver/spec/set',
   redisUrl: env.service.REDIS_URL
 });
 

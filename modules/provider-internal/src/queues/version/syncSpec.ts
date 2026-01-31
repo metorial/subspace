@@ -6,7 +6,7 @@ import { providerSpecificationInternalService } from '../../services/providerSpe
 import { providerVersionSetSpecificationQueue } from './setSpec';
 
 export let providerVersionSyncSpecificationQueue = createQueue<{ providerVersionId: string }>({
-  name: 'pint/pver/spec/sync',
+  name: 'sub/pint/pver/spec/sync',
   redisUrl: env.service.REDIS_URL
 });
 

@@ -5,7 +5,7 @@ import { indexProviderAuthConfigQueue } from '../search/providerAuthConfig';
 export let providerAuthConfigCreatedQueue = createQueue<{
   providerAuthConfigId: string;
 }>({
-  name: 'auth/lc/providerAuthConfig/created',
+  name: 'sub/auth/lc/providerAuthConfig/created',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -20,7 +20,7 @@ export let providerAuthConfigCreatedQueueProcessor = providerAuthConfigCreatedQu
 export let providerAuthConfigUpdatedQueue = createQueue<{
   providerAuthConfigId: string;
 }>({
-  name: 'auth/lc/providerAuthConfig/updated',
+  name: 'sub/auth/lc/providerAuthConfig/updated',
   redisUrl: env.service.REDIS_URL
 });
 

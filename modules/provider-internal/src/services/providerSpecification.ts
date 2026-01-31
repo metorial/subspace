@@ -13,7 +13,7 @@ import { env } from '../env';
 import { specificationCreatedQueue } from '../queues/lifecycle/specification';
 
 let specLock = createLock({
-  name: 'pint/pspec/lock/ensure',
+  name: 'sub/pint/pspec/lock/ensure',
   redisUrl: env.service.REDIS_URL
 });
 

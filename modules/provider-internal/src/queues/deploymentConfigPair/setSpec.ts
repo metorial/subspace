@@ -19,7 +19,7 @@ export let providerDeploymentConfigPairSetSpecificationQueue = createQueue<{
         status: 'failure';
       };
 }>({
-  name: 'pint/pdep/spec/set',
+  name: 'sub/pint/pdep/spec/set',
   redisUrl: env.service.REDIS_URL
 });
 

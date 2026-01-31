@@ -20,7 +20,7 @@ import {
 } from '../queues/lifecycle/providerVersion';
 
 let versionCreateLock = createLock({
-  name: 'pint/pver/lock/create',
+  name: 'sub/pint/pver/lock/create',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -118,6 +118,13 @@ class providerVersionInternalServiceImpl {
             await db.providerVariant.updateMany({
               where: { oid: d.variant.oid },
               data: { currentVersionOid: providerVersion.oid }
+            });
+            await db.providerVersion.updateMany({
+              where: {
+                providerVariantOid: d.variant.oid,
+                oid: { not: providerVersion.oid }
+              },
+              data: { isCurrent: false }
             });
           }
 

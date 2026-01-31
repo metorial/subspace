@@ -17,7 +17,7 @@ import { providerSetupSessionInternalService } from './providerSetupSessionInter
 let include = {};
 
 let syncLock = createLock({
-  name: 'auth/setupInternal/sync',
+  name: 'sub/auth/setupInternal/sync',
   redisUrl: env.service.REDIS_URL
 });
 

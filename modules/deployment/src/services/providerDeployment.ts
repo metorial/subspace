@@ -46,7 +46,7 @@ let include = {
 };
 
 let defaultLock = createLock({
-  name: 'dep/pdep/def/lock',
+  name: 'sub/dep/pdep/def/lock',
   redisUrl: env.service.REDIS_URL
 });
 

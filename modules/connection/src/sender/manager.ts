@@ -43,7 +43,7 @@ import { upsertParticipant } from '../shared/upsertParticipant';
 let Sentry = getSentry();
 
 let instanceLock = createLock({
-  name: 'conn/sess/inst/lock',
+  name: 'sub/conn/sess/inst/lock',
   redisUrl: env.service.REDIS_URL
 });
 

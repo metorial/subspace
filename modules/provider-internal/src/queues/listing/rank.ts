@@ -4,7 +4,7 @@ import { db } from '@metorial-subspace/db';
 import { env } from '../../env';
 
 let startRankQueue = createQueue({
-  name: 'pint/rank/start',
+  name: 'sub/pint/rank/start',
   redisUrl: env.service.REDIS_URL,
   workerOpts: {
     concurrency: 1
@@ -12,7 +12,7 @@ let startRankQueue = createQueue({
 });
 
 export let processSingleRankQueue = createQueue<{ providerListingId: string }>({
-  name: 'pint/rank/single',
+  name: 'sub/pint/rank/single',
   redisUrl: env.service.REDIS_URL,
   workerOpts: {
     concurrency: 2,
@@ -22,7 +22,7 @@ export let processSingleRankQueue = createQueue<{ providerListingId: string }>({
 
 let rankCron = createCron(
   {
-    name: 'pint/rank/cron',
+    name: 'sub/pint/rank/cron',
     cron: '0 * * * *',
     redisUrl: env.service.REDIS_URL
   },

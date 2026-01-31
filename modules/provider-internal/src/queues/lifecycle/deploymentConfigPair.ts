@@ -6,7 +6,7 @@ import { providerDeploymentConfigPairSyncSpecificationQueue } from '../deploymen
 export let providerDeploymentConfigPairCreatedQueue = createQueue<{
   providerDeploymentConfigPairId: string;
 }>({
-  name: 'pint/lc/providerDeploymentConfigPair/created',
+  name: 'sub/pint/lc/providerDeploymentConfigPair/created',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -16,7 +16,7 @@ export let providerDeploymentConfigPairCreatedQueueProcessor =
 export let providerDeploymentConfigPairVersionCreatedQueue = createQueue<{
   providerDeploymentConfigPairVersionId: string;
 }>({
-  name: 'pint/lc/providerDeploymentConfigPair/ver/created',
+  name: 'sub/pint/lc/providerDeploymentConfigPair/ver/created',
   redisUrl: env.service.REDIS_URL
 });
 

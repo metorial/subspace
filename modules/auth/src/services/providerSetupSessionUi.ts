@@ -17,7 +17,7 @@ import { providerSetupSessionInclude } from './providerSetupSession';
 import { providerSetupSessionInternalService } from './providerSetupSessionInternal';
 
 let updateLock = createLock({
-  name: 'auth/providerSetupSession/service',
+  name: 'sub/auth/providerSetupSession/service',
   redisUrl: env.service.REDIS_URL
 });
 

@@ -3,7 +3,7 @@ import { env } from '../../env';
 import { indexProviderConfigVaultQueue } from '../search/providerConfigVault';
 
 export let providerConfigVaultCreatedQueue = createQueue<{ providerConfigVaultId: string }>({
-  name: 'dep/lc/providerConfigVault/created',
+  name: 'sub/dep/lc/providerConfigVault/created',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -16,7 +16,7 @@ export let providerConfigVaultCreatedQueueProcessor = providerConfigVaultCreated
 );
 
 export let providerConfigVaultUpdatedQueue = createQueue<{ providerConfigVaultId: string }>({
-  name: 'dep/lc/providerConfigVault/updated',
+  name: 'sub/dep/lc/providerConfigVault/updated',
   redisUrl: env.service.REDIS_URL
 });
 

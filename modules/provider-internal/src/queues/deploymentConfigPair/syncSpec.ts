@@ -9,7 +9,7 @@ export let providerDeploymentConfigPairSyncSpecificationQueue = createQueue<{
   providerDeploymentConfigPairId: string;
   versionId: string;
 }>({
-  name: 'pint/pdep/spec/sync',
+  name: 'sub/pint/pdep/spec/sync',
   redisUrl: env.service.REDIS_URL
 });
 
