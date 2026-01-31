@@ -11,6 +11,7 @@ import {
   type ProviderAuthCredentials,
   ProviderAuthMethodType,
   type ProviderDeployment,
+  ProviderDeploymentVersion,
   type ProviderOAuthSetup,
   type ProviderVariant,
   type ProviderVersion,
@@ -99,7 +100,9 @@ class providerOAuthSetupServiceImpl {
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
       providerVariant: ProviderVariant;
-      lockedVersion: ProviderVersion | null;
+      currentVersion:
+        | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+        | null;
     };
     credentials: ProviderAuthCredentials;
     input: {

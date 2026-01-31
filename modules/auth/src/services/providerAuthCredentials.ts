@@ -150,7 +150,7 @@ class providerAuthCredentialsServiceImpl {
 
           backendOid: backend.backend.oid,
 
-          slateCredentialsOid: backendProviderAuthCredentials.slateOAuthCredentials.oid,
+          slateCredentialsOid: backendProviderAuthCredentials.slateOAuthCredentials?.oid,
 
           name: d.input.name?.trim() || undefined,
           description: d.input.description?.trim() || undefined,

@@ -4,6 +4,7 @@ import { Service } from '@lowerdeck/service';
 import {
   db,
   Environment,
+  ProviderDeploymentVersion,
   type Provider,
   type ProviderAuthConfig,
   type ProviderDeployment,
@@ -40,7 +41,9 @@ export interface ProviderAuthImportParams {
   providerDeployment?: ProviderDeployment & {
     provider: Provider;
     providerVariant: ProviderVariant;
-    lockedVersion: ProviderVersion | null;
+    currentVersion:
+      | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+      | null;
   };
   providerAuthConfig?: ProviderAuthConfig & { authMethod: { id: string } };
 }

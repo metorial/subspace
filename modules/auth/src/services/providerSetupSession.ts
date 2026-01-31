@@ -11,6 +11,7 @@ import {
   type Provider,
   type ProviderAuthCredentials,
   type ProviderDeployment,
+  ProviderDeploymentVersion,
   type ProviderSetupSession,
   type ProviderSetupSessionStatus,
   type ProviderSetupSessionType,
@@ -144,7 +145,9 @@ class providerSetupSessionServiceImpl {
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
       providerVariant: ProviderVariant;
-      lockedVersion: ProviderVersion | null;
+      currentVersion:
+        | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+        | null;
     };
     credentials?: ProviderAuthCredentials;
     brand?: Brand;

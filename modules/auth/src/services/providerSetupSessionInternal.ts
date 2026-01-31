@@ -8,6 +8,7 @@ import {
   type ProviderAuthCredentials,
   type ProviderAuthMethod,
   type ProviderDeployment,
+  ProviderDeploymentVersion,
   type ProviderOAuthSetup,
   type ProviderSetupSession,
   type ProviderVariant,
@@ -30,7 +31,9 @@ class providerSetupSessionInternalServiceImpl {
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
       providerVariant: ProviderVariant;
-      lockedVersion: ProviderVersion | null;
+      currentVersion:
+        | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+        | null;
     };
     credentials?: ProviderAuthCredentials;
     authMethod: ProviderAuthMethod;
@@ -116,7 +119,9 @@ class providerSetupSessionInternalServiceImpl {
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
       providerVariant: ProviderVariant;
-      lockedVersion: ProviderVersion | null;
+      currentVersion:
+        | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+        | null;
     };
     input: {
       name?: string;

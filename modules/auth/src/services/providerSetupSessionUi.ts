@@ -48,7 +48,7 @@ class providerSetupSessionUiServiceImpl {
         solution: true,
         environment: true,
         provider: { include: { defaultVariant: true } },
-        deployment: true
+        deployment: { include: { currentVersion: true } }
       }
     });
 
@@ -99,7 +99,7 @@ class providerSetupSessionUiServiceImpl {
           include: {
             provider: true,
             providerVariant: true,
-            lockedVersion: true
+            currentVersion: { include: { lockedVersion: true } }
           }
         }
       }
@@ -177,7 +177,7 @@ class providerSetupSessionUiServiceImpl {
               include: {
                 provider: true,
                 providerVariant: true,
-                lockedVersion: true
+                currentVersion: { include: { lockedVersion: true } }
               }
             }
           }
@@ -285,7 +285,7 @@ class providerSetupSessionUiServiceImpl {
               include: {
                 provider: true,
                 providerVariant: true,
-                lockedVersion: true
+                currentVersion: { include: { lockedVersion: true } }
               }
             }
           }

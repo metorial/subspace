@@ -108,8 +108,6 @@ declare global {
             read: { status: 'enabled' | 'disabled' };
           }
         | { status: 'disabled' };
-
-      [key: string]: any;
     };
   }
 }

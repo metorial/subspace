@@ -42,7 +42,7 @@ let include = {
   provider: true,
   defaultConfig: true,
   providerVariant: true,
-  lockedVersion: { include: { specification: true } }
+  currentVersion: { include: { lockedVersion: { include: { specification: true } } } }
 };
 
 let defaultLock = createLock({
@@ -229,13 +229,7 @@ class providerDeploymentServiceImpl {
           providerOid: d.provider.oid,
           providerVariantOid: d.provider.defaultVariant.oid
         },
-        include: {
-          provider: true,
-          providerVariant: true,
-          currentVersion: {
-            include: { lockedVersion: true }
-          }
-        }
+        include
       });
 
       let currentVersion = await db.providerDeploymentVersion.create({
@@ -245,7 +239,7 @@ class providerDeploymentServiceImpl {
           providerVariantOid: d.provider.defaultVariant.oid,
           deploymentOid: providerDeployment.oid
         },
-        include: { lockedVersion: true }
+        include: include.currentVersion.include
       });
       providerDeployment.currentVersion = currentVersion;
 
@@ -296,7 +290,7 @@ class providerDeploymentServiceImpl {
 
       return await db.providerDeployment.findFirstOrThrow({
         where: { oid: providerDeployment.oid },
-        include: { ...include, currentVersion: true }
+        include
       });
     });
   }

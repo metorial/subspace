@@ -14,6 +14,7 @@ import {
   type ProviderAuthMethod,
   ProviderAuthMethodType,
   type ProviderDeployment,
+  ProviderDeploymentVersion,
   type ProviderVariant,
   type ProviderVersion,
   type Solution,
@@ -34,7 +35,9 @@ class providerAuthConfigInternalServiceImpl {
     environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment?: ProviderDeployment & {
-      lockedVersion: ProviderVersion | null;
+      currentVersion:
+        | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+        | null;
     };
     authMethodId?: string;
   }) {
