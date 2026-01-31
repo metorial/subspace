@@ -355,7 +355,7 @@ class sessionProviderInputServiceImpl {
           providerSessions.map(async ps => ({
             ...getId('sessionProvider'),
 
-            tag: generateCode(3),
+            tag: generateCode(5),
             status: 'active' as const,
             isEphemeral: d.session.isEphemeral,
 
@@ -415,7 +415,7 @@ class sessionProviderInputServiceImpl {
           providerSessions.map(async ps => ({
             ...getId('sessionTemplateProvider'),
 
-            tag: generateCode(3),
+            tag: generateCode(5),
             status: 'active' as const,
 
             tenantOid: d.tenant.oid,

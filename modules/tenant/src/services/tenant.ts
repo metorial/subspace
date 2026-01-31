@@ -1,4 +1,5 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
+import { generatePlainId } from '@lowerdeck/id';
 import { Service } from '@lowerdeck/service';
 import { db, EnvironmentType, getId } from '@metorial-subspace/db';
 
@@ -37,6 +38,8 @@ class tenantServiceImpl {
         ...getId('tenant'),
         name: d.input.name,
         identifier: d.input.identifier,
+
+        urlKey: generatePlainId(10),
 
         environments: {
           create: d.input.environments.map(env => ({

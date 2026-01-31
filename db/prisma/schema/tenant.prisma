@@ -2,6 +2,8 @@ model Tenant {
   oid BigInt @id
   id  String @unique
 
+  urlKey String @unique
+
   identifier String @unique
   name       String
 

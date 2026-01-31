@@ -39,7 +39,7 @@ export let providerController = app.controller({
 
       let list = await paginator.run(ctx.input);
 
-      return Paginator.presentLight(list, providerPresenter);
+      return Paginator.presentLight(list, v => providerPresenter(v, ctx));
     }),
 
   get: providerApp
@@ -51,7 +51,7 @@ export let providerController = app.controller({
         providerId: v.string()
       })
     )
-    .do(async ctx => providerPresenter(ctx.provider)),
+    .do(async ctx => providerPresenter(ctx.provider, ctx)),
 
   update: providerApp
     .handler()
@@ -80,6 +80,6 @@ export let providerController = app.controller({
         }
       });
 
-      return providerPresenter(provider);
+      return providerPresenter(provider, ctx);
     })
 });

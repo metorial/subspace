@@ -98,7 +98,7 @@ export let customProviderController = app.controller({
 
       let list = await paginator.run(ctx.input);
 
-      return Paginator.presentLight(list, customProviderPresenter);
+      return Paginator.presentLight(list, v => customProviderPresenter(v, ctx));
     }),
 
   get: customProviderApp
@@ -111,7 +111,7 @@ export let customProviderController = app.controller({
         allowDeleted: v.optional(v.boolean())
       })
     )
-    .do(async ctx => customProviderPresenter(ctx.customProvider)),
+    .do(async ctx => customProviderPresenter(ctx.customProvider, ctx)),
 
   create: tenantApp
     .handler()
@@ -151,7 +151,7 @@ export let customProviderController = app.controller({
         }
       });
 
-      return customProviderPresenter(customProvider);
+      return customProviderPresenter(customProvider, ctx);
     }),
 
   update: customProviderApp
@@ -182,6 +182,6 @@ export let customProviderController = app.controller({
         }
       });
 
-      return customProviderPresenter(customProvider);
+      return customProviderPresenter(customProvider, ctx);
     })
 });

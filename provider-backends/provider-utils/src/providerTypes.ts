@@ -1,5 +1,6 @@
 import { canonicalize } from '@lowerdeck/canonicalize';
 import { Hash } from '@lowerdeck/hash';
+import { generatePlainId } from '@lowerdeck/id';
 import { db, get4ByteIntId, ID } from '@metorial-subspace/db';
 
 export let ensureProviderType = async (
@@ -16,7 +17,8 @@ export let ensureProviderType = async (
       id: await ID.generateId('providerType'),
       identifier,
       name,
-      attributes
+      attributes,
+      shortKey: generatePlainId(5)
     }
   });
 };

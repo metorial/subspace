@@ -3,6 +3,7 @@ import type {
   Provider,
   ProviderEntry,
   ProviderSpecification,
+  ProviderType,
   ProviderVariant,
   ProviderVersion,
   Publisher,
@@ -28,9 +29,12 @@ export let customProviderPresenter = (
                   | null;
               })
             | null;
+
+          type: ProviderType;
         })
       | null;
-  }
+  },
+  d: { tenant: Tenant }
 ) => ({
   object: 'custom_provider',
 
@@ -41,7 +45,7 @@ export let customProviderPresenter = (
   description: customProvider.description,
   metadata: customProvider.metadata,
 
-  provider: providerPresenter(customProvider.provider!),
+  provider: providerPresenter(customProvider.provider!, d),
 
   createdAt: customProvider.createdAt,
   updatedAt: customProvider.updatedAt

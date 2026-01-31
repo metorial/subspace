@@ -33,7 +33,8 @@ export let providerPresenter = (
       | null;
 
     type: ProviderType;
-  }
+  },
+  d: { tenant: Tenant }
 ) => ({
   object: 'provider',
 
@@ -58,7 +59,7 @@ export let providerPresenter = (
       })
     : null,
 
-  type: providerTypePresenter(provider.type),
+  type: providerTypePresenter(provider.type, d),
 
   identifier: provider.identifier,
 

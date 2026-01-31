@@ -38,6 +38,7 @@ let include = {
       entry: true,
       publisher: true,
       ownerTenant: true,
+      type: true,
 
       defaultVariant: {
         include: {
