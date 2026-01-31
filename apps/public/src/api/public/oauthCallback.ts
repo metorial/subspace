@@ -13,14 +13,20 @@ export let oauthCallbackApp = createHono()
     c.res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     c.res.headers.set('Access-Control-Allow-Credentials', 'true');
   })
-  .get('/:tenantKey/:typeKey', async c => {
+  .get('/:oauthIdentifier', async c => {
+    let oauthIdentifier = c.req.param('oauthIdentifier');
+    let [tenantUrlKey, providerTag, typeKey] = oauthIdentifier.split('--');
+
     let tenant = await db.tenant.findFirst({
-      where: { urlKey: c.req.param('tenantKey') }
+      where: { urlKey: tenantUrlKey }
     });
     let type = await db.providerType.findFirst({
-      where: { shortKey: c.req.param('typeKey') }
+      where: { shortKey: typeKey }
     });
-    if (!tenant || !type) {
+    let provider = await db.provider.findFirst({
+      where: { tag: providerTag }
+    });
+    if (!tenant || !provider || !type) {
       return c.text('Invalid oauth callback URL', 400);
     }
 

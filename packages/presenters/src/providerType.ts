@@ -1,9 +1,10 @@
-import type { ProviderType, Tenant } from '@metorial-subspace/db';
+import type { Provider, ProviderType, Tenant } from '@metorial-subspace/db';
 import { env } from './env';
 
 let mapAuth = (
   auth: ProviderType['attributes']['auth'],
   providerType: ProviderType,
+  provider: Provider,
   tenant: Tenant
 ) => {
   if (auth.status == 'disabled') return auth;
@@ -14,13 +15,16 @@ let mapAuth = (
       auth.oauth.status == 'enabled'
         ? {
             ...auth.oauth,
-            oauthCallbackUrl: `${env.service.PUBLIC_SERVICE_URL}/oauth-callback/${tenant.urlKey}/${providerType.shortKey}`
+            oauthCallbackUrl: `${env.service.PUBLIC_SERVICE_URL}/oauth-callback/${tenant.urlKey}-${provider.tag}-${providerType.shortKey}`
           }
         : auth.oauth
   };
 };
 
-export let providerTypePresenter = (providerType: ProviderType, d: { tenant: Tenant }) => ({
+export let providerTypePresenter = (
+  providerType: ProviderType,
+  d: { tenant: Tenant; provider: Provider }
+) => ({
   object: 'provider.type',
 
   id: providerType.id,
@@ -28,7 +32,7 @@ export let providerTypePresenter = (providerType: ProviderType, d: { tenant: Ten
 
   config: providerType.attributes.config,
   triggers: providerType.attributes.triggers,
-  auth: mapAuth(providerType.attributes.auth, providerType, d.tenant),
+  auth: mapAuth(providerType.attributes.auth, providerType, d.provider, d.tenant),
 
   createdAt: providerType.createdAt
 });

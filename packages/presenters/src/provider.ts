@@ -35,41 +35,55 @@ export let providerPresenter = (
     type: ProviderType;
   },
   d: { tenant: Tenant }
-) => ({
-  object: 'provider',
+) => {
+  let type = providerTypePresenter(provider.type, {
+    tenant: d.tenant,
+    provider
+  });
 
-  id: provider.id,
-  access: provider.access,
-  status: provider.status,
+  return {
+    object: 'provider',
 
-  ownerTenant: provider.ownerTenant ? tenantPresenter(provider.ownerTenant) : null,
-  publisher: publisherPresenter(provider.publisher),
-  entry: providerEntryPresenter(provider.entry),
+    id: provider.id,
+    access: provider.access,
+    status: provider.status,
 
-  defaultVariant: provider.defaultVariant
-    ? providerVariantPresenter({
-        ...provider.defaultVariant,
-        provider
-      })
-    : null,
-  currentVersion: provider.defaultVariant?.currentVersion
-    ? providerVersionPresenter({
-        ...provider.defaultVariant.currentVersion,
-        provider
-      })
-    : null,
+    ownerTenant: provider.ownerTenant ? tenantPresenter(provider.ownerTenant) : null,
+    publisher: publisherPresenter(provider.publisher),
+    entry: providerEntryPresenter(provider.entry),
 
-  type: providerTypePresenter(provider.type, d),
+    defaultVariant: provider.defaultVariant
+      ? providerVariantPresenter({
+          ...provider.defaultVariant,
+          provider
+        })
+      : null,
+    currentVersion: provider.defaultVariant?.currentVersion
+      ? providerVersionPresenter({
+          ...provider.defaultVariant.currentVersion,
+          provider
+        })
+      : null,
 
-  identifier: provider.identifier,
+    type,
 
-  tag: provider.tag,
+    oauth:
+      type.auth.status == 'enabled' && type.auth.oauth.status == 'enabled'
+        ? {
+            oauthCallbackUrl: type.auth.oauth.oauthCallbackUrl
+          }
+        : null,
 
-  name: provider.name,
-  description: provider.description,
-  slug: provider.slug,
-  metadata: provider.metadata,
+    identifier: provider.identifier,
 
-  createdAt: provider.createdAt,
-  updatedAt: provider.updatedAt
-});
+    tag: provider.tag,
+
+    name: provider.name,
+    description: provider.description,
+    slug: provider.slug,
+    metadata: provider.metadata,
+
+    createdAt: provider.createdAt,
+    updatedAt: provider.updatedAt
+  };
+};
