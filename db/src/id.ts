@@ -113,7 +113,7 @@ export let getId = <K extends Parameters<typeof ID.generateIdSync>[0]>(model: K)
 });
 
 export let get4ByteIntId = (): number => {
-  let buffer = new Uint32Array(1);
+  let buffer = new Int32Array(1);
   crypto.getRandomValues(buffer);
   return buffer[0];
 };

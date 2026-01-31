@@ -23,15 +23,16 @@ COPY packages/store/package.json ./packages/store/package.json
 COPY packages/generator/package.json ./packages/generator/package.json
 
 COPY provider-backends/provider-slates/package.json ./provider-backends/provider-slates/package.json
+COPY provider-backends/provider-shuttle/package.json ./provider-backends/provider-shuttle/package.json
 COPY provider-backends/provider-utils/package.json ./provider-backends/provider-utils/package.json
 COPY provider-backends/provider-manager/package.json ./provider-backends/provider-manager/package.json
-COPY packages/conduit/package.json ./packages/conduit/package.json
 
 COPY modules/auth/package.json ./modules/auth/package.json
 COPY modules/catalog/package.json ./modules/catalog/package.json
 COPY modules/connection/package.json ./modules/connection/package.json
 COPY modules/deployment/package.json ./modules/deployment/package.json
 COPY modules/provider-internal/package.json ./modules/provider-internal/package.json
+COPY modules/custom-provider/package.json ./modules/custom-provider/package.json
 COPY modules/search/package.json ./modules/search/package.json
 COPY modules/session/package.json ./modules/session/package.json
 COPY modules/tenant/package.json ./modules/tenant/package.json

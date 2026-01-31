@@ -35,4 +35,6 @@ model Solution {
   customProviderDeployments                CustomProviderDeployment[]
   customProviderVersions                   CustomProviderVersion[]
   customProviderCommits                    CustomProviderCommit[]
+  customProviderEnvironments               CustomProviderEnvironment[]
+  providerEnvironments                     ProviderEnvironment[]
 }
