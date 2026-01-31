@@ -44,29 +44,6 @@ export let createVersion = (d: {
   };
 }) =>
   withTransaction(async db => {
-    if (d.forVersion) {
-      if (
-        d.customProvider.providerOid &&
-        d.customProvider.providerOid !== d.forVersion.provider.oid
-      ) {
-        throw new Error('CustomProvider providerOid mismatch');
-      }
-      if (
-        d.customProvider.providerVariantOid &&
-        d.customProvider.providerVariantOid !== d.forVersion.providerVersion.providerVariantOid
-      ) {
-        throw new Error('CustomProvider providerVariantOid mismatch');
-      }
-
-      await db.customProvider.update({
-        where: { oid: d.customProvider.oid },
-        data: {
-          providerOid: d.forVersion.provider.oid,
-          providerVariantOid: d.forVersion.providerVersion.providerVariantOid
-        }
-      });
-    }
-
     await db.customProvider.updateMany({
       where: { oid: d.customProvider.oid },
       data: {
@@ -253,12 +230,7 @@ export let syncVersionToCustomProvider = async (d: {
 
       shuttleServer: d.shuttleServer,
       shuttleCustomServer: d.shuttleCustomServer,
-      shuttleCustomDeployment: d.shuttleCustomDeployment,
-
-      forVersion: {
-        provider: fullProviderVersion.provider,
-        providerVersion: fullProviderVersion
-      }
+      shuttleCustomDeployment: d.shuttleCustomDeployment
     });
 
     await linkNewShuttleVersionToCustomProvider({
