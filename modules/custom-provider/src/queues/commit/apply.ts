@@ -6,12 +6,12 @@ import { env } from '../../env';
 export let commitApplyQueue = createQueue<{
   customProviderCommitId: string;
 }>({
-  name: 'cpr/commit/apply',
+  name: 'sub/cpr/commit/apply',
   redisUrl: env.service.REDIS_URL
 });
 
 let lock = createLock({
-  name: 'cpr/commit/apply/lock',
+  name: 'sub/cpr/commit/apply/lock',
   redisUrl: env.service.REDIS_URL
 });
 

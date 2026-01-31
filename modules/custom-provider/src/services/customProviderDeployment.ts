@@ -111,7 +111,8 @@ class customProviderDeploymentServiceImpl {
     let customProviderDeployment = await db.customProviderDeployment.findFirst({
       where: {
         id: d.customProviderDeploymentId,
-        tenantOid: d.tenant.oid
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid
       },
       include
     });

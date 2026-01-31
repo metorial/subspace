@@ -296,7 +296,8 @@ class customProviderCommitServiceImpl {
     let customProviderCommit = await db.customProviderCommit.findFirst({
       where: {
         id: d.customProviderCommitId,
-        tenantOid: d.tenant.oid
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid
       },
       include
     });

@@ -8,7 +8,7 @@ import { customDeploymentSucceededQueue } from './succeeded';
 export let customDeploymentMonitorQueue = createQueue<{
   customProviderDeploymentId: string;
 }>({
-  name: 'cpr/deployment/monitor',
+  name: 'sub/cpr/deployment/monitor',
   redisUrl: env.service.REDIS_URL,
   workerOpts: {
     concurrency: 5

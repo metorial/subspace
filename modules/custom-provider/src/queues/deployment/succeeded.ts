@@ -1,14 +1,16 @@
 import { createQueue, QueueRetryError } from '@lowerdeck/queue';
-import { addAfterTransactionHook, db, getId, withTransaction } from '@metorial-subspace/db';
+import { addAfterTransactionHook, db, withTransaction } from '@metorial-subspace/db';
 import { getTenantForShuttle, shuttle } from '@metorial-subspace/provider-shuttle/src/client';
 import { upsertShuttleServerVersion } from '@metorial-subspace/provider-shuttle/src/lib/upsertShuttleVersion';
 import { env } from '../../env';
+import { ensureEnvironments } from '../../internal/ensureEnvironments';
+import { linkNewShuttleVersionToCustomProvider } from '../../internal/linkVersion';
 import { commitApplyQueue } from '../commit/apply';
 
 export let customDeploymentSucceededQueue = createQueue<{
   customProviderDeploymentId: string;
 }>({
-  name: 'cpr/deployment/succeeded',
+  name: 'sub/cpr/deployment/succeeded',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -68,46 +70,12 @@ export let customDeploymentSucceededQueueProcessor = customDeploymentSucceededQu
         shuttleServerRecord,
         shuttleServerVersionRecord
       });
-      let provider = versionRes.provider;
-
-      await db.customProviderVersion.updateMany({
-        where: { oid: customProviderVersion.oid },
-        data: {
-          status: 'deployment_succeeded',
-          providerVersionOid: versionRes.providerVersion.oid
-        }
-      });
-      await db.customProvider.updateMany({
-        where: { oid: customProviderVersion.customProviderOid },
-        data: {
-          providerOid: provider.oid,
-          providerVariantOid: provider.defaultVariantOid
-        }
+      await linkNewShuttleVersionToCustomProvider({
+        ...versionRes,
+        customProviderVersion
       });
 
-      let environments = await db.customProviderEnvironment.findMany({
-        where: { customProviderOid: customProviderVersion.customProviderOid }
-      });
-      let newProviderEnvironments = await db.providerEnvironment.createManyAndReturn({
-        skipDuplicates: true,
-        data: environments.map(env => ({
-          ...getId('providerEnvironment'),
-          tenantOid: deployment.tenantOid,
-          environmentOid: env.environmentOid,
-          providerOid: provider.oid,
-          providerVariantOid: provider.defaultVariantOid!
-        }))
-      });
-
-      for (let env of newProviderEnvironments) {
-        let matchingCustomEnv = environments.find(e => e.environmentOid == env.environmentOid);
-        if (!matchingCustomEnv) continue;
-
-        await db.customProviderEnvironment.updateMany({
-          where: { oid: matchingCustomEnv.oid },
-          data: { providerEnvironmentOid: env.oid }
-        });
-      }
+      await ensureEnvironments(customProviderVersion);
 
       let sourceEnvFull = await db.customProviderEnvironment.findUniqueOrThrow({
         where: { oid: sourceEnvironment.oid },

@@ -5,7 +5,7 @@ import { env } from '../../env';
 export let customDeploymentFailedQueue = createQueue<{
   customProviderDeploymentId: string;
 }>({
-  name: 'cpr/deployment/failed',
+  name: 'sub/cpr/deployment/failed',
   redisUrl: env.service.REDIS_URL
 });
 

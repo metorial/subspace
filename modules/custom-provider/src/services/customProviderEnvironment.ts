@@ -44,6 +44,7 @@ class customProviderEnvironmentServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
+              solutionOid: d.solution.oid,
 
               AND: [
                 d.ids ? { id: { in: d.ids } } : undefined!,
@@ -72,7 +73,8 @@ class customProviderEnvironmentServiceImpl {
     let customProviderEnvironment = await db.customProviderEnvironment.findFirst({
       where: {
         id: d.customProviderEnvironmentId,
-        tenantOid: d.tenant.oid
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid
       },
       include
     });

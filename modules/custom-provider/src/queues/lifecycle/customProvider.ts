@@ -3,7 +3,7 @@ import { env } from '../../env';
 import { indexCustomProviderQueue } from '../search/customProvider';
 
 export let customProviderCreatedQueue = createQueue<{ customProviderId: string }>({
-  name: 'cpr/lc/customProvider/created',
+  name: 'sub/cpr/lc/customProvider/created',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -14,7 +14,7 @@ export let customProviderCreatedQueueProcessor = customProviderCreatedQueue.proc
 );
 
 export let customProviderUpdatedQueue = createQueue<{ customProviderId: string }>({
-  name: 'cpr/lc/customProvider/updated',
+  name: 'sub/cpr/lc/customProvider/updated',
   redisUrl: env.service.REDIS_URL
 });
 

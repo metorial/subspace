@@ -4,7 +4,7 @@ import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-
 import { env } from '../../env';
 
 export let indexCustomProviderQueue = createQueue<{ customProviderId: string }>({
-  name: 'cpr/sidx/customProvider',
+  name: 'sub/cpr/sidx/customProvider',
   redisUrl: env.service.REDIS_URL
 });
 

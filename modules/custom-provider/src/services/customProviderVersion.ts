@@ -6,7 +6,6 @@ import {
   CustomProvider,
   CustomProviderVersionStatus,
   db,
-  getId,
   withTransaction,
   type Environment,
   type Solution,
@@ -23,6 +22,7 @@ import { checkTenant } from '@metorial-subspace/module-tenant';
 import { backend } from '../_shuttle/backend';
 import { CustomProviderConfig, CustomProviderFrom } from '../_shuttle/types';
 import { createVersion } from '../internal/createVersion';
+import { ensureEnvironments } from '../internal/ensureEnvironments';
 
 let include = {
   customProvider: {
@@ -78,17 +78,7 @@ class customProviderVersionServiceImpl {
     });
 
     return withTransaction(async db => {
-      let environments = await db.environment.findMany({
-        where: { tenantOid: d.tenant.oid }
-      });
-      await db.customProviderEnvironment.createMany({
-        data: environments.map(env => ({
-          ...getId('customProviderEnvironment'),
-          tenantOid: d.tenant.oid,
-          environmentOid: env.oid,
-          customProviderOid: d.customProvider.oid
-        }))
-      });
+      await ensureEnvironments(d);
 
       let versionRes = await createVersion({
         actor: d.actor,
@@ -184,7 +174,8 @@ class customProviderVersionServiceImpl {
     let customProviderVersion = await db.customProviderVersion.findFirst({
       where: {
         id: d.customProviderVersionId,
-        tenantOid: d.tenant.oid
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid
       },
       include
     });

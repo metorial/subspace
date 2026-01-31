@@ -1,11 +1,15 @@
+import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { generatePlainId } from '@lowerdeck/id';
 import {
   Actor,
   addAfterTransactionHook,
   CustomProvider,
   CustomProviderDeploymentTrigger,
+  db,
   Environment,
   getId,
+  Provider,
+  ProviderVersion,
   ShuttleCustomServer,
   ShuttleCustomServerDeployment,
   ShuttleServer,
@@ -13,7 +17,10 @@ import {
   Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import { actorService } from '@metorial-subspace/module-tenant';
 import { customProviderDeploymentCreatedQueue } from '../queues/lifecycle/customProviderDeployment';
+import { ensureEnvironments } from './ensureEnvironments';
+import { linkNewShuttleVersionToCustomProvider } from './linkVersion';
 
 export let createVersion = (d: {
   actor: Actor;
@@ -30,8 +37,43 @@ export let createVersion = (d: {
   shuttleServer: ShuttleServer;
   shuttleCustomServer: ShuttleCustomServer;
   shuttleCustomDeployment: ShuttleCustomServerDeployment;
+
+  forVersion?: {
+    provider: Provider;
+    providerVersion: ProviderVersion;
+  };
 }) =>
   withTransaction(async db => {
+    if (d.forVersion) {
+      if (
+        d.customProvider.providerOid &&
+        d.customProvider.providerOid !== d.forVersion.provider.oid
+      ) {
+        throw new Error('CustomProvider providerOid mismatch');
+      }
+      if (
+        d.customProvider.providerVariantOid &&
+        d.customProvider.providerVariantOid !== d.forVersion.providerVersion.providerVariantOid
+      ) {
+        throw new Error('CustomProvider providerVariantOid mismatch');
+      }
+
+      await db.customProvider.update({
+        where: { oid: d.customProvider.oid },
+        data: {
+          providerOid: d.forVersion.provider.oid,
+          providerVariantOid: d.forVersion.providerVersion.providerVariantOid
+        }
+      });
+    }
+
+    await db.customProvider.updateMany({
+      where: { oid: d.customProvider.oid },
+      data: {
+        shuttleCustomServerOid: d.shuttleCustomServer.oid
+      }
+    });
+
     let deployment = await db.customProviderDeployment.create({
       data: {
         ...getId('customProviderDeployment'),
@@ -72,45 +114,33 @@ export let createVersion = (d: {
 
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
-        creatorActorOid: d.actor.oid
+        creatorActorOid: d.actor.oid,
+
+        providerVersionOid: d.forVersion?.providerVersion.oid || null
       }
     });
 
-    let env = await db.customProviderEnvironment.findUnique({
+    let env = await db.customProviderEnvironment.upsert({
       where: {
         environmentOid_customProviderOid: {
           environmentOid: d.environment.oid,
           customProviderOid: d.customProvider.oid
         }
       },
+      create: {
+        ...getId('customProviderEnvironment'),
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
+        customProviderOid: d.customProvider.oid
+      },
+      update: {},
       include: {
         providerEnvironment: {
           include: { currentVersion: { include: { customProviderVersion: true } } }
         }
       }
     });
-    if (!env) {
-      env = await db.customProviderEnvironment.upsert({
-        where: {
-          environmentOid_customProviderOid: {
-            environmentOid: d.environment.oid,
-            customProviderOid: d.customProvider.oid
-          }
-        },
-        create: {
-          ...getId('customProviderEnvironment'),
-          tenantOid: d.tenant.oid,
-          environmentOid: d.environment.oid,
-          customProviderOid: d.customProvider.oid
-        },
-        update: {},
-        include: {
-          providerEnvironment: {
-            include: { currentVersion: { include: { customProviderVersion: true } } }
-          }
-        }
-      });
-    }
 
     let commit = await db.customProviderCommit.create({
       data: {
@@ -157,3 +187,84 @@ export let createVersion = (d: {
 
     return { deployment, version };
   });
+
+export let syncVersionToCustomProvider = async (d: {
+  providerVersion: ProviderVersion;
+
+  message: string;
+
+  shuttleServer: ShuttleServer;
+  shuttleCustomServer: ShuttleCustomServer;
+  shuttleCustomDeployment: ShuttleCustomServerDeployment;
+}) => {
+  let fullProviderVersion = await db.providerVersion.findUniqueOrThrow({
+    where: { oid: d.providerVersion.oid },
+    include: {
+      customProviderVersion: true,
+      provider: {
+        include: {
+          customProvider: {
+            include: {
+              tenant: true,
+              solution: true
+            }
+          }
+        }
+      }
+    }
+  });
+  if (!fullProviderVersion.customProviderVersion) return;
+  if (!fullProviderVersion.provider.customProvider) return;
+
+  let customProvider = fullProviderVersion.provider.customProvider;
+
+  let environments = await ensureEnvironments({
+    customProvider
+  });
+
+  let actor = await actorService.getSystemActor({
+    tenant: customProvider.tenant
+  });
+
+  let sortedEnvironments = environments.sort(
+    (a, b) => a.environment.createdAt.getTime() - b.environment.createdAt.getTime()
+  );
+  let environment =
+    sortedEnvironments.find(e => e.environment.type == 'development') ?? sortedEnvironments[0];
+  if (!environment) {
+    throw new ServiceError(
+      badRequestError({
+        message: 'No environments found for custom provider'
+      })
+    );
+  }
+
+  await withTransaction(async db => {
+    await createVersion({
+      actor,
+      tenant: customProvider.tenant,
+      solution: customProvider.solution,
+      environment: environment.environment,
+
+      message: d.message,
+      trigger: 'system',
+
+      customProvider,
+
+      shuttleServer: d.shuttleServer,
+      shuttleCustomServer: d.shuttleCustomServer,
+      shuttleCustomDeployment: d.shuttleCustomDeployment,
+
+      forVersion: {
+        provider: fullProviderVersion.provider,
+        providerVersion: fullProviderVersion
+      }
+    });
+
+    await linkNewShuttleVersionToCustomProvider({
+      customProviderVersion: fullProviderVersion.customProviderVersion!,
+      provider: fullProviderVersion.provider,
+      providerVersion: fullProviderVersion
+    });
+  });
+};

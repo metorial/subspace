@@ -26,6 +26,7 @@ import { checkTenant } from '@metorial-subspace/module-tenant';
 import { backend } from '../_shuttle/backend';
 import { CustomProviderConfig, CustomProviderFrom } from '../_shuttle/types';
 import { createVersion } from '../internal/createVersion';
+import { ensureEnvironments } from '../internal/ensureEnvironments';
 import {
   customProviderCreatedQueue,
   customProviderUpdatedQueue
@@ -166,21 +167,13 @@ class customProviderServiceImpl {
           metadata: d.input.metadata,
 
           tenantOid: d.tenant.oid,
-          solutionOid: d.solution.oid
+          solutionOid: d.solution.oid,
+
+          shuttleCustomServerOid: backendProvider.shuttleCustomServer.oid
         }
       });
 
-      let environments = await db.environment.findMany({
-        where: { tenantOid: d.tenant.oid }
-      });
-      await db.customProviderEnvironment.createMany({
-        data: environments.map(env => ({
-          ...getId('customProviderEnvironment'),
-          tenantOid: d.tenant.oid,
-          environmentOid: env.oid,
-          customProviderOid: customProvider.oid
-        }))
-      });
+      await ensureEnvironments({ customProvider });
 
       await createVersion({
         actor: d.actor,
