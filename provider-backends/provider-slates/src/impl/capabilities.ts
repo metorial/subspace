@@ -24,7 +24,6 @@ export class ProviderCapabilities extends IProviderCapabilities {
     data: ProviderSpecificationGetForPairParam
   ): Promise<ProviderSpecificationGetRes> {
     return this.getSpecificationForProviderVersion({
-      tenant: data.tenant,
       provider: data.provider,
       providerVariant: data.providerVariant,
       providerVersion: data.providerVersion

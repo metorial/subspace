@@ -227,16 +227,31 @@ class providerDeploymentServiceImpl {
           solutionOid: d.solution.oid,
           environmentOid: d.environment.oid,
           providerOid: d.provider.oid,
-          providerVariantOid: d.provider.defaultVariant.oid,
-          lockedVersionOid: d.lockedVersion?.oid,
-
-          specificationDiscoveryStatus: 'discovering'
+          providerVariantOid: d.provider.defaultVariant.oid
         },
         include: {
           provider: true,
           providerVariant: true,
-          lockedVersion: true
+          currentVersion: {
+            include: { lockedVersion: true }
+          }
         }
+      });
+
+      let currentVersion = await db.providerDeploymentVersion.create({
+        data: {
+          ...getId('providerDeploymentVersion'),
+          lockedVersionOid: d.lockedVersion?.oid,
+          providerVariantOid: d.provider.defaultVariant.oid,
+          deploymentOid: providerDeployment.oid
+        },
+        include: { lockedVersion: true }
+      });
+      providerDeployment.currentVersion = currentVersion;
+
+      await db.providerDeployment.updateMany({
+        where: { oid: providerDeployment.oid },
+        data: { currentVersionOid: currentVersion.oid }
       });
 
       if (d.input.config.type === 'config') {
@@ -281,7 +296,7 @@ class providerDeploymentServiceImpl {
 
       return await db.providerDeployment.findFirstOrThrow({
         where: { oid: providerDeployment.oid },
-        include
+        include: { ...include, currentVersion: true }
       });
     });
   }
@@ -367,7 +382,7 @@ class providerDeploymentServiceImpl {
             providerOid: d.provider.oid,
             isDefault: true
           },
-          include
+          include: { ...include, currentVersion: true }
         }),
       { ifExists: true }
     );

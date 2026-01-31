@@ -29,10 +29,13 @@ export let ID = createIdGenerator({
   providerEnvironmentVersion: idType.sorted('pev'),
 
   providerDeployment: idType.sorted('pde'),
+  providerDeploymentVersion: idType.sorted('pdv'),
+
   providerConfig: idType.sorted('pcf'),
   providerConfigVersion: idType.sorted('pcv'),
   providerConfigUpdate: idType.sorted('pcu'),
   providerConfigVault: idType.sorted('pcvt'),
+
   providerDeploymentConfigPair: idType.sorted('pdcp'),
   providerDeploymentConfigPairProviderVersion: idType.sorted('pdcpv'),
 

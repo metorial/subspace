@@ -2,7 +2,7 @@ import type {
   Provider,
   ProviderAuthConfigVersion,
   ProviderConfigVersion,
-  ProviderDeployment,
+  ProviderDeploymentVersion,
   ProviderVariant,
   ProviderVersion,
   Tenant
@@ -30,7 +30,6 @@ export abstract class IProviderCapabilities extends IProviderFunctionality {
 }
 
 export interface ProviderSpecificationGetForProviderParam {
-  tenant: Tenant;
   provider: Provider;
   providerVariant: ProviderVariant;
   providerVersion: ProviderVersion;
@@ -39,7 +38,7 @@ export interface ProviderSpecificationGetForProviderParam {
 export interface ProviderSpecificationGetForPairParam {
   tenant: Tenant;
 
-  deployment: (ProviderDeployment & { lockedVersion: ProviderVersion | null }) | null;
+  deploymentVersion: ProviderDeploymentVersion | null;
   configVersion: ProviderConfigVersion;
   authConfigVersion: ProviderAuthConfigVersion | null;
 

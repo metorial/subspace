@@ -17,6 +17,7 @@ import {
   type ProviderConfigStatus,
   type ProviderConfigVault,
   type ProviderDeployment,
+  ProviderDeploymentVersion,
   type ProviderVariant,
   type ProviderVersion,
   type Solution,
@@ -152,7 +153,9 @@ class providerConfigServiceImpl {
 
     provider?: Provider & { defaultVariant: ProviderVariant | null };
     providerVersion?: ProviderVersion;
-    providerDeployment?: ProviderDeployment;
+    providerDeployment?: ProviderDeployment & {
+      currentVersion: ProviderDeploymentVersion | null;
+    };
     providerConfig?: ProviderConfig & { deployment: ProviderDeployment | null };
   }) {
     if (d.providerConfig) {
@@ -164,7 +167,7 @@ class providerConfigServiceImpl {
 
     let versionOid =
       d.providerVersion?.oid ??
-      d.providerDeployment?.lockedVersionOid ??
+      d.providerDeployment?.currentVersion?.lockedVersionOid ??
       d.provider?.defaultVariant?.currentVersionOid;
 
     if (!versionOid) {
@@ -198,7 +201,9 @@ class providerConfigServiceImpl {
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
       providerVariant: ProviderVariant;
-      lockedVersion: ProviderVersion | null;
+      currentVersion:
+        | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+        | null;
     };
     input: {
       name?: string;
@@ -301,7 +306,7 @@ class providerConfigServiceImpl {
               deploymentOid: d.providerDeployment?.oid ?? d.input.config.vault.deploymentOid,
               specificationOid: parentConfig.specificationOid
             },
-            include
+            include: { ...include, currentVersion: true }
           });
 
           let currentVersion = await db.providerConfigVersion.create({
@@ -352,7 +357,10 @@ class providerConfigServiceImpl {
             deploymentOid: d.providerDeployment?.oid,
             specificationOid: version.specificationOid
           },
-          include
+          include: {
+            ...include,
+            currentVersion: true
+          }
         });
 
         let currentVersion = await db.providerConfigVersion.create({
@@ -438,7 +446,9 @@ class providerConfigServiceImpl {
             include: {
               provider: true,
               providerVariant: true,
-              lockedVersion: true
+              currentVersion: {
+                include: { lockedVersion: true }
+              }
             }
           });
 

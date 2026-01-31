@@ -55,33 +55,7 @@ export class ProviderCapabilities extends IProviderCapabilities {
   override async getSpecificationForProviderVersion(
     data: ProviderSpecificationGetForProviderParam
   ): Promise<ProviderSpecificationGetRes> {
-    if (!data.providerVersion.shuttleServerVersionOid) {
-      throw new Error('Provider version does not have a server associated with it');
-    }
-
-    let shuttleServerVersion = await db.shuttleServerVersion.findUniqueOrThrow({
-      where: { oid: data.providerVersion.shuttleServerVersionOid },
-      include: { server: true }
-    });
-
-    let tenant = await getTenantForShuttle(data.tenant);
-
-    let discovery = await shuttle.serverDiscovery.getForVersion({
-      tenantId: tenant.id,
-      serverVersionId: shuttleServerVersion.id
-    });
-    if (!discovery) return null;
-
-    let version = await shuttle.serverVersion.get({
-      serverVersionId: shuttleServerVersion.id,
-      tenantId: tenant.id
-    });
-    let server = await shuttle.server.get({
-      serverId: shuttleServerVersion.server.id,
-      tenantId: tenant.id
-    });
-
-    return this.mapDiscovery(server, version, discovery);
+    throw new Error('Not supported by Shuttle provider backend');
   }
 
   override async getSpecificationForProviderPair(

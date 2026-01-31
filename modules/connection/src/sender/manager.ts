@@ -207,9 +207,9 @@ export class SenderManager {
         where: { oid: provider.oid },
         include: {
           environment: true,
-          deployment: true,
-          config: true,
-          authConfig: true,
+          deployment: { include: { currentVersion: true } },
+          config: { include: { currentVersion: true } },
+          authConfig: { include: { currentVersion: true } },
           provider: { include: { defaultVariant: { include: { currentVersion: true } } } }
         }
       });

@@ -127,11 +127,14 @@ class sessionProviderInputServiceImpl {
             let config = s.configId
               ? await db.providerConfig.findFirst({ where: { ...ts, id: s.configId } })
               : null;
-            let deployment = s.deploymentId
-              ? await db.providerDeployment.findFirst({ where: { ...ts, id: s.deploymentId } })
-              : null;
             let authConfig = s.authConfigId
               ? await db.providerAuthConfig.findFirst({ where: { ...ts, id: s.authConfigId } })
+              : null;
+            let deployment = s.deploymentId
+              ? await db.providerDeployment.findFirst({
+                  where: { ...ts, id: s.deploymentId },
+                  include: { currentVersion: true }
+                })
               : null;
 
             checkDeletedRelation(config, d);
@@ -163,7 +166,8 @@ class sessionProviderInputServiceImpl {
                   include: {
                     provider: {
                       include: { defaultVariant: { include: { currentVersion: true } } }
-                    }
+                    },
+                    currentVersion: true
                   }
                 });
                 checkDeletedRelation(fetchedDeployment, d);

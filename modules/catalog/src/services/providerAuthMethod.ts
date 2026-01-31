@@ -4,10 +4,6 @@ import { Service } from '@lowerdeck/service';
 import {
   db,
   Environment,
-  type Provider,
-  type ProviderAuthConfig,
-  type ProviderConfig,
-  type ProviderDeployment,
   type ProviderSpecification,
   type ProviderVersion,
   type Solution,
@@ -21,17 +17,9 @@ class providerAuthMethodServiceImpl {
     solution: Solution;
     environment: Environment;
 
-    provider?: Provider;
-    providerVersion?: ProviderVersion;
-    providerDeployment?: ProviderDeployment;
-    providerConfig?: ProviderConfig & { deployment: ProviderDeployment | null };
-    providerAuthConfig?: ProviderAuthConfig & { deployment: ProviderDeployment | null };
+    providerVersion: ProviderVersion;
   }) {
-    let versionOid =
-      d.providerVersion?.oid ??
-      d.providerDeployment?.lockedVersionOid ??
-      d.providerConfig?.deployment?.lockedVersionOid ??
-      d.providerAuthConfig?.deployment?.lockedVersionOid;
+    let versionOid = d.providerVersion?.oid;
 
     let version = versionOid
       ? await db.providerVersion.findFirst({
@@ -50,7 +38,8 @@ class providerAuthMethodServiceImpl {
                 provider: getProviderTenantFilter(d)
               }
             ],
-            providerOid: d.provider?.oid,
+            providerOid: d.providerVersion.providerOid,
+
             ...(version?.specificationOid
               ? {
                   providerAuthMethods: {
