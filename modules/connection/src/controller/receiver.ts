@@ -175,6 +175,10 @@ export let startReceiver = () => {
             ? { type: 'error' as const, data: result.output.error }
             : result.output.data;
 
+        if (output.type == 'mcp' && 'error' in output.data && output.data.error) {
+          status = 'failed';
+        }
+
         return {
           isSystemError: false,
           status,
@@ -202,7 +206,11 @@ export let startReceiver = () => {
     };
 
     let processToolCall = async (data: ConduitInput & { type: 'tool_call' }) => {
+      console.log('Processing tool call data:', data);
+
       let res = await sendToProvider(data);
+
+      console.log('Tool call processed result:', res);
 
       let message = await completeMessage(
         { messageId: data.sessionMessageId },
@@ -216,6 +224,8 @@ export let startReceiver = () => {
           failureReason: res.isSystemError ? 'system_error' : undefined
         }
       );
+
+      console.log('Completed tool call message:', message);
 
       let result = {
         message,
