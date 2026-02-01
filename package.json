@@ -24,8 +24,7 @@
     "provider-backends/*",
     "apps/*",
     "packages/*",
-    "modules/*",
-    "dev"
+    "modules/*"
   ],
   "dependencies": {
     "knip": "^5.82.0"

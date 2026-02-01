@@ -3,12 +3,14 @@ import type {
   ProviderAuthConfigVersion,
   ProviderConfigVersion,
   ProviderRun,
+  ProviderTool,
   ProviderVariant,
   ProviderVersion,
   Session,
   SessionConnection,
   SessionMessage,
   SessionParticipant,
+  SessionProvider,
   ShuttleConnection,
   SlateSession,
   SlateToolCall,
@@ -97,11 +99,12 @@ export interface ProviderRunCreateRes {
 }
 
 export interface ToolInvocationCreateParam {
-  tool: { callableId: string };
+  tool: ProviderTool;
   sender: SessionParticipant;
 
   input: PrismaJson.SessionMessageInput;
   message: SessionMessage;
+  sessionProvider: SessionProvider;
 }
 
 export interface ToolInvocationCreateRes {

@@ -1,7 +1,7 @@
 import { ProgrammablePromise } from '@lowerdeck/programmable-promise';
 import {
   db,
-  messageInputToMcp,
+  messageTranslator,
   snowflake,
   type ShuttleConnection
 } from '@metorial-subspace/db';
@@ -143,7 +143,13 @@ class ProviderRunConnection extends IProviderRunConnection {
   async handleToolInvocation(
     data: ToolInvocationCreateParam
   ): Promise<ToolInvocationCreateRes> {
-    let mcpMessage = await messageInputToMcp(data.input, data.message);
+    let mcpMessage = await messageTranslator.toMcp({
+      data: data.input,
+      message: data.message,
+      tool: data.tool,
+      sessionProvider: data.sessionProvider,
+      recipient: 'provider_backend'
+    });
     if (!mcpMessage) {
       return {
         output: {
@@ -165,13 +171,13 @@ class ProviderRunConnection extends IProviderRunConnection {
     let id = 'id' in mcpMessage && mcpMessage.id ? mcpMessage.id : undefined;
 
     if (id !== undefined) {
-      let method = 'method' in mcpMessage ? mcpMessage.method : undefined;
-      if (method == 'tools/call' || method == 'prompts/get') {
-        // @ts-ignore
-        mcpMessage.params = { ...mcpMessage.params, name: data.tool.callableId };
-      }
+      // let method = 'method' in mcpMessage ? mcpMessage.method : undefined;
+      // if (method == 'tools/call' || method == 'prompts/get') {
+      //   // @ts-ignore
+      //   mcpMessage.params = { ...mcpMessage.params, name: data.tool.callableId };
+      // }
 
-      console.log('Sending tool invocation MCP message:', mcpMessage);
+      console.log('Sending tool invocation MCP message:', data.input, mcpMessage);
 
       let responsePromise = new ProgrammablePromise<JSONRPCMessage>();
       this.#mcpMessageListeners.set(id, async msg => responsePromise.resolve(msg));

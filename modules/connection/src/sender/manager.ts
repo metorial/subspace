@@ -403,7 +403,7 @@ export class SenderManager {
           sessionMessageId: message.id,
 
           toolCallableId: tool.callableId,
-          toolId: d.toolId,
+          toolId: tool.id,
           toolKey: tool.key,
 
           input: d.input

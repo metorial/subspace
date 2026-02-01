@@ -19,7 +19,9 @@ import {
   type JSONRPCMessage,
   type JSONRPCRequest,
   type JSONRPCResponse,
+  ListPromptsRequestSchema,
   type ListPromptsResult,
+  ListResourceTemplatesRequestSchema,
   type ListResourceTemplatesResult,
   ListToolsRequestSchema,
   type ListToolsResult
@@ -216,7 +218,7 @@ export class McpSender {
       }
 
       case 'prompts/list': {
-        let promptList = mcpValidate(id, ListToolsRequestSchema, msg);
+        let promptList = mcpValidate(id, ListPromptsRequestSchema, msg);
         if (!promptList.success) return { mcp: promptList.error, store: true };
         return this.handlePromptListMessage(id);
       }
@@ -228,7 +230,7 @@ export class McpSender {
       }
 
       case 'resources/templates/list': {
-        let resourceTemplateList = mcpValidate(id, ListToolsRequestSchema, msg);
+        let resourceTemplateList = mcpValidate(id, ListResourceTemplatesRequestSchema, msg);
         if (!resourceTemplateList.success)
           return { mcp: resourceTemplateList.error, store: true };
         return this.handleResourceTemplatesListMessage(id);
@@ -466,7 +468,9 @@ export class McpSender {
         result: {
           protocolVersion: init.protocolVersion,
           capabilities: {
-            tools: {}
+            tools: {},
+            prompts: {},
+            resources: {}
           },
           serverInfo: {
             name:

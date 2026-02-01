@@ -109,11 +109,17 @@ export let startReceiver = () => {
       data: ConduitInput & { type: 'tool_call' },
       message: SessionMessage
     ) => {
+      console.log('Sending tool invocation to provider for tool ID:', data.toolId);
+      let tool = await db.providerTool.findFirstOrThrow({
+        where: { id: data.toolId }
+      });
+
       return await backend.sendToolInvocation({
-        tool: { callableId: data.toolCallableId },
-        sender: state.participant,
+        tool,
+        message,
         input: data.input,
-        message
+        sender: state.participant,
+        sessionProvider: state.sessionProvider
       });
     };
 

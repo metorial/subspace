@@ -11,7 +11,6 @@ import type {
   SessionProvider,
   ToolCall
 } from '@metorial-subspace/db';
-import { messageInputToMcp, messageOutputToMcp } from '@metorial-subspace/db';
 import { type SessionErrorPresenterProps, sessionErrorPresenter } from './sessionError';
 import { sessionParticipantPresenter } from './sessionParticipant';
 import { toolCallPresenter } from './toolCall';
@@ -86,8 +85,9 @@ export let sessionMessagePresenter = async (message: SessionMessagePresenterProp
           : undefined
     },
 
-    input: message.input ? await messageInputToMcp(message.input, message) : null,
-    output: message.output ? await messageOutputToMcp(message.output, message) : null,
+    // TODO: @herber add back
+    // input: message.input ? await messageInputToMcp(message.input, message) : null,
+    // output: message.output ? await messageOutputToMcp(message.output, message) : null,
 
     toolCall: message.toolCall
       ? await toolCallPresenter({
