@@ -293,7 +293,7 @@ export class SenderManager {
     let providers = await this.listProviders();
     return await Promise.all(
       providers.map(provider => this.listToolsForProvider(provider))
-    ).then(results => results.flat());
+    ).then(results => results.flat().sort((a, b) => a.id.localeCompare(b.id)));
   }
 
   async getProviderByTag(d: { tag: string }) {

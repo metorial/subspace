@@ -6,7 +6,11 @@ import {
   markdownList,
   mcpValidate
 } from '@metorial-subspace/connection-utils';
-import { db, type SessionConnectionMcpConnectionTransport } from '@metorial-subspace/db';
+import {
+  db,
+  messageTranslator,
+  type SessionConnectionMcpConnectionTransport
+} from '@metorial-subspace/db';
 import {
   type CallToolRequest,
   CallToolRequestSchema,
@@ -21,11 +25,17 @@ import {
   type JSONRPCResponse,
   ListPromptsRequestSchema,
   type ListPromptsResult,
+  ListResourcesRequestSchema,
+  type ListResourcesResult,
   ListResourceTemplatesRequestSchema,
   type ListResourceTemplatesResult,
   ListToolsRequestSchema,
-  type ListToolsResult
+  type ListToolsResult,
+  type ReadResourceRequest,
+  ReadResourceRequestSchema,
+  type Resource
 } from '@modelcontextprotocol/sdk/types.js';
+import { uniqBy } from 'lodash';
 import { PING_MESSAGE_ID_PREFIX } from '../const';
 import { providerToolPresenter } from '../presenter';
 import { upsertParticipant } from '../shared/upsertParticipant';
@@ -61,7 +71,7 @@ export class McpSender {
       let res = await this.handleMessageInternal(msg, opts);
       if (!res || !res.mcp) return null;
 
-      let message = 'message' in res ? res.message : null;
+      let message = 'message' in res && res.message ? res.message : null;
       let isBroadcastBySender = !!message;
 
       if (res.store && !message) {
@@ -178,9 +188,6 @@ export class McpSender {
   }
 
   private async handleMessageInternal(msg: JSONRPCMessage, opts: HandleResponseOpts) {
-    // TODO: for mcp capable backends we should have something other
-    // than call tool which directly forwards the mcp message
-
     let method = 'method' in msg ? msg.method : null;
     let id = 'id' in msg ? msg.id : null;
 
@@ -189,12 +196,23 @@ export class McpSender {
       return this.handlePingResponse(id);
 
     if (!method) {
+      if (!id) return;
+      // Get message by id and route response accordingly
+      let message = await db.sessionMessage.findFirst({
+        where: {
+          sessionOid: this.session.oid,
+          providerMcpId: id.toString()
+        }
+      });
+      if (!message) return;
+
       // TODO: handle responses for mcp-compatible backends
       return;
     }
 
     if (id === undefined || id === null || method.startsWith('notifications/')) {
       // TODO: handle notification for mcp-compatible backends
+      // -> send to all backends that support it
       return;
     }
 
@@ -234,6 +252,23 @@ export class McpSender {
         if (!resourceTemplateList.success)
           return { mcp: resourceTemplateList.error, store: true };
         return this.handleResourceTemplatesListMessage(id);
+      }
+
+      case 'resources/list': {
+        let resourceTemplateList = mcpValidate(id, ListResourcesRequestSchema, msg);
+        if (!resourceTemplateList.success)
+          return { mcp: resourceTemplateList.error, store: true };
+        return this.handleResourcesListMessage(id, resourceTemplateList.data.params ?? {});
+      }
+
+      case 'resources/read': {
+        let resourceTemplateRead = mcpValidate(id, ReadResourceRequestSchema, msg);
+        if (!resourceTemplateRead.success)
+          return { mcp: resourceTemplateRead.error, store: true };
+        return this.handleResourceReadMessage(id, {
+          ...resourceTemplateRead.data.params,
+          waitForResponse: opts.waitForResponse
+        });
       }
     }
 
@@ -380,6 +415,183 @@ export class McpSender {
           })
         } satisfies ListResourceTemplatesResult
       } satisfies JSONRPCResponse
+    };
+  }
+
+  private async handleResourcesListMessage(id: ID, opts: { cursor?: string }) {
+    let allTools = await this.manager.listTools();
+    let resourceListTools = uniqBy(
+      allTools.filter(t => t.value.mcpToolType.type == 'mcp.resources_list'),
+      t => t.sessionProvider.tag
+    );
+
+    console.log({ resourceListTools });
+
+    let internalCursor: string | undefined = undefined;
+
+    if (opts?.cursor) {
+      let [tag, ...rest] = opts.cursor.split('_');
+      let remainingCursor = rest.join('_').trim();
+
+      let firstToolIndex = resourceListTools.findIndex(t => t.sessionProvider.tag === tag);
+      if (firstToolIndex < 0) {
+        return {
+          store: true,
+          mcp: {
+            jsonrpc: '2.0',
+            id,
+            error: {
+              code: -32000,
+              message: `Invalid cursor: provider with tag "${tag}" not found`
+            }
+          } satisfies JSONRPCErrorResponse
+        };
+      }
+
+      let remainingTools = resourceListTools.slice(firstToolIndex); // Include the found tool
+      resourceListTools = remainingTools;
+
+      if (remainingCursor.length) internalCursor = remainingCursor;
+    }
+
+    if (!resourceListTools.length) {
+      return {
+        store: true,
+        mcp: {
+          jsonrpc: '2.0',
+          id,
+          result: {
+            resources: []
+          } satisfies ListResourcesResult
+        } satisfies JSONRPCResponse
+      };
+    }
+
+    let resources: Resource[] = [];
+
+    console.log({ resourceListTools, internalCursor });
+
+    let i = 0;
+    while (resources.length < 50 && resourceListTools.length) {
+      if (i++ > 100) break; // Safety break to avoid infinite loops
+
+      let tool = resourceListTools[0]!;
+
+      let toolResources = await this.manager.callTool({
+        toolId: tool.id,
+        input: {
+          type: 'tool.call',
+          data: {}
+        },
+        waitForResponse: true,
+        transport: 'system'
+      });
+
+      console.log({ toolResources });
+
+      if (
+        !toolResources.output ||
+        toolResources.output.type != 'mcp' ||
+        toolResources.status == 'failed'
+      ) {
+        let out: any = toolResources.output
+          ? await messageTranslator.outputToMcpBasic(
+              toolResources.output,
+              toolResources.message
+            )
+          : null;
+
+        return {
+          store: true,
+          mcp: {
+            jsonrpc: '2.0',
+            id,
+            error: out?.error ?? {
+              code: -32000,
+              message: 'Failed to retrieve resources'
+            }
+          } satisfies JSONRPCErrorResponse
+        };
+      }
+
+      let res = toolResources.output.data as JSONRPCResponse & { result: ListResourcesResult };
+
+      try {
+        resources.push(
+          ...res?.result?.resources?.map(r => ({
+            ...r,
+            uri: `${tool.sessionProvider.tag}_${r.uri}`
+          }))
+        );
+      } catch (e) {}
+
+      if (!res?.result?.resources?.length || !res?.result?.nextCursor) {
+        resourceListTools.shift();
+        internalCursor = undefined;
+      } else {
+        internalCursor = res.result.nextCursor;
+      }
+    }
+
+    console.log({ resources });
+
+    return {
+      store: true,
+      mcp: {
+        jsonrpc: '2.0',
+        id,
+        result: { resources } satisfies ListResourcesResult
+      } satisfies JSONRPCResponse
+    };
+  }
+
+  private async handleResourceReadMessage(
+    id: ID,
+    opts: { uri: string; waitForResponse: boolean }
+  ) {
+    let [tag, ...rest] = opts.uri.split('_');
+    let remainingUri = rest.join('_').trim();
+
+    let allTools = await this.manager.listTools();
+    let resourceReadTool = allTools.find(
+      t => t.value.mcpToolType.type == 'mcp.resources_read' && t.sessionProvider.tag === tag
+    );
+
+    if (!resourceReadTool) {
+      return {
+        store: true,
+        mcp: {
+          jsonrpc: '2.0',
+          id,
+          error: {
+            code: -32000,
+            message: `No resource read tool found for provider with tag "${tag}"`
+          }
+        } satisfies JSONRPCErrorResponse
+      };
+    }
+
+    let result = await this.manager.callTool({
+      toolId: resourceReadTool.id,
+      input: {
+        type: 'mcp',
+        data: {
+          jsonrpc: '2.0',
+          method: 'resources/read',
+          id,
+          params: {
+            uri: remainingUri
+          }
+        } satisfies JSONRPCRequest & ReadResourceRequest
+      },
+      waitForResponse: opts.waitForResponse,
+      transport: 'mcp'
+    });
+
+    return {
+      store: true,
+      message: result.message,
+      mcp: await conduitResultToMcpMessage(result)
     };
   }
 
