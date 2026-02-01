@@ -48,12 +48,12 @@ export let translateMessageToMcp = async ({
     };
   }
 
-  if (!message?.clientMcpId) return null;
+  if (!message) return null;
 
   if (data.type === 'tool.result') {
     return {
       jsonrpc: '2.0',
-      id: message.clientMcpId,
+      id: message.clientMcpId ?? message.id,
       result: {
         content: [
           {
@@ -139,7 +139,7 @@ export let translateMessageToMcp = async ({
 
   return {
     jsonrpc: '2.0',
-    id: message.clientMcpId,
+    id: message.clientMcpId ?? message.id,
     error: {
       code: -32000,
       message: data.data.message,

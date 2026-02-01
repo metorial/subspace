@@ -8,7 +8,5 @@ export let conduitResultToMcpMessage = async (
   let output = msg.output ?? msg.message?.output;
   if (!output) return null;
 
-  console.log(messageTranslator);
-
   return messageTranslator.outputToMcpBasic(output, msg.message);
 };

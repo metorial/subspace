@@ -347,6 +347,7 @@ export class SenderManager {
       instance,
       tool: {
         ...tool,
+        key: `${provider.tag}_${tool.key}`,
         sessionProvider: provider,
         sessionProviderInstance: instance
       }

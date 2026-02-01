@@ -85,8 +85,20 @@ export let messageOutputToToolCall = async (
   if (output.type === 'mcp') {
     if ('params' in output.data && output.data.params)
       return output.data.params?.arguments ?? output.data.params;
-    if ('result' in output.data && output.data.result)
-      return output.data.result?.structuredContent ?? output.data.result;
+    if ('result' in output.data && output.data.result) {
+      if (output.data.result?.structuredContent) return output.data.result.structuredContent;
+      if ('content' in output.data.result && (output.data.result?.content as any)?.length) {
+        let items = output.data.result?.content as any[];
+        if (items.length === 1 && items[0].type === 'text') {
+          try {
+            return JSON.parse(items[0].text);
+          } catch {
+            return items[0];
+          }
+        }
+      }
+      return output.data.result;
+    }
     if ('error' in output.data && output.data.error) return output.data.error;
     return {};
   }

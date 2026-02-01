@@ -1,4 +1,5 @@
 import { createHono } from '@lowerdeck/hono';
+import { messageOutputToToolCall } from '@metorial-subspace/db';
 import {
   connectionPresenter,
   providerToolPresenter,
@@ -101,7 +102,8 @@ export let metorialIntegrationProtocolRouter = createHono()
       z.object({
         toolId: z.string(),
         input: z.record(z.string(), z.any()),
-        waitForResponse: z.boolean().optional()
+        waitForResponse: z.boolean().optional(),
+        connectionToken: z.string()
       })
     ),
     async c => {
@@ -111,6 +113,7 @@ export let metorialIntegrationProtocolRouter = createHono()
         sessionId: c.req.param('sessionId')!,
         solutionId: c.req.param('solutionId')!,
         tenantId: c.req.param('tenantId')!,
+        connectionToken: body.connectionToken,
         transport: 'tool_call'
       });
 
@@ -125,7 +128,7 @@ export let metorialIntegrationProtocolRouter = createHono()
       });
 
       return c.json({
-        output: toolRes.output,
+        output: await messageOutputToToolCall(toolRes.output!, toolRes.message),
         message: sessionMessagePresenter(toolRes.message)
       });
     }
