@@ -129,6 +129,7 @@ class providerAuthConfigInternalServiceImpl {
   }) {
     checkTenant(d, d.providerDeployment);
     checkTenant(d, d.backendProviderAuthConfig.slateAuthConfig);
+    checkTenant(d, d.backendProviderAuthConfig.shuttleAuthConfig);
 
     if (d.providerDeployment && d.providerDeployment.providerOid !== d.provider.oid) {
       throw new ServiceError(
@@ -197,7 +198,8 @@ class providerAuthConfigInternalServiceImpl {
         data: {
           ...getId('providerAuthConfigVersion'),
           authConfigOid: providerAuthConfig.oid,
-          slateAuthConfigOid: d.backendProviderAuthConfig.slateAuthConfig?.oid
+          slateAuthConfigOid: d.backendProviderAuthConfig.slateAuthConfig?.oid,
+          shuttleAuthConfigOid: d.backendProviderAuthConfig.shuttleAuthConfig?.oid
         }
       });
 

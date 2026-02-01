@@ -1,6 +1,7 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
+import { shadowId } from '@lowerdeck/shadow-id';
 import {
   CustomProviderDeployment,
   CustomProviderDeploymentStatus,
@@ -23,7 +24,9 @@ let include = {
       provider: true
     }
   },
-  creatorActor: true
+  creatorActor: true,
+  customProviderVersion: true,
+  commit: true
 };
 
 class customProviderDeploymentServiceImpl {
@@ -142,12 +145,25 @@ class customProviderDeploymentServiceImpl {
 
     let tenant = await getTenantForShuttle(d.tenant);
 
-    let logs = await shuttle.serverDeployment.getOutput({
+    let steps = await shuttle.serverDeployment.getOutput({
       tenantId: tenant.id,
       serverDeploymentId: shuttleDeployment.id
     });
 
-    return logs;
+    return {
+      object: 'custom_provider.deployment.logs',
+      customProviderDeploymentId: d.customProviderDeployment.id,
+      steps: steps.map(l => ({
+        ...l,
+        id: shadowId('cpds_', [l.id]),
+        object: 'custom_provider.deployment.step',
+
+        logs: l.logs.map(log => ({
+          ...log,
+          object: 'custom_provider.deployment.log'
+        }))
+      }))
+    };
   }
 }
 

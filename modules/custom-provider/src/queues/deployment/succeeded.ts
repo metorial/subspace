@@ -32,6 +32,7 @@ export let customDeploymentSucceededQueueProcessor = customDeploymentSucceededQu
     let shuttleServerVersionRecord = deployment?.shuttleServerVersion;
     let sourceEnvironment = deployment?.sourceEnvironment;
     let commit = deployment?.commit;
+
     if (!deployment) throw new QueueRetryError();
     if (
       !customProviderVersion ||
@@ -54,15 +55,6 @@ export let customDeploymentSucceededQueueProcessor = customDeploymentSucceededQu
     });
 
     await withTransaction(async db => {
-      await db.customProviderDeployment.updateMany({
-        where: { id: deployment.id },
-        data: {
-          status: 'succeeded',
-          startedAt: deployment.startedAt ?? new Date(),
-          endedAt: deployment.endedAt ?? new Date()
-        }
-      });
-
       let versionRes = await upsertShuttleServerVersion({
         shuttleServer,
         shuttleServerVersion,
@@ -70,6 +62,7 @@ export let customDeploymentSucceededQueueProcessor = customDeploymentSucceededQu
         shuttleServerRecord,
         shuttleServerVersionRecord
       });
+
       await linkNewShuttleVersionToCustomProvider({
         ...versionRes,
         customProviderVersion
@@ -102,6 +95,15 @@ export let customDeploymentSucceededQueueProcessor = customDeploymentSucceededQu
       await addAfterTransactionHook(() =>
         commitApplyQueue.add({ customProviderCommitId: commit.id })
       );
+
+      await db.customProviderDeployment.updateMany({
+        where: { id: deployment.id },
+        data: {
+          status: 'succeeded',
+          startedAt: deployment.startedAt ?? new Date(),
+          endedAt: deployment.endedAt ?? new Date()
+        }
+      });
     });
   }
 );

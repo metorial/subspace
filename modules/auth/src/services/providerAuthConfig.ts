@@ -374,7 +374,8 @@ class providerAuthConfigServiceImpl {
         data: {
           ...getId('providerAuthConfigVersion'),
           authConfigOid: d.providerAuthConfig.oid,
-          slateAuthConfigOid: backendRes?.backendProviderAuthConfig.slateAuthConfig?.oid
+          slateAuthConfigOid: backendRes?.backendProviderAuthConfig.slateAuthConfig?.oid,
+          shuttleAuthConfigOid: backendRes?.backendProviderAuthConfig.shuttleAuthConfig?.oid
         }
       });
       let fromVersionOid = d.providerAuthConfig.currentVersionOid;

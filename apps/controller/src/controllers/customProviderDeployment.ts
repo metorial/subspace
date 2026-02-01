@@ -66,5 +66,24 @@ export let customProviderDeploymentController = app.controller({
         customProviderDeploymentId: v.string()
       })
     )
-    .do(async ctx => customProviderDeploymentPresenter(ctx.customProviderDeployment))
+    .do(async ctx => customProviderDeploymentPresenter(ctx.customProviderDeployment)),
+
+  getLogs: customProviderDeploymentApp
+    .handler()
+    .input(
+      v.object({
+        tenantId: v.string(),
+        environmentId: v.string(),
+        customProviderDeploymentId: v.string()
+      })
+    )
+    .do(
+      async ctx =>
+        await customProviderDeploymentService.getLogs({
+          tenant: ctx.tenant,
+          solution: ctx.solution,
+          environment: ctx.environment,
+          customProviderDeployment: ctx.customProviderDeployment
+        })
+    )
 });

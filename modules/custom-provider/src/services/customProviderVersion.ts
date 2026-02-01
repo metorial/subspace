@@ -30,7 +30,9 @@ let include = {
       provider: true
     }
   },
-  deployment: true,
+  deployment: {
+    include: { commit: true }
+  },
   providerVersion: true,
 
   customProviderEnvironmentVersions: {

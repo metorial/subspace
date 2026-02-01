@@ -15,7 +15,10 @@ export let oauthCallbackApp = createHono()
   })
   .get('/:oauthIdentifier', async c => {
     let oauthIdentifier = c.req.param('oauthIdentifier');
-    let [tenantUrlKey, providerTag, typeKey] = oauthIdentifier.split('--');
+    let [tenantUrlKey, providerTag, typeKey] = oauthIdentifier.split('-');
+    if (!tenantUrlKey || !providerTag || !typeKey) {
+      return c.text('Invalid oauth callback URL', 400);
+    }
 
     let tenant = await db.tenant.findFirst({
       where: { urlKey: tenantUrlKey }

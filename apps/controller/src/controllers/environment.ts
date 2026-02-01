@@ -21,7 +21,6 @@ export let environmentController = tenantWithoutEnvironmentApp.controller({
     .input(
       v.object({
         tenantId: v.string(),
-        environmentId: v.string(),
         name: v.string(),
         identifier: v.string(),
         type: v.enumOf(['development', 'production'])

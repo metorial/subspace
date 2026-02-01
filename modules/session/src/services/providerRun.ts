@@ -95,7 +95,7 @@ class providerRunServiceImpl {
       },
       include
     });
-    if (!providerRun) throw new ServiceError(notFoundError('provider.run', d.providerRunId));
+    if (!providerRun) throw new ServiceError(notFoundError('provider_run', d.providerRunId));
 
     return providerRun;
   }

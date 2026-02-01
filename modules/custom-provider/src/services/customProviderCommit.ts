@@ -33,7 +33,9 @@ let envInclude = {
 
 let verInclude = {
   include: {
-    deployment: true,
+    deployment: {
+      include: { commit: true }
+    },
     providerVersion: true,
     customProviderEnvironmentVersions: {
       include: {
@@ -63,7 +65,8 @@ let include = {
   fromEnvironment: envInclude,
   targetCustomProviderVersion: verInclude,
   toEnvironmentVersionBefore: verInclude,
-  creatorActor: true
+  creatorActor: true,
+  customProviderDeployment: true
 };
 
 class customProviderCommitServiceImpl {

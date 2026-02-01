@@ -38,7 +38,10 @@ export let customDeploymentMonitorQueueProcessor = customDeploymentMonitorQueue.
       serverDeploymentId: shuttleDeploymentRecord.id
     });
 
-    if (shuttleDeployment.status != deployment.status) {
+    if (
+      (shuttleDeployment.status == 'deploying' || shuttleDeployment.status == 'queued') &&
+      shuttleDeployment.status != deployment.status
+    ) {
       let updated = await db.customProviderDeployment.update({
         where: { id: deployment.id },
         data: {
@@ -58,14 +61,14 @@ export let customDeploymentMonitorQueueProcessor = customDeploymentMonitorQueue.
       deployment = { ...deployment, ...updated };
     }
 
-    if (deployment.status == 'failed') {
+    if (shuttleDeployment.status == 'failed') {
       await customDeploymentFailedQueue.add({
         customProviderDeploymentId: deployment.id
       });
       return;
     }
 
-    if (deployment.status == 'succeeded') {
+    if (shuttleDeployment.status == 'succeeded') {
       // Wait for the version to be available
       if (shuttleDeployment.serverVersionId) {
         let shuttleVersion = await shuttle.serverVersion.get({

@@ -35,9 +35,12 @@ class providerRunLogsServiceImpl {
     });
 
     return {
-      object: 'provider.run.logs',
+      object: 'provider_run.logs',
       providerRunId: d.providerRun.id,
-      logs: allLogs
+      logs: allLogs.logs.map((l, i) => ({
+        ...l,
+        object: 'provider_run.log'
+      }))
     };
   }
 }

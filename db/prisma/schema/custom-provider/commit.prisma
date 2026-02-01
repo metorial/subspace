@@ -56,6 +56,6 @@ model CustomProviderCommit {
   createdAt DateTime  @default(now())
   appliedAt DateTime?
 
-  customProviderDeployments         CustomProviderDeployment[]
+  customProviderDeployment          CustomProviderDeployment?
   customProviderEnvironmentVersions CustomProviderEnvironmentVersion[]
 }

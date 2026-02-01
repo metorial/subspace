@@ -153,7 +153,10 @@ export let createVersion = (d: {
 
     await db.customProviderDeployment.updateMany({
       where: { oid: deployment.oid },
-      data: { sourceEnvironmentOid: env.oid }
+      data: {
+        sourceEnvironmentOid: env.oid,
+        commitOid: commit.oid
+      }
     });
 
     await addAfterTransactionHook(() =>

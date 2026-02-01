@@ -21,7 +21,6 @@ export let actorController = tenantWithoutEnvironmentApp.controller({
     .input(
       v.object({
         tenantId: v.string(),
-        actorId: v.string(),
         name: v.string(),
         identifier: v.string(),
         organizationActorId: v.string(),

@@ -33,7 +33,7 @@ model CustomProviderDeployment {
   sourceEnvironmentOid BigInt?
   sourceEnvironment    CustomProviderEnvironment? @relation(fields: [sourceEnvironmentOid], references: [oid])
 
-  commitOid BigInt?
+  commitOid BigInt?               @unique
   commit    CustomProviderCommit? @relation(fields: [commitOid], references: [oid])
 
   shuttleServerVersionOid BigInt?               @unique

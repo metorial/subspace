@@ -19,6 +19,7 @@ import {
   providerDeploymentService
 } from '@metorial-subspace/module-deployment';
 import { providerDeploymentInternalService } from '@metorial-subspace/module-provider-internal';
+import { normalizeJsonSchema } from '@metorial-subspace/provider-utils';
 import { sessionProviderInclude } from './sessionProvider';
 import { sessionTemplateProviderInclude } from './sessionTemplateProvider';
 
@@ -185,12 +186,14 @@ class sessionProviderInputServiceImpl {
               });
               checkDeletedRelation(provider, d);
 
-              deployment = await providerDeploymentService.ensureDefaultProviderDeployment({
-                tenant: d.tenant,
-                solution: d.solution,
-                environment: d.environment,
-                provider
-              });
+              deployment =
+                deployment ??
+                (await providerDeploymentService.ensureDefaultProviderDeployment({
+                  tenant: d.tenant,
+                  solution: d.solution,
+                  environment: d.environment,
+                  provider
+                }));
             }
 
             if (!provider || !deployment) {
@@ -200,6 +203,10 @@ class sessionProviderInputServiceImpl {
                     'Please provide at least a provider config, auth config, or deployment'
                 })
               );
+            }
+
+            if (provider.oid !== deployment.providerOid) {
+              throw new ServiceError(deploymentMismatchError);
             }
 
             if (config?.deploymentOid && config.deploymentOid !== deployment.oid)
@@ -229,15 +236,19 @@ class sessionProviderInputServiceImpl {
                 });
                 checkDeletedRelation(config, d);
               } else {
-                let schema = spec.value.specification.configJsonSchema;
+                let schema = normalizeJsonSchema(spec.value.specification.configJsonSchema);
                 let hasRequired = true;
 
-                try {
-                  if (schema.type === 'object' && schema.properties) {
-                    let required = schema.required || [];
-                    if (!required.length) hasRequired = false;
-                  }
-                } catch {}
+                if (schema) {
+                  try {
+                    if (schema.type === 'object' && schema.properties) {
+                      let required = schema.required || [];
+                      if (!required.length) hasRequired = false;
+                    }
+                  } catch {}
+                } else {
+                  hasRequired = false;
+                }
 
                 if (hasRequired) {
                   throw new ServiceError(

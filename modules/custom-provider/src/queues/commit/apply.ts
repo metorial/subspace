@@ -71,6 +71,7 @@ export let commitApplyQueueProcessor = commitApplyQueue.process(async data => {
           environmentOid: targetGlobalEnvironment.oid,
           providerOid: customProvider.providerOid!,
           tenantOid: commit.toEnvironment.tenantOid,
+          solutionOid: commit.toEnvironment.solutionOid,
           providerVariantOid: customProvider.providerVariantOid!,
           currentVersionOid: targetVersion.providerVersionOid!
         },

@@ -39,7 +39,7 @@ class tenantServiceImpl {
         name: d.input.name,
         identifier: d.input.identifier,
 
-        urlKey: generatePlainId(10),
+        urlKey: generatePlainId(10).toLowerCase(),
 
         environments: {
           create: d.input.environments.map(env => ({

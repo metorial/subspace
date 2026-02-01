@@ -241,7 +241,7 @@ services:
       MESSAGE_BUCKET_NAME: messages
       SHUTTLE_URL: http://shuttle:52080/metorial-shuttle
       SHUTTLE_LIVE_URL: http://shuttle:52080
-      SHUTTLE_PUBLIC_URL: http://shuttle:52081
+      SHUTTLE_PUBLIC_URL: http://localhost:52081
       SLATES_HUB_PUBLIC_URL: http://localhost:52045
 
     volumes:
@@ -287,7 +287,7 @@ services:
       MESSAGE_BUCKET_NAME: messages
       SHUTTLE_URL: http://shuttle:52080/metorial-shuttle
       SHUTTLE_LIVE_URL: http://shuttle:52080
-      SHUTTLE_PUBLIC_URL: http://shuttle:52081
+      SHUTTLE_PUBLIC_URL: http://localhost:52081
       SLATES_HUB_PUBLIC_URL: http://localhost:52045
 
     volumes:
@@ -320,8 +320,6 @@ services:
       dockerfile: ./apps/worker/dev.Dockerfile
     container_name: subspace-worker-service
     restart: unless-stopped
-    ports:
-      - '52072:52072'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0
@@ -334,7 +332,7 @@ services:
       MESSAGE_BUCKET_NAME: messages
       SHUTTLE_URL: http://shuttle:52080/metorial-shuttle
       SHUTTLE_LIVE_URL: http://shuttle:52080
-      SHUTTLE_PUBLIC_URL: http://shuttle:52081
+      SHUTTLE_PUBLIC_URL: http://localhost:52081
       SLATES_HUB_PUBLIC_URL: http://localhost:52045
 
     volumes:
@@ -367,7 +365,7 @@ services:
     container_name: subspace-connection-endpoint-service
     restart: unless-stopped
     ports:
-      - '52073:52073'
+      - '52072:52072'
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0

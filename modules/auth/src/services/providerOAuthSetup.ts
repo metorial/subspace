@@ -244,6 +244,7 @@ class providerOAuthSetupServiceImpl {
           authMethodOid: authMethod.oid,
 
           slateOAuthSetupOid: backendProviderOAuthSetup.slateOAuthSetup?.oid,
+          shuttleOAuthSetupOid: backendProviderOAuthSetup.shuttleOAuthSetup?.oid,
 
           expiresAt: addMinutes(new Date(), 30)
         },

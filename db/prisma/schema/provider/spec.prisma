@@ -125,9 +125,15 @@ model ProviderAuthMethod {
   @@index([isDefault])
 }
 
+enum ProviderSpecificationType {
+  preliminary
+  full
+}
+
 model ProviderSpecification {
-  oid BigInt @id
-  id  String @unique
+  oid  BigInt                    @id
+  id   String                    @unique
+  type ProviderSpecificationType
 
   specId               String
   specUniqueIdentifier String

@@ -28,6 +28,7 @@ export let startReceiver = () => {
     ctx.extendTtl(1000 * 60);
 
     let topic = topics.instance.decode(ctx.topic);
+    console.log(topic);
     if (!topic) {
       console.warn(`Received message on invalid topic: ${ctx.topic}`);
       ctx.close();
@@ -37,20 +38,23 @@ export let startReceiver = () => {
     let state = await ConnectionState.create(topic, () => {
       ctx.close();
     });
+    console.log(state);
     if (!state) {
       ctx.close();
       return;
     }
 
-    let providerParticipantProm = upsertParticipant({
+    let providerParticipant = await upsertParticipant({
       session: state.session,
       from: {
         type: 'provider',
         provider: state.provider
       }
     });
+    console.log(providerParticipant);
 
     let backend = await getConnectionBackendConnection(state);
+    console.log(backend);
 
     let clientMcpIdTranslation = new Map<string, string | number>();
 
@@ -74,7 +78,7 @@ export let startReceiver = () => {
         connection: state.connection,
         source: 'provider',
         provider: state.sessionProvider,
-        senderParticipant: await providerParticipantProm,
+        senderParticipant: providerParticipant,
         transport: 'mcp',
         input: { type: 'mcp', data: mcpMessage },
         isProductive: true,
@@ -208,7 +212,7 @@ export let startReceiver = () => {
           providerRun: state.providerRun,
           completedAt: res.completedAt,
           slateToolCall: res.slateToolCall,
-          responderParticipant: await providerParticipantProm,
+          responderParticipant: providerParticipant,
           failureReason: res.isSystemError ? 'system_error' : undefined
         }
       );
