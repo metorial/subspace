@@ -18,7 +18,7 @@ export let ensureProviderType = async (
       identifier,
       name,
       attributes,
-      shortKey: generatePlainId(3)
+      shortKey: generatePlainId(3).toLowerCase()
     }
   });
 };

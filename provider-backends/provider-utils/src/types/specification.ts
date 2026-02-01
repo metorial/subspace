@@ -10,7 +10,7 @@ export type SpecificationAuthMethodType = 'oauth' | 'token' | 'service_account' 
 
 export interface SpecificationTool {
   specId: string;
-  specUniqueIdentifier: string;
+  specUniqueIdentifier?: string;
   callableId: string;
 
   key: string;
@@ -32,6 +32,7 @@ export interface SpecificationTool {
     | {
         type: 'mcp.tool';
         key: string;
+        title: string | undefined;
         icons: Icons['icons'] | undefined;
         annotations: ToolAnnotations | undefined;
         execution: ToolExecution | undefined;
@@ -40,6 +41,7 @@ export interface SpecificationTool {
     | {
         type: 'mcp.prompt';
         key: string;
+        title: string | undefined;
         icons: Icons['icons'] | undefined;
         arguments: {
           name: string;
@@ -52,6 +54,7 @@ export interface SpecificationTool {
         type: 'mcp.resource_template';
         uriTemplate: string;
         mimeType: string | undefined;
+        title: string | undefined;
         variableNames: string[];
         icons: Icons['icons'] | undefined;
         annotations: Annotations | undefined;
@@ -72,7 +75,7 @@ export interface SpecificationTool {
 
 export interface SpecificationAuthMethod {
   specId: string;
-  specUniqueIdentifier: string;
+  specUniqueIdentifier?: string;
   callableId: string;
 
   type: SpecificationAuthMethodType;
@@ -100,7 +103,7 @@ export interface SpecificationAuthMethod {
 
 export interface Specification {
   specId: string;
-  specUniqueIdentifier: string;
+  specUniqueIdentifier?: string;
 
   key: string;
 

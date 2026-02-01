@@ -1,6 +1,7 @@
 import { createQueue, QueueRetryError } from '@lowerdeck/queue';
 import { db } from '@metorial-subspace/db';
 import { getBackend } from '@metorial-subspace/provider';
+import { ProviderSpecificationGetRes } from '@metorial-subspace/provider-utils';
 import { env } from '../../env';
 import { providerSpecificationInternalService } from '../../services/providerSpecification';
 import { providerVersionSetSpecificationQueue } from './setSpec';
@@ -14,7 +15,7 @@ export let providerVersionSyncSpecificationQueueProcessor =
   providerVersionSyncSpecificationQueue.process(async data => {
     let version = await db.providerVersion.findFirst({
       where: { id: data.providerVersionId },
-      include: { provider: true, providerVariant: true }
+      include: { provider: { include: { ownerTenant: true } }, providerVariant: true }
     });
     if (!version) throw new QueueRetryError();
 
@@ -32,11 +33,19 @@ export let providerVersionSyncSpecificationQueueProcessor =
         return;
       }
 
-      let capabilities = await backend.capabilities.getSpecificationForProviderVersion({
-        providerVersion: version,
-        provider: version.provider,
-        providerVariant: version.providerVariant
-      });
+      let capabilities: ProviderSpecificationGetRes | null = null;
+
+      try {
+        capabilities = await backend.capabilities.getSpecificationForProviderVersion({
+          tenant: version.provider.ownerTenant,
+          providerVersion: version,
+          provider: version.provider,
+          providerVariant: version.providerVariant
+        });
+        console.log('Discovered capabilities for version', version.id, capabilities);
+      } catch (e) {
+        console.warn('Failed to get capabilities for version', version.id, e);
+      }
 
       // Some backends might need a config to be able to discover specifications
       if (!capabilities) {
@@ -50,6 +59,8 @@ export let providerVersionSyncSpecificationQueueProcessor =
       let spec = await providerSpecificationInternalService.ensureProviderSpecification({
         provider: version.provider,
         providerVersion: version,
+
+        type: capabilities.type,
 
         specification: capabilities.specification,
         authMethods: capabilities.authMethods,

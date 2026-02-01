@@ -1,6 +1,7 @@
 import { createQueue, QueueRetryError } from '@lowerdeck/queue';
 import { db } from '@metorial-subspace/db';
 import { getBackend } from '@metorial-subspace/provider';
+import { ProviderSpecificationGetRes } from '@metorial-subspace/provider-utils';
 import { env } from '../../env';
 import { providerSpecificationInternalService } from '../../services/providerSpecification';
 import { providerDeploymentConfigPairSetSpecificationQueue } from './setSpec';
@@ -39,7 +40,8 @@ export let providerDeploymentConfigPairSyncSpecificationQueueProcessor =
     });
 
     let version = await db.providerVersion.findFirstOrThrow({
-      where: { id: data.versionId }
+      where: { id: data.versionId },
+      include: { specification: true }
     });
 
     try {
@@ -55,9 +57,10 @@ export let providerDeploymentConfigPairSyncSpecificationQueueProcessor =
       };
 
       if (version.specificationOid) {
-        let isNeeded = false; // @herber: maybe we have providers where we always want to re-discover specs?
+        // If we have the full spec, we can skip discovery
+        let alreadyHasFullSpec = version.specification?.type == 'full';
 
-        if (!isNeeded) {
+        if (alreadyHasFullSpec) {
           await providerDeploymentConfigPairSetSpecificationQueue.add({
             providerDeploymentConfigPairOid: pair.oid,
             versionOid: version.oid,
@@ -67,8 +70,16 @@ export let providerDeploymentConfigPairSyncSpecificationQueueProcessor =
         }
       }
 
-      let capabilities =
-        await backend.capabilities.getSpecificationForProviderPair(discoverParams);
+      let capabilities: ProviderSpecificationGetRes = null;
+
+      try {
+        capabilities =
+          await backend.capabilities.getSpecificationForProviderPair(discoverParams);
+      } catch (e) {
+        console.error('Error discovering capabilities:', e);
+      }
+
+      console.log('Discovered capabilities:', capabilities);
 
       // Some backends might need a config to be able to discover specifications
       if (!capabilities) {
@@ -83,6 +94,8 @@ export let providerDeploymentConfigPairSyncSpecificationQueueProcessor =
       let spec = await providerSpecificationInternalService.ensureProviderSpecification({
         provider: providerDeployment.provider,
         providerVersion: version,
+
+        type: capabilities.type,
 
         specification: capabilities.specification,
         authMethods: capabilities.authMethods,

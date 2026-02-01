@@ -158,6 +158,7 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
     };
 
     let provider = await providerInternalService.upsertProvider({
+      tenant: null,
       publisher,
       source: {
         type: 'slates',

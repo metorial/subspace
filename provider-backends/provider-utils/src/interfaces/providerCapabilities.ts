@@ -3,6 +3,7 @@ import type {
   ProviderAuthConfigVersion,
   ProviderConfigVersion,
   ProviderDeploymentVersion,
+  ProviderSpecificationType,
   ProviderVariant,
   ProviderVersion,
   Tenant
@@ -30,6 +31,7 @@ export abstract class IProviderCapabilities extends IProviderFunctionality {
 }
 
 export interface ProviderSpecificationGetForProviderParam {
+  tenant: Tenant | null;
   provider: Provider;
   providerVariant: ProviderVariant;
   providerVersion: ProviderVersion;
@@ -52,6 +54,7 @@ export type ProviderSpecificationGetRes = {
   features: SpecificationFeatures;
   tools: SpecificationTool[];
   authMethods: SpecificationAuthMethod[];
+  type: ProviderSpecificationType;
 } | null;
 
 export interface ProviderSpecificationBehaviorParam {}

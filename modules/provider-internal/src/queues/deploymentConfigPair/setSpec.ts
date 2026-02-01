@@ -2,6 +2,7 @@ import { createQueue, QueueRetryError } from '@lowerdeck/queue';
 import {
   db,
   getId,
+  withTransaction,
   type ProviderDeploymentConfigPairSpecificationDiscoveryStatus
 } from '@metorial-subspace/db';
 import { env } from '../../env';
@@ -84,34 +85,56 @@ export let providerDeploymentConfigPairSetSpecificationQueueProcessor =
       };
     }
 
-    let newPairVersion = await db.providerDeploymentConfigPairProviderVersion.upsert({
-      where: {
-        pairOid_versionOid: filter
-      },
-      create: {
-        ...getId('providerDeploymentConfigPairProviderVersion'),
-        ...filter,
-        ...result,
-        previousPairVersionOid: previousPairVersion?.oid
-      },
-      update: {
-        ...result,
-        previousPairVersionOid: previousPairVersion?.oid
+    let newPairVersion = await withTransaction(async db => {
+      let newPairVersion = await db.providerDeploymentConfigPairProviderVersion.upsert({
+        where: {
+          pairOid_versionOid: filter
+        },
+        create: {
+          ...getId('providerDeploymentConfigPairProviderVersion'),
+          ...filter,
+          ...result,
+          previousPairVersionOid: previousPairVersion?.oid
+        },
+        update: {
+          ...result,
+          previousPairVersionOid: previousPairVersion?.oid
+        },
+        include: {
+          specification: true
+        }
+      });
+
+      if (newPairVersion.specificationOid) {
+        let versionSpec = version.specificationOid
+          ? await db.providerSpecification.findFirst({
+              where: { oid: version.specificationOid }
+            })
+          : null;
+
+        if (versionSpec?.type != 'full' && newPairVersion.specification?.type == 'full') {
+          // Update the version in this transaction
+          // to avoid eventually consistent issues
+          await db.providerVersion.update({
+            where: { oid: version.oid },
+            data: { specificationOid: newPairVersion.specificationOid }
+          });
+
+          await providerVersionSetSpecificationQueue.add({
+            versionOid: version.oid,
+            result: {
+              status: 'success',
+              specificationOid: newPairVersion.specificationOid,
+              source: 'pair'
+            }
+          });
+        }
       }
+
+      return newPairVersion;
     });
 
     if (newPairVersion.specificationOid) {
-      if (!version.slateVersionOid) {
-        await providerVersionSetSpecificationQueue.add({
-          versionOid: version.oid,
-          result: {
-            status: 'success',
-            specificationOid: newPairVersion.specificationOid,
-            source: 'pair'
-          }
-        });
-      }
-
       if (
         previousPairVersion?.specificationOid &&
         newPairVersion.specificationOid !== previousPairVersion.specificationOid

@@ -24,6 +24,7 @@ export class ProviderCapabilities extends IProviderCapabilities {
     data: ProviderSpecificationGetForPairParam
   ): Promise<ProviderSpecificationGetRes> {
     return this.getSpecificationForProviderVersion({
+      tenant: data.tenant,
       provider: data.provider,
       providerVariant: data.providerVariant,
       providerVersion: data.providerVersion
@@ -60,6 +61,7 @@ export class ProviderCapabilities extends IProviderCapabilities {
     });
 
     return {
+      type: 'full',
       features: {
         supportsAuthMethod: specRecord.authMethods.length > 0,
         configContainsAuth: false

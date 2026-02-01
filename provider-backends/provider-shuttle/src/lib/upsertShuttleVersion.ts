@@ -4,7 +4,8 @@ import {
   withTransaction,
   type Publisher,
   type ShuttleServer,
-  type ShuttleServerVersion
+  type ShuttleServerVersion,
+  type Tenant
 } from '@metorial-subspace/db';
 import {
   providerInternalService,
@@ -34,9 +35,10 @@ export let upsertShuttleServerVersion = ({
 }) =>
   withTransaction(async db => {
     let publisher: Publisher | null = null;
+    let tenant: Tenant | null = null;
 
     if (server.tenantId) {
-      let tenant = await db.tenant.findFirst({
+      tenant = await db.tenant.findFirst({
         where: { shuttleTenantId: server.tenantId }
       });
 
@@ -102,6 +104,7 @@ export let upsertShuttleServerVersion = ({
     };
 
     let provider = await providerInternalService.upsertProvider({
+      tenant,
       publisher,
       source: {
         type: 'shuttle',
