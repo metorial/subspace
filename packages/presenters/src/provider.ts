@@ -70,7 +70,13 @@ export let providerPresenter = (
     oauth:
       type.auth.status == 'enabled' && type.auth.oauth.status == 'enabled'
         ? {
-            oauthCallbackUrl: type.auth.oauth.oauthCallbackUrl
+            status: 'enabled',
+            callbackUrl: type.auth.oauth.oauthCallbackUrl,
+
+            autoRegistration:
+              type.auth.oauth.oauthAutoRegistration?.status == 'supported'
+                ? { status: 'supported' }
+                : null
           }
         : null,
 

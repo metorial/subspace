@@ -15,7 +15,10 @@ let mapAuth = (
       auth.oauth.status == 'enabled'
         ? {
             ...auth.oauth,
-            oauthCallbackUrl: `${env.service.PUBLIC_SERVICE_URL}/oauth-callback/${tenant.urlKey}-${provider.tag}-${providerType.shortKey}`
+            oauthCallbackUrl:
+              auth.oauth.oauthAutoRegistration?.status == 'supported'
+                ? null
+                : `${env.service.PUBLIC_SERVICE_URL}/oauth-callback/${tenant.urlKey}-${provider.tag}-${providerType.shortKey}`
           }
         : auth.oauth
   };

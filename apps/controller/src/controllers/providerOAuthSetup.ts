@@ -73,7 +73,7 @@ export let providerOAuthSetupController = app.controller({
         isEphemeral: v.optional(v.boolean()),
 
         providerId: v.string(),
-        providerAuthCredentialsId: v.string(),
+        providerAuthCredentialsId: v.optional(v.string()),
         providerDeploymentId: v.optional(v.string()),
         providerAuthMethodId: v.optional(v.string()),
 
@@ -88,12 +88,14 @@ export let providerOAuthSetupController = app.controller({
         solution: ctx.solution
       });
 
-      let credentials = await providerAuthCredentialsService.getProviderAuthCredentialsById({
-        providerAuthCredentialsId: ctx.input.providerAuthCredentialsId,
-        tenant: ctx.tenant,
-        environment: ctx.environment,
-        solution: ctx.solution
-      });
+      let credentials = ctx.input.providerAuthCredentialsId
+        ? await providerAuthCredentialsService.getProviderAuthCredentialsById({
+            providerAuthCredentialsId: ctx.input.providerAuthCredentialsId,
+            tenant: ctx.tenant,
+            environment: ctx.environment,
+            solution: ctx.solution
+          })
+        : undefined;
 
       let providerDeployment = ctx.input.providerDeploymentId
         ? await providerDeploymentService.getProviderDeploymentById({

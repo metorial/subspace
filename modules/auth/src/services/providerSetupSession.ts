@@ -16,6 +16,7 @@ import {
   type ProviderSetupSessionStatus,
   type ProviderSetupSessionType,
   type ProviderSetupSessionUiMode,
+  ProviderType,
   type ProviderVariant,
   type ProviderVersion,
   type Solution,
@@ -141,7 +142,7 @@ class providerSetupSessionServiceImpl {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
-    provider: Provider & { defaultVariant: ProviderVariant | null };
+    provider: Provider & { defaultVariant: ProviderVariant | null; type: ProviderType };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
       providerVariant: ProviderVariant;
@@ -215,14 +216,20 @@ class providerSetupSessionServiceImpl {
         });
 
       if (d.credentials && authMethod.type !== 'oauth') d.credentials = undefined;
-      if (authMethod.type === 'oauth' && !d.credentials) {
+      if (
+        authMethod.type === 'oauth' &&
+        !d.credentials &&
+        // If auto registration is supported, we don't need to require credentials
+        d.provider.type.attributes.auth.oauth?.oauthAutoRegistration?.status != 'supported'
+      ) {
         let defaultCredentials = await db.providerAuthCredentials.findFirst({
           where: {
             providerOid: d.provider.oid,
             tenantOid: d.tenant.oid,
             solutionOid: d.solution.oid,
             environmentOid: d.environment.oid,
-            isDefault: true
+            isDefault: true,
+            status: 'active'
           }
         });
 

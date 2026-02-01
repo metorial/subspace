@@ -13,6 +13,7 @@ import {
   type ProviderDeployment,
   ProviderDeploymentVersion,
   type ProviderOAuthSetup,
+  ProviderType,
   type ProviderVariant,
   type ProviderVersion,
   type Solution,
@@ -33,6 +34,7 @@ import {
   providerOAuthSetupCreatedQueue,
   providerOAuthSetupUpdatedQueue
 } from '../queues/lifecycle/providerOAuthSetup';
+import { providerAuthCredentialsService } from './providerAuthCredentials';
 
 let include = {
   provider: true,
@@ -96,7 +98,7 @@ class providerOAuthSetupServiceImpl {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
-    provider: Provider & { defaultVariant: ProviderVariant | null };
+    provider: Provider & { defaultVariant: ProviderVariant | null; type: ProviderType };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
       providerVariant: ProviderVariant;
@@ -104,7 +106,7 @@ class providerOAuthSetupServiceImpl {
         | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
         | null;
     };
-    credentials: ProviderAuthCredentials;
+    credentials?: ProviderAuthCredentials;
     input: {
       name?: string;
       description?: string;
@@ -130,13 +132,35 @@ class providerOAuthSetupServiceImpl {
         })
       );
     }
-    if (d.credentials.providerOid !== d.provider.oid) {
+    if (d.credentials && d.credentials.providerOid !== d.provider.oid) {
       throw new ServiceError(
         badRequestError({
           message: 'Auth credentials do not belong to provider',
           code: 'provider_mismatch'
         })
       );
+    }
+    if (
+      !d.credentials &&
+      d.provider.type.attributes.auth.oauth?.oauthAutoRegistration?.status !== 'supported'
+    ) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'No provider auth credentials provided for oauth method',
+          code: 'missing_oauth_credentials'
+        })
+      );
+    }
+
+    let credentials = d.credentials;
+
+    if (!credentials) {
+      credentials = await providerAuthCredentialsService.ensureDefaultProviderAuthCredentials({
+        tenant: d.tenant,
+        solution: d.solution,
+        environment: d.environment,
+        provider: d.provider
+      });
     }
 
     return withTransaction(async db => {
@@ -215,7 +239,7 @@ class providerOAuthSetupServiceImpl {
         provider: d.provider,
         providerVersion: version,
         input: d.input.config,
-        credentials: d.credentials,
+        credentials,
         authMethod,
         redirectUrl: `${env.service.PUBLIC_SERVICE_URL}/oauth-setup/${newId.id}/callback?client_secret=${clientSecret}`
       });
@@ -240,7 +264,7 @@ class providerOAuthSetupServiceImpl {
           solutionOid: d.solution.oid,
           environmentOid: d.environment.oid,
           providerOid: d.provider.oid,
-          authCredentialsOid: d.credentials.oid,
+          authCredentialsOid: credentials.oid,
           authMethodOid: authMethod.oid,
 
           slateOAuthSetupOid: backendProviderOAuthSetup.slateOAuthSetup?.oid,

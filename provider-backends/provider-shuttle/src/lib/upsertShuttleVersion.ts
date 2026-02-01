@@ -89,7 +89,13 @@ export let upsertShuttleServerVersion = ({
 
               oauth: {
                 status: 'enabled',
-                oauthCallbackUrl: `${env.service.SHUTTLE_PUBLIC_URL}/shuttle-oauth/callback`
+                oauthCallbackUrl: `${env.service.SHUTTLE_PUBLIC_URL}/shuttle-oauth/callback`,
+                oauthAutoRegistration: {
+                  status:
+                    server.oauthConfig?.discovery.status == 'supports_auto_registration'
+                      ? 'supported'
+                      : 'unsupported'
+                }
               },
 
               export: { status: 'enabled' },

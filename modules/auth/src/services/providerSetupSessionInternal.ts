@@ -11,6 +11,7 @@ import {
   ProviderDeploymentVersion,
   type ProviderOAuthSetup,
   type ProviderSetupSession,
+  ProviderType,
   type ProviderVariant,
   type ProviderVersion,
   type Solution,
@@ -27,7 +28,7 @@ class providerSetupSessionInternalServiceImpl {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
-    provider: Provider & { defaultVariant: ProviderVariant | null };
+    provider: Provider & { defaultVariant: ProviderVariant | null; type: ProviderType };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
       providerVariant: ProviderVariant;
@@ -50,7 +51,10 @@ class providerSetupSessionInternalServiceImpl {
     };
   }) {
     if (d.authMethod.type === 'oauth') {
-      if (!d.credentials) {
+      if (
+        !d.credentials &&
+        d.provider.type.attributes.auth.oauth?.oauthAutoRegistration?.status !== 'supported'
+      ) {
         throw new ServiceError(
           badRequestError({
             message: 'No provider auth credentials provided for oauth method',
@@ -65,7 +69,7 @@ class providerSetupSessionInternalServiceImpl {
         environment: d.environment,
         provider: d.provider,
         providerDeployment: d.providerDeployment,
-        credentials: d.credentials!,
+        credentials: d.credentials,
         input: {
           name: d.input.name,
           description: d.input.description,

@@ -93,21 +93,22 @@ declare global {
             oauth:
               | {
                   status: 'enabled';
+                  oauthAutoRegistration?: { status: 'supported' | 'unsupported' };
                   oauthCallbackUrl: string;
                 }
-              | { status: 'disabled' };
+              | { status: 'disabled'; oauthAutoRegistration?: undefined };
 
             export: { status: 'enabled' | 'disabled' };
             import: { status: 'enabled' | 'disabled' };
           }
-        | { status: 'disabled' };
+        | { status: 'disabled'; oauth?: undefined; export?: undefined; import?: undefined };
 
       config:
         | {
             status: 'enabled';
             read: { status: 'enabled' | 'disabled' };
           }
-        | { status: 'disabled' };
+        | { status: 'disabled'; read?: undefined };
     };
   }
 }

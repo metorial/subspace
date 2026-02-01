@@ -171,7 +171,7 @@ class providerSetupSessionUiServiceImpl {
             solution: true,
             environment: true,
             authCredentials: true,
-            provider: { include: { defaultVariant: true } },
+            provider: { include: { defaultVariant: true, type: true } },
             authMethod: true,
             deployment: {
               include: {
