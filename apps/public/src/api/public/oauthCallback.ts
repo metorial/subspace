@@ -40,5 +40,18 @@ export let oauthCallbackApp = createHono()
       return c.text('OAuth is disabled for this provider', 400);
     }
 
-    return c.redirect(type.attributes.auth.oauth.oauthCallbackUrl);
+    let currentUrl = new URL(c.req.url);
+
+    let destUrl = new URL(type.attributes.auth.oauth.oauthCallbackUrl);
+    destUrl.search = currentUrl.search;
+
+    destUrl.searchParams.set('source', 'metorial_subspace');
+    destUrl.searchParams.set('subspace_tenant_id', tenant.id);
+    destUrl.searchParams.set('subspace_provider_id', provider.id);
+    if (tenant.slateTenantId)
+      destUrl.searchParams.set('slates_tenant_id', tenant.slateTenantId);
+    if (tenant.shuttleTenantId)
+      destUrl.searchParams.set('shuttle_tenant_id', tenant.shuttleTenantId);
+
+    return c.redirect(destUrl.toString());
   });
