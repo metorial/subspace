@@ -21,6 +21,8 @@ export let customProviderCommitPresenter = (
       provider: Provider | null;
     };
 
+    customProviderDeployment: CustomProviderDeployment | null;
+
     toEnvironment: CustomProviderEnvironment & {
       environment: Environment;
       providerEnvironment:
@@ -42,7 +44,9 @@ export let customProviderCommitPresenter = (
       | null;
 
     targetCustomProviderVersion: CustomProviderVersion & {
-      deployment: CustomProviderDeployment;
+      deployment: CustomProviderDeployment & {
+        commit: CustomProviderCommit | null;
+      };
       providerVersion: ProviderVersion | null;
       customProviderEnvironmentVersions: (CustomProviderEnvironmentVersion & {
         customProviderEnvironment: CustomProviderEnvironment & {
@@ -59,7 +63,9 @@ export let customProviderCommitPresenter = (
 
     toEnvironmentVersionBefore:
       | (CustomProviderVersion & {
-          deployment: CustomProviderDeployment;
+          deployment: CustomProviderDeployment & {
+            commit: CustomProviderCommit | null;
+          };
           providerVersion: ProviderVersion | null;
           customProviderEnvironmentVersions: (CustomProviderEnvironmentVersion & {
             customProviderEnvironment: CustomProviderEnvironment & {
@@ -93,6 +99,7 @@ export let customProviderCommitPresenter = (
 
   customProviderId: customProviderCommit.customProvider.id,
   providerId: customProviderCommit.customProvider.provider?.id,
+  customProviderDeploymentId: customProviderCommit.customProviderDeployment?.id || null,
 
   toEnvironment: customProviderEnvironmentPresenter({
     ...customProviderCommit.toEnvironment,

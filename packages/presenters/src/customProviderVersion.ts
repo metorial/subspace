@@ -1,6 +1,7 @@
 import type {
   Actor,
   CustomProvider,
+  CustomProviderCommit,
   CustomProviderDeployment,
   CustomProviderEnvironment,
   CustomProviderEnvironmentVersion,
@@ -20,7 +21,9 @@ export let customProviderVersionPresenter = (
       provider: Provider | null;
     };
 
-    deployment: CustomProviderDeployment;
+    deployment: CustomProviderDeployment & {
+      commit: CustomProviderCommit | null;
+    };
 
     providerVersion: ProviderVersion | null;
 
@@ -54,7 +57,8 @@ export let customProviderVersionPresenter = (
     deployment: customProviderDeploymentPresenter({
       ...customProviderVersion.deployment,
       customProvider: customProviderVersion.customProvider,
-      creatorActor: customProviderVersion.creatorActor
+      creatorActor: customProviderVersion.creatorActor,
+      customProviderVersion: customProviderVersion
     }),
 
     environments: customEnvironments.map(cev => ({

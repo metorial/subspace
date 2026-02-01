@@ -45,7 +45,9 @@ export let customProviderPresenter = (
   description: customProvider.description,
   metadata: customProvider.metadata,
 
-  provider: providerPresenter(customProvider.provider!, d),
+  provider: customProvider.provider
+    ? providerPresenter(customProvider.provider, d)
+    : undefined,
 
   createdAt: customProvider.createdAt,
   updatedAt: customProvider.updatedAt
