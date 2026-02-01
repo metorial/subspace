@@ -59,6 +59,9 @@ export interface SpecificationTool {
         icons: Icons['icons'] | undefined;
         annotations: Annotations | undefined;
         _meta: { [key: string]: any } | undefined;
+      }
+    | {
+        type: 'mcp.resources_list' | 'mcp.resources_read';
       };
 
   capabilities: {

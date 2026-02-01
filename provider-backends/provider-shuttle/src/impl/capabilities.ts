@@ -11,16 +11,19 @@ import {
 import { UriTemplate } from '@modelcontextprotocol/sdk/shared/uriTemplate.js';
 import z from 'zod';
 import { getTenantForShuttle, shuttle, shuttleDefaultReaderTenant } from '../client';
+import { RESOURCES_LIST_KEY, RESOURCES_READ_KEY } from '../const';
 
 let toolSlug = (name: string) =>
   slugify(name.replaceAll('_', '-').replaceAll(' ', '-').toLowerCase());
 
 let emptyConfigSchema = z.object({}).toJSONSchema();
 
-let shuttleOAuthOutputSchema = z.object({
-  accessToken: z.string(),
-  expiresAt: z.string().optional().nullable()
-});
+let shuttleOAuthOutputSchema = z
+  .object({
+    accessToken: z.string(),
+    expiresAt: z.string().optional().nullable()
+  })
+  .toJSONSchema();
 
 let promptArgumentsToZod = (
   args: {
@@ -267,7 +270,49 @@ export class ProviderCapabilities extends IProviderCapabilities {
               },
               tags: {},
               metadata: {}
-            }))
+            })),
+
+            ...(discovery.capabilities.resources
+              ? [
+                  {
+                    specId: `shuttle::${server.id}::tool::resources_list`,
+                    callableId: RESOURCES_LIST_KEY,
+                    key: `resources_list`,
+                    name: 'resources_list',
+                    title: 'List Resources',
+                    description: 'List all resources',
+                    inputJsonSchema: emptyConfigSchema,
+                    outputJsonSchema: emptyConfigSchema,
+                    constraints: [],
+                    instructions: [],
+                    capabilities: {},
+                    mcpToolType: {
+                      type: 'mcp.resources_list' as const
+                    },
+                    tags: {},
+                    metadata: {}
+                  },
+
+                  {
+                    specId: `shuttle::${server.id}::tool::resources_read`,
+                    callableId: RESOURCES_READ_KEY,
+                    key: `resources_read`,
+                    name: 'resources_read',
+                    title: 'Read Resource',
+                    description: 'Read a specific resource',
+                    inputJsonSchema: emptyConfigSchema,
+                    outputJsonSchema: emptyConfigSchema,
+                    constraints: [],
+                    instructions: [],
+                    capabilities: {},
+                    mcpToolType: {
+                      type: 'mcp.resources_read' as const
+                    },
+                    tags: {},
+                    metadata: {}
+                  }
+                ]
+              : [])
           ]
         : []
     };
