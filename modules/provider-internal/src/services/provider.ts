@@ -7,6 +7,7 @@ import {
   type Publisher,
   ShuttleServer,
   type Slate,
+  Tenant,
   withTransaction
 } from '@metorial-subspace/db';
 import { ensureProviderType } from '@metorial-subspace/provider-utils';
@@ -17,6 +18,8 @@ import { providerCreatedQueue, providerUpdatedQueue } from '../queues/lifecycle/
 class providerInternalServiceImpl {
   async upsertProvider(d: {
     publisher: Publisher;
+
+    tenant: Tenant | null;
 
     source:
       | {
@@ -78,7 +81,15 @@ class providerInternalServiceImpl {
       let providerData = {
         identifier: `${identifier}::provider`,
 
-        access: 'public' as const,
+        ...(d.tenant
+          ? {
+              access: 'tenant' as const,
+              ownerTenantOid: d.tenant.oid
+            }
+          : {
+              access: 'public' as const
+            }),
+
         status: 'active' as const,
 
         name: d.info.name,

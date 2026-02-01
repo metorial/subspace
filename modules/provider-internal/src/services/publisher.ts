@@ -15,7 +15,7 @@ class publisherInternalServiceImpl {
     return this.upsertPublisher({
       owner: { type: 'tenant', tenant: d.tenant },
       input: {
-        identifier: `tenant::${d.tenant.identifier}`,
+        identifier: `tenant::${d.tenant.id}`,
         name: d.tenant.name
       }
     });

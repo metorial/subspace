@@ -163,6 +163,14 @@ class providerDeploymentConfigPairInternalServiceImpl {
       }
     }
 
+    if (res.pair.lastUsedPairVersionOid != res.version.oid) {
+      res.pair.lastUsedPairVersionOid = res.version.oid;
+      await db.providerDeploymentConfigPair.updateMany({
+        where: { oid: res.pair.oid },
+        data: { lastUsedPairVersionOid: res.version.oid }
+      });
+    }
+
     return res;
   }
 }

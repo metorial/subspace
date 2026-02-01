@@ -305,24 +305,23 @@ class providerConfigServiceImpl {
 
               deploymentOid: d.providerDeployment?.oid ?? d.input.config.vault.deploymentOid,
               specificationOid: parentConfig.specificationOid
-            },
-            include: { ...include, currentVersion: true }
+            }
           });
 
           let currentVersion = await db.providerConfigVersion.create({
             data: {
               ...getId('providerConfigVersion'),
               configOid: config.oid,
-              slateInstanceOid: parentConfig.currentVersion?.slateInstanceOid
+              slateInstanceOid: parentConfig.currentVersion?.slateInstanceOid,
+              shuttleConfigOid: parentConfig.currentVersion?.shuttleConfigOid
             }
           });
 
-          await db.providerConfig.updateMany({
+          return await db.providerConfig.update({
             where: { oid: config.oid },
-            data: { currentVersionOid: currentVersion.oid }
+            data: { currentVersionOid: currentVersion.oid },
+            include: { ...include, currentVersion: true }
           });
-
-          return config;
         }
 
         let version = await providerDeploymentInternalService.getCurrentVersionOptional({
@@ -356,10 +355,6 @@ class providerConfigServiceImpl {
 
             deploymentOid: d.providerDeployment?.oid,
             specificationOid: version.specificationOid
-          },
-          include: {
-            ...include,
-            currentVersion: true
           }
         });
 
@@ -367,7 +362,8 @@ class providerConfigServiceImpl {
           data: {
             ...getId('providerConfigVersion'),
             configOid: config.oid,
-            slateInstanceOid: inner.slateInstance?.oid
+            slateInstanceOid: inner.slateInstance?.oid,
+            shuttleConfigOid: inner.shuttleServerConfig?.oid
           }
         });
 
@@ -400,14 +396,16 @@ class providerConfigServiceImpl {
           });
         }
 
-        return config;
+        return await db.providerConfig.findFirstOrThrow({
+          where: { oid: config.oid },
+          include: { ...include, currentVersion: true }
+        });
       })();
 
       if (d.providerDeployment) {
         await providerDeploymentConfigPairInternalService.upsertDeploymentConfigPair({
           deployment: d.providerDeployment,
           config,
-
           authConfig: null
         });
       }
