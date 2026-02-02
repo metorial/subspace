@@ -97,9 +97,10 @@
     },
     "clients/typescript": {
       "name": "@metorial-services/subspace-client",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "dependencies": {
         "@lowerdeck/rpc-client": "^1.0.3",
+        "@lowerdeck/validation": "^1.0.4",
       },
       "devDependencies": {
         "tsup": "^8.5.1",
