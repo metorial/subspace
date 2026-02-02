@@ -42,7 +42,6 @@ export let providerVersionSyncSpecificationQueueProcessor =
           provider: version.provider,
           providerVariant: version.providerVariant
         });
-        console.log('Discovered capabilities for version', version.id, capabilities);
       } catch (e) {
         console.warn('Failed to get capabilities for version', version.id, e);
       }

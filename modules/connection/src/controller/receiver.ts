@@ -28,7 +28,6 @@ export let startReceiver = () => {
     ctx.extendTtl(1000 * 60);
 
     let topic = topics.instance.decode(ctx.topic);
-    console.log(topic);
     if (!topic) {
       console.warn(`Received message on invalid topic: ${ctx.topic}`);
       ctx.close();
@@ -38,7 +37,6 @@ export let startReceiver = () => {
     let state = await ConnectionState.create(topic, () => {
       ctx.close();
     });
-    console.log(state);
     if (!state) {
       ctx.close();
       return;
@@ -51,10 +49,8 @@ export let startReceiver = () => {
         provider: state.provider
       }
     });
-    console.log(providerParticipant);
 
     let backend = await getConnectionBackendConnection(state);
-    console.log(backend);
 
     let clientMcpIdTranslation = new Map<string, string | number>();
 
@@ -109,7 +105,6 @@ export let startReceiver = () => {
       data: ConduitInput & { type: 'tool_call' },
       message: SessionMessage
     ) => {
-      console.log('Sending tool invocation to provider for tool ID:', data.toolId);
       let tool = await db.providerTool.findFirstOrThrow({
         where: { id: data.toolId }
       });
@@ -212,11 +207,7 @@ export let startReceiver = () => {
     };
 
     let processToolCall = async (data: ConduitInput & { type: 'tool_call' }) => {
-      console.log('Processing tool call data:', data);
-
       let res = await sendToProvider(data);
-
-      console.log('Tool call processed result:', res);
 
       let message = await completeMessage(
         { messageId: data.sessionMessageId },
@@ -230,8 +221,6 @@ export let startReceiver = () => {
           failureReason: res.isSystemError ? 'system_error' : undefined
         }
       );
-
-      console.log('Completed tool call message:', message);
 
       let result = {
         message,
@@ -285,7 +274,6 @@ export let startReceiver = () => {
     });
 
     ctx.onClose(async () => {
-      console.log(`Closing provider instance receiver for instance id: ${state.instance.id}`);
       try {
         await state.dispose();
       } catch (err) {

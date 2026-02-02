@@ -79,8 +79,6 @@ export let providerDeploymentConfigPairSyncSpecificationQueueProcessor =
         console.error('Error discovering capabilities:', e);
       }
 
-      console.log('Discovered capabilities:', capabilities);
-
       // Some backends might need a config to be able to discover specifications
       if (!capabilities) {
         await providerDeploymentConfigPairSetSpecificationQueue.add({

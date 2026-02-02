@@ -171,16 +171,12 @@ class ProviderRunConnection extends IProviderRunConnection {
     let id = 'id' in mcpMessage && mcpMessage.id ? mcpMessage.id : undefined;
 
     if (id !== undefined) {
-      console.log('Sending tool invocation MCP message:', data.input, mcpMessage);
-
       let responsePromise = new ProgrammablePromise<JSONRPCMessage>();
       this.#mcpMessageListeners.set(id, async msg => responsePromise.resolve(msg));
 
       await this.#conRef.sendMcpMessage(mcpMessage);
 
       let outputMessage = await responsePromise.promise;
-
-      console.log('Received tool invocation MCP response:', outputMessage);
 
       return {
         output: {
