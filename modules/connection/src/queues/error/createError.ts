@@ -6,7 +6,7 @@ import { endOfDay, startOfDay } from 'date-fns';
 import { env } from '../../env';
 
 export let createErrorQueue = createQueue<{ errorId: string }>({
-  name: 'con/error/create',
+  name: 'sub/con/error/create',
   redisUrl: env.service.REDIS_URL,
   workerOpts: { concurrency: 5 }
 });

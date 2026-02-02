@@ -4,7 +4,7 @@ import { env } from '../../env';
 export let providerOAuthSetupCreatedQueue = createQueue<{
   providerOAuthSetupId: string;
 }>({
-  name: 'auth/lc/providerOAuthSetup/created',
+  name: 'sub/auth/lc/providerOAuthSetup/created',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -15,7 +15,7 @@ export let providerOAuthSetupCreatedQueueProcessor = providerOAuthSetupCreatedQu
 export let providerOAuthSetupUpdatedQueue = createQueue<{
   providerOAuthSetupId: string;
 }>({
-  name: 'auth/lc/providerOAuthSetup/updated',
+  name: 'sub/auth/lc/providerOAuthSetup/updated',
   redisUrl: env.service.REDIS_URL
 });
 

@@ -2,6 +2,8 @@ model Tenant {
   oid BigInt @id
   id  String @unique
 
+  urlKey String @unique
+
   identifier String @unique
   name       String
 
@@ -53,11 +55,27 @@ model Tenant {
   shuttleOAuthSetups                       ShuttleOAuthSetup[]
   shuttleAuthConfigs                       ShuttleAuthConfig[]
   shuttleServerConfigs                     ShuttleServerConfig[]
+  customProviderDeployments                CustomProviderDeployment[]
+  customProviderVersions                   CustomProviderVersion[]
+  customProviders                          CustomProvider[]
+  shuttleCustomServers                     ShuttleCustomServer[]
+  shuttleCustomServerDeployments           ShuttleCustomServerDeployment[]
+  providerEnvironments                     ProviderEnvironment[]
+  customProviderEnvironments               CustomProviderEnvironment[]
+  actors                                   Actor[]
+  customProviderCommits                    CustomProviderCommit[]
+}
+
+enum EnvironmentType {
+  development
+  production
 }
 
 model Environment {
   oid BigInt @id
   id  String @unique
+
+  type EnvironmentType
 
   identifier String @unique
   name       String
@@ -65,7 +83,8 @@ model Environment {
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid], onDelete: Cascade)
 
-  createdAt                                DateTime                                  @default(now())
+  createdAt DateTime @default(now())
+
   providerAuthConfigs                      ProviderAuthConfig[]
   providerAuthCredentials                  ProviderAuthCredentials[]
   providerAuthExports                      ProviderAuthExport[]
@@ -91,4 +110,33 @@ model Environment {
   sessionTemplates                         SessionTemplate[]
   sessionTemplateProviders                 SessionTemplateProvider[]
   providerSetupSessions                    ProviderSetupSession[]
+  providerEnvironments                     ProviderEnvironment[]
+  customProviderEnvironments               CustomProviderEnvironment[]
+  customProviderEnvironmentVersions        CustomProviderEnvironmentVersion[]
+  providerEnvironmentVersions              ProviderEnvironmentVersion[]
+}
+
+enum ActorType {
+  external
+  system
+}
+
+model Actor {
+  oid BigInt @id
+  id  String @unique
+
+  type ActorType
+
+  identifier          String  @unique
+  name                String
+  organizationActorId String?
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  customProviderVersions    CustomProviderVersion[]
+  customProviderDeployments CustomProviderDeployment[]
+  customProviderCommits     CustomProviderCommit[]
 }

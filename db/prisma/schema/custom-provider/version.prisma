@@ -1,0 +1,54 @@
+enum CustomProviderVersionStatus {
+  queued
+  deploying
+  deployment_succeeded
+  deployment_failed
+}
+
+model CustomProviderVersion {
+  oid BigInt @id
+  id  String @unique
+
+  status CustomProviderVersionStatus
+
+  versionIndex      Int
+  versionIdentifier String
+
+  creatorActorOid BigInt
+  creatorActor    Actor  @relation(fields: [creatorActorOid], references: [oid])
+
+  customProviderOid BigInt
+  customProvider    CustomProvider @relation(fields: [customProviderOid], references: [oid])
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid Int
+  solution    Solution @relation(fields: [solutionOid], references: [oid])
+
+  providerVersionOid BigInt?          @unique
+  providerVersion    ProviderVersion? @relation(fields: [providerVersionOid], references: [oid])
+
+  deploymentOid BigInt                   @unique
+  deployment    CustomProviderDeployment @relation(fields: [deploymentOid], references: [oid])
+
+  shuttleServerVersionOid BigInt?               @unique
+  shuttleServerVersion    ShuttleServerVersion? @relation(fields: [shuttleServerVersionOid], references: [oid])
+
+  shuttleCustomServerOid BigInt?              @unique
+  shuttleCustomServer    ShuttleCustomServer? @relation(fields: [shuttleCustomServerOid], references: [oid])
+
+  shuttleCustomServerDeploymentOid BigInt?                        @unique
+  shuttleCustomServerDeployment    ShuttleCustomServerDeployment? @relation(fields: [shuttleCustomServerDeploymentOid], references: [oid])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  customProviderEnvironmentVersions CustomProviderEnvironmentVersion[]
+  customProviderCommits             CustomProviderCommit[]
+  customProviderCommitsBefore       CustomProviderCommit[]             @relation("CustomProviderCommitToEnvVersionBefore")
+
+  @@unique([customProviderOid, versionIndex])
+  @@unique([customProviderOid, versionIdentifier])
+  @@index([status])
+}

@@ -14,6 +14,7 @@ import {
   type ProviderAuthMethod,
   ProviderAuthMethodType,
   type ProviderDeployment,
+  ProviderDeploymentVersion,
   type ProviderVariant,
   type ProviderVersion,
   type Solution,
@@ -34,15 +35,18 @@ class providerAuthConfigInternalServiceImpl {
     environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment?: ProviderDeployment & {
-      lockedVersion: ProviderVersion | null;
+      currentVersion:
+        | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+        | null;
     };
     authMethodId?: string;
   }) {
     let version = await providerDeploymentInternalService.getCurrentVersionOptional({
       provider: d.provider,
+      environment: d.environment,
       deployment: d.providerDeployment
     });
-    if (!version.specificationOid) {
+    if (!version?.specificationOid) {
       throw new ServiceError(
         badRequestError({
           message: 'Provider has not been discovered'
@@ -125,6 +129,7 @@ class providerAuthConfigInternalServiceImpl {
   }) {
     checkTenant(d, d.providerDeployment);
     checkTenant(d, d.backendProviderAuthConfig.slateAuthConfig);
+    checkTenant(d, d.backendProviderAuthConfig.shuttleAuthConfig);
 
     if (d.providerDeployment && d.providerDeployment.providerOid !== d.provider.oid) {
       throw new ServiceError(
@@ -193,7 +198,8 @@ class providerAuthConfigInternalServiceImpl {
         data: {
           ...getId('providerAuthConfigVersion'),
           authConfigOid: providerAuthConfig.oid,
-          slateAuthConfigOid: d.backendProviderAuthConfig.slateAuthConfig?.oid
+          slateAuthConfigOid: d.backendProviderAuthConfig.slateAuthConfig?.oid,
+          shuttleAuthConfigOid: d.backendProviderAuthConfig.shuttleAuthConfig?.oid
         }
       });
 

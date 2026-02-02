@@ -99,9 +99,9 @@ model ProviderAuthConfigVersion {
 
   createdAt DateTime @default(now())
 
-  providerAuthConfigUpdates               ProviderAuthConfigUpdate[]               @relation("fromVersion")
-  providerAuthConfigUpdatesTo             ProviderAuthConfigUpdate[]               @relation("toVersion")
-  providerDeploymentConfigPairAuthConfigs ProviderDeploymentConfigPairAuthConfig[]
+  providerAuthConfigUpdates     ProviderAuthConfigUpdate[]     @relation("fromVersion")
+  providerAuthConfigUpdatesTo   ProviderAuthConfigUpdate[]     @relation("toVersion")
+  providerDeploymentConfigPairs ProviderDeploymentConfigPair[]
 }
 
 model ProviderAuthConfigUpdate {

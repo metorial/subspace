@@ -13,6 +13,7 @@ import {
   type ProviderAuthCredentials,
   type ProviderAuthImport,
   type ProviderDeployment,
+  ProviderDeploymentVersion,
   type ProviderVariant,
   type ProviderVersion,
   type Solution,
@@ -140,7 +141,9 @@ class providerAuthConfigServiceImpl {
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
       providerVariant: ProviderVariant;
-      lockedVersion: ProviderVersion | null;
+      currentVersion:
+        | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+        | null;
     };
 
     providerAuthConfig?: ProviderAuthConfig & { deployment: ProviderDeployment | null };
@@ -200,7 +203,9 @@ class providerAuthConfigServiceImpl {
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
       providerVariant: ProviderVariant;
-      lockedVersion: ProviderVersion | null;
+      currentVersion:
+        | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+        | null;
     };
     source: ProviderAuthConfigSource;
     credentials?: ProviderAuthCredentials;
@@ -328,7 +333,7 @@ class providerAuthConfigServiceImpl {
       let providerDeployment = d.providerAuthConfig.deploymentOid
         ? await db.providerDeployment.findFirstOrThrow({
             where: { oid: d.providerAuthConfig.deploymentOid },
-            include: { lockedVersion: true }
+            include: { currentVersion: { include: { lockedVersion: true } } }
           })
         : undefined;
 
@@ -369,7 +374,8 @@ class providerAuthConfigServiceImpl {
         data: {
           ...getId('providerAuthConfigVersion'),
           authConfigOid: d.providerAuthConfig.oid,
-          slateAuthConfigOid: backendRes?.backendProviderAuthConfig.slateAuthConfig?.oid
+          slateAuthConfigOid: backendRes?.backendProviderAuthConfig.slateAuthConfig?.oid,
+          shuttleAuthConfigOid: backendRes?.backendProviderAuthConfig.shuttleAuthConfig?.oid
         }
       });
       let fromVersionOid = d.providerAuthConfig.currentVersionOid;

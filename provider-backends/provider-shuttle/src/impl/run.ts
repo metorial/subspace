@@ -1,13 +1,15 @@
 import { ProgrammablePromise } from '@lowerdeck/programmable-promise';
 import {
   db,
-  messageInputToMcp,
+  messageTranslator,
   snowflake,
   type ShuttleConnection
 } from '@metorial-subspace/db';
 import {
   IProviderRun,
   IProviderRunConnection,
+  type HandleMcpNotificationOrRequestParam,
+  type HandleMcpNotificationOrRequestRes,
   type ProviderRunCreateParam,
   type ProviderRunCreateRes,
   type ProviderRunLogsParam,
@@ -131,10 +133,23 @@ class ProviderRunConnection extends IProviderRunConnection {
     this.init();
   }
 
+  override async handleMcpResponseOrNotification(
+    data: HandleMcpNotificationOrRequestParam
+  ): Promise<HandleMcpNotificationOrRequestRes> {
+    await this.#conRef?.sendMcpMessage(data.input);
+    return {};
+  }
+
   async handleToolInvocation(
     data: ToolInvocationCreateParam
   ): Promise<ToolInvocationCreateRes> {
-    let mcpMessage = await messageInputToMcp(data.input, data.message);
+    let mcpMessage = await messageTranslator.toMcp({
+      data: data.input,
+      message: data.message,
+      tool: data.tool,
+      sessionProvider: data.sessionProvider,
+      recipient: 'provider_backend'
+    });
     if (!mcpMessage) {
       return {
         output: {
@@ -200,22 +215,19 @@ class ProviderRunConnection extends IProviderRunConnection {
       },
       onMessage: async data => {
         if (data.type == 'mcp.message') {
+          // Handle response to a specific tool invocation
           let id = 'id' in data.data && data.data.id ? data.data.id : undefined;
-
           if (id !== undefined) {
             let listener = this.#mcpMessageListeners.get(id);
             if (listener) {
               await listener(data.data);
               this.#mcpMessageListeners.delete(id);
+
+              return; // No need to emit as mcp request/notification
             }
           }
 
-          await this.emitMessage({
-            output: {
-              type: 'mcp',
-              data: data.data
-            }
-          });
+          await this.emitMcpMessage(data.data);
         } else if (data.type == 'error') {
           this.close();
         }

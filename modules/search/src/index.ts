@@ -54,5 +54,11 @@ export let voyagerIndex = {
     sourceId: voyagerSource.id,
     identifier: getIndexName('provider_auth_config'),
     name: 'Provider Auth Configs'
+  }),
+
+  customProvider: await voyager.index.upsert({
+    sourceId: voyagerSource.id,
+    identifier: getIndexName('custom_provider'),
+    name: 'Custom Providers'
   })
 };

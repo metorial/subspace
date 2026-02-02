@@ -5,6 +5,8 @@ import {
   type SlateSession
 } from '@metorial-subspace/db';
 import type {
+  HandleMcpNotificationOrRequestParam,
+  HandleMcpNotificationOrRequestRes,
   ProviderRunCreateParam,
   ProviderRunCreateRes,
   ProviderRunLogsParam,
@@ -110,6 +112,12 @@ export class ProviderRunConnection extends IProviderRunConnection {
 
   private get tenant() {
     return this.params.tenant;
+  }
+
+  override async handleMcpResponseOrNotification(
+    data: HandleMcpNotificationOrRequestParam
+  ): Promise<HandleMcpNotificationOrRequestRes> {
+    return {};
   }
 
   override async handleToolInvocation(

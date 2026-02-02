@@ -5,7 +5,7 @@ import { env } from '../../env';
 
 export let expireSessionsCron = createCron(
   {
-    name: 'con/conn/expire',
+    name: 'sub/con/ses/expire',
     cron: '* * * * *',
     redisUrl: env.service.REDIS_URL
   },

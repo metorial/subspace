@@ -71,7 +71,7 @@ export let providerListingController = app.controller({
 
       let list = await paginator.run(ctx.input);
 
-      return Paginator.presentLight(list, providerListingPresenter);
+      return Paginator.presentLight(list, v => providerListingPresenter(v, ctx));
     }),
 
   get: providerListingApp
@@ -83,5 +83,5 @@ export let providerListingController = app.controller({
         providerListingId: v.string()
       })
     )
-    .do(async ctx => providerListingPresenter(ctx.providerListing))
+    .do(async ctx => providerListingPresenter(ctx.providerListing, ctx))
 });

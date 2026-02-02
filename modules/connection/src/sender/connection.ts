@@ -1,7 +1,7 @@
 import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { serialize } from '@lowerdeck/serialize';
 import type { BroadcastMessage, ConduitResult } from '@metorial-subspace/connection-utils';
-import { db, type SessionMessage, type SessionProvider } from '@metorial-subspace/db';
+import { db, type SessionMessage } from '@metorial-subspace/db';
 import { broadcastNats } from '../lib/nats';
 import { topics } from '../lib/topic';
 import type { CreateMessageProps } from '../shared/createMessage';
@@ -98,12 +98,12 @@ export class SenderConnection {
     };
   }
 
-  ensureProviderInstance(provider: SessionProvider) {
-    return this.manager.ensureProviderInstance(provider);
+  listToolsIncludingInternal() {
+    return this.manager.listToolsIncludingInternal();
   }
 
-  listToolsForProvider(provider: SessionProvider) {
-    return this.manager.listToolsForProvider(provider);
+  listToolsIncludingInternalAndNonAllowed() {
+    return this.manager.listToolsIncludingInternalAndNonAllowed();
   }
 
   listTools() {

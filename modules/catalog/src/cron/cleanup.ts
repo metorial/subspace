@@ -4,7 +4,7 @@ import { env } from '../env';
 
 export let cleanupCron = createCron(
   {
-    name: 'cat/cleanup',
+    name: 'sub/cat/cleanup',
     cron: '0 0 * * *',
     redisUrl: env.service.REDIS_URL
   },

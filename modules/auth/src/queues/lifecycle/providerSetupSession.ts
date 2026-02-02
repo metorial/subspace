@@ -4,7 +4,7 @@ import { env } from '../../env';
 export let providerSetupSessionCreatedQueue = createQueue<{
   providerSetupSessionId: string;
 }>({
-  name: 'auth/lc/providerSetupSession/created',
+  name: 'sub/auth/lc/providerSetupSession/created',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -14,7 +14,7 @@ export let providerSetupSessionCreatedQueueProcessor =
 export let providerSetupSessionUpdatedQueue = createQueue<{
   providerSetupSessionId: string;
 }>({
-  name: 'auth/lc/providerSetupSession/updated',
+  name: 'sub/auth/lc/providerSetupSession/updated',
   redisUrl: env.service.REDIS_URL
 });
 

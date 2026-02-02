@@ -1,0 +1,57 @@
+enum CustomProviderDeploymentStatus {
+  queued
+  deploying
+  succeeded
+  failed
+}
+
+enum CustomProviderDeploymentTrigger {
+  manual
+  system
+  // git
+}
+
+model CustomProviderDeployment {
+  oid BigInt @id
+  id  String @unique
+
+  status  CustomProviderDeploymentStatus
+  trigger CustomProviderDeploymentTrigger
+
+  creatorActorOid BigInt
+  creatorActor    Actor  @relation(fields: [creatorActorOid], references: [oid])
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid Int
+  solution    Solution @relation(fields: [solutionOid], references: [oid])
+
+  customProviderOid BigInt
+  customProvider    CustomProvider @relation(fields: [customProviderOid], references: [oid])
+
+  sourceEnvironmentOid BigInt?
+  sourceEnvironment    CustomProviderEnvironment? @relation(fields: [sourceEnvironmentOid], references: [oid])
+
+  commitOid BigInt?               @unique
+  commit    CustomProviderCommit? @relation(fields: [commitOid], references: [oid])
+
+  shuttleServerVersionOid BigInt?               @unique
+  shuttleServerVersion    ShuttleServerVersion? @relation(fields: [shuttleServerVersionOid], references: [oid])
+
+  shuttleCustomServerOid BigInt?              @unique
+  shuttleCustomServer    ShuttleCustomServer? @relation(fields: [shuttleCustomServerOid], references: [oid])
+
+  shuttleCustomServerDeploymentOid BigInt?                        @unique
+  shuttleCustomServerDeployment    ShuttleCustomServerDeployment? @relation(fields: [shuttleCustomServerDeploymentOid], references: [oid])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  startedAt DateTime?
+  endedAt   DateTime?
+
+  customProviderVersion CustomProviderVersion?
+
+  @@index([status])
+  @@index([trigger])
+}

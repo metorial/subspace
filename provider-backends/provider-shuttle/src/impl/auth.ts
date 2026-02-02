@@ -20,14 +20,6 @@ export class ProviderAuth extends IProviderAuth {
   override async createProviderAuthCredentials(
     data: ProviderAuthCredentialsCreateParam
   ): Promise<ProviderAuthCredentialsCreateRes> {
-    if (data.input.type !== 'oauth') {
-      throw new ServiceError(
-        badRequestError({
-          message: 'Only oauth credentials are supported by this provider'
-        })
-      );
-    }
-
     if (!data.provider.defaultVariant?.shuttleServerOid) {
       throw new Error('Provider default variant does not have a shuttle associated with it');
     }
@@ -42,9 +34,13 @@ export class ProviderAuth extends IProviderAuth {
       tenantId: tenant.id,
       serverId: shuttleServer.id,
 
-      scopes: data.input.scopes,
-      clientId: data.input.clientId,
-      clientSecret: data.input.clientSecret
+      ...(data.input.type == 'oauth'
+        ? {
+            scopes: data.input.scopes,
+            clientId: data.input.clientId,
+            clientSecret: data.input.clientSecret
+          }
+        : {})
     });
 
     let shuttleOAuthCredentials = await db.shuttleOAuthCredentials.create({
@@ -57,15 +53,16 @@ export class ProviderAuth extends IProviderAuth {
     });
 
     return {
+      type: 'oauth',
       shuttleOAuthCredentials,
-      type: 'oauth'
+      isAutoRegistration: data.input.type == 'auto_registration'
     };
   }
 
   override async createProviderOAuthSetup(
     data: ProviderOAuthSetupCreateParam
   ): Promise<ProviderOAuthSetupCreateRes> {
-    if (!data.credentials.shuttleCredentialsOid) {
+    if (!data.credentials?.shuttleCredentialsOid) {
       throw new Error('Credentials do not have associated shuttle credentials');
     }
     if (!data.provider.defaultVariant?.shuttleServerOid) {
@@ -92,7 +89,8 @@ export class ProviderAuth extends IProviderAuth {
       serverId: shuttleServer.id,
       input: data.input,
       redirectUrl: data.redirectUrl,
-      serverCredentialsId: shuttleOAuthCredentials.id
+      serverCredentialsId: shuttleOAuthCredentials.id,
+      callbackUrlOverride: data.callbackUrlOverride ?? undefined
     });
 
     let shuttleOAuthSetup = await db.shuttleOAuthSetup.create({

@@ -7,7 +7,7 @@ import { env } from '../../env';
 
 let offloadCron = createCron(
   {
-    name: 'con/ofl/cron',
+    name: 'sub/con/ofl/cron',
     cron: '30 4 * * *',
     redisUrl: env.service.REDIS_URL
   },
@@ -17,7 +17,7 @@ let offloadCron = createCron(
 );
 
 let offloadMessagesQueue = createQueue<{ cursor?: string }>({
-  name: 'con/ofl/msg/many',
+  name: 'sub/con/ofl/msg/many',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -43,7 +43,7 @@ let offloadMessagesQueueProcessor = offloadMessagesQueue.process(async data => {
 });
 
 let offloadMessageQueue = createQueue<{ messageId: string }>({
-  name: 'con/ofl/msg',
+  name: 'sub/con/ofl/msg',
   redisUrl: env.service.REDIS_URL,
   workerOpts: { concurrency: 5 }
 });

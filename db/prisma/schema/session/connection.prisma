@@ -24,6 +24,7 @@ enum SessionConnectionTransport {
   mcp
   tool_call
   metorial_protocol
+  system
 }
 
 model SessionConnection {

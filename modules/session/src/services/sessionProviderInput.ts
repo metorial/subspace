@@ -19,10 +19,11 @@ import {
   providerDeploymentService
 } from '@metorial-subspace/module-deployment';
 import { providerDeploymentInternalService } from '@metorial-subspace/module-provider-internal';
+import { normalizeJsonSchema } from '@metorial-subspace/provider-utils';
 import { sessionProviderInclude } from './sessionProvider';
 import { sessionTemplateProviderInclude } from './sessionTemplateProvider';
 
-export type SessionProviderInputToolFilters = { toolKeys?: string[] } | null;
+export type SessionProviderInputToolFilters = PrismaJson.ToolFilter | null;
 
 export type SessionProviderInput = {
   sessionTemplateId?: string;
@@ -127,11 +128,14 @@ class sessionProviderInputServiceImpl {
             let config = s.configId
               ? await db.providerConfig.findFirst({ where: { ...ts, id: s.configId } })
               : null;
-            let deployment = s.deploymentId
-              ? await db.providerDeployment.findFirst({ where: { ...ts, id: s.deploymentId } })
-              : null;
             let authConfig = s.authConfigId
               ? await db.providerAuthConfig.findFirst({ where: { ...ts, id: s.authConfigId } })
+              : null;
+            let deployment = s.deploymentId
+              ? await db.providerDeployment.findFirst({
+                  where: { ...ts, id: s.deploymentId },
+                  include: { currentVersion: true }
+                })
               : null;
 
             checkDeletedRelation(config, d);
@@ -163,7 +167,8 @@ class sessionProviderInputServiceImpl {
                   include: {
                     provider: {
                       include: { defaultVariant: { include: { currentVersion: true } } }
-                    }
+                    },
+                    currentVersion: true
                   }
                 });
                 checkDeletedRelation(fetchedDeployment, d);
@@ -181,12 +186,14 @@ class sessionProviderInputServiceImpl {
               });
               checkDeletedRelation(provider, d);
 
-              deployment = await providerDeploymentService.ensureDefaultProviderDeployment({
-                tenant: d.tenant,
-                solution: d.solution,
-                environment: d.environment,
-                provider
-              });
+              deployment =
+                deployment ??
+                (await providerDeploymentService.ensureDefaultProviderDeployment({
+                  tenant: d.tenant,
+                  solution: d.solution,
+                  environment: d.environment,
+                  provider
+                }));
             }
 
             if (!provider || !deployment) {
@@ -198,17 +205,24 @@ class sessionProviderInputServiceImpl {
               );
             }
 
+            if (provider.oid !== deployment.providerOid) {
+              throw new ServiceError(deploymentMismatchError);
+            }
+
             if (config?.deploymentOid && config.deploymentOid !== deployment.oid)
               throw new ServiceError(deploymentMismatchError);
             if (authConfig?.deploymentOid && authConfig.deploymentOid !== deployment.oid)
               throw new ServiceError(deploymentMismatchError);
 
             let version = await providerDeploymentInternalService.getCurrentVersion({
+              environment: d.environment,
               deployment,
               provider
             });
-            if (!version.specificationOid) {
-              throw new ServiceError(badRequestError({ message: 'Provider cannot be run' }));
+            if (!version?.specificationOid) {
+              throw new ServiceError(
+                badRequestError({ message: 'Provider has no usable version' })
+              );
             }
 
             let spec = await db.providerSpecification.findFirstOrThrow({
@@ -222,15 +236,19 @@ class sessionProviderInputServiceImpl {
                 });
                 checkDeletedRelation(config, d);
               } else {
-                let schema = spec.value.specification.configJsonSchema;
+                let schema = normalizeJsonSchema(spec.value.specification.configJsonSchema);
                 let hasRequired = true;
 
-                try {
-                  if (schema.type === 'object' && schema.properties) {
-                    let required = schema.required || [];
-                    if (!required.length) hasRequired = false;
-                  }
-                } catch {}
+                if (schema) {
+                  try {
+                    if (schema.type === 'object' && schema.properties) {
+                      let required = schema.required || [];
+                      if (!required.length) hasRequired = false;
+                    }
+                  } catch {}
+                } else {
+                  hasRequired = false;
+                }
 
                 if (hasRequired) {
                   throw new ServiceError(
@@ -301,20 +319,6 @@ class sessionProviderInputServiceImpl {
     );
   }
 
-  async mapToolFilters(d: { filters: SessionProviderInputToolFilters | undefined }) {
-    if (!d.filters) return { type: 'v1.allow_all' } satisfies PrismaJson.ToolFilter;
-
-    return {
-      type: 'v1.whitelist',
-      filters: [
-        {
-          type: 'tool_keys',
-          keys: d.filters.toolKeys || []
-        }
-      ]
-    } satisfies PrismaJson.ToolFilter;
-  }
-
   async createSessionProvidersForInput(d: {
     tenant: Tenant;
     solution: Solution;
@@ -348,7 +352,7 @@ class sessionProviderInputServiceImpl {
           providerSessions.map(async ps => ({
             ...getId('sessionProvider'),
 
-            tag: generateCode(3),
+            tag: generateCode(5),
             status: 'active' as const,
             isEphemeral: d.session.isEphemeral,
 
@@ -365,7 +369,7 @@ class sessionProviderInputServiceImpl {
             fromTemplateOid: ps.template?.oid,
             fromTemplateProviderOid: ps.templateProvider?.oid,
 
-            toolFilter: await this.mapToolFilters({ filters: ps.toolFilters })
+            toolFilter: ps.toolFilters ?? { type: 'v1.allow_all' }
           }))
         ),
         include: sessionProviderInclude
@@ -408,7 +412,7 @@ class sessionProviderInputServiceImpl {
           providerSessions.map(async ps => ({
             ...getId('sessionTemplateProvider'),
 
-            tag: generateCode(3),
+            tag: generateCode(5),
             status: 'active' as const,
 
             tenantOid: d.tenant.oid,
@@ -421,7 +425,7 @@ class sessionProviderInputServiceImpl {
             configOid: ps.config.oid,
             authConfigOid: ps.authConfig?.oid,
 
-            toolFilter: await this.mapToolFilters({ filters: ps.toolFilters })
+            toolFilter: ps.toolFilters ?? { type: 'v1.allow_all' }
           }))
         ),
         include: sessionTemplateProviderInclude

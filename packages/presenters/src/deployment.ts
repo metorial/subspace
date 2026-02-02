@@ -2,6 +2,7 @@ import type {
   Provider,
   ProviderConfig,
   ProviderDeployment,
+  ProviderDeploymentVersion,
   ProviderSpecification,
   ProviderVariant,
   ProviderVersion
@@ -13,8 +14,14 @@ export let providerDeploymentPresenter = (
   providerDeployment: ProviderDeployment & {
     provider: Provider;
     providerVariant: ProviderVariant;
-    lockedVersion: (ProviderVersion & { specification: ProviderSpecification | null }) | null;
     defaultConfig: ProviderConfig | null;
+    currentVersion:
+      | (ProviderDeploymentVersion & {
+          lockedVersion:
+            | (ProviderVersion & { specification: ProviderSpecification | null })
+            | null;
+        })
+      | null;
   }
 ) => ({
   object: 'provider.deployment',
@@ -30,9 +37,9 @@ export let providerDeploymentPresenter = (
 
   providerId: providerDeployment.provider.id,
 
-  lockedVersion: providerDeployment.lockedVersion
+  lockedVersion: providerDeployment.currentVersion?.lockedVersion
     ? providerVersionPresenter({
-        ...providerDeployment.lockedVersion,
+        ...providerDeployment.currentVersion.lockedVersion,
         provider: providerDeployment.provider
       })
     : null,

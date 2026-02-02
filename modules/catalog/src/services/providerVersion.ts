@@ -33,6 +33,13 @@ class providerVersionServiceImpl {
             where: {
               provider: getProviderTenantFilter(d),
 
+              OR: [
+                { isEnvironmentLocked: false },
+                {
+                  providerEnvironmentVersions: { some: { environmentOid: d.environment.oid } }
+                }
+              ],
+
               AND: [
                 d.ids ? { id: { in: d.ids } } : undefined!,
                 providers ? { providerOid: providers.in } : undefined!
@@ -53,6 +60,13 @@ class providerVersionServiceImpl {
     let providerVersion = await db.providerVersion.findFirst({
       where: {
         provider: getProviderTenantFilter(d),
+
+        OR: [
+          { isEnvironmentLocked: false },
+          {
+            providerEnvironmentVersions: { some: { environmentOid: d.environment.oid } }
+          }
+        ],
 
         AND: [
           {

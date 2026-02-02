@@ -12,25 +12,6 @@
         "typescript": "5.8.2",
       },
     },
-    "apps/connection-endpoint": {
-      "name": "@metorial-subspace/app-connection-endpoint",
-      "dependencies": {
-        "@hono/zod-validator": "^0.7.6",
-        "@lowerdeck/delay": "^1.0.4",
-        "@lowerdeck/error": "^1.0.10",
-        "@lowerdeck/hono": "^1.0.6",
-        "@metorial-subspace/module-connection": "^1.0.0",
-        "@sentry/bun": "^10.34.0",
-        "hono": "^4.11.3",
-        "zod": "^4.3.5",
-      },
-      "devDependencies": {
-        "@types/bun": "latest",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
-      },
-    },
     "apps/controller": {
       "name": "@metorial-subspace/app-controller",
       "dependencies": {
@@ -221,6 +202,7 @@
         "@lowerdeck/once": "^1.0.4",
         "@lowerdeck/queue": "^1.0.0",
         "@lowerdeck/serialize": "^1.0.4",
+        "@lowerdeck/unique": "^1.0.4",
         "@lowerdeck/validation": "^1.0.4",
         "@metorial-subspace/conduit": "^1.0.0",
         "@metorial-subspace/connection-utils": "^1.0.0",
@@ -232,11 +214,37 @@
         "@metorial-subspace/redis-url": "^1.0.0",
         "@metorial-subspace/store": "^1.0.0",
         "@modelcontextprotocol/sdk": "^1.25.2",
+        "@types/lodash": "^4.17.23",
         "date-fns": "^4.1.0",
+        "lodash": "^4.17.23",
         "nats": "^2.29.3",
         "zod": "^4.3.5",
       },
       "devDependencies": {
+        "typescript": "5.8.2",
+        "vitest": "^3.1.2",
+      },
+    },
+    "modules/custom-provider": {
+      "name": "@metorial-subspace/module-custom-provider",
+      "version": "1.0.0",
+      "dependencies": {
+        "@lowerdeck/env": "^1.0.4",
+        "@lowerdeck/error": "^1.0.0",
+        "@lowerdeck/lock": "^1.0.4",
+        "@lowerdeck/pagination": "^1.0.0",
+        "@lowerdeck/queue": "^1.0.0",
+        "@lowerdeck/service": "^1.0.0",
+        "@lowerdeck/validation": "^1.0.4",
+        "@metorial-subspace/db": "^1.0.0",
+        "@metorial-subspace/list-utils": "^1.0.0",
+        "@metorial-subspace/module-provider-internal": "^1.0.0",
+        "@metorial-subspace/module-search": "^1.0.0",
+        "@metorial-subspace/module-tenant": "^1.0.0",
+        "@metorial-subspace/provider": "^1.0.0",
+      },
+      "devDependencies": {
+        "@metorial-subspace/tsconfig": "^1.0.0",
         "typescript": "5.8.2",
         "vitest": "^3.1.2",
       },
@@ -373,6 +381,7 @@
         "@metorial-subspace/db": "^1.0.0",
         "@modelcontextprotocol/sdk": "^1.25.2",
         "object-storage-client": "^0.2.5",
+        "safe-regex2": "^5.0.0",
         "zod": "^4.3.5",
       },
       "devDependencies": {
@@ -482,7 +491,7 @@
         "@lowerdeck/queue": "^1.0.4",
         "@lowerdeck/slugify": "^1.0.4",
         "@lowerdeck/validation": "^1.0.4",
-        "@metorial-services/shuttle-client": "^1.0.1",
+        "@metorial-services/shuttle-client": "1.0.5",
         "@metorial-subspace/db": "^1.0.0",
         "@metorial-subspace/module-provider-internal": "^1.0.0",
         "@metorial-subspace/provider-utils": "^1.0.0",
@@ -510,7 +519,7 @@
         "@lowerdeck/queue": "^1.0.4",
         "@lowerdeck/slugify": "^1.0.4",
         "@lowerdeck/validation": "^1.0.4",
-        "@metorial-services/slates-hub-client": "1.0.14",
+        "@metorial-services/slates-hub-client": "1.0.15",
         "@metorial-subspace/db": "^1.0.0",
         "@metorial-subspace/module-provider-internal": "^1.0.0",
         "@metorial-subspace/provider-utils": "^1.0.0",
@@ -841,6 +850,8 @@
 
     "@lowerdeck/slugify": ["@lowerdeck/slugify@1.0.4", "", { "dependencies": { "@lowerdeck/id": "^1.0.5", "slugify": "^1.6.6" } }, "sha512-cOOzCOV4ka+duJDQRvfR20Zf+TH6Iqs9fZ6RWsosKavDWLtGHfw+/1MTMaf681ixXUk/OPcnK80yRIIfgmsKFw=="],
 
+    "@lowerdeck/unique": ["@lowerdeck/unique@1.0.4", "", {}, "sha512-cJh8XG0NdijeVoWY9WDnHZtwXzL846jJSrXmu3YynJZog2+DWHwyG1VZpT3eT0Txn/aYDwQyErT8gUtRyff4jA=="],
+
     "@lowerdeck/validation": ["@lowerdeck/validation@1.0.4", "", {}, "sha512-Nr99OhNyr74w/e90Nkm+TNYq2Sk978jY3UKF1B1EDNjrnLGR7sPa3MGxDMpVISgMqgqwGF6rSKMGzNZCFNarng=="],
 
     "@metorial-io/data-hooks": ["@metorial-io/data-hooks@1.0.1", "", { "dependencies": { "@lowerdeck/canonicalize": "^1.0.4", "@lowerdeck/error": "^1.0.10", "@lowerdeck/memo": "^1.0.4", "@lowerdeck/sentry": "^1.0.2", "@lowerdeck/validation": "^1.0.4", "@metorial-io/ui": "^1.0.0", "@metorial/util-endpoint": "^1.0.0", "fast-deep-equal": "^3.1.3", "formik": "^2.4.9", "react": "^19.2.3", "sonner": "^2.0.7", "yup": "^1.7.1" } }, "sha512-weAOBBCdjgweQHY+aYKsLxi6ZCA0JsYlX5sfJzePfN5/xXMijaXKcp2nzfyxB6V1caDtbNRHX7gG4N9aADcRmQ=="],
@@ -849,15 +860,13 @@
 
     "@metorial-io/ui": ["@metorial-io/ui@1.0.0", "", { "dependencies": { "@dnd-kit/core": "^6.3.1", "@dnd-kit/sortable": "^10.0.0", "@dnd-kit/utilities": "^3.2.2", "@looped/hooks": "^0.1.3", "@lowerdeck/memo": "^1.0.4", "@radix-ui/react-accordion": "^1.2.12", "@radix-ui/react-alert-dialog": "^1.1.15", "@radix-ui/react-checkbox": "^1.3.3", "@radix-ui/react-dialog": "^1.1.15", "@radix-ui/react-dropdown-menu": "^2.1.16", "@radix-ui/react-popover": "^1.1.15", "@radix-ui/react-select": "^2.2.6", "@radix-ui/react-slider": "^1.3.6", "@radix-ui/react-switch": "^1.2.6", "@radix-ui/react-toggle-group": "^1.1.11", "@radix-ui/react-tooltip": "^1.2.8", "@radix-ui/react-visually-hidden": "^1.2.4", "@remixicon/react": "^4.8.0", "clsx": "^2.1.1", "copy-to-clipboard": "^3.3.3", "date-fns": "^4.1.0", "framer-motion": "^12.24.4", "react": "^19.2.3", "react-dom": "^19.2.3", "react-feather": "^2.0.10", "react-textarea-autosize": "^8.5.9", "react-use": "^17.6.0", "react-wrap-balancer": "^1.1.1", "shleemy": "^1.2.2", "sonner": "^2.0.7", "styled-components": "^6.2.0", "use-delayed": "^0.1.0" } }, "sha512-JQzEoGzaWPPEhUZY1sIhVNII6xHhnrGsPNE98LCnM9fw37khdvLtI31X9bNJSfM5FvZSIwdzZfGjEAWQxHVn2Q=="],
 
-    "@metorial-services/shuttle-client": ["@metorial-services/shuttle-client@1.0.1", "", { "dependencies": { "@lowerdeck/rpc-client": "^1.0.2", "@metorial/util-websocket": "^1.0.0", "@types/bun": "^1.3.7" } }, "sha512-RnLze69SdPNXCQIwlhgZpwKc750Cnm3GbfCccks4GC2AjkT2jtjcTqZRH142dcDmevqOaXYfCB7A5tGxWYLudw=="],
+    "@metorial-services/shuttle-client": ["@metorial-services/shuttle-client@1.0.5", "", { "dependencies": { "@lowerdeck/rpc-client": "^1.0.2", "@metorial/util-websocket": "^1.0.0", "@types/bun": "^1.3.7" } }, "sha512-mn6SPVL0xmdgMOnClF5vWyv/aS8q4uzRQmNHok9JS+BkEoov5DEFD8ED3ztyAgqCZbqByHVSSTqVf1KFCwQJCg=="],
 
-    "@metorial-services/slates-hub-client": ["@metorial-services/slates-hub-client@1.0.14", "", { "dependencies": { "@lowerdeck/rpc-client": "^1.0.2" } }, "sha512-339ejIYGb0EvmHpfhW4d5hgW9ORuGcJ5DCYpYvpw873j4kVzzRUDomjU7Mt4YrFSnmQ5o7BJzerHJ6FfVrNyKQ=="],
+    "@metorial-services/slates-hub-client": ["@metorial-services/slates-hub-client@1.0.15", "", { "dependencies": { "@lowerdeck/rpc-client": "^1.0.2" } }, "sha512-jcPx30V3sRDAVcYQKxq8bHmq1iClGvIj0Tqz8uyEXRpQQMzmpA/VOfOW+7gh9IkpC0e4rqRyNa6L/UUsBqUtDg=="],
 
     "@metorial-services/subspace-client": ["@metorial-services/subspace-client@workspace:clients/typescript"],
 
     "@metorial-services/voyager-client": ["@metorial-services/voyager-client@1.0.0", "", { "dependencies": { "@lowerdeck/rpc-client": "^1.0.2" } }, "sha512-2rXOJwbBRji+cJpko5cS2pVWGuPaZzWB9q1O3+Gj+98ZJtOWa6dBlQuZY+DEsx2jySOsDDEpeTDqcMXe+IblVQ=="],
-
-    "@metorial-subspace/app-connection-endpoint": ["@metorial-subspace/app-connection-endpoint@workspace:apps/connection-endpoint"],
 
     "@metorial-subspace/app-controller": ["@metorial-subspace/app-controller@workspace:apps/controller"],
 
@@ -880,6 +889,8 @@
     "@metorial-subspace/module-catalog": ["@metorial-subspace/module-catalog@workspace:modules/catalog"],
 
     "@metorial-subspace/module-connection": ["@metorial-subspace/module-connection@workspace:modules/connection"],
+
+    "@metorial-subspace/module-custom-provider": ["@metorial-subspace/module-custom-provider@workspace:modules/custom-provider"],
 
     "@metorial-subspace/module-deployment": ["@metorial-subspace/module-deployment@workspace:modules/deployment"],
 
@@ -1350,6 +1361,8 @@
     "@types/hoist-non-react-statics": ["@types/hoist-non-react-statics@3.3.7", "", { "dependencies": { "hoist-non-react-statics": "^3.3.0" }, "peerDependencies": { "@types/react": "*" } }, "sha512-PQTyIulDkIDro8P+IHbKCsw7U2xxBYflVzW/FgWdCAePD9xGSidgA76/GeJ6lBKoblyhf9pBY763gbrN+1dI8g=="],
 
     "@types/js-cookie": ["@types/js-cookie@2.2.7", "", {}, "sha512-aLkWa0C0vO5b4Sr798E26QgOkss68Un0bLjs7u9qxzPT5CG+8DuNTffWES58YzJs3hrVAOs1wonycqEBqNJubA=="],
+
+    "@types/lodash": ["@types/lodash@4.17.23", "", {}, "sha512-RDvF6wTulMPjrNdCoYRC8gNR880JNGT8uB+REUpC2Ns4pRqQJhGz90wh7rgdXDPpCczF3VGktDuFGVnz8zP7HA=="],
 
     "@types/mysql": ["@types/mysql@2.15.27", "", { "dependencies": { "@types/node": "*" } }, "sha512-YfWiV16IY0OeBfBCk8+hXKmdTKrKlwKN1MNKAPBu5JYxLwBEZl7QzeEpGnlZb3VMGJrrGmB84gXiH+ofs/TezA=="],
 
@@ -1977,6 +1990,8 @@
 
     "resolve-from": ["resolve-from@5.0.0", "", {}, "sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw=="],
 
+    "ret": ["ret@0.5.0", "", {}, "sha512-I1XxrZSQ+oErkRR4jYbAyEEu2I0avBvvMM5JN+6EBprOGRCs63ENqZ3vjavq8fBw2+62G5LF5XelKwuJpcvcxw=="],
+
     "retry": ["retry@0.12.0", "", {}, "sha512-9LkiTwjUh6rT555DtE9rTX+BKByPfrMzEAtnlEtdEwr3Nkffwiihqe2bWADg+OQRjt9gl6ICdmB/ZFDCGAtSow=="],
 
     "reusify": ["reusify@1.1.0", "", {}, "sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw=="],
@@ -1990,6 +2005,8 @@
     "run-parallel": ["run-parallel@1.2.0", "", { "dependencies": { "queue-microtask": "^1.2.2" } }, "sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA=="],
 
     "safe-buffer": ["safe-buffer@5.1.2", "", {}, "sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g=="],
+
+    "safe-regex2": ["safe-regex2@5.0.0", "", { "dependencies": { "ret": "~0.5.0" } }, "sha512-YwJwe5a51WlK7KbOJREPdjNrpViQBI3p4T50lfwPuDhZnE3XGVTlGvi+aolc5+RvxDD6bnUmjVsU9n1eboLUYw=="],
 
     "safer-buffer": ["safer-buffer@2.1.2", "", {}, "sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg=="],
 
@@ -2219,11 +2236,37 @@
 
     "@chevrotain/gast/lodash": ["lodash@4.17.21", "", {}, "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg=="],
 
+    "@metorial-services/shuttle-client/@types/bun": ["@types/bun@1.3.8", "", { "dependencies": { "bun-types": "1.3.8" } }, "sha512-3LvWJ2q5GerAXYxO2mffLTqOzEu5qnhEAlh48Vnu8WQfnmSwbgagjGZV6BoHKJztENYEDn6QmVd949W4uESRJA=="],
+
     "@metorial-services/subspace-client/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "@metorial-subspace/conduit/@types/bun": ["@types/bun@1.3.8", "", { "dependencies": { "bun-types": "1.3.8" } }, "sha512-3LvWJ2q5GerAXYxO2mffLTqOzEu5qnhEAlh48Vnu8WQfnmSwbgagjGZV6BoHKJztENYEDn6QmVd949W4uESRJA=="],
 
     "@metorial-subspace/conduit/vitest": ["vitest@2.1.9", "", { "dependencies": { "@vitest/expect": "2.1.9", "@vitest/mocker": "2.1.9", "@vitest/pretty-format": "^2.1.9", "@vitest/runner": "2.1.9", "@vitest/snapshot": "2.1.9", "@vitest/spy": "2.1.9", "@vitest/utils": "2.1.9", "chai": "^5.1.2", "debug": "^4.3.7", "expect-type": "^1.1.0", "magic-string": "^0.30.12", "pathe": "^1.1.2", "std-env": "^3.8.0", "tinybench": "^2.9.0", "tinyexec": "^0.3.1", "tinypool": "^1.0.1", "tinyrainbow": "^1.2.0", "vite": "^5.0.0", "vite-node": "2.1.9", "why-is-node-running": "^2.3.0" }, "peerDependencies": { "@edge-runtime/vm": "*", "@types/node": "^18.0.0 || >=20.0.0", "@vitest/browser": "2.1.9", "@vitest/ui": "2.1.9", "happy-dom": "*", "jsdom": "*" }, "optionalPeers": ["@edge-runtime/vm", "@types/node", "@vitest/browser", "@vitest/ui", "happy-dom", "jsdom"], "bin": { "vitest": "vitest.mjs" } }, "sha512-MSmPM9REYqDGBI8439mA4mWhV5sKmDlBKWIYbA3lRb2PTHACE0mgKwA8yQ2xq9vxDTuk4iPrECBAEW2aoFXY0Q=="],
 
+    "@metorial-subspace/connection-utils/@types/bun": ["@types/bun@1.3.8", "", { "dependencies": { "bun-types": "1.3.8" } }, "sha512-3LvWJ2q5GerAXYxO2mffLTqOzEu5qnhEAlh48Vnu8WQfnmSwbgagjGZV6BoHKJztENYEDn6QmVd949W4uESRJA=="],
+
+    "@metorial-subspace/db/@types/bun": ["@types/bun@1.3.8", "", { "dependencies": { "bun-types": "1.3.8" } }, "sha512-3LvWJ2q5GerAXYxO2mffLTqOzEu5qnhEAlh48Vnu8WQfnmSwbgagjGZV6BoHKJztENYEDn6QmVd949W4uESRJA=="],
+
+    "@metorial-subspace/generator/@types/bun": ["@types/bun@1.3.8", "", { "dependencies": { "bun-types": "1.3.8" } }, "sha512-3LvWJ2q5GerAXYxO2mffLTqOzEu5qnhEAlh48Vnu8WQfnmSwbgagjGZV6BoHKJztENYEDn6QmVd949W4uESRJA=="],
+
+    "@metorial-subspace/list-utils/@types/bun": ["@types/bun@1.3.8", "", { "dependencies": { "bun-types": "1.3.8" } }, "sha512-3LvWJ2q5GerAXYxO2mffLTqOzEu5qnhEAlh48Vnu8WQfnmSwbgagjGZV6BoHKJztENYEDn6QmVd949W4uESRJA=="],
+
+    "@metorial-subspace/module-search/@types/bun": ["@types/bun@1.3.8", "", { "dependencies": { "bun-types": "1.3.8" } }, "sha512-3LvWJ2q5GerAXYxO2mffLTqOzEu5qnhEAlh48Vnu8WQfnmSwbgagjGZV6BoHKJztENYEDn6QmVd949W4uESRJA=="],
+
     "@metorial-subspace/module-session/p-queue": ["p-queue@8.1.1", "", { "dependencies": { "eventemitter3": "^5.0.1", "p-timeout": "^6.1.2" } }, "sha512-aNZ+VfjobsWryoiPnEApGGmf5WmNsCo9xu8dfaYamG5qaLP7ClhLN6NgsFe6SwJ2UbLEBK5dv9x8Mn5+RVhMWQ=="],
+
+    "@metorial-subspace/provider/@types/bun": ["@types/bun@1.3.8", "", { "dependencies": { "bun-types": "1.3.8" } }, "sha512-3LvWJ2q5GerAXYxO2mffLTqOzEu5qnhEAlh48Vnu8WQfnmSwbgagjGZV6BoHKJztENYEDn6QmVd949W4uESRJA=="],
+
+    "@metorial-subspace/provider-shuttle/@types/bun": ["@types/bun@1.3.8", "", { "dependencies": { "bun-types": "1.3.8" } }, "sha512-3LvWJ2q5GerAXYxO2mffLTqOzEu5qnhEAlh48Vnu8WQfnmSwbgagjGZV6BoHKJztENYEDn6QmVd949W4uESRJA=="],
+
+    "@metorial-subspace/provider-slates/@types/bun": ["@types/bun@1.3.8", "", { "dependencies": { "bun-types": "1.3.8" } }, "sha512-3LvWJ2q5GerAXYxO2mffLTqOzEu5qnhEAlh48Vnu8WQfnmSwbgagjGZV6BoHKJztENYEDn6QmVd949W4uESRJA=="],
+
+    "@metorial-subspace/provider-utils/@types/bun": ["@types/bun@1.3.8", "", { "dependencies": { "bun-types": "1.3.8" } }, "sha512-3LvWJ2q5GerAXYxO2mffLTqOzEu5qnhEAlh48Vnu8WQfnmSwbgagjGZV6BoHKJztENYEDn6QmVd949W4uESRJA=="],
+
+    "@metorial-subspace/redis-url/@types/bun": ["@types/bun@1.3.8", "", { "dependencies": { "bun-types": "1.3.8" } }, "sha512-3LvWJ2q5GerAXYxO2mffLTqOzEu5qnhEAlh48Vnu8WQfnmSwbgagjGZV6BoHKJztENYEDn6QmVd949W4uESRJA=="],
+
+    "@metorial-subspace/store/@types/bun": ["@types/bun@1.3.8", "", { "dependencies": { "bun-types": "1.3.8" } }, "sha512-3LvWJ2q5GerAXYxO2mffLTqOzEu5qnhEAlh48Vnu8WQfnmSwbgagjGZV6BoHKJztENYEDn6QmVd949W4uESRJA=="],
 
     "@mrleebo/prisma-ast/lilconfig": ["lilconfig@2.1.0", "", {}, "sha512-utWOt/GHzuUxnLKxB6dk81RoOeoNeHgbrXiuGk4yyF5qlRz+iIVWu56E2fqGHFrXz0QNUhLB/8nKqvRH66JKGQ=="],
 
@@ -2283,6 +2326,10 @@
 
     "@aws-crypto/util/@smithy/util-utf8/@smithy/util-buffer-from": ["@smithy/util-buffer-from@2.2.0", "", { "dependencies": { "@smithy/is-array-buffer": "^2.2.0", "tslib": "^2.6.2" } }, "sha512-IJdWBbTcMQ6DA0gdNhh/BwrLkDR+ADW5Kr1aZmd4k3DIF6ezMV4R2NIAmT08wQJ3yUK82thHWmC/TnK/wpMMIA=="],
 
+    "@metorial-services/shuttle-client/@types/bun/bun-types": ["bun-types@1.3.8", "", { "dependencies": { "@types/node": "*" } }, "sha512-fL99nxdOWvV4LqjmC+8Q9kW3M4QTtTR1eePs94v5ctGqU8OeceWrSUaRw3JYb7tU3FkMIAjkueehrHPPPGKi5Q=="],
+
+    "@metorial-subspace/conduit/@types/bun/bun-types": ["bun-types@1.3.8", "", { "dependencies": { "@types/node": "*" } }, "sha512-fL99nxdOWvV4LqjmC+8Q9kW3M4QTtTR1eePs94v5ctGqU8OeceWrSUaRw3JYb7tU3FkMIAjkueehrHPPPGKi5Q=="],
+
     "@metorial-subspace/conduit/vitest/@vitest/expect": ["@vitest/expect@2.1.9", "", { "dependencies": { "@vitest/spy": "2.1.9", "@vitest/utils": "2.1.9", "chai": "^5.1.2", "tinyrainbow": "^1.2.0" } }, "sha512-UJCIkTBenHeKT1TTlKMJWy1laZewsRIzYighyYiJKZreqtdxSos/S1t+ktRMQWu2CKqaarrkeszJx1cgC5tGZw=="],
 
     "@metorial-subspace/conduit/vitest/@vitest/mocker": ["@vitest/mocker@2.1.9", "", { "dependencies": { "@vitest/spy": "2.1.9", "estree-walker": "^3.0.3", "magic-string": "^0.30.12" }, "peerDependencies": { "msw": "^2.4.9", "vite": "^5.0.0" }, "optionalPeers": ["msw", "vite"] }, "sha512-tVL6uJgoUdi6icpxmdrn5YNo3g3Dxv+IHJBr0GXHaEdTcw3F+cPKnsXFhli6nO+f/6SDKPHEK1UN+k+TQv0Ehg=="],
@@ -2303,7 +2350,29 @@
 
     "@metorial-subspace/conduit/vitest/vite-node": ["vite-node@2.1.9", "", { "dependencies": { "cac": "^6.7.14", "debug": "^4.3.7", "es-module-lexer": "^1.5.4", "pathe": "^1.1.2", "vite": "^5.0.0" }, "bin": { "vite-node": "vite-node.mjs" } }, "sha512-AM9aQ/IPrW/6ENLQg3AGY4K1N2TGZdR5e4gu/MmmR2xR3Ll1+dib+nook92g4TV3PXVyeyxdWwtaCAiUL0hMxA=="],
 
+    "@metorial-subspace/connection-utils/@types/bun/bun-types": ["bun-types@1.3.8", "", { "dependencies": { "@types/node": "*" } }, "sha512-fL99nxdOWvV4LqjmC+8Q9kW3M4QTtTR1eePs94v5ctGqU8OeceWrSUaRw3JYb7tU3FkMIAjkueehrHPPPGKi5Q=="],
+
+    "@metorial-subspace/db/@types/bun/bun-types": ["bun-types@1.3.8", "", { "dependencies": { "@types/node": "*" } }, "sha512-fL99nxdOWvV4LqjmC+8Q9kW3M4QTtTR1eePs94v5ctGqU8OeceWrSUaRw3JYb7tU3FkMIAjkueehrHPPPGKi5Q=="],
+
+    "@metorial-subspace/generator/@types/bun/bun-types": ["bun-types@1.3.8", "", { "dependencies": { "@types/node": "*" } }, "sha512-fL99nxdOWvV4LqjmC+8Q9kW3M4QTtTR1eePs94v5ctGqU8OeceWrSUaRw3JYb7tU3FkMIAjkueehrHPPPGKi5Q=="],
+
+    "@metorial-subspace/list-utils/@types/bun/bun-types": ["bun-types@1.3.8", "", { "dependencies": { "@types/node": "*" } }, "sha512-fL99nxdOWvV4LqjmC+8Q9kW3M4QTtTR1eePs94v5ctGqU8OeceWrSUaRw3JYb7tU3FkMIAjkueehrHPPPGKi5Q=="],
+
+    "@metorial-subspace/module-search/@types/bun/bun-types": ["bun-types@1.3.8", "", { "dependencies": { "@types/node": "*" } }, "sha512-fL99nxdOWvV4LqjmC+8Q9kW3M4QTtTR1eePs94v5ctGqU8OeceWrSUaRw3JYb7tU3FkMIAjkueehrHPPPGKi5Q=="],
+
     "@metorial-subspace/module-session/p-queue/p-timeout": ["p-timeout@6.1.4", "", {}, "sha512-MyIV3ZA/PmyBN/ud8vV9XzwTrNtR4jFrObymZYnZqMmW0zA8Z17vnT0rBgFE/TlohB+YCHqXMgZzb3Csp49vqg=="],
+
+    "@metorial-subspace/provider-shuttle/@types/bun/bun-types": ["bun-types@1.3.8", "", { "dependencies": { "@types/node": "*" } }, "sha512-fL99nxdOWvV4LqjmC+8Q9kW3M4QTtTR1eePs94v5ctGqU8OeceWrSUaRw3JYb7tU3FkMIAjkueehrHPPPGKi5Q=="],
+
+    "@metorial-subspace/provider-slates/@types/bun/bun-types": ["bun-types@1.3.8", "", { "dependencies": { "@types/node": "*" } }, "sha512-fL99nxdOWvV4LqjmC+8Q9kW3M4QTtTR1eePs94v5ctGqU8OeceWrSUaRw3JYb7tU3FkMIAjkueehrHPPPGKi5Q=="],
+
+    "@metorial-subspace/provider-utils/@types/bun/bun-types": ["bun-types@1.3.8", "", { "dependencies": { "@types/node": "*" } }, "sha512-fL99nxdOWvV4LqjmC+8Q9kW3M4QTtTR1eePs94v5ctGqU8OeceWrSUaRw3JYb7tU3FkMIAjkueehrHPPPGKi5Q=="],
+
+    "@metorial-subspace/provider/@types/bun/bun-types": ["bun-types@1.3.8", "", { "dependencies": { "@types/node": "*" } }, "sha512-fL99nxdOWvV4LqjmC+8Q9kW3M4QTtTR1eePs94v5ctGqU8OeceWrSUaRw3JYb7tU3FkMIAjkueehrHPPPGKi5Q=="],
+
+    "@metorial-subspace/redis-url/@types/bun/bun-types": ["bun-types@1.3.8", "", { "dependencies": { "@types/node": "*" } }, "sha512-fL99nxdOWvV4LqjmC+8Q9kW3M4QTtTR1eePs94v5ctGqU8OeceWrSUaRw3JYb7tU3FkMIAjkueehrHPPPGKi5Q=="],
+
+    "@metorial-subspace/store/@types/bun/bun-types": ["bun-types@1.3.8", "", { "dependencies": { "@types/node": "*" } }, "sha512-fL99nxdOWvV4LqjmC+8Q9kW3M4QTtTR1eePs94v5ctGqU8OeceWrSUaRw3JYb7tU3FkMIAjkueehrHPPPGKi5Q=="],
 
     "@prisma/instrumentation/@opentelemetry/instrumentation/@opentelemetry/api-logs": ["@opentelemetry/api-logs@0.207.0", "", { "dependencies": { "@opentelemetry/api": "^1.3.0" } }, "sha512-lAb0jQRVyleQQGiuuvCOTDVspc14nx6XJjP4FspJ1sNARo3Regq4ZZbrc3rN4b1TYSuUCvgH+UXUPug4SLOqEQ=="],
 

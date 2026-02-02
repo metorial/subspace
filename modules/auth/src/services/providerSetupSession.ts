@@ -11,10 +11,12 @@ import {
   type Provider,
   type ProviderAuthCredentials,
   type ProviderDeployment,
+  ProviderDeploymentVersion,
   type ProviderSetupSession,
   type ProviderSetupSessionStatus,
   type ProviderSetupSessionType,
   type ProviderSetupSessionUiMode,
+  ProviderType,
   type ProviderVariant,
   type ProviderVersion,
   type Solution,
@@ -41,6 +43,7 @@ import {
 import { providerAuthConfigInclude } from './providerAuthConfig';
 import { providerAuthConfigInternalService } from './providerAuthConfigInternal';
 import { providerSetupSessionInternalService } from './providerSetupSessionInternal';
+import { providerSetupSessionUiService } from './providerSetupSessionUi';
 
 let include = {
   authConfig: { include: providerAuthConfigInclude },
@@ -140,16 +143,18 @@ class providerSetupSessionServiceImpl {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
-    provider: Provider & { defaultVariant: ProviderVariant | null };
+    provider: Provider & { defaultVariant: ProviderVariant | null; type: ProviderType };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
       providerVariant: ProviderVariant;
-      lockedVersion: ProviderVersion | null;
+      currentVersion:
+        | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+        | null;
     };
     credentials?: ProviderAuthCredentials;
     brand?: Brand;
     input: {
-      name: string;
+      name?: string;
       authMethodId?: string;
       description?: string;
       metadata?: Record<string, any>;
@@ -212,14 +217,20 @@ class providerSetupSessionServiceImpl {
         });
 
       if (d.credentials && authMethod.type !== 'oauth') d.credentials = undefined;
-      if (authMethod.type === 'oauth' && !d.credentials) {
+      if (
+        authMethod.type === 'oauth' &&
+        !d.credentials &&
+        // If auto registration is supported, we don't need to require credentials
+        d.provider.type.attributes.auth.oauth?.oauthAutoRegistration?.status != 'supported'
+      ) {
         let defaultCredentials = await db.providerAuthCredentials.findFirst({
           where: {
             providerOid: d.provider.oid,
             tenantOid: d.tenant.oid,
             solutionOid: d.solution.oid,
             environmentOid: d.environment.oid,
-            isDefault: true
+            isDefault: true,
+            status: 'active'
           }
         });
 
@@ -267,6 +278,21 @@ class providerSetupSessionServiceImpl {
         inner = { ...inner, ...authConfigInner };
       }
 
+      // If we don't really need a config for the provider, just create an empty one
+      if (d.input.type != 'auth_only' && !d.input.configInput) {
+        let configRes = await providerSetupSessionUiService.getConfigSchemaWithoutSession({
+          tenant: d.tenant,
+          solution: d.solution,
+          environment: d.environment,
+          provider: d.provider,
+          deployment: d.providerDeployment
+        });
+
+        if (configRes.type == 'none') {
+          d.input.configInput = {};
+        }
+      }
+
       if (d.input.configInput && d.input.type !== 'auth_only') {
         let configInner = await providerSetupSessionInternalService.createProviderConfig({
           tenant: d.tenant,
@@ -299,6 +325,7 @@ class providerSetupSessionServiceImpl {
           name: d.input.name?.trim() || undefined,
           description: d.input.description?.trim() || undefined,
           metadata: d.input.metadata,
+          redirectUrl: d.input.redirectUrl,
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,

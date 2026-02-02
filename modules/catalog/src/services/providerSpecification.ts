@@ -26,7 +26,7 @@ class providerSpecificationServiceImpl {
     let deployments = d.providerDeploymentIds
       ? await db.providerDeployment.findMany({
           where: { id: { in: d.providerDeploymentIds } },
-          include: { lockedVersion: true }
+          include: { currentVersion: { include: { lockedVersion: true } } }
         })
       : undefined;
     let configs = d.providerConfigIds
@@ -37,7 +37,9 @@ class providerSpecificationServiceImpl {
 
     let specOids = [
       ...(versions?.map(v => v.specificationOid!).filter(o => o) ?? []),
-      ...(deployments?.map(d => d.lockedVersion?.specificationOid!).filter(o => o) ?? []),
+      ...(deployments
+        ?.map(d => d.currentVersion?.lockedVersion?.specificationOid!)
+        .filter(o => o) ?? []),
       ...(configs?.map(c => c.specificationOid) ?? [])
     ];
 

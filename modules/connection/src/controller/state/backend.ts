@@ -1,5 +1,9 @@
 import { getBackend } from '@metorial-subspace/provider';
-import type { ToolInvocationCreateParam } from '@metorial-subspace/provider-utils';
+import type {
+  HandleMcpNotificationOrRequestParam,
+  ToolInvocationCreateParam
+} from '@metorial-subspace/provider-utils';
+import type { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
 import type { ConnectionState } from '.';
 
 export let getConnectionBackendConnection = async (state: ConnectionState) => {
@@ -36,14 +40,16 @@ export let getConnectionBackendConnection = async (state: ConnectionState) => {
       await conn.close();
     },
 
-    send: async (d: ToolInvocationCreateParam) => {
+    sendToolInvocation: async (d: ToolInvocationCreateParam) => {
       return await conn.handleToolInvocation(d);
     },
 
-    onMessage: (
-      listener: (data: { output: PrismaJson.SessionMessageOutput }) => Promise<void>
-    ) => {
-      conn.onMessage(listener);
+    sendMcpResponseOrNotification: async (d: HandleMcpNotificationOrRequestParam) => {
+      return await conn.handleMcpResponseOrNotification(d);
+    },
+
+    onMcpNotificationOrRequest: (listener: (data: JSONRPCMessage) => Promise<void>) => {
+      conn.onMcpNotificationOrRequest(listener);
     },
 
     onClose: (listener: () => Promise<void>) => {

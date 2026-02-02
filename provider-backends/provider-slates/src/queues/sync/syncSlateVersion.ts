@@ -17,7 +17,7 @@ export let syncSlateVersionQueue = createQueue<{
   slateId: string;
   slateVersionId: string;
 }>({
-  name: 'kst/sltv/sync',
+  name: 'sub/sltv/sync',
   redisUrl: env.service.REDIS_URL,
   workerOpts: {
     concurrency: 1,
@@ -71,10 +71,11 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
       update: {}
     });
 
+    let newVersionOid = snowflake.nextId();
     let slateVersionRecord = await db.slateVersion.upsert({
       where: { id: data.slateVersionId },
       create: {
-        oid: snowflake.nextId(),
+        oid: newVersionOid,
         id: data.slateVersionId,
         version: version.version,
         identifier: `${slate.identifier}::${version.version}`,
@@ -82,6 +83,11 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
       },
       update: {}
     });
+
+    // Abort if the version already existed
+    if (slateVersionRecord.oid != newVersionOid) {
+      return;
+    }
 
     let registryRecord = await slates.slate.getRegistryRecord({
       slateId: slate.id
@@ -105,7 +111,7 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
 
     let spec = version.specification?.id
       ? await slates.slateSpecification.get({
-          slateSpecificationId: version.specification?.id
+          slateSpecificationId: version.specification?.specificationId
         })
       : null;
 
@@ -152,6 +158,7 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
     };
 
     let provider = await providerInternalService.upsertProvider({
+      tenant: null,
       publisher,
       source: {
         type: 'slates',
@@ -165,7 +172,7 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
         image: registryRecord.logoUrl ? { type: 'url', url: registryRecord.logoUrl } : null,
         skills: registryRecord.skills,
         readme: readme,
-        categories: registryRecord.categories.map((c: any) => c.identifier)
+        categories: registryRecord.categories?.map((c: any) => c.identifier) ?? []
       },
       type
     });

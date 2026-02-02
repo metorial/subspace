@@ -38,7 +38,8 @@ model SessionMessage {
   methodOrToolKey String?
 
   /// [SessionMessageClientMcpId]
-  mcpMessageId Json
+  clientMcpId   Json
+  providerMcpId String? @unique
 
   /// [SessionMessageInput]
   input Json?
@@ -47,6 +48,10 @@ model SessionMessage {
   output Json?
 
   isProductive Boolean @default(true)
+
+  parentMessageOid BigInt?
+  parentMessage    SessionMessage?  @relation("SessionMessageToParent", fields: [parentMessageOid], references: [oid])
+  childMessages    SessionMessage[] @relation("SessionMessageToParent")
 
   isOffloadedToStorage Boolean                     @default(false)
   bucketOid            Int
@@ -96,6 +101,7 @@ model SessionMessage {
   @@index([isOffloadedToStorage])
   @@index([status])
   @@index([type])
+  @@index([source])
 }
 
 model SessionMessageStorageBucket {

@@ -3,18 +3,20 @@ import type {
   ProviderAuthConfigVersion,
   ProviderConfigVersion,
   ProviderRun,
+  ProviderTool,
   ProviderVariant,
   ProviderVersion,
   Session,
   SessionConnection,
   SessionMessage,
   SessionParticipant,
+  SessionProvider,
   ShuttleConnection,
   SlateSession,
   SlateToolCall,
   Tenant
 } from '@metorial-subspace/db';
-import type { InitializeRequest } from '@modelcontextprotocol/sdk/types.js';
+import type { InitializeRequest, JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
 import { IProviderFunctionality } from '../providerFunctionality';
 
 export abstract class IProviderRun extends IProviderFunctionality {
@@ -27,9 +29,7 @@ export abstract class IProviderRun extends IProviderFunctionality {
 
 export abstract class IProviderRunConnection {
   #closeListeners = new Set<() => Promise<void>>();
-  #messageListeners = new Set<
-    (data: { output: PrismaJson.SessionMessageOutput }) => Promise<void>
-  >();
+  #messageListeners = new Set<(data: JSONRPCMessage) => Promise<void>>();
   #isClosed = false;
 
   public onClose(listener: () => Promise<void>) {
@@ -42,9 +42,7 @@ export abstract class IProviderRunConnection {
     return () => this.#closeListeners.delete(listener);
   }
 
-  public onMessage(
-    listener: (data: { output: PrismaJson.SessionMessageOutput }) => Promise<void>
-  ) {
+  public onMcpNotificationOrRequest(listener: (data: JSONRPCMessage) => Promise<void>) {
     this.#messageListeners.add(listener);
     return () => this.#messageListeners.delete(listener);
   }
@@ -58,7 +56,7 @@ export abstract class IProviderRunConnection {
     }
   }
 
-  protected async emitMessage(data: { output: PrismaJson.SessionMessageOutput }) {
+  protected async emitMcpMessage(data: JSONRPCMessage) {
     for (let listener of this.#messageListeners) {
       await listener(data);
     }
@@ -67,6 +65,10 @@ export abstract class IProviderRunConnection {
   abstract handleToolInvocation(
     data: ToolInvocationCreateParam
   ): Promise<ToolInvocationCreateRes>;
+
+  abstract handleMcpResponseOrNotification(
+    data: HandleMcpNotificationOrRequestParam
+  ): Promise<HandleMcpNotificationOrRequestRes>;
 
   abstract close(): Promise<void>;
 }
@@ -97,11 +99,12 @@ export interface ProviderRunCreateRes {
 }
 
 export interface ToolInvocationCreateParam {
-  tool: { callableId: string };
+  tool: ProviderTool;
   sender: SessionParticipant;
 
   input: PrismaJson.SessionMessageInput;
   message: SessionMessage;
+  sessionProvider: SessionProvider;
 }
 
 export interface ToolInvocationCreateRes {
@@ -118,6 +121,23 @@ export interface ToolInvocationCreateRes {
           message: string;
         };
       };
+}
+
+export interface HandleMcpNotificationOrRequestParam {
+  sender: SessionParticipant;
+  input: JSONRPCMessage;
+  message: SessionMessage;
+}
+
+export interface HandleMcpNotificationOrRequestRes {
+  slateToolCall?: SlateToolCall;
+  output?: {
+    type: 'error';
+    error: {
+      code: string;
+      message: string;
+    };
+  };
 }
 
 export interface ProviderRunLogsParam {

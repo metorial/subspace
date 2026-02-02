@@ -1,6 +1,7 @@
 import { createQueue, QueueRetryError } from '@lowerdeck/queue';
 import { db } from '@metorial-subspace/db';
 import { getBackend } from '@metorial-subspace/provider';
+import { ProviderSpecificationGetRes } from '@metorial-subspace/provider-utils';
 import { env } from '../../env';
 import { providerSpecificationInternalService } from '../../services/providerSpecification';
 import { providerDeploymentConfigPairSetSpecificationQueue } from './setSpec';
@@ -9,7 +10,7 @@ export let providerDeploymentConfigPairSyncSpecificationQueue = createQueue<{
   providerDeploymentConfigPairId: string;
   versionId: string;
 }>({
-  name: 'pint/pdep/spec/sync',
+  name: 'sub/pint/pdep/spec/sync',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -19,39 +20,47 @@ export let providerDeploymentConfigPairSyncSpecificationQueueProcessor =
       where: { id: data.providerDeploymentConfigPairId },
       include: {
         tenant: true,
-        providerConfig: true,
-        providerDeployment: {
-          include: { providerVariant: true, provider: true, lockedVersion: true }
+        providerConfigVersion: true,
+        providerAuthConfigVersion: true,
+        providerDeploymentVersion: {
+          include: {
+            deployment: {
+              include: { providerVariant: true, provider: true }
+            }
+          }
         }
       }
     });
     if (!pair) throw new QueueRetryError();
 
+    let providerDeployment = pair.providerDeploymentVersion.deployment;
+
     let backend = await getBackend({
-      entity: pair.providerDeployment.providerVariant
+      entity: providerDeployment.providerVariant
     });
 
     let version = await db.providerVersion.findFirstOrThrow({
-      where: { id: data.versionId }
+      where: { id: data.versionId },
+      include: { specification: true }
     });
 
     try {
       let discoverParams = {
         tenant: pair.tenant,
-        deployment: pair.providerDeployment,
+        provider: providerDeployment.provider,
+        providerVariant: providerDeployment.providerVariant,
+        providerVersion: version,
 
-        provider: pair.providerDeployment.provider,
-        providerVariant: pair.providerDeployment.providerVariant,
-        providerVersion: version
+        deploymentVersion: pair.providerDeploymentVersion,
+        configVersion: pair.providerConfigVersion,
+        authConfigVersion: pair.providerAuthConfigVersion
       };
 
       if (version.specificationOid) {
-        let isNeeded =
-          await backend.capabilities.isSpecificationForProviderDeploymentVersionSameAsForVersion(
-            discoverParams
-          );
+        // If we have the full spec, we can skip discovery
+        let alreadyHasFullSpec = version.specification?.type == 'full';
 
-        if (!isNeeded) {
+        if (alreadyHasFullSpec) {
           await providerDeploymentConfigPairSetSpecificationQueue.add({
             providerDeploymentConfigPairOid: pair.oid,
             versionOid: version.oid,
@@ -61,8 +70,14 @@ export let providerDeploymentConfigPairSyncSpecificationQueueProcessor =
         }
       }
 
-      let capabilities =
-        await backend.capabilities.getSpecificationForProviderPair(discoverParams);
+      let capabilities: ProviderSpecificationGetRes = null;
+
+      try {
+        capabilities =
+          await backend.capabilities.getSpecificationForProviderPair(discoverParams);
+      } catch (e) {
+        console.error('Error discovering capabilities:', e);
+      }
 
       // Some backends might need a config to be able to discover specifications
       if (!capabilities) {
@@ -75,8 +90,10 @@ export let providerDeploymentConfigPairSyncSpecificationQueueProcessor =
       }
 
       let spec = await providerSpecificationInternalService.ensureProviderSpecification({
-        provider: pair.providerDeployment.provider,
+        provider: providerDeployment.provider,
         providerVersion: version,
+
+        type: capabilities.type,
 
         specification: capabilities.specification,
         authMethods: capabilities.authMethods,

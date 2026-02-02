@@ -1,5 +1,6 @@
 import { createHono } from '@lowerdeck/hono';
 import path from 'path';
+import { oauthCallbackApp } from './oauthCallback';
 import { oauthSetupApp } from './oauthSetup';
 import { setupSessionApp } from './setupSession';
 
@@ -26,6 +27,7 @@ export let app = createHono()
   })
   .route('/oauth-setup', oauthSetupApp)
   .route('/setup-session', setupSessionApp)
+  .route('/oauth-callback', oauthCallbackApp)
   .get('/assets/:key*', async c => {
     let key = c.req.param('key*');
 

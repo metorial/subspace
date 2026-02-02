@@ -10,6 +10,7 @@ import {
   type ProviderConfigVault,
   type ProviderConfigVaultStatus,
   type ProviderDeployment,
+  ProviderDeploymentVersion,
   type ProviderVariant,
   type ProviderVersion,
   type Solution,
@@ -124,7 +125,9 @@ class providerConfigVaultServiceImpl {
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
       providerVariant: ProviderVariant;
-      lockedVersion: ProviderVersion | null;
+      currentVersion:
+        | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+        | null;
     };
     input: {
       name: string;

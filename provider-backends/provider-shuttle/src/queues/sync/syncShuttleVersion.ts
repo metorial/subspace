@@ -1,23 +1,16 @@
-import { generateCode, generatePlainId } from '@lowerdeck/id';
 import { createQueue } from '@lowerdeck/queue';
-import { slugify } from '@lowerdeck/slugify';
-import { snowflake, withTransaction, type Publisher } from '@metorial-subspace/db';
-import {
-  providerInternalService,
-  providerVersionInternalService,
-  publisherInternalService
-} from '@metorial-subspace/module-provider-internal';
-import { normalizeJsonSchema } from '@metorial-subspace/provider-utils';
-import { backend } from '../../backend';
+import { snowflake, withTransaction } from '@metorial-subspace/db';
+import { syncVersionToCustomProvider } from '@metorial-subspace/module-custom-provider';
 import { shuttle, shuttleDefaultReaderTenant } from '../../client';
 import { env } from '../../env';
+import { upsertShuttleServerVersion } from '../../lib/upsertShuttleVersion';
 
 export let syncShuttleVersionQueue = createQueue<{
   serverId: string;
   serverVersionId: string;
   tenantId: string | undefined;
 }>({
-  name: 'kst/shut/sync',
+  name: 'sub/shut/sync',
   redisUrl: env.service.REDIS_URL,
   workerOpts: {
     concurrency: 1,
@@ -39,6 +32,11 @@ export let syncShuttleVersionQueueProcessor = syncShuttleVersionQueue.process(as
     tenantId: version.tenantId ?? shuttleDefaultReaderTenant.id
   });
 
+  let deployment = await shuttle.serverDeployment.get({
+    tenantId: data.tenantId ?? shuttleDefaultReaderTenant.id,
+    serverDeploymentId: version.deploymentId
+  });
+
   await withTransaction(async db => {
     let shuttleServerRecord = await db.shuttleServer.upsert({
       where: { id: data.serverId },
@@ -46,15 +44,17 @@ export let syncShuttleVersionQueueProcessor = syncShuttleVersionQueue.process(as
         oid: snowflake.nextId(),
         id: server.id,
         identifier: server.id,
-        shuttleTenantId: server.tenantId
+        shuttleTenantId: server.tenantId!,
+        type: server.type
       },
       update: {}
     });
 
+    let newShuttleServerVersionRecord = snowflake.nextId();
     let shuttleServerVersionRecord = await db.shuttleServerVersion.upsert({
       where: { id: version.id },
       create: {
-        oid: snowflake.nextId(),
+        oid: newShuttleServerVersionRecord,
         id: version.id,
         version: version.id,
         identifier: `${server.id}::${version.id}`,
@@ -63,105 +63,109 @@ export let syncShuttleVersionQueueProcessor = syncShuttleVersionQueue.process(as
       update: {}
     });
 
-    let publisher: Publisher | null = null;
+    // Avoid race conditions with custom servers,
+    // i.e., servers owned by another tenant
+    let timeSinceCreation = Date.now() - version.createdAt.getTime();
+    if (timeSinceCreation < 1000 * 120 && server.tenantId) {
+      await syncShuttleVersionQueue.add(data, { delay: 1000 * 120 });
+      return;
+    }
 
-    if (server.tenantId) {
-      let tenant = await db.tenant.findFirst({
-        where: { shuttleTenantId: server.tenantId }
+    // Abort if the version already existed -> was created using a custom server
+    if (shuttleServerVersionRecord.oid != newShuttleServerVersionRecord) {
+      return;
+    }
+
+    let tenant = server.tenantId
+      ? await db.tenant.findFirst({
+          where: { shuttleTenantId: server.tenantId }
+        })
+      : null;
+
+    // We don't know who owns this server, but it's certainly not us
+    if (server.tenantId && !tenant) return;
+
+    if (!tenant) {
+      await upsertShuttleServerVersion({
+        shuttleServer: server,
+        shuttleServerVersion: version,
+
+        shuttleServerRecord,
+        shuttleServerVersionRecord
+      });
+    } else {
+      let variant = await db.providerVariant.findFirst({
+        where: {
+          shuttleServerOid: shuttleServerRecord.oid
+        },
+        include: {
+          provider: {
+            include: {
+              customProvider: true
+            }
+          }
+        }
+      });
+      let customProvider = variant?.provider?.customProvider;
+      if (!customProvider) {
+        throw new Error('No custom provider found for tenant-specific shuttle server');
+      }
+      if (tenant.oid != customProvider.tenantOid) {
+        throw new Error('Tenant mismatch for custom provider shuttle server');
+      }
+      if (!customProvider.shuttleCustomServerOid) {
+        throw new Error('Custom provider has no associated custom shuttle server');
+      }
+
+      let shuttleCustomServerRecord = await db.shuttleCustomServer.upsert({
+        where: { id: server.id },
+        create: {
+          oid: snowflake.nextId(),
+          id: server.id,
+          identifier: deployment.id,
+          serverOid: shuttleServerRecord.oid,
+          tenantOid: tenant.oid,
+          shuttleTenantId: server.tenantId!
+        },
+        update: {}
       });
 
-      if (tenant) {
-        publisher = await publisherInternalService.upsertPublisherForTenant({
-          tenant
+      let shuttleCustomDeploymentRecord = await db.shuttleCustomServerDeployment.upsert({
+        where: { id: deployment.id },
+        create: {
+          oid: snowflake.nextId(),
+          id: deployment.id,
+          identifier: deployment.id,
+          serverVersionOid: shuttleServerVersionRecord.oid,
+          serverOid: shuttleServerRecord.oid,
+          tenantOid: tenant.oid,
+          customServerOid: shuttleCustomServerRecord.oid
+        },
+        update: {}
+      });
+
+      await withTransaction(async db => {
+        let versionRes = await upsertShuttleServerVersion({
+          shuttleServer: server,
+          shuttleServerVersion: version,
+
+          shuttleServerRecord,
+          shuttleServerVersionRecord
         });
-      }
-    }
 
-    if (!publisher) {
-      if (server.type == 'container') {
-        publisher = await publisherInternalService.upsertPublisherForExternal({
-          identifier: `shuttle::registry::${version.repositoryVersion?.repository.registry.id}`,
-          name:
-            version.repositoryVersion?.repository.registry.name ??
-            version.repositoryVersion?.repository.registry.url ??
-            'Unknown Registry'
+        await syncVersionToCustomProvider({
+          providerVersion: versionRes.providerVersion,
+
+          message:
+            version.repositoryTag && version.repositoryVersion
+              ? `Digest of ${version.repositoryTag.name} was updated to ${version.repositoryVersion}`
+              : 'System built new version',
+
+          shuttleServer: shuttleServerRecord,
+          shuttleCustomServer: shuttleCustomServerRecord,
+          shuttleCustomDeployment: shuttleCustomDeploymentRecord
         });
-      } else if (server.type == 'remote') {
-        publisher = await publisherInternalService.upsertPublisherForExternal({
-          identifier: `shuttle::remote::${version.remoteUrl}`,
-          name: `MCP Remote (${version.remoteUrl ?? 'unknown'})`
-        });
-      }
+      });
     }
-
-    if (!publisher) {
-      publisher = await publisherInternalService.upsertUnknownPublisher();
-    }
-
-    let hasConfig = !!(version.configSchema
-      ? normalizeJsonSchema(version.configSchema.configSchema)
-      : null);
-
-    let type = {
-      name: 'Shuttles',
-
-      attributes: {
-        provider: 'metorial-shuttle',
-        backend: `mcp.${server.type}`,
-
-        triggers: { status: 'disabled' },
-
-        auth: server.oauthConfig
-          ? {
-              status: 'enabled',
-
-              oauth: {
-                status: 'enabled',
-                oauthCallbackUrl: `${env.service.SHUTTLE_PUBLIC_URL}/shuttle-oauth/callback`
-              },
-
-              export: { status: 'enabled' },
-              import: { status: 'enabled' }
-            }
-          : { status: 'disabled' },
-
-        config: hasConfig
-          ? { status: 'enabled', read: { status: 'disabled' } }
-          : { status: 'disabled' }
-      } satisfies PrismaJson.ProviderTypeAttributes
-    };
-
-    let provider = await providerInternalService.upsertProvider({
-      publisher,
-      source: {
-        type: 'shuttle',
-        shuttleServer: shuttleServerRecord,
-        backend
-      },
-      info: {
-        name: server.name,
-        description: server.description ?? undefined,
-        slug: slugify(`${server.name}-${generateCode(5)}`)
-      },
-      type
-    });
-    if (!provider?.defaultVariant) {
-      throw new Error(`No default variant after upserting provider for server ${server.id}`);
-    }
-
-    let providerVersion = await providerVersionInternalService.upsertVersion({
-      variant: provider.defaultVariant,
-      isCurrent: version.isCurrent,
-      source: {
-        type: 'shuttle',
-        shuttleServer: shuttleServerRecord,
-        shuttleServerVersion: shuttleServerVersionRecord,
-        backend
-      },
-      info: {
-        name: generatePlainId(8)
-      },
-      type
-    });
   });
 });

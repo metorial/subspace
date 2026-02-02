@@ -7,12 +7,12 @@ import { env } from '../../env';
 import { syncShuttleVersionQueue } from './syncShuttleVersion';
 
 export let syncChangeNotificationsQueue = createQueue<{}>({
-  name: 'kst/shut/cnhnotif',
+  name: 'sub/shut/cnhnotif',
   redisUrl: env.service.REDIS_URL
 });
 
 let lock = createLock({
-  name: 'kst/shut/cnhnotif/lock',
+  name: 'sub/shut/cnhnotif/lock',
   redisUrl: env.service.REDIS_URL
 });
 

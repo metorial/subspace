@@ -43,18 +43,21 @@ export abstract class IProviderAuth extends IProviderFunctionality {
 export interface ProviderAuthCredentialsCreateParam {
   tenant: Tenant;
   provider: Provider & { defaultVariant: ProviderVariant | null };
-  input: {
-    type: 'oauth';
-    clientId: string;
-    clientSecret: string;
-    scopes: string[];
-  };
+  input:
+    | {
+        type: 'oauth';
+        clientId: string;
+        clientSecret: string;
+        scopes: string[];
+      }
+    | { type: 'auto_registration' };
 }
 
 export interface ProviderAuthCredentialsCreateRes {
   slateOAuthCredentials?: SlateOAuthCredentials;
   shuttleOAuthCredentials?: ShuttleOAuthCredentials;
   type: ProviderAuthCredentialsType;
+  isAutoRegistration: boolean;
 }
 
 export interface ProviderAuthConfigCreateParam {
@@ -78,6 +81,7 @@ export interface ProviderOAuthSetupCreateParam {
   credentials: ProviderAuthCredentials;
   authMethod: ProviderAuthMethod;
   redirectUrl: string;
+  callbackUrlOverride: string | null;
   input: Record<string, any>;
 }
 

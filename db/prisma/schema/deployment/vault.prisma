@@ -5,7 +5,7 @@ enum ProviderConfigVaultStatus {
 }
 
 model ProviderConfigVault {
-  oid BigInt @id @default(autoincrement())
+  oid BigInt @id
   id  String @unique
 
   status ProviderConfigVaultStatus

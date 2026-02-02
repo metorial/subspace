@@ -5,10 +5,12 @@ import {
   db,
   getId,
   type ProviderAuthConfig,
+  ProviderAuthConfigVersion,
   type ProviderConfig,
+  ProviderConfigVersion,
   type ProviderDeployment,
+  ProviderDeploymentVersion,
   type ProviderVersion,
-  snowflake,
   withTransaction
 } from '@metorial-subspace/db';
 import {
@@ -16,20 +18,26 @@ import {
   providerDeploymentConfigPairVersionCreatedQueue
 } from '../queues/lifecycle/deploymentConfigPair';
 
+interface PairParts {
+  deployment: ProviderDeployment & { currentVersion: ProviderDeploymentVersion | null };
+  config: ProviderConfig & { currentVersion: ProviderConfigVersion | null };
+  authConfig:
+    | (ProviderAuthConfig & { currentVersion: ProviderAuthConfigVersion | null })
+    | null;
+}
+
+let getPairIdentifier = (d: PairParts) =>
+  `${d.deployment.currentVersion!.oid.toString(36)}.${d.config.currentVersion!.oid.toString(36)}.${
+    d.authConfig ? d.authConfig.currentVersion!.oid.toString(36) : '$'
+  }`;
+
 class providerDeploymentConfigPairInternalServiceImpl {
-  private async upsertDeploymentConfigPairWithoutCreatingVersion(d: {
-    deployment: ProviderDeployment;
-    config: ProviderConfig;
-    version?: ProviderVersion;
-  }) {
+  private async upsertDeploymentConfigPairWithoutCreatingVersion(
+    d: PairParts & { version?: ProviderVersion }
+  ) {
     return withTransaction(async db => {
       let existing = await db.providerDeploymentConfigPair.findUnique({
-        where: {
-          providerConfigOid_providerDeploymentOid: {
-            providerDeploymentOid: d.deployment.oid,
-            providerConfigOid: d.config.oid
-          }
-        },
+        where: { identifier: getPairIdentifier(d) },
         include: {
           versions: d.version ? { where: { versionOid: d.version.oid } } : false
         }
@@ -44,16 +52,16 @@ class providerDeploymentConfigPairInternalServiceImpl {
 
       let newId = getId('providerDeploymentConfigPair');
       let pair = await db.providerDeploymentConfigPair.upsert({
-        where: {
-          providerConfigOid_providerDeploymentOid: {
-            providerDeploymentOid: d.deployment.oid,
-            providerConfigOid: d.config.oid
-          }
-        },
+        where: { identifier: getPairIdentifier(d) },
         create: {
           ...newId,
-          providerDeploymentOid: d.deployment.oid,
-          providerConfigOid: d.config.oid,
+
+          identifier: getPairIdentifier(d),
+
+          providerDeploymentVersionOid: d.deployment.currentVersion!.oid,
+          providerConfigVersionOid: d.config.currentVersion!.oid,
+          providerAuthConfigVersionOid: d.authConfig?.currentVersion?.oid,
+
           tenantOid: d.deployment.tenantOid,
           environmentOid: d.deployment.environmentOid
         },
@@ -87,50 +95,9 @@ class providerDeploymentConfigPairInternalServiceImpl {
     });
   }
 
-  private async upsertDeploymentConfigPairWithAuthConfig(d: {
-    deployment: ProviderDeployment;
-    config: ProviderConfig;
-    authConfig: ProviderAuthConfig | null;
-    version?: ProviderVersion;
-  }) {
+  async upsertDeploymentConfigPair(d: PairParts & { version?: ProviderVersion }) {
     return withTransaction(async db => {
       let res = await this.upsertDeploymentConfigPairWithoutCreatingVersion(d);
-      if (!d.authConfig) return res;
-
-      if (!d.authConfig.currentVersionOid) {
-        throw new Error('Auth config has no current version');
-      }
-
-      let existingAuthConfigLink = await db.providerDeploymentConfigPairAuthConfig.findUnique({
-        where: {
-          pairOid_authConfigVersionOid: {
-            pairOid: res.pair.oid,
-            authConfigVersionOid: d.authConfig.currentVersionOid
-          }
-        }
-      });
-      if (existingAuthConfigLink) return res;
-
-      await db.providerDeploymentConfigPairAuthConfig.createMany({
-        data: {
-          oid: snowflake.nextId(),
-          pairOid: res.pair.oid,
-          authConfigVersionOid: d.authConfig.currentVersionOid
-        }
-      });
-
-      return res;
-    });
-  }
-
-  async upsertDeploymentConfigPair(d: {
-    deployment: ProviderDeployment;
-    config: ProviderConfig;
-    authConfig: ProviderAuthConfig | null;
-    version?: ProviderVersion;
-  }) {
-    return withTransaction(async db => {
-      let res = await this.upsertDeploymentConfigPairWithAuthConfig(d);
 
       if (!d.version) {
         return {
@@ -178,12 +145,7 @@ class providerDeploymentConfigPairInternalServiceImpl {
     });
   }
 
-  async useDeploymentConfigPair(d: {
-    deployment: ProviderDeployment;
-    config: ProviderConfig;
-    version: ProviderVersion;
-    authConfig: ProviderAuthConfig | null;
-  }) {
+  async useDeploymentConfigPair(d: PairParts & { version: ProviderVersion }) {
     let res = await this.upsertDeploymentConfigPair(d);
 
     // This should never happen
@@ -199,6 +161,14 @@ class providerDeploymentConfigPairInternalServiceImpl {
         });
         if (res.version.specificationDiscoveryStatus !== 'discovering') break;
       }
+    }
+
+    if (res.pair.lastUsedPairVersionOid != res.version.oid) {
+      res.pair.lastUsedPairVersionOid = res.version.oid;
+      await db.providerDeploymentConfigPair.updateMany({
+        where: { oid: res.pair.oid },
+        data: { lastUsedPairVersionOid: res.version.oid }
+      });
     }
 
     return res;

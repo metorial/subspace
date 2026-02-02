@@ -49,9 +49,8 @@ model ProviderConfig {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  defaultForDeployment     ProviderDeployment?            @relation("defaultConfig")
+  defaultForDeployment     ProviderDeployment?       @relation("defaultConfig")
   vault                    ProviderConfigVault?
-  deploymentPairs          ProviderDeploymentConfigPair[]
   providerSetupSession     ProviderSetupSession?
   sessionProviders         SessionProvider[]
   sessionTemplateProviders SessionTemplateProvider[]
@@ -77,9 +76,10 @@ model ProviderConfigVersion {
 
   createdAt DateTime @default(now())
 
-  configUpdatesFrom ProviderConfigUpdate[] @relation("fromVersion")
-  configUpdatesTo   ProviderConfigUpdate[] @relation("toVersion")
-  currentForConfigs ProviderConfig[]       @relation("currentVersion")
+  configUpdatesFrom             ProviderConfigUpdate[]         @relation("fromVersion")
+  configUpdatesTo               ProviderConfigUpdate[]         @relation("toVersion")
+  currentForConfigs             ProviderConfig[]               @relation("currentVersion")
+  providerDeploymentConfigPairs ProviderDeploymentConfigPair[]
 }
 
 model ProviderConfigUpdate {

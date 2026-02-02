@@ -61,6 +61,7 @@ export class ProviderCapabilities extends IProviderCapabilities {
     });
 
     return {
+      type: 'full',
       features: {
         supportsAuthMethod: specRecord.authMethods.length > 0,
         configContainsAuth: false

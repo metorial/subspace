@@ -42,11 +42,11 @@ let include = {
   provider: true,
   defaultConfig: true,
   providerVariant: true,
-  lockedVersion: { include: { specification: true } }
+  currentVersion: { include: { lockedVersion: { include: { specification: true } } } }
 };
 
 let defaultLock = createLock({
-  name: 'dep/pdep/def/lock',
+  name: 'sub/dep/pdep/def/lock',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -227,16 +227,25 @@ class providerDeploymentServiceImpl {
           solutionOid: d.solution.oid,
           environmentOid: d.environment.oid,
           providerOid: d.provider.oid,
-          providerVariantOid: d.provider.defaultVariant.oid,
-          lockedVersionOid: d.lockedVersion?.oid,
-
-          specificationDiscoveryStatus: 'discovering'
+          providerVariantOid: d.provider.defaultVariant.oid
         },
-        include: {
-          provider: true,
-          providerVariant: true,
-          lockedVersion: true
-        }
+        include
+      });
+
+      let currentVersion = await db.providerDeploymentVersion.create({
+        data: {
+          ...getId('providerDeploymentVersion'),
+          lockedVersionOid: d.lockedVersion?.oid,
+          providerVariantOid: d.provider.defaultVariant.oid,
+          deploymentOid: providerDeployment.oid
+        },
+        include: include.currentVersion.include
+      });
+      providerDeployment.currentVersion = currentVersion;
+
+      await db.providerDeployment.updateMany({
+        where: { oid: providerDeployment.oid },
+        data: { currentVersionOid: currentVersion.oid }
       });
 
       if (d.input.config.type === 'config') {
@@ -367,7 +376,7 @@ class providerDeploymentServiceImpl {
             providerOid: d.provider.oid,
             isDefault: true
           },
-          include
+          include: { ...include, currentVersion: true }
         }),
       { ifExists: true }
     );

@@ -1,5 +1,5 @@
 model ProviderListingCollection {
-  oid BigInt @id @default(autoincrement())
+  oid BigInt @id
   id  String @unique
 
   name        String
@@ -13,7 +13,7 @@ model ProviderListingCollection {
 }
 
 model ProviderListingCategory {
-  oid BigInt @id @default(autoincrement())
+  oid BigInt @id
   id  String @unique
 
   name        String
@@ -27,7 +27,7 @@ model ProviderListingCategory {
 }
 
 model ProviderListingGroup {
-  oid BigInt @id @default(autoincrement())
+  oid BigInt @id
   id  String @unique
 
   name        String

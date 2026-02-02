@@ -17,7 +17,8 @@ let include = {
   ownerTenant: true,
   defaultVariant: {
     include: providerVariantInclude
-  }
+  },
+  type: true
 };
 
 export let providerInclude = include;

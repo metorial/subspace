@@ -35,6 +35,8 @@ model Provider {
   access ProviderAccess
   status ProviderStatus
 
+  hasEnvironments Boolean @default(false)
+
   identifier  String  @unique
   slug        String  @unique
   name        String
@@ -87,6 +89,9 @@ model Provider {
   sessionParticipants       SessionParticipant[]
   sessionErrorGroups        SessionErrorGroup[]
   environmentProviders      EnvironmentProvider[]
+  customProvider            CustomProvider?
+  providerEnvironments      ProviderEnvironment[]
 
   @@index([status])
+  @@index([access])
 }

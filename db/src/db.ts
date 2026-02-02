@@ -40,11 +40,33 @@ declare global {
           type: 'v1.allow_all';
         }
       | {
-          type: 'v1.whitelist';
-          filters: {
-            type: 'tool_keys';
-            keys: string[];
-          }[];
+          type: 'v1.filter';
+          filters: (
+            | {
+                type: 'tool_keys';
+                keys: string[];
+              }
+            | {
+                type: 'tool_regex';
+                pattern: string;
+              }
+            | {
+                type: 'resource_regex';
+                pattern: string;
+              }
+            | {
+                type: 'resource_uris';
+                uris: string[];
+              }
+            | {
+                type: 'prompt_keys';
+                keys: string[];
+              }
+            | {
+                type: 'prompt_regex';
+                pattern: string;
+              }
+          )[];
 
           // TODO: add restrictions for resources and prompts as well
         };
@@ -93,23 +115,22 @@ declare global {
             oauth:
               | {
                   status: 'enabled';
+                  oauthAutoRegistration?: { status: 'supported' | 'unsupported' };
                   oauthCallbackUrl: string;
                 }
-              | { status: 'disabled' };
+              | { status: 'disabled'; oauthAutoRegistration?: undefined };
 
             export: { status: 'enabled' | 'disabled' };
             import: { status: 'enabled' | 'disabled' };
           }
-        | { status: 'disabled' };
+        | { status: 'disabled'; oauth?: undefined; export?: undefined; import?: undefined };
 
       config:
         | {
             status: 'enabled';
             read: { status: 'enabled' | 'disabled' };
           }
-        | { status: 'disabled' };
-
-      [key: string]: any;
+        | { status: 'disabled'; read?: undefined };
     };
   }
 }

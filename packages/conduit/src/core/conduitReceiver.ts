@@ -35,6 +35,7 @@ interface TopicState {
   pendingMessages: PendingMessage[]; // Queue of messages waiting for handler registration
   isProcessingQueue: boolean; // Flag to prevent concurrent queue processing
   onMessagePromise: Promise<void> | null; // Promise that resolves when onMessage completes
+  onMessageCalled: boolean; // Flag to track if onMessage was called (even if not awaited)
   ttlExpiresAt: number; // Logical TTL - when this receiver wants to stop handling this topic
 }
 
@@ -125,6 +126,7 @@ export class ConduitReceiver {
         pendingMessages: [],
         isProcessingQueue: false,
         onMessagePromise: null,
+        onMessageCalled: false,
         ttlExpiresAt: Number.POSITIVE_INFINITY // By default, never expire (until extendTtl is called)
       };
       this.topicStates.set(topic, state);
@@ -141,6 +143,10 @@ export class ConduitReceiver {
           let ctx = this.createTopicContext(topic, state);
           await this.topicHandler(ctx);
 
+          // The topicHandler might not await onMessage, so we need to wait for the next tick
+          // to ensure any non-awaited onMessage calls have a chance to execute
+          await new Promise(resolve => setImmediate(resolve));
+
           // Wait for any pending onMessage registration to complete
           // This ensures processPendingMessages has finished
           if (state.onMessagePromise) {
@@ -148,7 +154,9 @@ export class ConduitReceiver {
           }
 
           // Check if a message handler was registered
-          if (!state.messageHandler) {
+          // We check onMessageCalled instead of messageHandler to handle the case where
+          // onMessage was called but is still executing asynchronously
+          if (!state.onMessageCalled) {
             console.error(`No message handler registered for topic ${topic}, releasing topic`);
             this.topicStates.delete(topic);
 
@@ -223,6 +231,8 @@ export class ConduitReceiver {
           throw new Error(`Message handler already registered for topic ${topic}`);
         }
 
+        // Mark that onMessage was called
+        state.onMessageCalled = true;
         state.messageHandler = handler;
 
         // Process all pending messages and store the promise

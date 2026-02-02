@@ -4,7 +4,7 @@ import { processSingleRankQueue } from '../listing/rank';
 import { indexProviderListingQueue } from '../listing/search';
 
 export let listingCreatedQueue = createQueue<{ providerListingId: string }>({
-  name: 'pint/lc/listing/created',
+  name: 'sub/pint/lc/listing/created',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -15,7 +15,7 @@ export let listingCreatedQueueProcessor = listingCreatedQueue.process(async data
 });
 
 export let listingUpdatedQueue = createQueue<{ providerListingId: string }>({
-  name: 'pint/lc/listing/updated',
+  name: 'sub/pint/lc/listing/updated',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -26,7 +26,7 @@ export let listingUpdatedQueueProcessor = listingUpdatedQueue.process(async data
 });
 
 let listingChangedQueue = createQueue<{ providerListingId: string }>({
-  name: 'pint/lc/listing/changed',
+  name: 'sub/pint/lc/listing/changed',
   redisUrl: env.service.REDIS_URL
 });
 

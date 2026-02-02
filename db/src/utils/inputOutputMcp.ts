@@ -1,81 +1,4 @@
 import type { SessionMessage } from '@metorial-subspace/db';
-import type { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
-
-export let messageOutputToMcp = async (
-  output: PrismaJson.SessionMessageOutput,
-  message: SessionMessage | undefined | null
-): Promise<JSONRPCMessage | null> => {
-  if (!output) return null;
-
-  if (output.type === 'mcp') {
-    return {
-      jsonrpc: '2.0',
-      id: message?.mcpMessageId,
-      ...(output.data as any)
-    };
-  }
-
-  if (!message?.mcpMessageId) return null;
-
-  if (output.type === 'tool.result') {
-    return {
-      jsonrpc: '2.0',
-      id: message.mcpMessageId,
-      result: {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify(output.data)
-          }
-        ],
-        structuredContent: output.data
-      }
-    };
-  }
-
-  return {
-    jsonrpc: '2.0',
-    id: message.mcpMessageId,
-    error: {
-      code: -32000,
-      message: output.data.message,
-      data: {
-        ...output.data,
-        object: undefined,
-        status: undefined,
-        __typename: 'MetorialError'
-      }
-    }
-  };
-};
-
-export let messageInputToMcp = async (
-  input: PrismaJson.SessionMessageInput,
-  message: SessionMessage | undefined | null
-): Promise<JSONRPCMessage | null> => {
-  if (!input) return null;
-
-  if (input.type === 'mcp') {
-    return {
-      jsonrpc: '2.0',
-      id: message?.mcpMessageId ?? message?.id,
-      ...(input.data as any)
-    };
-  }
-
-  if (!message) return null;
-
-  if (input.type === 'tool.call') {
-    return {
-      jsonrpc: '2.0',
-      id: message.mcpMessageId ?? message.id,
-      method: message.methodOrToolKey ?? 'unknown_method',
-      params: input.data
-    };
-  }
-
-  return null;
-};
 
 export let messageOutputToToolCall = async (
   output: PrismaJson.SessionMessageOutput,
@@ -86,8 +9,20 @@ export let messageOutputToToolCall = async (
   if (output.type === 'mcp') {
     if ('params' in output.data && output.data.params)
       return output.data.params?.arguments ?? output.data.params;
-    if ('result' in output.data && output.data.result)
-      return output.data.result?.structuredContent ?? output.data.result;
+    if ('result' in output.data && output.data.result) {
+      if (output.data.result?.structuredContent) return output.data.result.structuredContent;
+      if ('content' in output.data.result && (output.data.result?.content as any)?.length) {
+        let items = output.data.result?.content as any[];
+        if (items.length === 1 && items[0].type === 'text') {
+          try {
+            return JSON.parse(items[0].text);
+          } catch {
+            return items[0];
+          }
+        }
+      }
+      return output.data.result;
+    }
     if ('error' in output.data && output.data.error) return output.data.error;
     return {};
   }

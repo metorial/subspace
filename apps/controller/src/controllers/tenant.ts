@@ -32,14 +32,23 @@ export let tenantController = app.controller({
     .input(
       v.object({
         name: v.string(),
-        identifier: v.string()
+        identifier: v.string(),
+
+        environments: v.array(
+          v.object({
+            name: v.string(),
+            identifier: v.string(),
+            type: v.enumOf(['development', 'production'])
+          })
+        )
       })
     )
     .do(async ctx => {
       let tenant = await tenantService.upsertTenant({
         input: {
           name: ctx.input.name,
-          identifier: ctx.input.identifier
+          identifier: ctx.input.identifier,
+          environments: ctx.input.environments
         }
       });
       return tenantPresenter(tenant);

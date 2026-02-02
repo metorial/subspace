@@ -17,6 +17,7 @@ import {
   type SessionConnection,
   type SessionConnectionMcpConnectionTransport,
   type SessionConnectionTransport,
+  type SessionMessage,
   type SessionParticipant,
   type SessionProvider,
   type Solution,
@@ -43,7 +44,7 @@ import { upsertParticipant } from '../shared/upsertParticipant';
 let Sentry = getSentry();
 
 let instanceLock = createLock({
-  name: 'conn/sess/inst/lock',
+  name: 'sub/conn/sess/inst/lock',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -65,7 +66,8 @@ export interface CallToolProps {
   input: PrismaJson.SessionMessageInput;
   waitForResponse: boolean;
   transport: SessionConnectionTransport;
-  mcpMessageId?: PrismaJson.SessionMessageClientMcpId;
+  clientMcpId?: PrismaJson.SessionMessageClientMcpId;
+  parentMessage?: SessionMessage;
 }
 
 export interface SenderMangerProps {
@@ -183,7 +185,7 @@ export class SenderManager {
     );
   }
 
-  async ensureProviderInstance(provider: SessionProvider) {
+  private async ensureProviderInstance(provider: SessionProvider) {
     let currentInstance = await db.sessionProviderInstance.findFirst({
       where: {
         sessionProviderOid: provider.oid,
@@ -206,9 +208,10 @@ export class SenderManager {
       let fullProvider = await db.sessionProvider.findFirstOrThrow({
         where: { oid: provider.oid },
         include: {
-          deployment: true,
-          config: true,
-          authConfig: true,
+          environment: true,
+          deployment: { include: { currentVersion: true } },
+          config: { include: { currentVersion: true } },
+          authConfig: { include: { currentVersion: true } },
           provider: { include: { defaultVariant: { include: { currentVersion: true } } } }
         }
       });
@@ -226,9 +229,13 @@ export class SenderManager {
       }
 
       let version = await providerDeploymentInternalService.getCurrentVersion({
+        environment: fullProvider.environment,
         deployment: fullProvider.deployment,
         provider: fullProvider.provider
       });
+      if (!version?.specificationOid) {
+        throw new ServiceError(badRequestError({ message: 'Provider has no usable version' }));
+      }
 
       let pair = await providerDeploymentConfigPairInternalService.useDeploymentConfigPair({
         deployment: fullProvider.deployment,
@@ -251,7 +258,7 @@ export class SenderManager {
     });
   }
 
-  async listToolsForProvider(provider: SessionProvider) {
+  private async listToolsForProvider(provider: SessionProvider) {
     let instance = await this.ensureProviderInstance(provider);
     if (!instance) return [];
 
@@ -267,13 +274,12 @@ export class SenderManager {
       }
     });
 
-    return tools
-      .filter(tool => checkToolAccess(tool, provider, 'list').allowed)
-      .map(t => ({
-        ...t,
-        sessionProvider: provider,
-        sessionProviderInstance: instance
-      }));
+    return tools.map(t => ({
+      ...t,
+      key: `${t.key}_${provider.tag}`,
+      sessionProvider: provider,
+      sessionProviderInstance: instance
+    }));
   }
 
   async listProviders() {
@@ -283,14 +289,31 @@ export class SenderManager {
     });
   }
 
-  async listTools() {
+  async listToolsIncludingInternalAndNonAllowed() {
     let providers = await this.listProviders();
     return await Promise.all(
       providers.map(provider => this.listToolsForProvider(provider))
-    ).then(results => results.flat());
+    ).then(results => results.flat().sort((a, b) => a.id.localeCompare(b.id)));
   }
 
-  async getProviderByTag(d: { tag: string }) {
+  async listToolsIncludingInternal() {
+    let allTools = await this.listToolsIncludingInternalAndNonAllowed();
+
+    return allTools.filter(
+      tool => checkToolAccess(tool, tool.sessionProvider, 'list').allowed
+    );
+  }
+
+  async listTools() {
+    let allTools = await this.listToolsIncludingInternal();
+
+    return allTools.filter(tool => {
+      let mcpType = tool.value.mcpToolType.type;
+      return mcpType !== 'mcp.logging_setLevel' && mcpType !== 'mcp.completion_complete';
+    });
+  }
+
+  private async getProviderByTag(d: { tag: string }) {
     let provider = await db.sessionProvider.findFirst({
       where: {
         sessionOid: this.session.oid,
@@ -303,7 +326,13 @@ export class SenderManager {
   }
 
   async getToolById(d: { toolId: string }) {
-    let [providerTag, ...toolKeyParts] = d.toolId.split('_');
+    let parts = d.toolId.split('_');
+    let providerTag = parts.pop();
+    let toolKeyParts = parts;
+    if (toolKeyParts.length === 0 || !providerTag?.trim()) {
+      throw new ServiceError(badRequestError({ message: 'Invalid tool ID format' }));
+    }
+
     let toolKey = toolKeyParts.join('_');
 
     let provider = await this.getProviderByTag({ tag: providerTag! });
@@ -312,8 +341,11 @@ export class SenderManager {
     let instance = await this.ensureProviderInstance(provider);
     if (!instance) throw new ServiceError(notFoundError('provider.instance'));
 
-    if (!instance.pairVersion.specificationOid)
-      throw new Error('Instance pair version missing specification OID');
+    if (!instance.pairVersion.specificationOid) {
+      throw new ServiceError(
+        badRequestError({ message: 'Tool not callable (not discovered yet)' })
+      );
+    }
 
     // Find the tool by key in the specification of the current instance
     let tool = await db.providerTool.findFirst({
@@ -334,6 +366,7 @@ export class SenderManager {
       instance,
       tool: {
         ...tool,
+        key: `${tool.key}_${provider.tag}`,
         sessionProvider: provider,
         sessionProviderInstance: instance
       }
@@ -375,11 +408,12 @@ export class SenderManager {
       source: 'client',
       input: d.input,
       senderParticipant: connection.participant,
-      mcpMessageId: d.mcpMessageId,
+      clientMcpId: d.clientMcpId,
       transport: d.transport,
       tool,
       isProductive: true,
-      provider
+      provider,
+      parentMessage: d.parentMessage
     });
 
     let processingPromise = (async () => {
@@ -390,7 +424,7 @@ export class SenderManager {
           sessionMessageId: message.id,
 
           toolCallableId: tool.callableId,
-          toolId: d.toolId,
+          toolId: tool.id,
           toolKey: tool.key,
 
           input: d.input

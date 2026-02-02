@@ -4,7 +4,7 @@ import { syncChangeNotificationsQueue } from './changeNotifications';
 
 export let syncChangeNotificationsCron = createCron(
   {
-    name: 'kst/slt/cnhnotif/cron',
+    name: 'sub/sht/cnhnotif/cron',
     redisUrl: env.service.REDIS_URL,
     cron: '* * * * *'
   },

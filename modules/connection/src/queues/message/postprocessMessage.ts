@@ -6,7 +6,7 @@ import { completeMessage } from '../../shared/completeMessage';
 import { upsertParticipant } from '../../shared/upsertParticipant';
 
 export let postprocessMessageQueue = createQueue<{ messageId: string }>({
-  name: 'con/msg/post',
+  name: 'sub/con/msg/post',
   redisUrl: env.service.REDIS_URL,
   workerOpts: { concurrency: 10 }
 });

@@ -7,6 +7,7 @@ export let ID = createIdGenerator({
   environment: idType.sorted('ken'),
   backend: idType.sorted('kbe'),
   brand: idType.sorted('kbr'),
+  actor: idType.sorted('kac'),
 
   publisher: idType.sorted('pub'),
 
@@ -24,11 +25,17 @@ export let ID = createIdGenerator({
 
   environmentProvider: idType.sorted('kep'),
 
+  providerEnvironment: idType.sorted('pen'),
+  providerEnvironmentVersion: idType.sorted('pev'),
+
   providerDeployment: idType.sorted('pde'),
+  providerDeploymentVersion: idType.sorted('pdv'),
+
   providerConfig: idType.sorted('pcf'),
   providerConfigVersion: idType.sorted('pcv'),
   providerConfigUpdate: idType.sorted('pcu'),
   providerConfigVault: idType.sorted('pcvt'),
+
   providerDeploymentConfigPair: idType.sorted('pdcp'),
   providerDeploymentConfigPairProviderVersion: idType.sorted('pdcpv'),
 
@@ -60,12 +67,20 @@ export let ID = createIdGenerator({
   providerAuthConfigUsedForConfig: idType.sorted('pacufc'),
   providerAuthConfigUsedForDeployment: idType.sorted('pacufd'),
 
+  customProvider: idType.sorted('cpr'),
+  customProviderCommit: idType.sorted('cpc'),
+  customProviderVersion: idType.sorted('cpv'),
+  customProviderDeployment: idType.sorted('cpd'),
+  customProviderEnvironment: idType.sorted('cpe'),
+  customProviderEnvironmentVersion: idType.sorted('cpev'),
+
   session: idType.sorted('ses'),
   sessionTemplate: idType.sorted('set'),
   sessionTemplateProvider: idType.sorted('stp'),
   sessionProvider: idType.sorted('spv'),
   sessionProviderInstance: idType.sorted('spi'),
   sessionMessage: idType.sorted('smg'),
+  sessionMessage_mcp: idType.sorted('smg_mcp'),
   sessionParticipant: idType.sorted('spar'),
   sessionEvent: idType.sorted('sev'),
   sessionClientConnection: idType.sorted('scc'),
@@ -101,7 +116,7 @@ export let getId = <K extends Parameters<typeof ID.generateIdSync>[0]>(model: K)
 });
 
 export let get4ByteIntId = (): number => {
-  let buffer = new Uint32Array(1);
+  let buffer = new Int32Array(1);
   crypto.getRandomValues(buffer);
   return buffer[0];
 };
