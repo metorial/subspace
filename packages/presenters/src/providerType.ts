@@ -1,5 +1,9 @@
-import type { Provider, ProviderType, Tenant } from '@metorial-subspace/db';
-import { env } from './env';
+import {
+  getOAuthCallbackUrl,
+  type Provider,
+  type ProviderType,
+  type Tenant
+} from '@metorial-subspace/db';
 
 let mapAuth = (
   auth: ProviderType['attributes']['auth'],
@@ -15,10 +19,7 @@ let mapAuth = (
       auth.oauth.status == 'enabled'
         ? {
             ...auth.oauth,
-            oauthCallbackUrl:
-              auth.oauth.oauthAutoRegistration?.status == 'supported'
-                ? null
-                : `${env.service.PUBLIC_SERVICE_URL}/oauth-callback/${tenant.urlKey}-${provider.tag}-${providerType.shortKey}`
+            oauthCallbackUrl: getOAuthCallbackUrl(providerType, provider, tenant)
           }
         : auth.oauth
   };
