@@ -12,6 +12,7 @@ export let sessionMessageApp = tenantApp.use(async ctx => {
   let sessionMessage = await sessionMessageService.getSessionMessageById({
     sessionMessageId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
@@ -26,8 +27,14 @@ export let sessionMessageController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
-          types: v.optional(v.array(v.enumOf(['unknown', 'tool_call', 'mcp_control']))),
+          types: v.optional(
+            v.array(v.enumOf(['unknown', 'tool_call', 'mcp_control', 'mcp_message']))
+          ),
+          source: v.optional(v.array(v.enumOf(['client', 'provider']))),
+          hierarchy: v.optional(v.array(v.enumOf(['parent', 'child']))),
+
           allowDeleted: v.optional(v.boolean()),
 
           ids: v.optional(v.array(v.string())),
@@ -36,18 +43,22 @@ export let sessionMessageController = app.controller({
           sessionConnectionIds: v.optional(v.array(v.string())),
           providerRunIds: v.optional(v.array(v.string())),
           errorIds: v.optional(v.array(v.string())),
-          participantIds: v.optional(v.array(v.string()))
+          participantIds: v.optional(v.array(v.string())),
+          parentMessageIds: v.optional(v.array(v.string()))
         })
       )
     )
     .do(async ctx => {
       let paginator = await sessionMessageService.listSessionMessages({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         allowDeleted: ctx.input.allowDeleted,
 
         types: ctx.input.types,
+        source: ctx.input.source,
+        hierarchy: ctx.input.hierarchy,
 
         ids: ctx.input.ids,
         sessionIds: ctx.input.sessionIds,
@@ -55,7 +66,8 @@ export let sessionMessageController = app.controller({
         sessionConnectionIds: ctx.input.sessionConnectionIds,
         providerRunIds: ctx.input.providerRunIds,
         errorIds: ctx.input.errorIds,
-        participantIds: ctx.input.participantIds
+        participantIds: ctx.input.participantIds,
+        parentMessageIds: ctx.input.parentMessageIds
       });
 
       let list = await paginator.run(ctx.input);
@@ -68,6 +80,7 @@ export let sessionMessageController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         sessionMessageId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })

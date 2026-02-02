@@ -27,9 +27,9 @@ export class ProviderDeployment extends IProviderDeployment {
         where: { oid: data.providerVariant.slateOid }
       });
 
-      let lockedVersion = data.deployment?.lockedVersionOid
+      let lockedVersion = data.deployment?.currentVersion?.lockedVersionOid
         ? await db.providerVersion.findUniqueOrThrow({
-            where: { oid: data.deployment.lockedVersionOid },
+            where: { oid: data.deployment.currentVersion.lockedVersionOid },
             include: { slateVersion: true }
           })
         : undefined;

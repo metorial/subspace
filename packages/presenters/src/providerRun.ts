@@ -14,7 +14,7 @@ export type ProviderRunPresenterProps = ProviderRun & {
 };
 
 export let providerRunPresenter = (providerRun: ProviderRunPresenterProps) => ({
-  object: 'provider.run',
+  object: 'provider_run',
 
   id: providerRun.id,
   status: providerRun.status,

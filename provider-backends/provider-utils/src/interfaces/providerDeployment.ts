@@ -1,8 +1,10 @@
 import type {
   Provider,
   ProviderDeployment,
+  ProviderDeploymentVersion,
   ProviderVariant,
   ProviderVersion,
+  ShuttleServerConfig,
   SlateInstance,
   Tenant
 } from '@metorial-subspace/db';
@@ -26,18 +28,24 @@ export interface ProviderDeploymentCreateParam {
   lockedVersion: ProviderVersion | null;
 }
 
-// @
 export interface ProviderDeploymentCreateRes {}
 
 export interface ProviderConfigCreateParam {
   tenant: Tenant;
   provider: Provider;
   providerVariant: ProviderVariant;
-  deployment: (ProviderDeployment & { lockedVersion: ProviderVersion | null }) | null;
+  deployment:
+    | (ProviderDeployment & {
+        currentVersion:
+          | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+          | null;
+      })
+    | null;
   id: string;
   config: Record<string, any>;
 }
 
 export interface ProviderConfigCreateRes {
-  slateInstance: SlateInstance | null;
+  slateInstance?: SlateInstance | null;
+  shuttleServerConfig?: ShuttleServerConfig | null;
 }

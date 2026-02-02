@@ -1,7 +1,7 @@
 import { createLocallyCachedFunction } from '@lowerdeck/cache';
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
-import { db, ID } from '@metorial-subspace/db';
+import { db, get4ByteIntId, ID } from '@metorial-subspace/db';
 
 let include = {};
 
@@ -29,7 +29,7 @@ class solutionServiceImpl {
       update: { name: d.input.name },
       create: {
         id: await ID.generateId('solution'),
-        oid: Date.now() / 1000,
+        oid: get4ByteIntId(),
         name: d.input.name,
         identifier: d.input.identifier
       },

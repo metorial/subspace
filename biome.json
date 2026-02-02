@@ -32,7 +32,9 @@
     "lineEnding": "lf"
   },
   "javascript": {
-    "globals": ["Bun"],
+    "globals": [
+      "Bun"
+    ],
     "formatter": {
       "quoteStyle": "single",
       "jsxQuoteStyle": "double",
@@ -71,6 +73,7 @@
         "noCommaOperator": "error"
       },
       "correctness": {
+        "noUnusedFunctionParameters": "off",
         "noUnusedVariables": "off",
         "noConstAssign": "error",
         "noConstantCondition": "error",
@@ -171,10 +174,13 @@
         "noDuplicateElseIf": "error",
         "noEvolvingTypes": "warn",
         "noVar": "error",
+        "noTsIgnore": "off",
         "noConsole": {
           "level": "off",
           "options": {
-            "allow": ["log"]
+            "allow": [
+              "log"
+            ]
           }
         },
         "noNonNullAssertedOptionalChain": "off"
@@ -183,7 +189,12 @@
   },
   "overrides": [
     {
-      "includes": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
+      "includes": [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.spec.ts",
+        "**/*.spec.tsx"
+      ],
       "linter": {
         "rules": {
           "suspicious": {
@@ -193,7 +204,10 @@
       }
     },
     {
-      "includes": ["**/db.ts", "**/prisma/*.ts"],
+      "includes": [
+        "**/db.ts",
+        "**/prisma/*.ts"
+      ],
       "linter": {
         "rules": {
           "style": {

@@ -1,7 +1,7 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, type Solution, type Tenant } from '@metorial-subspace/db';
+import { db, type Environment, type Solution, type Tenant } from '@metorial-subspace/db';
 import {
   resolveProviderCategories,
   resolveProviderCollections,
@@ -30,6 +30,7 @@ class ProviderListingService {
     providerListingId: string;
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
   }) {
     let providerListing = await db.providerListing.findFirst({
       where: {
@@ -77,6 +78,7 @@ class ProviderListingService {
 
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     orderByRank?: boolean;
   }) {

@@ -3,6 +3,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  type Environment,
   type SessionConnectionState,
   type SessionConnectionStatus,
   type Solution,
@@ -27,6 +28,7 @@ class sessionConnectionServiceImpl {
   async listSessionConnections(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     status?: SessionConnectionStatus[];
     connectionState?: SessionConnectionState[];
@@ -49,6 +51,7 @@ class sessionConnectionServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
 
               isEphemeral: false,
 
@@ -75,6 +78,7 @@ class sessionConnectionServiceImpl {
   async getSessionConnectionById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     sessionConnectionId: string;
     allowDeleted?: boolean;
   }) {
@@ -83,6 +87,7 @@ class sessionConnectionServiceImpl {
         id: d.sessionConnectionId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
         ...normalizeStatusForGet(d).hasParent
       },
       include

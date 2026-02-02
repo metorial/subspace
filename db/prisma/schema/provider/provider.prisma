@@ -35,8 +35,7 @@ model Provider {
   access ProviderAccess
   status ProviderStatus
 
-  tag    String      @unique
-  tagRef ProviderTag @relation(fields: [tag], references: [tag])
+  hasEnvironments Boolean @default(false)
 
   identifier  String  @unique
   slug        String  @unique
@@ -44,6 +43,9 @@ model Provider {
   description String?
 
   metadata Json?
+
+  tag    String      @unique
+  tagRef ProviderTag @relation(fields: [tag], references: [tag])
 
   entryOid BigInt        @unique
   entry    ProviderEntry @relation(fields: [entryOid], references: [oid])
@@ -60,12 +62,14 @@ model Provider {
   defaultVariantOid BigInt?
   defaultVariant    ProviderVariant? @relation(fields: [defaultVariantOid], references: [oid], name: "defaultVariant")
 
+  typeOid Int
+  type    ProviderType @relation(fields: [typeOid], references: [oid])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
   variants                  ProviderVariant[]
   providerVersions          ProviderVersion[]
-  tenantProviders           TenantProvider[]
   deployment                ProviderDeployment[]
   listing                   ProviderListing?
   providerConfigs           ProviderConfig[]
@@ -84,6 +88,10 @@ model Provider {
   sessionTemplateProviders  SessionTemplateProvider[]
   sessionParticipants       SessionParticipant[]
   sessionErrorGroups        SessionErrorGroup[]
+  environmentProviders      EnvironmentProvider[]
+  customProvider            CustomProvider?
+  providerEnvironments      ProviderEnvironment[]
 
   @@index([status])
+  @@index([access])
 }

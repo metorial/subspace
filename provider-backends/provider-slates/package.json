@@ -13,8 +13,6 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@metorial-subspace/module-provider-internal": "^1.0.0",
-    "@metorial-subspace/provider-utils": "^1.0.0",
     "@lowerdeck/cache": "^1.0.0",
     "@lowerdeck/cron": "^1.0.4",
     "@lowerdeck/env": "^1.0.4",
@@ -24,7 +22,10 @@
     "@lowerdeck/queue": "^1.0.4",
     "@lowerdeck/slugify": "^1.0.4",
     "@lowerdeck/validation": "^1.0.4",
-    "@metorial-services/slates-hub-client": "1.0.13",
-    "@metorial-subspace/db": "^1.0.0"
+    "@metorial-services/slates-hub-client": "1.0.15",
+    "@metorial-subspace/db": "^1.0.0",
+    "@metorial-subspace/module-provider-internal": "^1.0.0",
+    "@metorial-subspace/provider-utils": "^1.0.0",
+    "p-queue": "^9.1.0"
   }
 }

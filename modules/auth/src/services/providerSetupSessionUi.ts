@@ -4,11 +4,19 @@ import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
   db,
+  type Environment,
   getId,
+  type Provider,
+  type ProviderDeployment,
+  type ProviderDeploymentVersion,
   type ProviderSetupSession,
+  type ProviderVariant,
+  type Solution,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
 import { providerConfigService } from '@metorial-subspace/module-deployment';
+import { normalizeJsonSchema } from '@metorial-subspace/provider-utils';
 import { env } from '../env';
 import { providerSetupSessionUpdatedQueue } from '../queues/lifecycle/providerSetupSession';
 import { providerAuthConfigService } from './providerAuthConfig';
@@ -17,7 +25,7 @@ import { providerSetupSessionInclude } from './providerSetupSession';
 import { providerSetupSessionInternalService } from './providerSetupSessionInternal';
 
 let updateLock = createLock({
-  name: 'auth/providerSetupSession/service',
+  name: 'sub/auth/providerSetupSession/service',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -46,8 +54,9 @@ class providerSetupSessionUiServiceImpl {
       include: {
         tenant: true,
         solution: true,
+        environment: true,
         provider: { include: { defaultVariant: true } },
-        deployment: true
+        deployment: { include: { currentVersion: true } }
       }
     });
 
@@ -57,26 +66,43 @@ class providerSetupSessionUiServiceImpl {
       };
     }
 
-    let schema = await providerConfigService.getProviderConfigSchema({
+    return await providerConfigService.getProviderConfigSchema({
       tenant: fullSession.tenant,
       solution: fullSession.solution,
-
+      environment: fullSession.environment,
       provider: fullSession.provider,
       providerDeployment: fullSession.deployment ?? undefined
     });
+  }
 
-    let configSchema = schema.value.specification.configJsonSchema;
+  async getConfigSchemaWithoutSession(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    provider: Provider & { defaultVariant: ProviderVariant | null };
+    deployment?: ProviderDeployment & {
+      currentVersion: ProviderDeploymentVersion | null;
+    };
+  }) {
+    let schema = await providerConfigService.getProviderConfigSchema({
+      tenant: d.tenant,
+      solution: d.solution,
+      environment: d.environment,
+
+      provider: d.provider,
+      providerDeployment: d.deployment ?? undefined
+    });
+
+    let configSchema = normalizeJsonSchema(schema.value.specification.configJsonSchema);
+    if (!configSchema) return { type: 'none' as const };
+
     let hasProperties =
       configSchema &&
       typeof configSchema === 'object' &&
       'properties' in configSchema &&
       Object.keys(configSchema.properties || {}).length > 0;
 
-    if (!hasProperties) {
-      return {
-        type: 'none' as const
-      };
-    }
+    if (!hasProperties) return { type: 'none' as const };
 
     return {
       type: 'required' as const,
@@ -90,19 +116,20 @@ class providerSetupSessionUiServiceImpl {
       include: {
         tenant: true,
         solution: true,
+        environment: true,
         provider: { include: { defaultVariant: true } },
         authMethod: true,
         deployment: {
           include: {
             provider: true,
             providerVariant: true,
-            lockedVersion: true
+            currentVersion: { include: { lockedVersion: true } }
           }
         }
       }
     });
 
-    if (d.providerSetupSession.type == 'config_only') {
+    if (d.providerSetupSession.type === 'config_only') {
       return {
         type: 'none' as const
       };
@@ -111,6 +138,7 @@ class providerSetupSessionUiServiceImpl {
     let schema = await providerAuthConfigService.getProviderAuthConfigSchema({
       tenant: fullSession.tenant,
       solution: fullSession.solution,
+      environment: fullSession.environment,
 
       provider: fullSession.provider,
       providerDeployment: fullSession.deployment ?? undefined,
@@ -165,14 +193,15 @@ class providerSetupSessionUiServiceImpl {
           include: {
             tenant: true,
             solution: true,
+            environment: true,
             authCredentials: true,
-            provider: { include: { defaultVariant: true } },
+            provider: { include: { defaultVariant: true, type: true } },
             authMethod: true,
             deployment: {
               include: {
                 provider: true,
                 providerVariant: true,
-                lockedVersion: true
+                currentVersion: { include: { lockedVersion: true } }
               }
             }
           }
@@ -190,6 +219,7 @@ class providerSetupSessionUiServiceImpl {
             tenant: currentSession.tenant,
             solution: currentSession.solution,
             provider: currentSession.provider,
+            environment: currentSession.environment,
             providerDeployment: currentSession.deployment ?? undefined,
             credentials: currentSession.authCredentials ?? undefined,
             authMethod: currentSession.authMethod,
@@ -274,17 +304,18 @@ class providerSetupSessionUiServiceImpl {
             authCredentials: true,
             provider: { include: { defaultVariant: true } },
             authMethod: true,
+            environment: true,
             deployment: {
               include: {
                 provider: true,
                 providerVariant: true,
-                lockedVersion: true
+                currentVersion: { include: { lockedVersion: true } }
               }
             }
           }
         });
 
-        if (currentSession.status == 'completed' || currentSession.configOid) {
+        if (currentSession.status === 'completed' || currentSession.configOid) {
           throw new ServiceError(
             badRequestError({
               message: 'Cannot update a completed provider setup session'
@@ -296,6 +327,7 @@ class providerSetupSessionUiServiceImpl {
           tenant: currentSession.tenant,
           solution: currentSession.solution,
           provider: currentSession.provider,
+          environment: currentSession.environment,
           providerDeployment: currentSession.deployment ?? undefined,
           input: {
             name: currentSession.name ?? undefined,

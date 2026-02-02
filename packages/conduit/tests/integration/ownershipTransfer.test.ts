@@ -124,7 +124,7 @@ describe('Ownership Transfer Integration', () => {
     ]);
 
     // Send messages to 10 different topics
-    const topics = [];
+    const topics: any[] = [];
     for (let i = 0; i < 10; i++) {
       const topic = `topic-${i}`;
       topics.push(topic);

@@ -3,6 +3,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  type Environment,
   getId,
   type ProviderAuthConfig,
   type Solution,
@@ -30,6 +31,7 @@ class providerAuthExportServiceImpl {
   async listProviderAuthExports(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     allowDeleted?: boolean;
 
     ids?: string[];
@@ -52,6 +54,7 @@ class providerAuthExportServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
 
               ...normalizeStatusForList(d).onlyParent,
 
@@ -73,6 +76,7 @@ class providerAuthExportServiceImpl {
   async getProviderAuthExportById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerAuthExportId: string;
     allowDeleted?: boolean;
   }) {
@@ -81,6 +85,7 @@ class providerAuthExportServiceImpl {
         id: d.providerAuthExportId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
         ...normalizeStatusForGet(d).onlyParent
       },
       include
@@ -94,6 +99,7 @@ class providerAuthExportServiceImpl {
   async createProviderAuthExport(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     authConfig: ProviderAuthConfig;
 
     input: {
@@ -133,6 +139,7 @@ class providerAuthExportServiceImpl {
 
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
         authConfigOid: d.authConfig.oid,
 
         expiresAt: data.expiresAt

@@ -5,7 +5,7 @@ import { env } from '../../env';
 
 export let stopProviderRunsCron = createCron(
   {
-    name: 'con/prun/stop',
+    name: 'sub/con/prun/stop',
     cron: '* * * * *',
     redisUrl: env.service.REDIS_URL
   },

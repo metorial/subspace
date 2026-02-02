@@ -3,6 +3,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  type Environment,
   type Session,
   type SessionProvider,
   type SessionProviderStatus,
@@ -23,9 +24,9 @@ import {
 } from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import {
+  sessionProviderInputService,
   type SessionProviderInput,
-  type SessionProviderInputToolFilters,
-  sessionProviderInputService
+  type SessionProviderInputToolFilters
 } from './sessionProviderInput';
 
 let include = {
@@ -43,6 +44,7 @@ class sessionProviderServiceImpl {
   async listSessionProviders(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     status?: SessionProviderStatus[];
     allowDeleted?: boolean;
@@ -70,6 +72,7 @@ class sessionProviderServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
 
               ...normalizeStatusForList(d).noParent,
 
@@ -92,6 +95,7 @@ class sessionProviderServiceImpl {
   async getSessionProviderById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     sessionProviderId: string;
 
     allowDeleted?: boolean;
@@ -101,6 +105,7 @@ class sessionProviderServiceImpl {
         id: d.sessionProviderId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
         ...normalizeStatusForGet(d).noParent
       },
       include
@@ -114,6 +119,7 @@ class sessionProviderServiceImpl {
   async createSessionProvider(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     session: Session;
     input: SessionProviderInput;
@@ -123,6 +129,7 @@ class sessionProviderServiceImpl {
     let [res] = await sessionProviderInputService.createSessionProvidersForInput({
       tenant: d.tenant,
       solution: d.solution,
+      environment: d.environment,
 
       session: d.session,
       providers: [d.input]
@@ -134,6 +141,7 @@ class sessionProviderServiceImpl {
   async updateSessionProvider(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     sessionProvider: SessionProvider;
     input: {
       toolFilters?: SessionProviderInputToolFilters;
@@ -146,15 +154,11 @@ class sessionProviderServiceImpl {
       where: {
         oid: d.sessionProvider.oid,
         tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid
+        solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid
       },
       data: {
-        toolFilter:
-          d.input.toolFilters !== undefined
-            ? await sessionProviderInputService.mapToolFilters({
-                filters: d.input.toolFilters
-              })
-            : undefined
+        toolFilter: d.input.toolFilters ?? undefined
       },
       include
     });
@@ -163,6 +167,7 @@ class sessionProviderServiceImpl {
   async archiveSessionProvider(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     sessionProvider: SessionProvider;
   }) {
     checkTenant(d, d.sessionProvider);

@@ -4,7 +4,7 @@ import { env } from '../../env';
 
 export let expireOAuthSetupCron = createCron(
   {
-    name: 'auth/cron/expireOAuthSetup',
+    name: 'sub/auth/cron/expireOAuthSetup',
     cron: '* * * * *',
     redisUrl: env.service.REDIS_URL
   },

@@ -33,6 +33,13 @@ export let completeMessage = async (
     data.failureReason = 'provider_error';
   }
 
+  if (data.status === 'failed' && !data.output) {
+    data.output = {
+      type: 'error',
+      data: { code: 'unknown', message: 'An unknown error occurred' }
+    };
+  }
+
   let error: SessionError | undefined;
   if (data.status === 'failed') {
     let message = await db.sessionMessage.findFirstOrThrow({
@@ -95,7 +102,8 @@ export let completeMessage = async (
         providerRunOid: message.providerRunOid,
         messageOid: message.oid,
         tenantOid: message.tenantOid,
-        solutionOid: message.solutionOid
+        solutionOid: message.solutionOid,
+        environmentOid: message.environmentOid
       }
     });
   })().catch(() => {});

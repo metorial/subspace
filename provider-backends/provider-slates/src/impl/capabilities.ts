@@ -2,23 +2,29 @@ import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { db } from '@metorial-subspace/db';
 import {
   IProviderCapabilities,
-  type ProviderSpecificationGetForDeploymentParam,
+  type ProviderSpecificationBehaviorParam,
+  type ProviderSpecificationBehaviorRes,
+  type ProviderSpecificationGetForPairParam,
   type ProviderSpecificationGetForProviderParam,
   type ProviderSpecificationGetRes
 } from '@metorial-subspace/provider-utils';
 import { slates } from '../client';
 
 export class ProviderCapabilities extends IProviderCapabilities {
-  override async isSpecificationForProviderDeploymentVersionSameAsForVersion(
-    _data: ProviderSpecificationGetForDeploymentParam
-  ): Promise<boolean> {
-    return true;
+  override async getSpecificationBehavior(
+    data: ProviderSpecificationBehaviorParam
+  ): Promise<ProviderSpecificationBehaviorRes> {
+    return {
+      supportsVersionSpecification: true,
+      supportsDeploymentSpecification: true
+    };
   }
 
-  override async getSpecificationForProviderDeployment(
-    data: ProviderSpecificationGetForDeploymentParam
+  override async getSpecificationForProviderPair(
+    data: ProviderSpecificationGetForPairParam
   ): Promise<ProviderSpecificationGetRes> {
     return this.getSpecificationForProviderVersion({
+      tenant: data.tenant,
       provider: data.provider,
       providerVariant: data.providerVariant,
       providerVersion: data.providerVersion
@@ -55,6 +61,7 @@ export class ProviderCapabilities extends IProviderCapabilities {
     });
 
     return {
+      type: 'full',
       features: {
         supportsAuthMethod: specRecord.authMethods.length > 0,
         configContainsAuth: false
@@ -67,7 +74,8 @@ export class ProviderCapabilities extends IProviderCapabilities {
         description: specRecord.providerInfo.description,
         metadata: specRecord.providerInfo.metadata ?? {},
         configJsonSchema: specRecord.configSchema,
-        configVisibility: 'plain'
+        configVisibility: 'plain',
+        mcp: null
       },
       authMethods: specRecord.authMethods.map(am => ({
         specId: am.id,

@@ -2,12 +2,14 @@ import type {
   Provider,
   ProviderEntry,
   ProviderSpecification,
+  ProviderType,
   ProviderVariant,
   ProviderVersion,
   Publisher,
   Tenant
 } from '@metorial-subspace/db';
 import { providerEntryPresenter } from './providerEntry';
+import { providerTypePresenter } from './providerType';
 import { providerVariantPresenter } from './providerVariant';
 import { providerVersionPresenter } from './providerVersion';
 import { publisherPresenter } from './publisher';
@@ -29,40 +31,65 @@ export let providerPresenter = (
             | null;
         })
       | null;
-  }
-) => ({
-  object: 'provider',
 
-  id: provider.id,
-  access: provider.access,
-  status: provider.status,
+    type: ProviderType;
+  },
+  d: { tenant: Tenant }
+) => {
+  let type = providerTypePresenter(provider.type, {
+    tenant: d.tenant,
+    provider
+  });
 
-  ownerTenant: provider.ownerTenant ? tenantPresenter(provider.ownerTenant) : null,
-  publisher: publisherPresenter(provider.publisher),
-  entry: providerEntryPresenter(provider.entry),
+  return {
+    object: 'provider',
 
-  defaultVariant: provider.defaultVariant
-    ? providerVariantPresenter({
-        ...provider.defaultVariant,
-        provider
-      })
-    : null,
-  currentVersion: provider.defaultVariant?.currentVersion
-    ? providerVersionPresenter({
-        ...provider.defaultVariant.currentVersion,
-        provider
-      })
-    : null,
+    id: provider.id,
+    access: provider.access,
+    status: provider.status,
 
-  identifier: provider.identifier,
+    ownerTenant: provider.ownerTenant ? tenantPresenter(provider.ownerTenant) : null,
+    publisher: publisherPresenter(provider.publisher),
+    entry: providerEntryPresenter(provider.entry),
 
-  tag: provider.tag,
+    defaultVariant: provider.defaultVariant
+      ? providerVariantPresenter({
+          ...provider.defaultVariant,
+          provider
+        })
+      : null,
+    currentVersion: provider.defaultVariant?.currentVersion
+      ? providerVersionPresenter({
+          ...provider.defaultVariant.currentVersion,
+          provider
+        })
+      : null,
 
-  name: provider.name,
-  description: provider.description,
-  slug: provider.slug,
-  metadata: provider.metadata,
+    type,
 
-  createdAt: provider.createdAt,
-  updatedAt: provider.updatedAt
-});
+    oauth:
+      type.auth.status === 'enabled' && type.auth.oauth.status === 'enabled'
+        ? {
+            status: 'enabled',
+            callbackUrl: type.auth.oauth.oauthCallbackUrl,
+
+            autoRegistration:
+              type.auth.oauth.oauthAutoRegistration?.status === 'supported'
+                ? { status: 'supported' }
+                : null
+          }
+        : null,
+
+    identifier: provider.identifier,
+
+    tag: provider.tag,
+
+    name: provider.name,
+    description: provider.description,
+    slug: provider.slug,
+    metadata: provider.metadata,
+
+    createdAt: provider.createdAt,
+    updatedAt: provider.updatedAt
+  };
+};

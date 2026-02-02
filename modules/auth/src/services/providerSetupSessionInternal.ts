@@ -2,13 +2,16 @@ import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
+  type Environment,
   getId,
   type Provider,
   type ProviderAuthCredentials,
   type ProviderAuthMethod,
   type ProviderDeployment,
+  type ProviderDeploymentVersion,
   type ProviderOAuthSetup,
   type ProviderSetupSession,
+  type ProviderType,
   type ProviderVariant,
   type ProviderVersion,
   type Solution,
@@ -24,11 +27,14 @@ class providerSetupSessionInternalServiceImpl {
   async createProviderAuthConfig(d: {
     tenant: Tenant;
     solution: Solution;
-    provider: Provider & { defaultVariant: ProviderVariant | null };
+    environment: Environment;
+    provider: Provider & { defaultVariant: ProviderVariant | null; type: ProviderType };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
       providerVariant: ProviderVariant;
-      lockedVersion: ProviderVersion | null;
+      currentVersion:
+        | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+        | null;
     };
     credentials?: ProviderAuthCredentials;
     authMethod: ProviderAuthMethod;
@@ -45,7 +51,10 @@ class providerSetupSessionInternalServiceImpl {
     };
   }) {
     if (d.authMethod.type === 'oauth') {
-      if (!d.credentials) {
+      if (
+        !d.credentials &&
+        d.provider.type.attributes.auth.oauth?.oauthAutoRegistration?.status !== 'supported'
+      ) {
         throw new ServiceError(
           badRequestError({
             message: 'No provider auth credentials provided for oauth method',
@@ -57,9 +66,10 @@ class providerSetupSessionInternalServiceImpl {
       let setup = await providerOAuthSetupService.createProviderOAuthSetup({
         tenant: d.tenant,
         solution: d.solution,
+        environment: d.environment,
         provider: d.provider,
         providerDeployment: d.providerDeployment,
-        credentials: d.credentials!,
+        credentials: d.credentials,
         input: {
           name: d.input.name,
           description: d.input.description,
@@ -81,6 +91,7 @@ class providerSetupSessionInternalServiceImpl {
       let config = await providerAuthConfigService.createProviderAuthConfig({
         tenant: d.tenant,
         solution: d.solution,
+        environment: d.environment,
         provider: d.provider,
         providerDeployment: d.providerDeployment,
         import: d.import,
@@ -107,11 +118,14 @@ class providerSetupSessionInternalServiceImpl {
   async createProviderConfig(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
       providerVariant: ProviderVariant;
-      lockedVersion: ProviderVersion | null;
+      currentVersion:
+        | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+        | null;
     };
     input: {
       name?: string;
@@ -123,6 +137,7 @@ class providerSetupSessionInternalServiceImpl {
     let config = await providerConfigService.createProviderConfig({
       tenant: d.tenant,
       solution: d.solution,
+      environment: d.environment,
       provider: d.provider,
       providerDeployment: d.providerDeployment,
       input: {
@@ -233,6 +248,10 @@ class providerSetupSessionInternalServiceImpl {
       return d.session;
 
     return withTransaction(async db => {
+      d.session = await db.providerSetupSession.findFirstOrThrow({
+        where: { oid: d.session.oid }
+      });
+
       let result = d.session;
 
       let hasAuthConfig = d.session.authConfigOid !== null;

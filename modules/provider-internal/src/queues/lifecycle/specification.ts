@@ -3,7 +3,7 @@ import { db } from '@metorial-subspace/db';
 import { env } from '../../env';
 
 export let specificationCreatedQueue = createQueue<{ specificationId: string }>({
-  name: 'pint/lc/specification/created',
+  name: 'sub/pint/lc/specification/created',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -35,7 +35,7 @@ let specificationCreatedAssocToolQueue = createQueue<{
   toolOid: bigint;
   globalOid: bigint;
 }>({
-  name: 'pint/lc/specification/created/assoc-tool',
+  name: 'sub/pint/lc/specification/created/assoc-tool',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -51,7 +51,7 @@ let specificationCreatedAssocAuthMethodQueue = createQueue<{
   authMethodOid: bigint;
   globalOid: bigint;
 }>({
-  name: 'pint/lc/specification/created/assoc-auth-method',
+  name: 'sub/pint/lc/specification/created/assoc-auth-method',
   redisUrl: env.service.REDIS_URL
 });
 

@@ -12,6 +12,7 @@ export let providerListingApp = tenantApp.use(async ctx => {
   let providerListing = await providerListingService.getProviderListingById({
     providerListingId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution
   });
 
@@ -25,6 +26,7 @@ export let providerListingController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           search: v.optional(v.string()),
 
@@ -47,6 +49,7 @@ export let providerListingController = app.controller({
     .do(async ctx => {
       let paginator = await providerListingService.listProviderListings({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         search: ctx.input.search,
@@ -68,7 +71,7 @@ export let providerListingController = app.controller({
 
       let list = await paginator.run(ctx.input);
 
-      return Paginator.presentLight(list, providerListingPresenter);
+      return Paginator.presentLight(list, v => providerListingPresenter(v, ctx));
     }),
 
   get: providerListingApp
@@ -76,8 +79,9 @@ export let providerListingController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerListingId: v.string()
       })
     )
-    .do(async ctx => providerListingPresenter(ctx.providerListing))
+    .do(async ctx => providerListingPresenter(ctx.providerListing, ctx))
 });

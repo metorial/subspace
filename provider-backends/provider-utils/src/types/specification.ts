@@ -1,13 +1,22 @@
+import type {
+  Annotations,
+  Icons,
+  InitializeResult,
+  ToolAnnotations,
+  ToolExecution
+} from '@modelcontextprotocol/sdk/types.js';
+
 export type SpecificationAuthMethodType = 'oauth' | 'token' | 'service_account' | 'custom';
 
 export interface SpecificationTool {
   specId: string;
-  specUniqueIdentifier: string;
+  specUniqueIdentifier?: string;
   callableId: string;
 
   key: string;
 
   name: string;
+  title?: string;
   description?: string;
 
   inputJsonSchema: Record<string, any>;
@@ -16,10 +25,48 @@ export interface SpecificationTool {
   constraints: string[];
   instructions: string[];
 
-  mcpToolType: {
-    // TODO: @herber add support for other tool types
-    type: 'tool.callable';
-  };
+  mcpToolType:
+    | {
+        type: 'tool.callable';
+      }
+    | {
+        type: 'mcp.tool';
+        key: string;
+        title: string | undefined;
+        icons: Icons['icons'] | undefined;
+        annotations: ToolAnnotations | undefined;
+        execution: ToolExecution | undefined;
+        _meta: { [key: string]: any } | undefined;
+      }
+    | {
+        type: 'mcp.prompt';
+        key: string;
+        title: string | undefined;
+        icons: Icons['icons'] | undefined;
+        arguments: {
+          name: string;
+          description?: string | undefined;
+          required?: boolean | undefined;
+        }[];
+        _meta: { [key: string]: any } | undefined;
+      }
+    | {
+        type: 'mcp.resource_template';
+        uriTemplate: string;
+        mimeType: string | undefined;
+        title: string | undefined;
+        variableNames: string[];
+        icons: Icons['icons'] | undefined;
+        annotations: Annotations | undefined;
+        _meta: { [key: string]: any } | undefined;
+      }
+    | {
+        type:
+          | 'mcp.resources_list'
+          | 'mcp.resources_read'
+          | 'mcp.completion_complete'
+          | 'mcp.logging_setLevel';
+      };
 
   capabilities: {
     [key: string]: any;
@@ -35,7 +82,7 @@ export interface SpecificationTool {
 
 export interface SpecificationAuthMethod {
   specId: string;
-  specUniqueIdentifier: string;
+  specUniqueIdentifier?: string;
   callableId: string;
 
   type: SpecificationAuthMethodType;
@@ -63,7 +110,7 @@ export interface SpecificationAuthMethod {
 
 export interface Specification {
   specId: string;
-  specUniqueIdentifier: string;
+  specUniqueIdentifier?: string;
 
   key: string;
 
@@ -74,6 +121,12 @@ export interface Specification {
   configVisibility: 'encrypted' | 'plain';
 
   metadata: Record<string, any>;
+
+  mcp: {
+    serverInfo: InitializeResult['serverInfo'];
+    capabilities: InitializeResult['capabilities'];
+    instructions: InitializeResult['instructions'];
+  } | null;
 }
 
 export interface SpecificationFeatures {

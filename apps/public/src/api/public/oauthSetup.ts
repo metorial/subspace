@@ -25,8 +25,8 @@ export let oauthSetupApp = createHono()
 
     if (
       setup.expiresAt < new Date() ||
-      setup.status == 'expired' ||
-      setup.status == 'completed'
+      setup.status === 'expired' ||
+      setup.status === 'completed'
     ) {
       return c.text('OAuth setup is no longer valid', 400);
     }
@@ -45,8 +45,8 @@ export let oauthSetupApp = createHono()
 
     if (
       setup.expiresAt < new Date() ||
-      setup.status == 'expired' ||
-      setup.status == 'completed'
+      setup.status === 'expired' ||
+      setup.status === 'completed'
     ) {
       return c.text('OAuth setup is no longer valid', 400);
     }

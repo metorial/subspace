@@ -6,7 +6,7 @@ import { env } from '../../env';
 
 let expireSessionConnectionsCron = createCron(
   {
-    name: 'con/conn/expire',
+    name: 'sub/con/conn/expire/cron',
     cron: '* * * * *',
     redisUrl: env.service.REDIS_URL
   },
@@ -16,7 +16,7 @@ let expireSessionConnectionsCron = createCron(
 );
 
 let expireSessionConnectionsQueue = createQueue<{ cursor?: string }>({
-  name: 'con/conn/expire/many',
+  name: 'sub/con/conn/expire/many',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -45,7 +45,7 @@ let expireSessionConnectionsQueueProcessor = expireSessionConnectionsQueue.proce
 );
 
 let expireSessionConnectionQueue = createQueue<{ connectionId: string }>({
-  name: 'con/conn/expire',
+  name: 'sub/con/conn/expire/single',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -71,10 +71,15 @@ let expireSessionConnectionQueueProcessor = expireSessionConnectionQueue.process
         sessionOid: connection.sessionOid,
         connectionOid: connection.oid,
         tenantOid: connection.tenantOid,
-        solutionOid: connection.solutionOid
+        solutionOid: connection.solutionOid,
+        environmentOid: connection.environmentOid
       }
     });
   }
 );
 
-export let expireSessionConnectionsQueues = combineQueueProcessors([]);
+export let expireSessionConnectionsQueues = combineQueueProcessors([
+  expireSessionConnectionsCron,
+  expireSessionConnectionsQueueProcessor,
+  expireSessionConnectionQueueProcessor
+]);

@@ -6,7 +6,7 @@ import { env } from '../../env';
 export let indexProviderAuthCredentialsQueue = createQueue<{
   providerAuthCredentialsId: string;
 }>({
-  name: 'auth/sidx/providerAuthCredentials',
+  name: 'sub/auth/sidx/providerAuthCredentials',
   redisUrl: env.service.REDIS_URL
 });
 

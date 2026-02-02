@@ -12,6 +12,7 @@ export let sessionConnectionApp = tenantApp.use(async ctx => {
   let sessionConnection = await sessionConnectionService.getSessionConnectionById({
     sessionConnectionId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
@@ -26,6 +27,7 @@ export let sessionConnectionController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           status: v.optional(v.array(v.enumOf(['active', 'archived']))),
           connectionState: v.optional(v.array(v.enumOf(['connected', 'disconnected']))),
@@ -41,6 +43,7 @@ export let sessionConnectionController = app.controller({
     .do(async ctx => {
       let paginator = await sessionConnectionService.listSessionConnections({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         status: ctx.input.status,
@@ -64,6 +67,7 @@ export let sessionConnectionController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         sessionConnectionId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })

@@ -4,8 +4,10 @@ import { Worker as SnowflakeId } from 'snowflake-uuid';
 export let ID = createIdGenerator({
   tenant: idType.sorted('ktn'),
   solution: idType.sorted('kso'),
+  environment: idType.sorted('ken'),
   backend: idType.sorted('kbe'),
   brand: idType.sorted('kbr'),
+  actor: idType.sorted('kac'),
 
   publisher: idType.sorted('pub'),
 
@@ -13,6 +15,7 @@ export let ID = createIdGenerator({
   provider: idType.sorted('pro'),
   providerEntry: idType.sorted('pre'),
   providerVersion: idType.sorted('prv'),
+  providerType: idType.sorted('pty'),
 
   providerListing: idType.sorted('plg'),
   providerListingUpdate: idType.sorted('plu'),
@@ -20,13 +23,19 @@ export let ID = createIdGenerator({
   providerCollection: idType.sorted('pco'),
   providerGroup: idType.sorted('pgr'),
 
-  tenantProvider: idType.sorted('ktp'),
+  environmentProvider: idType.sorted('kep'),
+
+  providerEnvironment: idType.sorted('pen'),
+  providerEnvironmentVersion: idType.sorted('pev'),
 
   providerDeployment: idType.sorted('pde'),
+  providerDeploymentVersion: idType.sorted('pdv'),
+
   providerConfig: idType.sorted('pcf'),
   providerConfigVersion: idType.sorted('pcv'),
   providerConfigUpdate: idType.sorted('pcu'),
   providerConfigVault: idType.sorted('pcvt'),
+
   providerDeploymentConfigPair: idType.sorted('pdcp'),
   providerDeploymentConfigPairProviderVersion: idType.sorted('pdcpv'),
 
@@ -58,12 +67,20 @@ export let ID = createIdGenerator({
   providerAuthConfigUsedForConfig: idType.sorted('pacufc'),
   providerAuthConfigUsedForDeployment: idType.sorted('pacufd'),
 
+  customProvider: idType.sorted('cpr'),
+  customProviderCommit: idType.sorted('cpc'),
+  customProviderVersion: idType.sorted('cpv'),
+  customProviderDeployment: idType.sorted('cpd'),
+  customProviderEnvironment: idType.sorted('cpe'),
+  customProviderEnvironmentVersion: idType.sorted('cpev'),
+
   session: idType.sorted('ses'),
   sessionTemplate: idType.sorted('set'),
   sessionTemplateProvider: idType.sorted('stp'),
   sessionProvider: idType.sorted('spv'),
   sessionProviderInstance: idType.sorted('spi'),
   sessionMessage: idType.sorted('smg'),
+  sessionMessage_mcp: idType.sorted('smg_mcp'),
   sessionParticipant: idType.sorted('spar'),
   sessionEvent: idType.sorted('sev'),
   sessionClientConnection: idType.sorted('scc'),
@@ -97,3 +114,9 @@ export let getId = <K extends Parameters<typeof ID.generateIdSync>[0]>(model: K)
   oid: snowflake.nextId(),
   id: ID.generateIdSync(model)
 });
+
+export let get4ByteIntId = (): number => {
+  let buffer = new Int32Array(1);
+  crypto.getRandomValues(buffer);
+  return buffer[0]!;
+};

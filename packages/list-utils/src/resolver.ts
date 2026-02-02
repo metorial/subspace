@@ -11,7 +11,7 @@ export let createResolver =
   <R extends { oid: bigint }>(
     cb: (d: {
       selector: TenantSelector;
-      ts: { tenantOid: bigint; solutionOid: number };
+      ts: { tenantOid: bigint; solutionOid: number; environmentOid: bigint };
       onlyLogsAfter: Date;
       ids: string[];
     }) => Promise<R[]>
@@ -28,7 +28,8 @@ export let createResolver =
       onlyLogsAfter: startOfDay(subDays(new Date(), selector.tenant.logRetentionInDays)),
       ts: {
         tenantOid: selector.tenant.oid,
-        solutionOid: selector.solution.oid
+        solutionOid: selector.solution.oid,
+        environmentOid: selector.environment.oid
       }
     });
 

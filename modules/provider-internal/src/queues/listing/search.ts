@@ -4,7 +4,7 @@ import { db } from '@metorial-subspace/db';
 import { env } from '../../env';
 
 export let indexProviderListingQueue = createQueue<{ providerListingId: string }>({
-  name: 'pint/search/srvlst',
+  name: 'sub/pint/search/srvlst',
   redisUrl: env.service.REDIS_URL,
   workerOpts: {
     concurrency: 1,

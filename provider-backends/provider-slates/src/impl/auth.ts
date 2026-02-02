@@ -57,6 +57,7 @@ export class ProviderAuth extends IProviderAuth {
 
     return {
       slateOAuthCredentials,
+      isAutoRegistration: false,
       type: 'oauth'
     };
   }
@@ -93,7 +94,8 @@ export class ProviderAuth extends IProviderAuth {
 
       input: data.input,
       redirectUrl: data.redirectUrl,
-      slateOAuthCredentialsId: slateOAuthCredentials.id
+      slateOAuthCredentialsId: slateOAuthCredentials.id,
+      callbackUrlOverride: data.callbackUrlOverride ?? undefined
     });
 
     let slateOAuthSetup = await db.slateOAuthSetup.create({

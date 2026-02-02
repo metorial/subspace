@@ -23,3 +23,5 @@ Bun.serve({
   },
   port: 12121
 });
+
+await import('./connection/server');

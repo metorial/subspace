@@ -4,12 +4,6 @@ enum ProviderDeploymentStatus {
   deleted
 }
 
-enum ProviderDeploymentSpecificationDiscoveryStatus {
-  discovering
-  discovered
-  failed
-}
-
 model ProviderDeployment {
   oid BigInt @id
   id  String @unique
@@ -23,10 +17,11 @@ model ProviderDeployment {
   description String?
   metadata    Json?
 
-  specificationDiscoveryStatus ProviderDeploymentSpecificationDiscoveryStatus
-
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  environmentOid BigInt
+  environment    Environment @relation(fields: [environmentOid], references: [oid], onDelete: Cascade)
 
   solutionOid Int
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
@@ -37,31 +32,47 @@ model ProviderDeployment {
   providerVariantOid BigInt
   providerVariant    ProviderVariant @relation(fields: [providerVariantOid], references: [oid])
 
-  lockedVersionOid BigInt?
-  lockedVersion    ProviderVersion? @relation(fields: [lockedVersionOid], references: [oid])
-
   defaultConfigOid BigInt?         @unique
   defaultConfig    ProviderConfig? @relation(fields: [defaultConfigOid], references: [oid], name: "defaultConfig")
 
   defaultAuthConfigOid BigInt?             @unique
   defaultAuthConfig    ProviderAuthConfig? @relation(fields: [defaultAuthConfigOid], references: [oid], name: "defaultAuthConfig")
 
-  specificationOid BigInt?
-  specification    ProviderSpecification? @relation(fields: [specificationOid], references: [oid])
+  currentVersionOid BigInt?
+  currentVersion    ProviderDeploymentVersion? @relation(fields: [currentVersionOid], references: [oid], name: "currentVersion")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  configPairs              ProviderDeploymentConfigPair[]
-  providerOAuthSetups      ProviderOAuthSetup[]
-  providerConfigVaults     ProviderConfigVault[]
-  providerConfigs          ProviderConfig[]
-  providerAuthConfigs      ProviderAuthConfig[]
-  providerAuthImports      ProviderAuthImport[]
-  providerSetupSessions    ProviderSetupSession[]
-  sessionProviders         SessionProvider[]
-  sessionTemplateProviders SessionTemplateProvider[]
+  providerOAuthSetups        ProviderOAuthSetup[]
+  providerConfigVaults       ProviderConfigVault[]
+  providerConfigs            ProviderConfig[]
+  providerAuthConfigs        ProviderAuthConfig[]
+  providerAuthImports        ProviderAuthImport[]
+  providerSetupSessions      ProviderSetupSession[]
+  sessionProviders           SessionProvider[]
+  sessionTemplateProviders   SessionTemplateProvider[]
+  providerDeploymentVersions ProviderDeploymentVersion[]
 
   @@index([isDefault])
   @@index([status])
+}
+
+model ProviderDeploymentVersion {
+  oid BigInt @id
+  id  String @unique
+
+  providerVariantOid BigInt
+  providerVariant    ProviderVariant @relation(fields: [providerVariantOid], references: [oid])
+
+  lockedVersionOid BigInt?
+  lockedVersion    ProviderVersion? @relation(fields: [lockedVersionOid], references: [oid])
+
+  deploymentOid BigInt
+  deployment    ProviderDeployment @relation(fields: [deploymentOid], references: [oid])
+
+  createdAt DateTime @default(now())
+
+  defaultForDeployment          ProviderDeployment[]           @relation("currentVersion")
+  providerDeploymentConfigPairs ProviderDeploymentConfigPair[]
 }

@@ -4,13 +4,17 @@ import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
   db,
+  type Environment,
   getId,
+  getOAuthCallbackUrl,
   ID,
   type Provider,
   type ProviderAuthCredentials,
   ProviderAuthMethodType,
   type ProviderDeployment,
+  type ProviderDeploymentVersion,
   type ProviderOAuthSetup,
+  type ProviderType,
   type ProviderVariant,
   type ProviderVersion,
   type Solution,
@@ -31,6 +35,7 @@ import {
   providerOAuthSetupCreatedQueue,
   providerOAuthSetupUpdatedQueue
 } from '../queues/lifecycle/providerOAuthSetup';
+import { providerAuthCredentialsService } from './providerAuthCredentials';
 
 let include = {
   provider: true,
@@ -46,6 +51,7 @@ class providerOAuthSetupServiceImpl {
   async listProviderOAuthSetups(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     allowDeleted?: boolean;
   }) {
     return Paginator.create(({ prisma }) =>
@@ -56,6 +62,7 @@ class providerOAuthSetupServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
               isEphemeral: false,
               ...normalizeStatusForList(d).onlyParent
             },
@@ -68,6 +75,7 @@ class providerOAuthSetupServiceImpl {
   async getProviderOAuthSetupById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerOAuthSetupId: string;
     allowDeleted?: boolean;
   }) {
@@ -76,6 +84,7 @@ class providerOAuthSetupServiceImpl {
         id: d.providerOAuthSetupId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
         ...normalizeStatusForGet(d).onlyParent
       },
       include
@@ -89,13 +98,16 @@ class providerOAuthSetupServiceImpl {
   async createProviderOAuthSetup(d: {
     tenant: Tenant;
     solution: Solution;
-    provider: Provider & { defaultVariant: ProviderVariant | null };
+    environment: Environment;
+    provider: Provider & { defaultVariant: ProviderVariant | null; type: ProviderType };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
       providerVariant: ProviderVariant;
-      lockedVersion: ProviderVersion | null;
+      currentVersion:
+        | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+        | null;
     };
-    credentials: ProviderAuthCredentials;
+    credentials?: ProviderAuthCredentials;
     input: {
       name?: string;
       description?: string;
@@ -121,13 +133,35 @@ class providerOAuthSetupServiceImpl {
         })
       );
     }
-    if (d.credentials.providerOid !== d.provider.oid) {
+    if (d.credentials && d.credentials.providerOid !== d.provider.oid) {
       throw new ServiceError(
         badRequestError({
           message: 'Auth credentials do not belong to provider',
           code: 'provider_mismatch'
         })
       );
+    }
+    if (
+      !d.credentials &&
+      d.provider.type.attributes.auth.oauth?.oauthAutoRegistration?.status !== 'supported'
+    ) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'No provider auth credentials provided for oauth method',
+          code: 'missing_oauth_credentials'
+        })
+      );
+    }
+
+    let credentials = d.credentials;
+
+    if (!credentials) {
+      credentials = await providerAuthCredentialsService.ensureDefaultProviderAuthCredentials({
+        tenant: d.tenant,
+        solution: d.solution,
+        environment: d.environment,
+        provider: d.provider
+      });
     }
 
     return withTransaction(async db => {
@@ -137,9 +171,10 @@ class providerOAuthSetupServiceImpl {
 
       let version = await providerDeploymentInternalService.getCurrentVersionOptional({
         provider: d.provider,
+        environment: d.environment,
         deployment: d.providerDeployment
       });
-      if (!version.specificationOid) {
+      if (!version?.specificationOid) {
         throw new ServiceError(
           badRequestError({
             message: 'Provider has not been discovered'
@@ -200,13 +235,16 @@ class providerOAuthSetupServiceImpl {
       let newId = getId('providerOAuthSetup');
       let clientSecret = await ID.generateId('providerOAuthSetup_clientSecret');
 
+      let callbackUrlOverride = getOAuthCallbackUrl(d.provider.type, d.provider, d.tenant);
+
       let backendProviderOAuthSetup = await backend.auth.createProviderOAuthSetup({
         tenant: d.tenant,
         provider: d.provider,
         providerVersion: version,
         input: d.input.config,
-        credentials: d.credentials,
+        credentials,
         authMethod,
+        callbackUrlOverride,
         redirectUrl: `${env.service.PUBLIC_SERVICE_URL}/oauth-setup/${newId.id}/callback?client_secret=${clientSecret}`
       });
 
@@ -228,11 +266,13 @@ class providerOAuthSetupServiceImpl {
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid,
           providerOid: d.provider.oid,
-          authCredentialsOid: d.credentials.oid,
+          authCredentialsOid: credentials.oid,
           authMethodOid: authMethod.oid,
 
           slateOAuthSetupOid: backendProviderOAuthSetup.slateOAuthSetup?.oid,
+          shuttleOAuthSetupOid: backendProviderOAuthSetup.shuttleOAuthSetup?.oid,
 
           expiresAt: addMinutes(new Date(), 30)
         },
@@ -250,6 +290,7 @@ class providerOAuthSetupServiceImpl {
   async updateProviderOAuthSetup(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerOAuthSetup: ProviderOAuthSetup;
     input: {
       name?: string;

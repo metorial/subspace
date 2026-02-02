@@ -4,7 +4,6 @@ import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
   db,
-  type ProviderAuthConfig,
   type ProviderOAuthSetup,
   withTransaction
 } from '@metorial-subspace/db';
@@ -17,7 +16,7 @@ import { providerSetupSessionInternalService } from './providerSetupSessionInter
 let include = {};
 
 let syncLock = createLock({
-  name: 'auth/setupInternal/sync',
+  name: 'sub/auth/setupInternal/sync',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -54,7 +53,9 @@ class providerOAuthSetupInternalServiceImpl {
             provider: true,
             deployment: true,
             solution: true,
-            providerSetupSession: true
+            providerSetupSession: true,
+            environment: true,
+            authConfig: true
           }
         });
 
@@ -65,39 +66,34 @@ class providerOAuthSetupInternalServiceImpl {
           setup: providerOAuthSetup
         });
 
-        let authConfig: ProviderAuthConfig | undefined;
+        let authConfig = providerOAuthSetup.authConfig;
 
-        if (record.slateAuthConfig) {
-          let existing = await db.providerAuthConfig.findUnique({
-            where: { oid: record.slateAuthConfig.oid, tenantOid: providerOAuthSetup.tenantOid }
-          });
-          if (existing) {
-            authConfig = existing;
-          } else {
-            authConfig =
-              await providerAuthConfigInternalService.createProviderAuthConfigInternal({
-                backend: backend.backend,
-                source: providerOAuthSetup.providerSetupSession ? 'setup_session' : 'system',
-                type: 'oauth_automated',
-                tenant: providerOAuthSetup.tenant,
-                provider: providerOAuthSetup.provider,
-                solution: providerOAuthSetup.solution,
-                providerDeployment: providerOAuthSetup.deployment ?? undefined,
-                credentials: providerOAuthSetup.authCredentials,
-                input: {
-                  name: providerOAuthSetup.name ?? undefined,
-                  description: providerOAuthSetup.description ?? undefined,
-                  metadata: providerOAuthSetup.metadata ?? undefined,
-                  isEphemeral: providerOAuthSetup.isEphemeral,
-                  isDefault: false
-                },
-                authMethod: providerOAuthSetup.authMethod,
-                backendProviderAuthConfig: {
-                  slateAuthConfig: record.slateAuthConfig,
-                  expiresAt: null
-                }
-              });
-          }
+        if (record.slateAuthConfig || record.shuttleAuthConfig) {
+          authConfig =
+            await providerAuthConfigInternalService.createProviderAuthConfigInternal({
+              backend: backend.backend,
+              source: providerOAuthSetup.providerSetupSession ? 'setup_session' : 'system',
+              type: 'oauth_automated',
+              tenant: providerOAuthSetup.tenant,
+              environment: providerOAuthSetup.environment,
+              solution: providerOAuthSetup.solution,
+              provider: providerOAuthSetup.provider,
+              providerDeployment: providerOAuthSetup.deployment ?? undefined,
+              credentials: providerOAuthSetup.authCredentials,
+              input: {
+                name: providerOAuthSetup.name ?? undefined,
+                description: providerOAuthSetup.description ?? undefined,
+                metadata: providerOAuthSetup.metadata ?? undefined,
+                isEphemeral: providerOAuthSetup.isEphemeral,
+                isDefault: false
+              },
+              authMethod: providerOAuthSetup.authMethod,
+              backendProviderAuthConfig: {
+                slateAuthConfig: record.slateAuthConfig ?? undefined,
+                shuttleAuthConfig: record.shuttleAuthConfig ?? undefined,
+                expiresAt: null
+              }
+            });
         }
 
         let setup = await db.providerOAuthSetup.update({
@@ -114,6 +110,8 @@ class providerOAuthSetupInternalServiceImpl {
             errorMessage: record.error?.message ?? record.error?.code,
 
             slateOAuthSetupOid: record.slateOAuthSetup?.oid,
+            shuttleOAuthSetupOid: record.shuttleOAuthSetup?.oid,
+
             authConfigOid: authConfig?.oid ?? null
           }
         });

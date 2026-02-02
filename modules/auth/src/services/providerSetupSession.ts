@@ -5,15 +5,18 @@ import {
   addAfterTransactionHook,
   type Brand,
   db,
+  type Environment,
   getId,
   ID,
   type Provider,
   type ProviderAuthCredentials,
   type ProviderDeployment,
+  type ProviderDeploymentVersion,
   type ProviderSetupSession,
   type ProviderSetupSessionStatus,
   type ProviderSetupSessionType,
   type ProviderSetupSessionUiMode,
+  type ProviderType,
   type ProviderVariant,
   type ProviderVersion,
   type Solution,
@@ -40,6 +43,7 @@ import {
 import { providerAuthConfigInclude } from './providerAuthConfig';
 import { providerAuthConfigInternalService } from './providerAuthConfigInternal';
 import { providerSetupSessionInternalService } from './providerSetupSessionInternal';
+import { providerSetupSessionUiService } from './providerSetupSessionUi';
 
 let include = {
   authConfig: { include: providerAuthConfigInclude },
@@ -62,6 +66,7 @@ class providerSetupSessionServiceImpl {
   async listProviderSetupSessions(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     status?: ProviderSetupSessionStatus[];
     allowDeleted?: boolean;
@@ -90,6 +95,7 @@ class providerSetupSessionServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
 
               ...normalizeStatusForList(d).onlyParent,
 
@@ -111,6 +117,7 @@ class providerSetupSessionServiceImpl {
   async getProviderSetupSessionById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerSetupSessionId: string;
     allowDeleted?: boolean;
   }) {
@@ -119,6 +126,7 @@ class providerSetupSessionServiceImpl {
         id: d.providerSetupSessionId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
         ...normalizeStatusForGet(d).onlyParent
       },
       include
@@ -134,16 +142,19 @@ class providerSetupSessionServiceImpl {
   async createProviderSetupSession(d: {
     tenant: Tenant;
     solution: Solution;
-    provider: Provider & { defaultVariant: ProviderVariant | null };
+    environment: Environment;
+    provider: Provider & { defaultVariant: ProviderVariant | null; type: ProviderType };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
       providerVariant: ProviderVariant;
-      lockedVersion: ProviderVersion | null;
+      currentVersion:
+        | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+        | null;
     };
     credentials?: ProviderAuthCredentials;
     brand?: Brand;
     input: {
-      name: string;
+      name?: string;
       authMethodId?: string;
       description?: string;
       metadata?: Record<string, any>;
@@ -199,19 +210,27 @@ class providerSetupSessionServiceImpl {
         await providerAuthConfigInternalService.getVersionAndAuthMethod({
           tenant: d.tenant,
           solution: d.solution,
+          environment: d.environment,
           provider: d.provider,
           providerDeployment: d.providerDeployment,
           authMethodId: d.input.authMethodId ?? (d.credentials ? 'oauth' : undefined)
         });
 
       if (d.credentials && authMethod.type !== 'oauth') d.credentials = undefined;
-      if (authMethod.type === 'oauth' && !d.credentials) {
+      if (
+        authMethod.type === 'oauth' &&
+        !d.credentials &&
+        // If auto registration is supported, we don't need to require credentials
+        d.provider.type.attributes.auth.oauth?.oauthAutoRegistration?.status !== 'supported'
+      ) {
         let defaultCredentials = await db.providerAuthCredentials.findFirst({
           where: {
             providerOid: d.provider.oid,
             tenantOid: d.tenant.oid,
             solutionOid: d.solution.oid,
-            isDefault: true
+            environmentOid: d.environment.oid,
+            isDefault: true,
+            status: 'active'
           }
         });
 
@@ -238,6 +257,7 @@ class providerSetupSessionServiceImpl {
           await providerSetupSessionInternalService.createProviderAuthConfig({
             tenant: d.tenant,
             solution: d.solution,
+            environment: d.environment,
             provider: d.provider,
             providerDeployment: d.providerDeployment,
             credentials: d.credentials,
@@ -258,10 +278,26 @@ class providerSetupSessionServiceImpl {
         inner = { ...inner, ...authConfigInner };
       }
 
+      // If we don't really need a config for the provider, just create an empty one
+      if (d.input.type !== 'auth_only' && !d.input.configInput) {
+        let configRes = await providerSetupSessionUiService.getConfigSchemaWithoutSession({
+          tenant: d.tenant,
+          solution: d.solution,
+          environment: d.environment,
+          provider: d.provider,
+          deployment: d.providerDeployment
+        });
+
+        if (configRes.type === 'none') {
+          d.input.configInput = {};
+        }
+      }
+
       if (d.input.configInput && d.input.type !== 'auth_only') {
         let configInner = await providerSetupSessionInternalService.createProviderConfig({
           tenant: d.tenant,
           solution: d.solution,
+          environment: d.environment,
           provider: d.provider,
           providerDeployment: d.providerDeployment,
           input: {
@@ -289,9 +325,11 @@ class providerSetupSessionServiceImpl {
           name: d.input.name?.trim() || undefined,
           description: d.input.description?.trim() || undefined,
           metadata: d.input.metadata,
+          redirectUrl: d.input.redirectUrl,
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid,
           providerOid: d.provider.oid,
           brandOid: d.brand?.oid,
           authCredentialsOid: d.credentials?.oid,
@@ -338,6 +376,7 @@ class providerSetupSessionServiceImpl {
   async updateProviderSetupSession(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerSetupSession: ProviderSetupSession;
     input: {
       name?: string;

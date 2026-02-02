@@ -103,7 +103,7 @@ describe('Basic Flow Integration', () => {
   });
 
   test('should handle concurrent messages', async () => {
-    const promises = [];
+    const promises: any = [];
     for (let i = 0; i < 10; i++) {
       promises.push(sender.send('concurrent-topic', { index: i }));
     }

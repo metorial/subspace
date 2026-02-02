@@ -6,18 +6,24 @@ import type {
   ConduitInput,
   ConduitResult
 } from '@metorial-subspace/connection-utils';
-import { db } from '@metorial-subspace/db';
-import { getBackend } from '@metorial-subspace/provider';
+import { db, ID, type SessionMessage } from '@metorial-subspace/db';
 import { conduit } from '../lib/conduit';
 import { broadcastNats } from '../lib/nats';
 import { topics } from '../lib/topic';
 import { completeMessage } from '../shared/completeMessage';
+import { createMessage } from '../shared/createMessage';
 import { upsertParticipant } from '../shared/upsertParticipant';
 import { ConnectionState } from './state';
+import { getConnectionBackendConnection } from './state/backend';
 
 let Sentry = getSentry();
 
-export let startController = () => {
+const NO_OUTPUT_ERROR = {
+  type: 'error',
+  data: { code: 'no_result', message: 'Provided did not return a result' }
+} satisfies PrismaJson.SessionMessageOutput;
+
+export let startReceiver = () => {
   let receiver = conduit.createConduitReceiver(async ctx => {
     ctx.extendTtl(1000 * 60);
 
@@ -36,43 +42,143 @@ export let startController = () => {
       return;
     }
 
-    let backend = await getBackend({ entity: state.version });
-    let backendProviderRun = await backend.toolInvocation.createProviderRun({
-      tenant: state.instance.sessionProvider.tenant,
-      providerConfig: state.instance.sessionProvider.config,
-      providerConfigVersion: state.instance.sessionProvider.config.currentVersion!,
-
-      providerVersion: state.version,
-      provider: state.version.provider,
-      providerVariant: state.version.providerVariant,
-
-      providerRun: state.providerRun
+    let providerParticipant = await upsertParticipant({
+      session: state.session,
+      from: {
+        type: 'provider',
+        provider: state.provider
+      }
     });
 
-    let processMessage = async (data: ConduitInput) => {
+    let backend = await getConnectionBackendConnection(state);
+
+    let clientMcpIdTranslation = new Map<string, string | number>();
+
+    backend.onMcpNotificationOrRequest(async mcpMessage => {
+      let id = 'id' in mcpMessage ? mcpMessage.id : undefined;
+      let method = 'method' in mcpMessage ? mcpMessage.method : undefined;
+
+      let providerMcpId: string | undefined;
+      if (id) {
+        providerMcpId = await ID.generateId('sessionMessage_mcp');
+        clientMcpIdTranslation.set(providerMcpId, id);
+
+        // @ts-ignore
+        mcpMessage.id = providerMcpId;
+      }
+
+      let message = await createMessage({
+        status: id ? 'waiting_for_response' : 'succeeded',
+        type: 'mcp_message',
+        session: state.session,
+        connection: state.connection,
+        source: 'provider',
+        provider: state.sessionProvider,
+        senderParticipant: providerParticipant,
+        transport: 'mcp',
+        input: { type: 'mcp', data: mcpMessage },
+        isProductive: true,
+        methodOrToolKey: method,
+        providerMcpId
+      });
+
+      await broadcastNats.publish(
+        topics.sessionConnection.encode({
+          session: state.session,
+          connection: state.connection
+        }),
+        serialize.encode({
+          type: 'message_processed',
+          sessionId: state.session.id,
+          result: {
+            message,
+            output: { type: 'mcp', data: mcpMessage },
+            status: 'succeeded',
+            completedAt: new Date()
+          } satisfies ConduitResult,
+          channel: 'broadcast_response_or_notification'
+        } satisfies BroadcastMessage)
+      );
+    });
+
+    let sendToProviderInnerToolCall = async (
+      data: ConduitInput & { type: 'tool_call' },
+      message: SessionMessage
+    ) => {
+      let tool = await db.providerTool.findFirstOrThrow({
+        where: { id: data.toolId }
+      });
+
+      return await backend.sendToolInvocation({
+        tool,
+        message,
+        input: data.input,
+        sender: state.participant,
+        sessionProvider: state.sessionProvider
+      });
+    };
+
+    let sendToProviderInnerMcpMessage = async (
+      data: ConduitInput & { type: 'mcp.message_from_client' },
+      message: SessionMessage
+    ) => {
+      let mcpMessage = data.mcpMessage;
+
+      let id: any = 'id' in mcpMessage ? mcpMessage.id : undefined;
+      if (id) {
+        // We can only process a reply from the client if we
+        // have seen the original message and have a mapping for the ID
+        if (!clientMcpIdTranslation.has(id)) return {};
+
+        // @ts-ignore
+        mcpMessage.id = clientMcpIdTranslation.get(id);
+      }
+
+      return await backend.sendMcpResponseOrNotification({
+        sender: state.participant,
+        input: mcpMessage,
+        message
+      });
+    };
+
+    let sendToProviderInner = async (data: ConduitInput, message: SessionMessage) => {
+      if (data.type === 'tool_call') {
+        return await sendToProviderInnerToolCall(data, message);
+      } else if (data.type === 'mcp.message_from_client') {
+        return await sendToProviderInnerMcpMessage(data, message);
+      }
+
+      throw new Error(`Unsupported ConduitInput`);
+    };
+
+    let sendToProvider = async (data: ConduitInput) => {
       let message = await db.sessionMessage.findFirstOrThrow({
         where: { id: data.sessionMessageId }
       });
 
       try {
-        let result = await backend.toolInvocation.createToolInvocation({
-          tenant: state.instance.sessionProvider.tenant,
-          provider: state.version.provider,
-          providerRun: state.providerRun,
-          tool: { callableId: data.toolCallableId },
-          slateSession: backendProviderRun.slateSession,
-          runState: backendProviderRun.runState,
-          providerAuthConfig: state.instance.sessionProvider.authConfig,
-          providerAuthConfigVersion:
-            state.instance.sessionProvider.authConfig?.currentVersion ?? null,
-          input: data.input,
-          sender: state.participant,
-          message
-        });
+        let result = await sendToProviderInner(data, message);
+
+        if (!result.output) {
+          return {
+            isSystemError: false,
+            status: 'succeeded' as const,
+            output: null,
+            completedAt: new Date(),
+            slateToolCall: result.slateToolCall
+          };
+        }
 
         let status =
           result.output.type === 'success' ? ('succeeded' as const) : ('failed' as const);
-        let output = result.output.type === 'error' ? result.output.error : result.output.data;
+        let output =
+          result.output.type === 'error'
+            ? { type: 'error' as const, data: result.output.error }
+            : result.output.data;
+
+        if (output.type === 'mcp' && 'error' in output.data && output.data.error) {
+          status = 'failed';
+        }
 
         return {
           isSystemError: false,
@@ -92,7 +198,7 @@ export let startController = () => {
 
         return {
           isSystemError: true,
-          output: error,
+          output: { type: 'error', data: error } satisfies PrismaJson.SessionMessageOutput,
           status: 'failed' as const,
           completedAt: new Date(),
           slateToolCall: undefined
@@ -100,63 +206,86 @@ export let startController = () => {
       }
     };
 
-    ctx.onMessage(async (data: ConduitInput) => {
-      ctx.extendTtl(state.messageTTLExtensionMs);
-
-      let res = await processMessage(data);
-
-      let output =
-        res.status === 'failed'
-          ? { type: 'error' as const, data: res.output as any }
-          : { type: 'tool.result' as const, data: res.output };
-
-      let participant = await upsertParticipant({
-        session: state.session,
-        from: {
-          type: 'provider',
-          provider: state.provider
-        }
-      });
+    let processToolCall = async (data: ConduitInput & { type: 'tool_call' }) => {
+      let res = await sendToProvider(data);
 
       let message = await completeMessage(
         { messageId: data.sessionMessageId },
         {
-          output,
+          output: res.output ?? NO_OUTPUT_ERROR,
           status: res.status,
           providerRun: state.providerRun,
           completedAt: res.completedAt,
           slateToolCall: res.slateToolCall,
-          responderParticipant: participant,
+          responderParticipant: providerParticipant,
           failureReason: res.isSystemError ? 'system_error' : undefined
         }
       );
 
       let result = {
         message,
-        output,
+        output: res.output ?? NO_OUTPUT_ERROR,
         status: res.status,
         completedAt: res.completedAt
       } satisfies ConduitResult;
 
-      await broadcastNats.publish(
-        topics.sessionConnection.encode({
-          session: state.session,
-          connection: state.connection
-        }),
-        serialize.encode({
-          type: 'message_processed',
-          sessionId: state.session.id,
-          result,
-          channel: 'targeted_response'
-        } satisfies BroadcastMessage)
-      );
+      if (result.output) {
+        await broadcastNats.publish(
+          topics.sessionConnection.encode({
+            session: state.session,
+            connection: state.connection
+          }),
+          serialize.encode({
+            type: 'message_processed',
+            sessionId: state.session.id,
+            channel: 'targeted_response',
+            result
+          } satisfies BroadcastMessage)
+        );
+      }
 
       return result;
+    };
+
+    let processMcpResponse = async (
+      data: ConduitInput & { type: 'mcp.message_from_client' }
+    ) => {
+      let res = await sendToProvider(data);
+
+      await completeMessage(
+        { messageId: data.sessionMessageId },
+        {
+          output: { type: 'mcp', data: data.mcpMessage },
+          status: res.status,
+          providerRun: state.providerRun,
+          completedAt: res.completedAt,
+          slateToolCall: res.slateToolCall,
+          responderParticipant: state.participant,
+          failureReason: res.isSystemError ? 'system_error' : undefined
+        }
+      );
+    };
+
+    ctx.onMessage(async (data: ConduitInput) => {
+      ctx.extendTtl(state.messageTTLExtensionMs);
+
+      if (data.type === 'tool_call') return processToolCall(data);
+      if (data.type === 'mcp.message_from_client') return processMcpResponse(data);
     });
 
     ctx.onClose(async () => {
-      console.log(`Closing provider instance receiver for instance id: ${state.instance.id}`);
-      await state.dispose();
+      try {
+        await state.dispose();
+      } catch (err) {
+        console.error('Error disposing connection state:', err);
+        Sentry.captureException(err);
+      }
+      try {
+        await backend.close();
+      } catch (err) {
+        console.error('Error closing connection backend:', err);
+        Sentry.captureException(err);
+      }
     });
   });
 

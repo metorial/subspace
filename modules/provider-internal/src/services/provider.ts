@@ -5,9 +5,12 @@ import {
   getId,
   type Provider,
   type Publisher,
+  type ShuttleServer,
   type Slate,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import { ensureProviderType } from '@metorial-subspace/provider-utils';
 import { createTag } from '../lib/createTag';
 import { listingCreatedQueue, listingUpdatedQueue } from '../queues/lifecycle/listing';
 import { providerCreatedQueue, providerUpdatedQueue } from '../queues/lifecycle/provider';
@@ -16,23 +19,45 @@ class providerInternalServiceImpl {
   async upsertProvider(d: {
     publisher: Publisher;
 
-    source: {
-      type: 'slates';
-      slate: Slate;
-      backend: Backend;
-    };
+    tenant: Tenant | null;
+
+    source:
+      | {
+          type: 'slates';
+          slate: Slate;
+          backend: Backend;
+        }
+      | {
+          type: 'shuttle';
+          shuttleServer: ShuttleServer;
+          backend: Backend;
+        };
 
     info: {
       name: string;
       description?: string;
       slug: string;
-      image: PrismaJson.EntityImage | null;
+      image?: PrismaJson.EntityImage | null;
       skills?: string[];
       readme?: string;
+      categories?: string[];
+    };
+
+    type: {
+      name: string;
+      attributes: PrismaJson.ProviderTypeAttributes;
     };
   }) {
     return withTransaction(async db => {
-      let identifier = `provider::${d.source.type}::${d.source.slate.id}`;
+      let identifier = `provider::${d.source.type}::`;
+
+      if (d.source.type === 'slates') {
+        identifier += `${d.source.slate.oid}`;
+      } else if (d.source.type === 'shuttle') {
+        identifier += `${d.source.shuttleServer.oid}`;
+      } else {
+        throw new Error('Unknown provider source type');
+      }
 
       let providerEntryData = {
         identifier: `${identifier}::entry`,
@@ -51,17 +76,28 @@ class providerInternalServiceImpl {
         update: providerEntryData
       });
 
+      let type = await ensureProviderType(d.type.name, d.type.attributes);
+
       let providerData = {
         identifier: `${identifier}::provider`,
 
-        access: 'public' as const,
+        ...(d.tenant
+          ? {
+              access: 'tenant' as const,
+              ownerTenantOid: d.tenant.oid
+            }
+          : {
+              access: 'public' as const
+            }),
+
         status: 'active' as const,
 
         name: d.info.name,
         description: d.info.description,
 
         entryOid: entry.oid,
-        publisherOid: d.publisher.oid
+        publisherOid: d.publisher.oid,
+        typeOid: type.oid
       };
       let existingProvider = await db.provider.findFirst({
         where: { identifier }
@@ -96,12 +132,16 @@ class providerInternalServiceImpl {
 
         backendOid: d.source.backend.oid,
         providerOid: provider.oid,
-        slateOid: d.source.slate.oid,
-        publisherOid: d.publisher.oid
+        publisherOid: d.publisher.oid,
+
+        slateOid: d.source.type === 'slates' ? d.source.slate.oid : null,
+        shuttleServerOid: d.source.type === 'shuttle' ? d.source.shuttleServer.oid : null
       };
+
       let existingVariant = await db.providerVariant.findFirst({
         where: { identifier: variantData.identifier }
       });
+
       let variant = existingVariant
         ? await db.providerVariant.update({
             where: { identifier: variantData.identifier },
@@ -166,6 +206,22 @@ class providerInternalServiceImpl {
         listing = await db.providerListing.update({
           where: { providerOid: provider.oid },
           data: allData
+        });
+      }
+
+      if (d.info.categories) {
+        let categories = await db.providerListingCategory.findMany({
+          where: {
+            slug: { in: d.info.categories }
+          }
+        });
+        await db.providerListing.update({
+          where: { id: listing.id },
+          data: {
+            categories: {
+              set: categories.map(c => ({ oid: c.oid }))
+            }
+          }
         });
       }
 

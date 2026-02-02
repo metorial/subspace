@@ -3,10 +3,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
-  type Provider,
-  type ProviderAuthConfig,
-  type ProviderConfig,
-  type ProviderDeployment,
+  type Environment,
   type ProviderSpecification,
   type ProviderVersion,
   type Solution,
@@ -17,18 +14,11 @@ class providerToolServiceImpl {
   async listProviderTools(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
-    provider?: Provider;
-    providerVersion?: ProviderVersion;
-    providerDeployment?: ProviderDeployment;
-    providerConfig?: ProviderConfig & { deployment: ProviderDeployment | null };
-    providerAuthConfig?: ProviderAuthConfig & { deployment: ProviderDeployment | null };
+    providerVersion: ProviderVersion;
   }) {
-    let versionOid =
-      d.providerVersion?.oid ??
-      d.providerDeployment?.lockedVersionOid ??
-      d.providerConfig?.deployment?.lockedVersionOid ??
-      d.providerAuthConfig?.deployment?.lockedVersionOid;
+    let versionOid = d.providerVersion?.oid;
 
     let version = versionOid
       ? await db.providerVersion.findFirstOrThrow({
@@ -56,8 +46,7 @@ class providerToolServiceImpl {
                 }
               }
             ],
-
-            providerOid: d.provider?.oid,
+            providerOid: d.providerVersion.providerOid,
 
             ...(version?.specificationOid
               ? {
@@ -103,6 +92,7 @@ class providerToolServiceImpl {
   async getProviderToolById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerToolId: string;
   }) {
     let providerTool = await db.providerTool.findFirst({

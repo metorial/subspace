@@ -1,13 +1,14 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, type Solution, type Tenant } from '@metorial-subspace/db';
+import { db, type Environment, type Solution, type Tenant } from '@metorial-subspace/db';
 import { resolveProviders } from '@metorial-subspace/list-utils';
 
 class providerSpecificationServiceImpl {
   async listProviderSpecifications(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     ids?: string[];
     providerIds?: string[];
@@ -25,7 +26,7 @@ class providerSpecificationServiceImpl {
     let deployments = d.providerDeploymentIds
       ? await db.providerDeployment.findMany({
           where: { id: { in: d.providerDeploymentIds } },
-          include: { lockedVersion: true }
+          include: { currentVersion: { include: { lockedVersion: true } } }
         })
       : undefined;
     let configs = d.providerConfigIds
@@ -36,7 +37,9 @@ class providerSpecificationServiceImpl {
 
     let specOids = [
       ...(versions?.map(v => v.specificationOid!).filter(o => o) ?? []),
-      ...(deployments?.map(d => d.lockedVersion?.specificationOid!).filter(o => o) ?? []),
+      ...(deployments
+        ?.map(d => d.currentVersion?.lockedVersion?.specificationOid!)
+        .filter(o => o) ?? []),
       ...(configs?.map(c => c.specificationOid) ?? [])
     ];
 
@@ -80,6 +83,7 @@ class providerSpecificationServiceImpl {
   async getProviderSpecificationById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerSpecificationId: string;
   }) {
     let providerSpecification = await db.providerSpecification.findFirst({

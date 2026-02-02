@@ -1,18 +1,18 @@
 import { getOffloadedSessionMessage } from '@metorial-subspace/connection-utils';
-import type {
-  Provider,
-  ProviderRun,
-  ProviderSpecification,
-  ProviderTool,
-  Session,
-  SessionConnection,
-  SessionMessage,
-  SessionParticipant,
-  SessionProvider,
-  ToolCall
+import {
+  messageTranslator,
+  type Provider,
+  type ProviderRun,
+  type ProviderSpecification,
+  type ProviderTool,
+  type Session,
+  type SessionConnection,
+  type SessionMessage,
+  type SessionParticipant,
+  type SessionProvider,
+  type ToolCall
 } from '@metorial-subspace/db';
-import { messageInputToMcp, messageOutputToMcp } from '@metorial-subspace/db';
-import { type SessionErrorPresenterProps, sessionErrorPresenter } from './sessionError';
+import { sessionErrorPresenter, type SessionErrorPresenterProps } from './sessionError';
 import { sessionParticipantPresenter } from './sessionParticipant';
 import { toolCallPresenter } from './toolCall';
 
@@ -32,6 +32,8 @@ export type SessionMessagePresenterProps = SessionMessage & {
       })
     | null;
   error: SessionErrorPresenterProps | null;
+  parentMessage: SessionMessage | null;
+  childMessages: SessionMessage[];
 };
 
 export let sessionMessagePresenter = async (message: SessionMessagePresenterProps) => {
@@ -55,6 +57,12 @@ export let sessionMessagePresenter = async (message: SessionMessagePresenterProp
     sessionProviderId: message.sessionProvider?.id || null,
     connectionId: message.connection?.id || null,
     providerRunId: message.providerRun?.id || null,
+
+    hierarchy: {
+      type: message.parentMessage ? 'child' : 'parent',
+      parentMessageId: message.parentMessage?.id,
+      childMessageIds: message.childMessages.map(child => child.id)
+    },
 
     transport: {
       object: 'session.message.transport',
@@ -86,8 +94,12 @@ export let sessionMessagePresenter = async (message: SessionMessagePresenterProp
           : undefined
     },
 
-    input: message.input ? await messageInputToMcp(message.input, message) : null,
-    output: message.output ? await messageOutputToMcp(message.output, message) : null,
+    input: message.input
+      ? await messageTranslator.inputToMcpBasic(message.input, message)
+      : null,
+    output: message.output
+      ? await messageTranslator.outputToMcpBasic(message.output, message)
+      : null,
 
     toolCall: message.toolCall
       ? await toolCallPresenter({

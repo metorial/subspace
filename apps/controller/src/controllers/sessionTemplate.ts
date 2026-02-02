@@ -13,6 +13,7 @@ export let sessionTemplateApp = tenantApp.use(async ctx => {
   let sessionTemplate = await sessionTemplateService.getSessionTemplateById({
     sessionTemplateId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
@@ -27,6 +28,7 @@ export let sessionTemplateController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           status: v.optional(v.array(v.enumOf(['active', 'archived']))),
           allowDeleted: v.optional(v.boolean()),
@@ -44,6 +46,7 @@ export let sessionTemplateController = app.controller({
     .do(async ctx => {
       let paginator = await sessionTemplateService.listSessionTemplates({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         status: ctx.input.status,
@@ -68,6 +71,7 @@ export let sessionTemplateController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         sessionTemplateId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })
@@ -79,6 +83,7 @@ export let sessionTemplateController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         name: v.string(),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
@@ -97,6 +102,7 @@ export let sessionTemplateController = app.controller({
     .do(async ctx => {
       let sessionTemplate = await sessionTemplateService.createSessionTemplate({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         input: {
@@ -108,7 +114,7 @@ export let sessionTemplateController = app.controller({
             deploymentId: p.providerDeploymentId,
             configId: p.providerConfigId,
             authConfigId: p.providerAuthConfigId,
-            toolFilters: p.toolFilters
+            toolFilters: p.toolFilters as any
           }))
         }
       });
@@ -121,6 +127,7 @@ export let sessionTemplateController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         sessionTemplateId: v.string(),
 
         allowDeleted: v.optional(v.boolean()),
@@ -133,6 +140,7 @@ export let sessionTemplateController = app.controller({
     .do(async ctx => {
       let sessionTemplate = await sessionTemplateService.updateSessionTemplate({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
         template: ctx.sessionTemplate,
 

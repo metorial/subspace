@@ -52,7 +52,8 @@ export let createError = async (props: CreateErrorProps) => {
       connectionOid: props.connection?.oid,
       providerRunOid: props.providerRun?.oid,
       tenantOid: props.session.tenantOid,
-      solutionOid: props.session.solutionOid
+      solutionOid: props.session.solutionOid,
+      environmentOid: props.session.environmentOid
     }
   });
 

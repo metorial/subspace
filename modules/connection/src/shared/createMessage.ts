@@ -7,6 +7,7 @@ import {
   type SessionConnection,
   type SessionConnectionTransport,
   type SessionError,
+  type SessionMessage,
   type SessionMessageFailureReason,
   type SessionMessageSource,
   type SessionMessageStatus,
@@ -29,6 +30,8 @@ export interface CreateMessageProps {
   output?: PrismaJson.SessionMessageOutput;
   responderParticipant?: SessionParticipant;
 
+  parentMessage?: SessionMessage;
+
   provider?: SessionProvider;
 
   tool?: ProviderTool;
@@ -37,6 +40,7 @@ export interface CreateMessageProps {
   isProductive: boolean;
 
   clientMcpId?: PrismaJson.SessionMessageClientMcpId;
+  providerMcpId?: string;
 
   completedAt?: Date;
 }
@@ -63,6 +67,13 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
     data.failureReason = 'provider_error';
   }
 
+  if (data.status === 'failed' && !data.output) {
+    data.output = {
+      type: 'error',
+      data: { code: 'unknown', message: 'An unknown error occurred' }
+    };
+  }
+
   let error: SessionError | undefined;
   if (data.status === 'failed') {
     error = await createError({
@@ -85,22 +96,24 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
       failureReason: data.failureReason ?? 'none',
       completedAt: data.completedAt,
 
+      errorOid: error?.oid,
       sessionOid: data.session.oid,
       connectionOid: data.connection?.oid,
-      sessionProviderOid: data.provider?.oid,
       tenantOid: data.session.tenantOid,
       solutionOid: data.session.solutionOid,
+      sessionProviderOid: data.provider?.oid,
+      bucketOid: sessionMessageBucketRecord.oid,
+      parentMessageOid: data.parentMessage?.oid,
+      environmentOid: data.session.environmentOid,
       senderParticipantOid: data.senderParticipant.oid,
       responderParticipantOid: data.responderParticipant?.oid,
-
-      bucketOid: sessionMessageBucketRecord.oid,
-      errorOid: error?.oid,
 
       input: data.input,
       output: data.output,
 
       methodOrToolKey: data.tool?.key ?? data.methodOrToolKey ?? null,
       clientMcpId: data.clientMcpId ?? null,
+      providerMcpId: data.providerMcpId ?? null,
 
       toolCall: data.tool
         ? {
@@ -110,7 +123,8 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
               toolKey: data.tool.key,
               sessionOid: data.session.oid,
               tenantOid: data.session.tenantOid,
-              solutionOid: data.session.solutionOid
+              solutionOid: data.session.solutionOid,
+              environmentOid: data.session.environmentOid
             }
           }
         : undefined
@@ -126,7 +140,8 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
       providerRunOid: message.providerRunOid,
       messageOid: message.oid,
       tenantOid: message.tenantOid,
-      solutionOid: message.solutionOid
+      solutionOid: message.solutionOid,
+      environmentOid: message.environmentOid
     }
   });
 
@@ -140,7 +155,8 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
         providerRunOid: message.providerRunOid,
         messageOid: message.oid,
         tenantOid: message.tenantOid,
-        solutionOid: message.solutionOid
+        solutionOid: message.solutionOid,
+        environmentOid: message.environmentOid
       }
     });
   }

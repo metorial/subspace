@@ -7,7 +7,7 @@ declare global {
 }
 
 if (
-  process.env.METORIAL_ENV != 'development' &&
+  process.env.METORIAL_ENV !== 'development' &&
   !global.sentryInitialized &&
   process.env.SENTRY_DSN
 ) {

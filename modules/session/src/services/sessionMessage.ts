@@ -3,6 +3,8 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  type Environment,
+  type SessionMessageSource,
   type SessionMessageType,
   type Solution,
   type Tenant
@@ -13,6 +15,7 @@ import {
   resolveProviderRuns,
   resolveSessionConnections,
   resolveSessionErrors,
+  resolveSessionMessages,
   resolveSessionParticipants,
   resolveSessionProviders,
   resolveSessions
@@ -36,7 +39,9 @@ let include = {
       }
     }
   },
-  error: { include: sessionErrorInclude }
+  error: { include: sessionErrorInclude },
+  parentMessage: true,
+  childMessages: true
 };
 export let sessionMessageInclude = include;
 
@@ -44,8 +49,12 @@ class sessionMessageServiceImpl {
   async listSessionMessages(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     types?: SessionMessageType[];
+    source?: SessionMessageSource[];
+    hierarchy?: ('parent' | 'child')[];
+
     allowDeleted?: boolean;
 
     ids?: string[];
@@ -55,6 +64,7 @@ class sessionMessageServiceImpl {
     providerRunIds?: string[];
     errorIds?: string[];
     participantIds?: string[];
+    parentMessageIds?: string[];
   }) {
     let sessions = await resolveSessions(d, d.sessionIds);
     let sessionProviders = await resolveSessionProviders(d, d.sessionProviderIds);
@@ -62,6 +72,7 @@ class sessionMessageServiceImpl {
     let providerRuns = await resolveProviderRuns(d, d.providerRunIds);
     let errors = await resolveSessionErrors(d, d.errorIds);
     let participants = await resolveSessionParticipants(d, d.participantIds);
+    let parentMessages = await resolveSessionMessages(d, d.parentMessageIds);
 
     return Paginator.create(({ prisma }) =>
       prisma(
@@ -71,13 +82,30 @@ class sessionMessageServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
 
               AND: [
                 normalizeStatusForList(d).onlyParent,
                 { status: { not: 'waiting_for_response' as const } },
 
                 d.ids ? { id: { in: d.ids } } : undefined!,
+
                 d.types ? { type: { in: d.types } } : undefined!,
+                d.source ? { source: { in: d.source } } : undefined!,
+
+                !d.hierarchy?.length
+                  ? { parentMessageOid: null }
+                  : {
+                      OR: [
+                        d.hierarchy?.includes('parent')
+                          ? { parentMessageOid: null }
+                          : undefined!,
+
+                        d.hierarchy?.includes('child')
+                          ? { parentMessageOid: { not: null } }
+                          : undefined!
+                      ].filter(Boolean)
+                    },
 
                 sessions ? { sessionOid: sessions.in } : undefined!,
                 sessionProviders
@@ -86,6 +114,8 @@ class sessionMessageServiceImpl {
                 connections ? { connectionOid: connections.in } : undefined!,
                 providerRuns ? { providerRunOid: providerRuns.in } : undefined!,
                 errors ? { errorOid: errors.in } : undefined!,
+                parentMessages ? { parentMessageOid: parentMessages.in } : undefined!,
+
                 participants
                   ? {
                       OR: [
@@ -105,6 +135,7 @@ class sessionMessageServiceImpl {
   async getSessionMessageById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     sessionMessageId: string;
     allowDeleted?: boolean;
   }) {
@@ -113,6 +144,7 @@ class sessionMessageServiceImpl {
         id: d.sessionMessageId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
 
         AND: [normalizeStatusForGet(d).onlyParent, { status: { not: 'waiting_for_response' } }]
       },

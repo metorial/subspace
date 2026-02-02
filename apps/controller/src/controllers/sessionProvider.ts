@@ -1,5 +1,5 @@
 import { Paginator } from '@lowerdeck/pagination';
-import { v } from '@lowerdeck/validation';
+import { v, type ValidationTypeValue } from '@lowerdeck/validation';
 import { sessionProviderService, sessionService } from '@metorial-subspace/module-session';
 import { sessionProviderPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
@@ -12,6 +12,7 @@ export let sessionProviderApp = tenantApp.use(async ctx => {
   let sessionProvider = await sessionProviderService.getSessionProviderById({
     sessionProviderId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution,
     allowDeleted: ctx.body.allowDeleted
   });
@@ -19,13 +20,49 @@ export let sessionProviderApp = tenantApp.use(async ctx => {
   return { sessionProvider };
 });
 
+export let toolFilterValidator = v.union([
+  v.object({
+    type: v.literal('tool_keys'),
+    keys: v.array(v.string())
+  }),
+  v.object({
+    type: v.literal('tool_regex'),
+    pattern: v.string()
+  }),
+  v.object({
+    type: v.literal('resource_regex'),
+    pattern: v.string()
+  }),
+  v.object({
+    type: v.literal('resource_uris'),
+    uris: v.array(v.string())
+  }),
+  v.object({
+    type: v.literal('prompt_keys'),
+    keys: v.array(v.string())
+  }),
+  v.object({
+    type: v.literal('prompt_regex'),
+    pattern: v.string()
+  })
+]);
+
 export let toolFiltersValidator = v.nullable(
-  v.optional(
-    v.object({
-      toolKeys: v.optional(v.array(v.string()))
-    })
-  )
+  v.optional(v.union([toolFilterValidator, v.array(toolFilterValidator)]))
 );
+
+let normalizeToolFilters = (
+  t: ValidationTypeValue<typeof toolFiltersValidator>
+): PrismaJson.ToolFilter => {
+  if (!t) return { type: 'v1.allow_all' };
+
+  let filtersArray = Array.isArray(t) ? t : [t];
+
+  return {
+    type: 'v1.filter',
+    filters: filtersArray as any
+  };
+};
 
 export let sessionProviderController = app.controller({
   list: tenantApp
@@ -34,6 +71,7 @@ export let sessionProviderController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.string(),
+          environmentId: v.string(),
 
           allowDeleted: v.optional(v.boolean()),
           status: v.optional(v.array(v.enumOf(['active', 'archived']))),
@@ -51,6 +89,7 @@ export let sessionProviderController = app.controller({
     .do(async ctx => {
       let paginator = await sessionProviderService.listSessionProviders({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution
       });
 
@@ -64,6 +103,7 @@ export let sessionProviderController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         sessionProviderId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })
@@ -75,6 +115,7 @@ export let sessionProviderController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
 
         sessionId: v.string(),
 
@@ -88,12 +129,14 @@ export let sessionProviderController = app.controller({
     .do(async ctx => {
       let session = await sessionService.getSessionById({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
         sessionId: ctx.input.sessionId
       });
 
       let sessionProvider = await sessionProviderService.createSessionProvider({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
         session,
 
@@ -102,7 +145,7 @@ export let sessionProviderController = app.controller({
           configId: ctx.input.providerConfigId,
           authConfigId: ctx.input.providerAuthConfigId,
 
-          toolFilters: ctx.input.toolFilters
+          toolFilters: normalizeToolFilters(ctx.input.toolFilters)
         }
       });
 
@@ -114,6 +157,7 @@ export let sessionProviderController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         sessionProviderId: v.string(),
         allowDeleted: v.optional(v.boolean()),
 
@@ -124,10 +168,11 @@ export let sessionProviderController = app.controller({
       let sessionProvider = await sessionProviderService.updateSessionProvider({
         sessionProvider: ctx.sessionProvider,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution,
 
         input: {
-          toolFilters: ctx.input.toolFilters
+          toolFilters: normalizeToolFilters(ctx.input.toolFilters)
         }
       });
 
@@ -139,6 +184,7 @@ export let sessionProviderController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         sessionProviderId: v.string(),
         allowDeleted: v.optional(v.boolean())
       })
@@ -147,6 +193,7 @@ export let sessionProviderController = app.controller({
       let sessionProvider = await sessionProviderService.archiveSessionProvider({
         sessionProvider: ctx.sessionProvider,
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution
       });
 

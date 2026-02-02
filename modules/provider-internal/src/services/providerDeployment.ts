@@ -1,16 +1,20 @@
 import { delay } from '@lowerdeck/delay';
+import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  type Environment,
   type Provider,
   type ProviderDeployment,
+  type ProviderDeploymentVersion,
   type ProviderVariant,
   type ProviderVersion
 } from '@metorial-subspace/db';
 
 class providerDeploymentInternalServiceImpl {
   async getCurrentVersion(d: {
-    deployment: ProviderDeployment;
+    environment: Environment;
+    deployment: ProviderDeployment & { currentVersion: ProviderDeploymentVersion | null };
     provider: Provider & {
       defaultVariant?:
         | (ProviderVariant & {
@@ -20,13 +24,15 @@ class providerDeploymentInternalServiceImpl {
     };
   }) {
     return this.getCurrentVersionOptional({
+      environment: d.environment,
       deployment: d.deployment,
       provider: d.provider
     });
   }
 
   async getCurrentVersionOptional(d: {
-    deployment?: ProviderDeployment;
+    environment: Environment;
+    deployment?: ProviderDeployment & { currentVersion: ProviderDeploymentVersion | null };
     provider: Provider & {
       defaultVariant?:
         | (ProviderVariant & {
@@ -36,12 +42,13 @@ class providerDeploymentInternalServiceImpl {
     };
   }) {
     let inner = await this.getCurrentVersionInner(d);
+    if (!inner) return null;
 
     if (inner.specificationDiscoveryStatus === 'discovering') {
       for (let i = 0; i < 50; i++) {
         await delay(100);
         inner = await this.getCurrentVersionInner(d);
-        if (inner.specificationDiscoveryStatus !== 'discovering') break;
+        if (inner!.specificationDiscoveryStatus !== 'discovering') break;
       }
     }
 
@@ -49,7 +56,8 @@ class providerDeploymentInternalServiceImpl {
   }
 
   private async getCurrentVersionInner(d: {
-    deployment?: ProviderDeployment;
+    environment: Environment;
+    deployment?: ProviderDeployment & { currentVersion: ProviderDeploymentVersion | null };
     provider: Provider & {
       defaultVariant?:
         | (ProviderVariant & {
@@ -58,15 +66,54 @@ class providerDeploymentInternalServiceImpl {
         | null;
     };
   }) {
-    if (!d.provider.defaultVariantOid) throw new Error('Provider has no default variant oid');
+    if (d.deployment && d.deployment.environmentOid !== d.environment.oid) {
+      throw new Error('Environment mismatch between deployment and environment');
+    }
 
-    if (d.deployment?.lockedVersionOid) {
+    if (!d.provider.defaultVariantOid) return null;
+
+    if (d.deployment?.currentVersion?.lockedVersionOid) {
       return await db.providerVersion.findFirstOrThrow({
         where: {
-          oid: d.deployment.lockedVersionOid,
+          oid: d.deployment?.currentVersion.lockedVersionOid,
           providerOid: d.provider.oid
         }
       });
+    }
+
+    if (d.provider.hasEnvironments) {
+      let env = await db.providerEnvironment.findUnique({
+        where: {
+          environmentOid_providerOid: {
+            environmentOid: d.environment.oid,
+            providerOid: d.provider.oid
+          }
+        },
+        include: { currentVersion: true }
+      });
+      if (env?.currentVersion) {
+        return env.currentVersion;
+      }
+
+      // Check if we have a version for another environment
+      let version = await db.providerVersion.findFirst({
+        where: {
+          providerOid: d.provider.oid,
+          providerEnvironmentVersions: {
+            some: {}
+          }
+        }
+      });
+      if (version) {
+        throw new ServiceError(
+          badRequestError({
+            message:
+              'Provider has deployed versions in other environments, but not in the current one.'
+          })
+        );
+      }
+
+      return null;
     }
 
     let defaultVariant =
@@ -74,18 +121,17 @@ class providerDeploymentInternalServiceImpl {
       (await db.providerVariant.findFirstOrThrow({
         where: { oid: d.provider.defaultVariantOid }
       }));
-
     if (!defaultVariant.currentVersionOid) {
-      throw new Error('Provider variant has no current version oid');
+      return null;
     }
 
-    let currentVersion =
-      d.provider.defaultVariant?.currentVersion ??
-      (await db.providerVersion.findFirstOrThrow({
-        where: { oid: defaultVariant.currentVersionOid }
-      }));
+    if (d.provider.defaultVariant?.currentVersion) {
+      return d.provider.defaultVariant.currentVersion;
+    }
 
-    return currentVersion;
+    return await db.providerVersion.findFirstOrThrow({
+      where: { oid: defaultVariant.currentVersionOid }
+    });
   }
 }
 

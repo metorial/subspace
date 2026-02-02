@@ -6,7 +6,7 @@ import { endOfDay, startOfDay } from 'date-fns';
 import { env } from '../../env';
 
 export let createErrorQueue = createQueue<{ errorId: string }>({
-  name: 'con/error/create',
+  name: 'sub/con/error/create',
   redisUrl: env.service.REDIS_URL,
   workerOpts: { concurrency: 5 }
 });
@@ -54,6 +54,7 @@ export let createErrorQueueProcessor = createErrorQueue.process(async data => {
         code: error.code,
         message: error.message,
         tenantOid: error.session.tenantOid,
+        environmentOid: error.session.environmentOid,
         providerOid: error.providerRun?.providerOid,
         firstOccurrenceOid: error.oid
       },
@@ -94,6 +95,7 @@ export let createErrorQueueProcessor = createErrorQueue.process(async data => {
       providerRunOid: error.providerRunOid,
       errorOid: error.oid,
       tenantOid: error.tenantOid,
+      environmentOid: error.environmentOid,
       solutionOid: error.solutionOid
     }
   });

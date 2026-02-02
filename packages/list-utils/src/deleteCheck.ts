@@ -14,7 +14,13 @@ export interface DeletableRecord {
   id: string;
   isEphemeral?: boolean;
   status?: 'deleted' | 'archived' | string;
+  createdAt: Date;
 }
+
+let isCreatedRecently = (d: DeletableRecord, ms: number) => {
+  let now = Date.now();
+  return now - d.createdAt.getTime() < ms;
+};
 
 export let isRecordDeleted = (
   d: DeletableRecord | null | undefined,
@@ -22,11 +28,14 @@ export let isRecordDeleted = (
 ) => {
   if (!d) return false;
 
-  return (
-    d.status === 'deleted' ||
-    d.status === 'archived' ||
-    (d.isEphemeral && !opts?.allowEphemeral)
-  );
+  if (d.status === 'deleted' || d.status === 'archived') return true;
+
+  if (d.isEphemeral) {
+    if (!opts?.allowEphemeral) return true;
+    if (!isCreatedRecently(d, 15 * 1000)) return true;
+  }
+
+  return false;
 };
 
 export let checkDeletedEdit = (

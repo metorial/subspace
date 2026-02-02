@@ -5,7 +5,7 @@ import { indexProviderAuthCredentialsQueue } from '../search/providerAuthCredent
 export let providerAuthCredentialsCreatedQueue = createQueue<{
   providerAuthCredentialsId: string;
 }>({
-  name: 'auth/lc/providerAuthCredentials/created',
+  name: 'sub/auth/lc/providerAuthCredentials/created',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -19,7 +19,7 @@ export let providerAuthCredentialsCreatedQueueProcessor =
 export let providerAuthCredentialsUpdatedQueue = createQueue<{
   providerAuthCredentialsId: string;
 }>({
-  name: 'auth/lc/providerAuthCredentials/updated',
+  name: 'sub/auth/lc/providerAuthCredentials/updated',
   redisUrl: env.service.REDIS_URL
 });
 

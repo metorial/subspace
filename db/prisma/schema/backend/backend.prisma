@@ -1,5 +1,6 @@
 enum BackendType {
   slates
+  shuttle
 }
 
 model Backend {
@@ -12,9 +13,11 @@ model Backend {
 
   createdAt DateTime @default(now())
 
-  providerVersions                   ProviderVersion[]
-  slatesSyncChangeNotificationCursor SlatesSyncChangeNotificationCursor?
-  providerVariants                   ProviderVariant[]
-  providerAuthCredentials            ProviderAuthCredentials[]
-  providerAuthConfigs                ProviderAuthConfig[]
+  slatesSyncChangeNotificationCursor  SlatesSyncChangeNotificationCursor?
+  shuttleSyncChangeNotificationCursor ShuttleSyncChangeNotificationCursor?
+
+  providerVersions        ProviderVersion[]
+  providerVariants        ProviderVariant[]
+  providerAuthCredentials ProviderAuthCredentials[]
+  providerAuthConfigs     ProviderAuthConfig[]
 }

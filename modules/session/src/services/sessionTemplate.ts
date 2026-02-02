@@ -3,6 +3,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  type Environment,
   getId,
   type SessionProviderStatus,
   type SessionTemplate,
@@ -38,6 +39,7 @@ class sessionTemplateServiceImpl {
   async listSessionTemplates(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     status?: SessionProviderStatus[];
     allowDeleted?: boolean;
@@ -65,6 +67,7 @@ class sessionTemplateServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
 
               ...normalizeStatusForList(d).noParent,
 
@@ -99,6 +102,7 @@ class sessionTemplateServiceImpl {
   async getSessionTemplateById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     sessionTemplateId: string;
     allowDeleted?: boolean;
   }) {
@@ -107,6 +111,7 @@ class sessionTemplateServiceImpl {
         id: d.sessionTemplateId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
         ...normalizeStatusForGet(d).noParent
       },
       include
@@ -120,6 +125,7 @@ class sessionTemplateServiceImpl {
   async createSessionTemplate(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     input: {
       name?: string;
       description?: string;
@@ -139,7 +145,8 @@ class sessionTemplateServiceImpl {
           metadata: d.input.metadata,
 
           tenantOid: d.tenant.oid,
-          solutionOid: d.solution.oid
+          solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid
         },
         include
       });
@@ -148,6 +155,7 @@ class sessionTemplateServiceImpl {
         await sessionProviderInputService.createSessionTemplateProvidersForInput({
           tenant: d.tenant,
           solution: d.solution,
+          environment: d.environment,
           template,
 
           providers: d.input.providers
@@ -160,6 +168,7 @@ class sessionTemplateServiceImpl {
   async updateSessionTemplate(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     template: SessionTemplate;
     input: {
       name?: string;
@@ -192,6 +201,7 @@ class sessionTemplateServiceImpl {
   async archiveSessionTemplate(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     sessionTemplate: SessionTemplate;
   }) {
     checkTenant(d, d.sessionTemplate);

@@ -5,7 +5,7 @@ import type {
   SpecificationFeatures,
   SpecificationTool
 } from '@metorial-subspace/provider-utils';
-import type { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
+import type { InitializeRequest, JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../prisma/generated/client';
 import { env } from './env';
@@ -40,18 +40,41 @@ declare global {
           type: 'v1.allow_all';
         }
       | {
-          type: 'v1.whitelist';
-          filters: {
-            type: 'tool_keys';
-            keys: string[];
-          }[];
+          type: 'v1.filter';
+          filters: (
+            | {
+                type: 'tool_keys';
+                keys: string[];
+              }
+            | {
+                type: 'tool_regex';
+                pattern: string;
+              }
+            | {
+                type: 'resource_regex';
+                pattern: string;
+              }
+            | {
+                type: 'resource_uris';
+                uris: string[];
+              }
+            | {
+                type: 'prompt_keys';
+                keys: string[];
+              }
+            | {
+                type: 'prompt_regex';
+                pattern: string;
+              }
+          )[];
 
           // TODO: add restrictions for resources and prompts as well
         };
 
     type SessionConnectionMcpData = {
-      capabilities?: any;
-      protocolVersion?: string;
+      capabilities?: InitializeRequest['params']['capabilities'];
+      protocolVersion?: InitializeRequest['params']['protocolVersion'];
+      clientInfo?: InitializeRequest['params']['clientInfo'];
     };
 
     type SessionMessageOutput =
@@ -72,6 +95,42 @@ declare global {
       identifier: string;
       name: string;
       [key: string]: any;
+    };
+
+    type ProviderTypeAttributes = {
+      provider: 'metorial-slates' | 'metorial-shuttle';
+      backend: 'slates' | 'mcp.container' | 'mcp.function' | 'mcp.remote';
+
+      triggers:
+        | {
+            status: 'enabled';
+            receiverUrl: string;
+          }
+        | { status: 'disabled' };
+
+      auth:
+        | {
+            status: 'enabled';
+
+            oauth:
+              | {
+                  status: 'enabled';
+                  oauthAutoRegistration?: { status: 'supported' | 'unsupported' };
+                  oauthCallbackUrl: string;
+                }
+              | { status: 'disabled'; oauthAutoRegistration?: undefined };
+
+            export: { status: 'enabled' | 'disabled' };
+            import: { status: 'enabled' | 'disabled' };
+          }
+        | { status: 'disabled'; oauth?: undefined; export?: undefined; import?: undefined };
+
+      config:
+        | {
+            status: 'enabled';
+            read: { status: 'enabled' | 'disabled' };
+          }
+        | { status: 'disabled'; read?: undefined };
     };
   }
 }

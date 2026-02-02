@@ -2,7 +2,13 @@ import { canonicalize } from '@lowerdeck/canonicalize';
 import { Hash } from '@lowerdeck/hash';
 import { createLock } from '@lowerdeck/lock';
 import { Service } from '@lowerdeck/service';
-import { db, getId, type Provider, type ProviderVersion } from '@metorial-subspace/db';
+import {
+  db,
+  getId,
+  type Provider,
+  type ProviderSpecificationType,
+  type ProviderVersion
+} from '@metorial-subspace/db';
 import type {
   Specification,
   SpecificationAuthMethod,
@@ -13,7 +19,7 @@ import { env } from '../env';
 import { specificationCreatedQueue } from '../queues/lifecycle/specification';
 
 let specLock = createLock({
-  name: 'pint/pspec/lock/ensure',
+  name: 'sub/pint/pspec/lock/ensure',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -22,6 +28,8 @@ class providerSpecificationInternalServiceImpl {
     provider: Provider;
     providerVersion: ProviderVersion;
 
+    type: ProviderSpecificationType;
+
     specification: Specification;
     authMethods: SpecificationAuthMethod[];
     features: SpecificationFeatures;
@@ -29,6 +37,7 @@ class providerSpecificationInternalServiceImpl {
   }) {
     let specHash = await Hash.sha256(
       canonicalize({
+        type: d.type,
         providerId: d.provider.id,
         specification: d.specification,
         authMethods: d.authMethods,
@@ -53,113 +62,131 @@ class providerSpecificationInternalServiceImpl {
         d.authMethods.find(am => am.type === 'oauth') ??
         d.authMethods[0];
 
-      await db.providerToolGlobal.createMany({
-        skipDuplicates: true,
-        data: d.tools.map(t => ({
-          ...getId('providerToolGlobal'),
-          key: t.key,
-          providerOid: d.provider.oid
-        }))
-      });
-      await db.providerAuthMethodGlobal.createMany({
-        skipDuplicates: true,
-        data: d.authMethods.map(am => ({
-          ...getId('providerAuthMethodGlobal'),
-          key: am.key,
-          providerOid: d.provider.oid
-        }))
-      });
+      try {
+        return await db.$transaction(async db => {
+          await db.providerToolGlobal.createMany({
+            skipDuplicates: true,
+            data: d.tools.map(t => ({
+              ...getId('providerToolGlobal'),
+              key: t.key,
+              providerOid: d.provider.oid
+            }))
+          });
+          await db.providerAuthMethodGlobal.createMany({
+            skipDuplicates: true,
+            data: d.authMethods.map(am => ({
+              ...getId('providerAuthMethodGlobal'),
+              key: am.key,
+              providerOid: d.provider.oid
+            }))
+          });
 
-      let globalTools = await db.providerToolGlobal.findMany({
-        where: { providerOid: d.provider.oid },
-        select: { oid: true, key: true }
-      });
-      let globalAuthMethods = await db.providerAuthMethodGlobal.findMany({
-        where: { providerOid: d.provider.oid },
-        select: { oid: true, key: true }
-      });
+          let globalTools = await db.providerToolGlobal.findMany({
+            where: { providerOid: d.provider.oid },
+            select: { oid: true, key: true }
+          });
+          let globalAuthMethods = await db.providerAuthMethodGlobal.findMany({
+            where: { providerOid: d.provider.oid },
+            select: { oid: true, key: true }
+          });
 
-      let globalToolsMap = new Map(globalTools.map(t => [t.key, t]));
-      let globalAuthMethodsMap = new Map(globalAuthMethods.map(am => [am.key, am]));
+          let globalToolsMap = new Map(globalTools.map(t => [t.key, t]));
+          let globalAuthMethodsMap = new Map(globalAuthMethods.map(am => [am.key, am]));
 
-      let spec = await db.providerSpecification.create({
-        data: {
-          ...getId('providerSpecification'),
-          providerOid: d.provider.oid,
+          let spec = await db.providerSpecification.create({
+            data: {
+              ...getId('providerSpecification'),
+              providerOid: d.provider.oid,
 
-          hash: specHash,
+              type: d.type,
 
-          specId: d.specification.specId,
-          specUniqueIdentifier: d.specification.specUniqueIdentifier,
-          key: d.specification.key,
+              hash: specHash,
 
-          name: d.specification.name,
-          description: d.specification.description,
+              specId: d.specification.specId,
+              specUniqueIdentifier:
+                d.specification.specUniqueIdentifier ?? d.specification.specId,
+              key: d.specification.key,
 
-          value: {
-            specification: d.specification,
-            authMethods: d.authMethods,
-            features: d.features,
-            tools: d.tools
-          },
+              name: d.specification.name,
+              description: d.specification.description,
 
-          supportsAuthMethod: d.features.supportsAuthMethod,
-          configContainsAuth: d.features.configContainsAuth,
+              value: {
+                specification: d.specification,
+                authMethods: d.authMethods,
+                features: d.features,
+                tools: d.tools
+              },
 
-          providerAuthMethods: {
-            create: await Promise.all(
-              d.authMethods.map(async am => ({
-                ...getId('providerAuthMethod'),
-                specId: am.specId,
-                specUniqueIdentifier: am.specUniqueIdentifier,
-                callableId: am.callableId,
+              supportsAuthMethod: d.features.supportsAuthMethod,
+              configContainsAuth: d.features.configContainsAuth,
 
-                type: am.type,
-                key: am.key,
-                isDefault: am.specId === defaultAuthConfig?.specId,
+              providerAuthMethods: {
+                create: await Promise.all(
+                  d.authMethods.map(async am => ({
+                    ...getId('providerAuthMethod'),
+                    specId: am.specId,
+                    specUniqueIdentifier: am.specUniqueIdentifier ?? am.specId,
+                    callableId: am.callableId,
 
-                name: am.name,
-                description: am.description,
+                    type: am.type,
+                    key: am.key,
+                    isDefault: am.specId === defaultAuthConfig?.specId,
 
-                value: am,
+                    name: am.name,
+                    description: am.description,
 
-                providerOid: d.provider.oid,
-                globalOid: globalAuthMethodsMap.get(am.key)!.oid,
-                hash: await Hash.sha256(canonicalize([d.provider.id, am]))
-              }))
-            )
-          },
+                    value: am,
 
-          providerTools: {
-            create: await Promise.all(
-              d.tools.map(async t => ({
-                ...getId('providerTool'),
-                specId: t.specId,
-                specUniqueIdentifier: t.specUniqueIdentifier,
-                callableId: t.callableId,
-                key: t.key,
+                    providerOid: d.provider.oid,
+                    globalOid: globalAuthMethodsMap.get(am.key)!.oid,
+                    hash: await Hash.sha256(canonicalize([d.provider.id, am]))
+                  }))
+                )
+              },
 
-                name: t.name,
-                description: t.description,
+              providerTools: {
+                create: await Promise.all(
+                  d.tools.map(async t => ({
+                    ...getId('providerTool'),
+                    specId: t.specId,
+                    specUniqueIdentifier: t.specUniqueIdentifier ?? t.specId,
+                    callableId: t.callableId,
+                    key: t.key,
 
-                value: t,
+                    name: t.name,
+                    description: t.description,
 
-                providerOid: d.provider.oid,
-                globalOid: globalToolsMap.get(t.key)!.oid,
-                hash: await Hash.sha256(canonicalize([d.provider.id, t]))
-              }))
-            )
+                    value: t,
+
+                    providerOid: d.provider.oid,
+                    globalOid: globalToolsMap.get(t.key)!.oid,
+                    hash: await Hash.sha256(canonicalize([d.provider.id, t]))
+                  }))
+                )
+              }
+            },
+            include: {
+              providerAuthMethods: true,
+              providerTools: true
+            }
+          });
+
+          await specificationCreatedQueue.add({ specificationId: spec.id });
+
+          return spec;
+        });
+      } catch (e) {
+        let spec = await db.providerSpecification.findUnique({
+          where: {
+            providerOid_hash: {
+              providerOid: d.provider.oid,
+              hash: specHash
+            }
           }
-        },
-        include: {
-          providerAuthMethods: true,
-          providerTools: true
-        }
-      });
-
-      await specificationCreatedQueue.add({ specificationId: spec.id });
-
-      return spec;
+        });
+        if (spec) return spec;
+        throw e;
+      }
     });
   }
 }

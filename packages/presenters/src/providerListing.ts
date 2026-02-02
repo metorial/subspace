@@ -6,6 +6,7 @@ import type {
   ProviderListingCollection,
   ProviderListingGroup,
   ProviderSpecification,
+  ProviderType,
   ProviderVariant,
   ProviderVersion,
   Publisher,
@@ -33,6 +34,8 @@ export let providerListingPresenter = (
               | null;
           })
         | null;
+
+      type: ProviderType;
     };
 
     categories: ProviderListingCategory[];
@@ -40,7 +43,8 @@ export let providerListingPresenter = (
     groups: ProviderListingGroup[];
   } & {
     readme?: string | null;
-  }
+  },
+  d: { tenant: Tenant }
 ) => ({
   object: 'provider.listing',
 
@@ -67,7 +71,7 @@ export let providerListingPresenter = (
   providerSessionsCount: providerListing.providerSessionsCount,
   providerMessagesCount: providerListing.providerMessagesCount,
 
-  provider: providerPresenter(providerListing.provider),
+  provider: providerPresenter(providerListing.provider, d),
 
   categories: providerListing.categories.map(category =>
     providerListingCategoryPresenter(category)

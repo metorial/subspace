@@ -10,12 +10,14 @@ import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
   db,
+  type Environment,
   getId,
   type Provider,
   type ProviderConfig,
   type ProviderConfigStatus,
   type ProviderConfigVault,
   type ProviderDeployment,
+  type ProviderDeploymentVersion,
   type ProviderVariant,
   type ProviderVersion,
   type Solution,
@@ -57,7 +59,7 @@ let include = {
 };
 
 let defaultLock = createLock({
-  name: 'dep/pconf/def/lock',
+  name: 'sub/dep/pconf/def/lock',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -65,6 +67,7 @@ class providerConfigServiceImpl {
   async listProviderConfigs(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     search?: string;
 
@@ -99,6 +102,7 @@ class providerConfigServiceImpl {
             where: {
               tenantOid: d.tenant.oid,
               solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
               isForVault: false,
               isEphemeral: false,
 
@@ -122,6 +126,7 @@ class providerConfigServiceImpl {
   async getProviderConfigById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerConfigId: string;
     allowDeleted?: boolean;
   }) {
@@ -130,6 +135,7 @@ class providerConfigServiceImpl {
         id: d.providerConfigId,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
         ...normalizeStatusForGet(d).noParent
       },
       include
@@ -143,10 +149,13 @@ class providerConfigServiceImpl {
   async getProviderConfigSchema(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     provider?: Provider & { defaultVariant: ProviderVariant | null };
     providerVersion?: ProviderVersion;
-    providerDeployment?: ProviderDeployment;
+    providerDeployment?: ProviderDeployment & {
+      currentVersion: ProviderDeploymentVersion | null;
+    };
     providerConfig?: ProviderConfig & { deployment: ProviderDeployment | null };
   }) {
     if (d.providerConfig) {
@@ -158,7 +167,7 @@ class providerConfigServiceImpl {
 
     let versionOid =
       d.providerVersion?.oid ??
-      d.providerDeployment?.lockedVersionOid ??
+      d.providerDeployment?.currentVersion?.lockedVersionOid ??
       d.provider?.defaultVariant?.currentVersionOid;
 
     if (!versionOid) {
@@ -187,11 +196,14 @@ class providerConfigServiceImpl {
   async createProviderConfig(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment?: ProviderDeployment & {
       provider: Provider;
       providerVariant: ProviderVariant;
-      lockedVersion: ProviderVersion | null;
+      currentVersion:
+        | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+        | null;
     };
     input: {
       name?: string;
@@ -253,6 +265,7 @@ class providerConfigServiceImpl {
         tenantOid: d.tenant.oid,
         providerOid: d.provider.oid,
         solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
 
         deploymentOid: d.providerDeployment?.oid
       };
@@ -292,31 +305,31 @@ class providerConfigServiceImpl {
 
               deploymentOid: d.providerDeployment?.oid ?? d.input.config.vault.deploymentOid,
               specificationOid: parentConfig.specificationOid
-            },
-            include
+            }
           });
 
           let currentVersion = await db.providerConfigVersion.create({
             data: {
               ...getId('providerConfigVersion'),
               configOid: config.oid,
-              slateInstanceOid: parentConfig.currentVersion?.slateInstanceOid
+              slateInstanceOid: parentConfig.currentVersion?.slateInstanceOid,
+              shuttleConfigOid: parentConfig.currentVersion?.shuttleConfigOid
             }
           });
 
-          await db.providerConfig.updateMany({
+          return await db.providerConfig.update({
             where: { oid: config.oid },
-            data: { currentVersionOid: currentVersion.oid }
+            data: { currentVersionOid: currentVersion.oid },
+            include: { ...include, currentVersion: true }
           });
-
-          return config;
         }
 
         let version = await providerDeploymentInternalService.getCurrentVersionOptional({
           provider: d.provider,
+          environment: d.environment,
           deployment: d.providerDeployment
         });
-        if (!version.specificationOid) {
+        if (!version?.specificationOid) {
           throw new ServiceError(
             badRequestError({
               message: 'Cannot create config without a discovered specification'
@@ -342,15 +355,15 @@ class providerConfigServiceImpl {
 
             deploymentOid: d.providerDeployment?.oid,
             specificationOid: version.specificationOid
-          },
-          include
+          }
         });
 
         let currentVersion = await db.providerConfigVersion.create({
           data: {
             ...getId('providerConfigVersion'),
             configOid: config.oid,
-            slateInstanceOid: inner.slateInstance?.oid
+            slateInstanceOid: inner.slateInstance?.oid,
+            shuttleConfigOid: inner.shuttleServerConfig?.oid
           }
         });
 
@@ -383,14 +396,16 @@ class providerConfigServiceImpl {
           });
         }
 
-        return config;
+        return await db.providerConfig.findFirstOrThrow({
+          where: { oid: config.oid },
+          include: { ...include, currentVersion: true }
+        });
       })();
 
       if (d.providerDeployment) {
         await providerDeploymentConfigPairInternalService.upsertDeploymentConfigPair({
           deployment: d.providerDeployment,
           config,
-
           authConfig: null
         });
       }
@@ -406,6 +421,7 @@ class providerConfigServiceImpl {
   async ensureDefaultEmptyProviderConfig(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment: ProviderDeployment;
   }) {
@@ -422,12 +438,15 @@ class providerConfigServiceImpl {
             where: {
               oid: d.providerDeployment.oid,
               tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid
+              solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid
             },
             include: {
               provider: true,
               providerVariant: true,
-              lockedVersion: true
+              currentVersion: {
+                include: { lockedVersion: true }
+              }
             }
           });
 
@@ -437,6 +456,7 @@ class providerConfigServiceImpl {
           return await this.createProviderConfig({
             tenant: d.tenant,
             solution: d.solution,
+            environment: d.environment,
             provider: d.provider,
             providerDeployment: deployment,
             input: {
@@ -455,6 +475,7 @@ class providerConfigServiceImpl {
   async updateProviderConfig(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerConfig: ProviderConfig;
     input: {
       name?: string;
@@ -470,7 +491,8 @@ class providerConfigServiceImpl {
         where: {
           oid: d.providerConfig.oid,
           tenantOid: d.tenant.oid,
-          solutionOid: d.solution.oid
+          solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid
         },
         data: {
           name: d.input.name ?? d.providerConfig.name,
@@ -491,6 +513,7 @@ class providerConfigServiceImpl {
   private async getDefaultProviderConfig(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     providerDeployment: ProviderDeployment;
   }) {
     return withTransaction(db =>
@@ -498,6 +521,7 @@ class providerConfigServiceImpl {
         where: {
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid,
           deploymentOid: d.providerDeployment.oid,
           isDefault: true
         },

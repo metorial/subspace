@@ -12,6 +12,7 @@ export let providerVariantApp = tenantApp.use(async ctx => {
   let providerVariant = await providerVariantService.getProviderVariantById({
     providerVariantId,
     tenant: ctx.tenant,
+    environment: ctx.environment,
     solution: ctx.solution
   });
 
@@ -24,13 +25,15 @@ export let providerVariantController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+          environmentId: v.string()
         })
       )
     )
     .do(async ctx => {
       let paginator = await providerVariantService.listProviderVariants({
         tenant: ctx.tenant,
+        environment: ctx.environment,
         solution: ctx.solution
       });
 
@@ -44,6 +47,7 @@ export let providerVariantController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         providerVariantId: v.string()
       })
     )

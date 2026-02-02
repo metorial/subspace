@@ -72,8 +72,6 @@ export class ConnectionState {
       return 1000 * 30;
     }
 
-    // TODO: @herber add handling for non-slates providers
-
     return 1000 * 60 * 2;
   }
 
@@ -105,6 +103,10 @@ export class ConnectionState {
     return this.baseState.backend;
   }
 
+  get sessionProvider() {
+    return this.baseState.sessionProvider;
+  }
+
   #isDisposed = false;
   async dispose() {
     if (this.#isDisposed) return;
@@ -121,7 +123,8 @@ export class ConnectionState {
         connectionOid: this.connection.oid,
         providerRunOid: this.providerRun.oid,
         tenantOid: this.session.tenantOid,
-        solutionOid: this.session.solutionOid
+        solutionOid: this.session.solutionOid,
+        environmentOid: this.session.environmentOid
       }
     });
 

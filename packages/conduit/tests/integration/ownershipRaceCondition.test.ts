@@ -132,7 +132,7 @@ describe('Ownership Race Condition Tests', () => {
     await Promise.all(receivers.map(id => coordination.registerReceiver(id, 10000)));
 
     // Single topic, many attempts to claim
-    const claimPromises = [];
+    const claimPromises: any[] = [];
     for (let i = 0; i < 100; i++) {
       const receiver = receivers[i % receivers.length]!;
       claimPromises.push(coordination.claimTopicOwnership('contested-topic', receiver, 30000));

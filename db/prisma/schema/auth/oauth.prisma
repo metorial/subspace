@@ -36,6 +36,9 @@ model ProviderOAuthSetup {
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid], onDelete: Cascade)
 
+  environmentOid BigInt
+  environment    Environment @relation(fields: [environmentOid], references: [oid], onDelete: Cascade)
+
   solutionOid Int
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
@@ -50,6 +53,9 @@ model ProviderOAuthSetup {
 
   slateOAuthSetupOid BigInt?          @unique
   slateOAuthSetup    SlateOAuthSetup? @relation(fields: [slateOAuthSetupOid], references: [oid], onDelete: Cascade)
+
+  shuttleOAuthSetupOid BigInt?            @unique
+  shuttleOAuthSetup    ShuttleOAuthSetup? @relation(fields: [shuttleOAuthSetupOid], references: [oid], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt

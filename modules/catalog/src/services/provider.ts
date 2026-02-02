@@ -1,7 +1,13 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { db, type Provider, type Solution, type Tenant } from '@metorial-subspace/db';
+import {
+  db,
+  type Environment,
+  type Provider,
+  type Solution,
+  type Tenant
+} from '@metorial-subspace/db';
 import { providerInternalService } from '@metorial-subspace/module-provider-internal';
 import { providerVariantInclude } from './providerVariant';
 
@@ -11,12 +17,17 @@ let include = {
   ownerTenant: true,
   defaultVariant: {
     include: providerVariantInclude
-  }
+  },
+  type: true
 };
 
 export let providerInclude = include;
 
-export let getProviderTenantFilter = (d: { tenant: Tenant; solution: Solution }) => ({
+export let getProviderTenantFilter = (d: {
+  tenant: Tenant;
+  solution: Solution;
+  environment: Environment;
+}) => ({
   OR: [
     { access: 'public' as const },
     {
@@ -28,7 +39,12 @@ export let getProviderTenantFilter = (d: { tenant: Tenant; solution: Solution })
 });
 
 class providerServiceImpl {
-  async getProviderById(d: { providerId: string; tenant: Tenant; solution: Solution }) {
+  async getProviderById(d: {
+    providerId: string;
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+  }) {
     let provider = await db.provider.findFirst({
       where: {
         AND: [
@@ -52,7 +68,12 @@ class providerServiceImpl {
     return provider;
   }
 
-  async listProviders(d: { tenant: Tenant; solution: Solution; search?: string }) {
+  async listProviders(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    search?: string;
+  }) {
     return Paginator.create(({ prisma }) =>
       prisma(
         async opts =>

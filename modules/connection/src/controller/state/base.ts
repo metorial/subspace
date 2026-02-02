@@ -28,10 +28,14 @@ export let getConnectionBaseState = async (d: {
           version: {
             include: {
               provider: true,
+              backend: true,
+              providerVariant: true,
+
               slate: true,
               slateVersion: true,
-              backend: true,
-              providerVariant: true
+
+              shuttleServer: true,
+              shuttleServerVersion: true
             }
           }
         }
@@ -55,7 +59,10 @@ export let getConnectionBaseState = async (d: {
 
   let pairVersion = instance.pairVersion;
   let version = pairVersion.version;
-  if (!version.slate || !version.slateVersion) {
+  if (
+    (!version.slate || !version.slateVersion) &&
+    (!version.shuttleServer || !version.shuttleServerVersion)
+  ) {
     console.warn(
       `Session provider instance ${instance.id} is missing slate or slate version association`
     );

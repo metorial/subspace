@@ -3,6 +3,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  type Environment,
   type SessionParticipantType,
   type Solution,
   type Tenant
@@ -20,6 +21,7 @@ class sessionParticipantServiceImpl {
   async listSessionParticipants(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
 
     types?: SessionParticipantType[];
 
@@ -39,6 +41,7 @@ class sessionParticipantServiceImpl {
             ...opts,
             where: {
               tenantOid: d.tenant.oid,
+              environmentOid: d.environment.oid,
 
               AND: [
                 d.ids ? { id: { in: d.ids } } : undefined!,
@@ -69,12 +72,14 @@ class sessionParticipantServiceImpl {
   async getSessionParticipantById(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     sessionParticipantId: string;
   }) {
     let sessionParticipant = await db.sessionParticipant.findFirst({
       where: {
         id: d.sessionParticipantId,
-        tenantOid: d.tenant.oid
+        tenantOid: d.tenant.oid,
+        environmentOid: d.environment.oid
       },
       include
     });

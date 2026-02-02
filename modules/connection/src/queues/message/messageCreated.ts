@@ -4,7 +4,7 @@ import { env } from '../../env';
 import { postprocessMessageQueue } from './postprocessMessage';
 
 export let messageCreatedQueue = createQueue<{ messageId: string }>({
-  name: 'con/msg/created',
+  name: 'sub/con/msg/created',
   redisUrl: env.service.REDIS_URL,
   workerOpts: { concurrency: 25 }
 });

@@ -4,6 +4,7 @@ import {
   addAfterTransactionHook,
   type Backend,
   db,
+  type Environment,
   getId,
   type Provider,
   type ProviderAuthConfigSource,
@@ -13,6 +14,7 @@ import {
   type ProviderAuthMethod,
   ProviderAuthMethodType,
   type ProviderDeployment,
+  type ProviderDeploymentVersion,
   type ProviderVariant,
   type ProviderVersion,
   type Solution,
@@ -30,17 +32,21 @@ class providerAuthConfigInternalServiceImpl {
   async getVersionAndAuthMethod(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerDeployment?: ProviderDeployment & {
-      lockedVersion: ProviderVersion | null;
+      currentVersion:
+        | (ProviderDeploymentVersion & { lockedVersion: ProviderVersion | null })
+        | null;
     };
     authMethodId?: string;
   }) {
     let version = await providerDeploymentInternalService.getCurrentVersionOptional({
       provider: d.provider,
+      environment: d.environment,
       deployment: d.providerDeployment
     });
-    if (!version.specificationOid) {
+    if (!version?.specificationOid) {
       throw new ServiceError(
         badRequestError({
           message: 'Provider has not been discovered'
@@ -98,6 +104,7 @@ class providerAuthConfigInternalServiceImpl {
   async createProviderAuthConfigInternal(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider;
     providerDeployment?: ProviderDeployment;
     backend: Backend;
@@ -122,6 +129,7 @@ class providerAuthConfigInternalServiceImpl {
   }) {
     checkTenant(d, d.providerDeployment);
     checkTenant(d, d.backendProviderAuthConfig.slateAuthConfig);
+    checkTenant(d, d.backendProviderAuthConfig.shuttleAuthConfig);
 
     if (d.providerDeployment && d.providerDeployment.providerOid !== d.provider.oid) {
       throw new ServiceError(
@@ -177,6 +185,7 @@ class providerAuthConfigInternalServiceImpl {
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid,
           providerOid: d.provider.oid,
           authMethodOid: d.authMethod.oid,
           deploymentOid: d.providerDeployment?.oid,
@@ -189,7 +198,8 @@ class providerAuthConfigInternalServiceImpl {
         data: {
           ...getId('providerAuthConfigVersion'),
           authConfigOid: providerAuthConfig.oid,
-          slateAuthConfigOid: d.backendProviderAuthConfig.slateAuthConfig?.oid
+          slateAuthConfigOid: d.backendProviderAuthConfig.slateAuthConfig?.oid,
+          shuttleAuthConfigOid: d.backendProviderAuthConfig.shuttleAuthConfig?.oid
         }
       });
 
@@ -219,6 +229,7 @@ class providerAuthConfigInternalServiceImpl {
 
             tenantOid: d.tenant.oid,
             solutionOid: d.solution.oid,
+            environmentOid: d.environment.oid,
             authConfigOid: providerAuthConfig.oid,
             authConfigUpdateOid: update.oid,
             deploymentOid: d.providerDeployment?.oid,
@@ -265,6 +276,7 @@ class providerAuthConfigInternalServiceImpl {
   async createBackendProviderAuthConfig(d: {
     tenant: Tenant;
     solution: Solution;
+    environment: Environment;
     provider: Provider & { defaultVariant: ProviderVariant | null };
     providerVersion: ProviderVersion;
     authMethod: ProviderAuthMethod;
