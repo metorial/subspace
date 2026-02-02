@@ -49,6 +49,10 @@ model SessionMessage {
 
   isProductive Boolean @default(true)
 
+  parentMessageOid BigInt?
+  parentMessage    SessionMessage?  @relation("SessionMessageToParent", fields: [parentMessageOid], references: [oid])
+  childMessages    SessionMessage[] @relation("SessionMessageToParent")
+
   isOffloadedToStorage Boolean                     @default(false)
   bucketOid            Int
   bucket               SessionMessageStorageBucket @relation(fields: [bucketOid], references: [oid])
@@ -97,6 +101,7 @@ model SessionMessage {
   @@index([isOffloadedToStorage])
   @@index([status])
   @@index([type])
+  @@index([source])
 }
 
 model SessionMessageStorageBucket {

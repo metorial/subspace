@@ -7,6 +7,7 @@ import {
   type SessionConnection,
   type SessionConnectionTransport,
   type SessionError,
+  type SessionMessage,
   type SessionMessageFailureReason,
   type SessionMessageSource,
   type SessionMessageStatus,
@@ -28,6 +29,8 @@ export interface CreateMessageProps {
   input: PrismaJson.SessionMessageInput;
   output?: PrismaJson.SessionMessageOutput;
   responderParticipant?: SessionParticipant;
+
+  parentMessage?: SessionMessage;
 
   provider?: SessionProvider;
 
@@ -93,17 +96,17 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
       failureReason: data.failureReason ?? 'none',
       completedAt: data.completedAt,
 
+      errorOid: error?.oid,
       sessionOid: data.session.oid,
       connectionOid: data.connection?.oid,
-      sessionProviderOid: data.provider?.oid,
       tenantOid: data.session.tenantOid,
       solutionOid: data.session.solutionOid,
+      sessionProviderOid: data.provider?.oid,
+      bucketOid: sessionMessageBucketRecord.oid,
+      parentMessageOid: data.parentMessage?.oid,
       environmentOid: data.session.environmentOid,
       senderParticipantOid: data.senderParticipant.oid,
       responderParticipantOid: data.responderParticipant?.oid,
-
-      bucketOid: sessionMessageBucketRecord.oid,
-      errorOid: error?.oid,
 
       input: data.input,
       output: data.output,

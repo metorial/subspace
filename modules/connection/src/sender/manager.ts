@@ -17,6 +17,7 @@ import {
   type SessionConnection,
   type SessionConnectionMcpConnectionTransport,
   type SessionConnectionTransport,
+  type SessionMessage,
   type SessionParticipant,
   type SessionProvider,
   type Solution,
@@ -66,6 +67,7 @@ export interface CallToolProps {
   waitForResponse: boolean;
   transport: SessionConnectionTransport;
   clientMcpId?: PrismaJson.SessionMessageClientMcpId;
+  parentMessage?: SessionMessage;
 }
 
 export interface SenderMangerProps {
@@ -410,7 +412,8 @@ export class SenderManager {
       transport: d.transport,
       tool,
       isProductive: true,
-      provider
+      provider,
+      parentMessage: d.parentMessage
     });
 
     let processingPromise = (async () => {

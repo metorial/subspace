@@ -1,5 +1,11 @@
 import { Cases } from '@lowerdeck/case';
-import { internalServerError, isServiceError } from '@lowerdeck/error';
+import {
+  badRequestError,
+  internalServerError,
+  isServiceError,
+  ServiceError
+} from '@lowerdeck/error';
+import { generatePlainId } from '@lowerdeck/id';
 import { getSentry } from '@lowerdeck/sentry';
 import {
   checkResourceAccessManager,
@@ -26,6 +32,7 @@ import {
   type JSONRPCResponse,
   ListPromptsRequestSchema,
   type ListPromptsResult,
+  type ListResourcesRequest,
   ListResourcesRequestSchema,
   type ListResourcesResult,
   ListResourceTemplatesRequestSchema,
@@ -259,7 +266,11 @@ export class McpSender {
         let resourceTemplateList = mcpValidate(id, ListResourcesRequestSchema, msg);
         if (!resourceTemplateList.success)
           return { mcp: resourceTemplateList.error, store: true };
-        return this.handleResourcesListMessage(id, resourceTemplateList.data.params ?? {});
+        return this.handleResourcesListMessage(
+          id,
+          resourceTemplateList.data.params ?? {},
+          resourceTemplateList.data
+        );
       }
 
       case 'resources/read': {
@@ -419,7 +430,30 @@ export class McpSender {
     };
   }
 
-  private async handleResourcesListMessage(id: ID, opts: { cursor?: string }) {
+  private async handleResourcesListMessage(
+    id: ID,
+    opts: { cursor?: string },
+    mcpMessage: JSONRPCMessage & ListResourcesRequest
+  ) {
+    if (!this.connection) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Cannot list resources without an active connection'
+        })
+      );
+    }
+
+    let message = await this.manager.createMessage({
+      status: 'waiting_for_response',
+      type: 'mcp_message',
+      source: 'client',
+      input: { type: 'mcp', data: mcpMessage },
+      senderParticipant: this.connection?.participant!,
+      clientMcpId: id,
+      transport: 'mcp',
+      isProductive: true
+    });
+
     let allTools = await this.manager.listToolsIncludingInternalAndNonAllowed();
     let resourceListTools = uniqBy(
       allTools.filter(t => t.value.mcpToolType.type == 'mcp.resources_list'),
@@ -484,11 +518,20 @@ export class McpSender {
       let toolResources = await this.manager.callTool({
         toolId: tool.id,
         input: {
-          type: 'tool.call',
-          data: {}
+          type: 'mcp',
+          data: {
+            method: 'resources/list',
+            jsonrpc: '2.0',
+            id: generatePlainId(10),
+            params: {
+              cursor: internalCursor,
+              _meta: mcpMessage.params?._meta
+            }
+          } satisfies JSONRPCRequest & ListResourcesRequest
         },
         waitForResponse: true,
-        transport: 'system'
+        transport: 'system',
+        parentMessage: message
       });
 
       if (
@@ -505,6 +548,7 @@ export class McpSender {
 
         return {
           store: true,
+          message,
           mcp: {
             jsonrpc: '2.0',
             id,
@@ -544,6 +588,7 @@ export class McpSender {
 
     return {
       store: true,
+      message,
       mcp: {
         jsonrpc: '2.0',
         id,

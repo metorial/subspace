@@ -227,3 +227,34 @@ export let messageOutputToMcpBasic = async (
     }
   };
 };
+
+export let messageInputToMcpBasic = async (
+  input: PrismaJson.SessionMessageInput,
+  message: SessionMessage | undefined | null
+): Promise<JSONRPCMessage | null> => {
+  if (!input) return null;
+
+  if (input.type === 'mcp') {
+    return {
+      jsonrpc: '2.0',
+      id: message?.clientMcpId ?? message?.id,
+      ...(input.data as any)
+    };
+  }
+
+  if (!message) return null;
+
+  if (input.type === 'tool.call') {
+    return {
+      jsonrpc: '2.0',
+      id: message.clientMcpId ?? message.id,
+      method: 'tools/call',
+      params: {
+        name: message.methodOrToolKey ?? 'unknown_tool',
+        arguments: input.data
+      }
+    };
+  }
+
+  return null;
+};
