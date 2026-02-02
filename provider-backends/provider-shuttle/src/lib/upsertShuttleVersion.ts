@@ -50,7 +50,7 @@ export let upsertShuttleServerVersion = ({
     }
 
     if (!publisher) {
-      if (server.type == 'container') {
+      if (server.type === 'container') {
         publisher = await publisherInternalService.upsertPublisherForExternal({
           identifier: `shuttle::registry::${version.repositoryVersion?.repository.registry.id}`,
           name:
@@ -58,7 +58,7 @@ export let upsertShuttleServerVersion = ({
             version.repositoryVersion?.repository.registry.url ??
             'Unknown Registry'
         });
-      } else if (server.type == 'remote') {
+      } else if (server.type === 'remote') {
         publisher = await publisherInternalService.upsertPublisherForExternal({
           identifier: `shuttle::remote::${version.remoteUrl}`,
           name: `MCP Remote (${version.remoteUrl ?? 'unknown'})`
@@ -92,7 +92,7 @@ export let upsertShuttleServerVersion = ({
                 oauthCallbackUrl: `${env.service.SHUTTLE_PUBLIC_URL}/shuttle-oauth/callback`,
                 oauthAutoRegistration: {
                   status:
-                    server.oauthConfig?.discovery.status == 'supports_auto_registration'
+                    server.oauthConfig?.discovery.status === 'supports_auto_registration'
                       ? 'supported'
                       : 'unsupported'
                 }

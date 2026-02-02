@@ -10,7 +10,7 @@ import {
   type ProviderConfigVault,
   type ProviderConfigVaultStatus,
   type ProviderDeployment,
-  ProviderDeploymentVersion,
+  type ProviderDeploymentVersion,
   type ProviderVariant,
   type ProviderVersion,
   type Solution,

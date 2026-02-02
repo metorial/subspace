@@ -5,18 +5,18 @@ import {
   addAfterTransactionHook,
   type Brand,
   db,
-  Environment,
+  type Environment,
   getId,
   ID,
   type Provider,
   type ProviderAuthCredentials,
   type ProviderDeployment,
-  ProviderDeploymentVersion,
+  type ProviderDeploymentVersion,
   type ProviderSetupSession,
   type ProviderSetupSessionStatus,
   type ProviderSetupSessionType,
   type ProviderSetupSessionUiMode,
-  ProviderType,
+  type ProviderType,
   type ProviderVariant,
   type ProviderVersion,
   type Solution,
@@ -221,7 +221,7 @@ class providerSetupSessionServiceImpl {
         authMethod.type === 'oauth' &&
         !d.credentials &&
         // If auto registration is supported, we don't need to require credentials
-        d.provider.type.attributes.auth.oauth?.oauthAutoRegistration?.status != 'supported'
+        d.provider.type.attributes.auth.oauth?.oauthAutoRegistration?.status !== 'supported'
       ) {
         let defaultCredentials = await db.providerAuthCredentials.findFirst({
           where: {
@@ -279,7 +279,7 @@ class providerSetupSessionServiceImpl {
       }
 
       // If we don't really need a config for the provider, just create an empty one
-      if (d.input.type != 'auth_only' && !d.input.configInput) {
+      if (d.input.type !== 'auth_only' && !d.input.configInput) {
         let configRes = await providerSetupSessionUiService.getConfigSchemaWithoutSession({
           tenant: d.tenant,
           solution: d.solution,
@@ -288,7 +288,7 @@ class providerSetupSessionServiceImpl {
           deployment: d.providerDeployment
         });
 
-        if (configRes.type == 'none') {
+        if (configRes.type === 'none') {
           d.input.configInput = {};
         }
       }

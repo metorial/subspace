@@ -1,6 +1,6 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
-import { ActorType, db, getId, type Tenant } from '@metorial-subspace/db';
+import { type ActorType, db, getId, type Tenant } from '@metorial-subspace/db';
 
 let include = {};
 

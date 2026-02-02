@@ -1,7 +1,7 @@
 import { Service } from '@lowerdeck/service';
 import {
   db,
-  Environment,
+  type Environment,
   type ProviderRun,
   type Solution,
   type Tenant

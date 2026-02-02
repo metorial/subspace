@@ -158,12 +158,7 @@ class sessionProviderServiceImpl {
         environmentOid: d.environment.oid
       },
       data: {
-        toolFilter:
-          d.input.toolFilters !== undefined
-            ? await sessionProviderInputService.mapToolFilters({
-                filters: d.input.toolFilters
-              })
-            : undefined
+        toolFilter: d.input.toolFilters ?? undefined
       },
       include
     });

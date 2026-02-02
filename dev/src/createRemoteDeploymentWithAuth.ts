@@ -32,7 +32,7 @@ while (true) {
 
   console.log('Deployment status:', deployment.status, deployment.providerId);
 
-  if (deployment.status == 'failed' || deployment.status == 'succeeded') break;
+  if (deployment.status === 'failed' || deployment.status === 'succeeded') break;
 
   await delay(500);
 }
@@ -64,7 +64,7 @@ let authSetup = await client.providerSetupSession.create({
 
 console.log('Created auth setup session:', authSetup);
 
-while (authSetup.status != 'completed') {
+while (authSetup.status !== 'completed') {
   authSetup = await client.providerSetupSession.get({
     ...ts,
     providerSetupSessionId: authSetup.id
@@ -72,9 +72,9 @@ while (authSetup.status != 'completed') {
 
   console.log('Auth setup status:', authSetup.status, authSetup.authConfig);
 
-  if (authSetup.status == 'completed') break;
+  if (authSetup.status === 'completed') break;
 
-  if (authSetup.status == 'failed') {
+  if (authSetup.status === 'failed') {
     throw new Error('Auth setup failed');
   }
 

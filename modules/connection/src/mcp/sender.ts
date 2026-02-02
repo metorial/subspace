@@ -328,7 +328,7 @@ export class McpSender {
     let allTools = await this.manager.listTools();
     let mcpTools = allTools.filter(
       t =>
-        t.value.mcpToolType.type == 'tool.callable' || t.value.mcpToolType.type == 'mcp.tool'
+        t.value.mcpToolType.type === 'tool.callable' || t.value.mcpToolType.type === 'mcp.tool'
     );
 
     return {
@@ -339,7 +339,7 @@ export class McpSender {
         result: {
           tools: mcpTools.map(t => {
             let presented = providerToolPresenter(t);
-            let mcp = t.value.mcpToolType.type == 'mcp.tool' ? t.value.mcpToolType : null;
+            let mcp = t.value.mcpToolType.type === 'mcp.tool' ? t.value.mcpToolType : null;
 
             return {
               name: presented.key,
@@ -374,7 +374,7 @@ export class McpSender {
 
   private async handlePromptListMessage(id: ID) {
     let allTools = await this.manager.listToolsIncludingInternal();
-    let mcpPrompts = allTools.filter(t => t.value.mcpToolType.type == 'mcp.prompt');
+    let mcpPrompts = allTools.filter(t => t.value.mcpToolType.type === 'mcp.prompt');
 
     return {
       store: true,
@@ -384,7 +384,7 @@ export class McpSender {
         result: {
           prompts: mcpPrompts.map(t => {
             let presented = providerToolPresenter(t);
-            let mcp = t.value.mcpToolType.type == 'mcp.prompt' ? t.value.mcpToolType : null;
+            let mcp = t.value.mcpToolType.type === 'mcp.prompt' ? t.value.mcpToolType : null;
 
             return {
               name: presented.key,
@@ -402,7 +402,7 @@ export class McpSender {
   private async handleResourceTemplatesListMessage(id: ID) {
     let allTools = await this.manager.listToolsIncludingInternal();
     let mcpResourceTemplates = allTools.filter(
-      t => t.value.mcpToolType.type == 'mcp.resource_template'
+      t => t.value.mcpToolType.type === 'mcp.resource_template'
     );
 
     return {
@@ -414,7 +414,9 @@ export class McpSender {
           resourceTemplates: mcpResourceTemplates.map(t => {
             let presented = providerToolPresenter(t);
             let mcp =
-              t.value.mcpToolType.type == 'mcp.resource_template' ? t.value.mcpToolType : null;
+              t.value.mcpToolType.type === 'mcp.resource_template'
+                ? t.value.mcpToolType
+                : null;
 
             return {
               name: presented.name,
@@ -456,11 +458,11 @@ export class McpSender {
 
     let allTools = await this.manager.listToolsIncludingInternalAndNonAllowed();
     let resourceListTools = uniqBy(
-      allTools.filter(t => t.value.mcpToolType.type == 'mcp.resources_list'),
+      allTools.filter(t => t.value.mcpToolType.type === 'mcp.resources_list'),
       t => t.sessionProvider.tag
     );
 
-    let internalCursor: string | undefined = undefined;
+    let internalCursor: string | undefined;
 
     if (opts?.cursor) {
       let parts = opts.cursor.split('_');
@@ -509,9 +511,9 @@ export class McpSender {
 
       let tool = resourceListTools[0]!;
       let resourceFilters =
-        tool.sessionProvider.toolFilter.type == 'v1.filter'
+        tool.sessionProvider.toolFilter.type === 'v1.filter'
           ? tool.sessionProvider.toolFilter.filters.filter(
-              f => f.type == 'resource_regex' || f.type == 'resource_uris'
+              f => f.type === 'resource_regex' || f.type === 'resource_uris'
             )
           : [];
 
@@ -536,8 +538,8 @@ export class McpSender {
 
       if (
         !toolResources.output ||
-        toolResources.output.type != 'mcp' ||
-        toolResources.status == 'failed'
+        toolResources.output.type !== 'mcp' ||
+        toolResources.status === 'failed'
       ) {
         let out: any = toolResources.output
           ? await messageTranslator.outputToMcpBasic(
@@ -607,7 +609,7 @@ export class McpSender {
 
     let allTools = await this.manager.listToolsIncludingInternalAndNonAllowed();
     let resourceReadTool = allTools.find(
-      t => t.value.mcpToolType.type == 'mcp.resources_read' && t.sessionProvider.tag === tag
+      t => t.value.mcpToolType.type === 'mcp.resources_read' && t.sessionProvider.tag === tag
     );
 
     if (!resourceReadTool) {

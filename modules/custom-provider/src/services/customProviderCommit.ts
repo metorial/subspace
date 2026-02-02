@@ -2,12 +2,12 @@ import { badRequestError, notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
-  Actor,
-  CustomProviderCommit,
-  CustomProviderEnvironment,
-  CustomProviderVersion,
   db,
   getId,
+  type Actor,
+  type CustomProviderCommit,
+  type CustomProviderEnvironment,
+  type CustomProviderVersion,
   type Environment,
   type Solution,
   type Tenant
@@ -122,7 +122,7 @@ class customProviderCommitServiceImpl {
         );
       }
 
-      if (action.version.status != 'deployment_succeeded') {
+      if (action.version.status !== 'deployment_succeeded') {
         throw new ServiceError(
           badRequestError({
             message: 'Can only rollback to a version that has been successfully deployed.'

@@ -1,4 +1,4 @@
-import { CustomProvider, getId, withTransaction } from '@metorial-subspace/db';
+import { type CustomProvider, getId, withTransaction } from '@metorial-subspace/db';
 
 export let ensureEnvironments = async (
   d: { customProvider: CustomProvider } | { customProviderOid: bigint }
@@ -41,7 +41,7 @@ export let ensureEnvironments = async (
 
       for (let env of newProviderEnvironments) {
         let matchingCustomEnv = customProviderEnvironments.find(
-          e => e.environmentOid == env.environmentOid
+          e => e.environmentOid === env.environmentOid
         );
         if (!matchingCustomEnv) continue;
 

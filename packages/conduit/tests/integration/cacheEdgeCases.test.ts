@@ -22,7 +22,7 @@ describe('Cache Edge Cases Integration', () => {
     const sender = conduit.createSender();
 
     // Send 10 messages (more than cache size)
-    const responses = [];
+    const responses: any[] = [];
     for (let i = 0; i < 10; i++) {
       const response = await sender.send('cache-eviction-topic', { id: i });
       responses.push(response);
@@ -100,7 +100,7 @@ describe('Cache Edge Cases Integration', () => {
     const sender = conduit.createSender();
 
     // Send many messages rapidly
-    const promises = [];
+    const promises: any[] = [];
     for (let i = 0; i < 200; i++) {
       promises.push(sender.send('high-volume-topic', { index: i }));
     }

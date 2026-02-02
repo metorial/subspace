@@ -72,7 +72,7 @@ export let syncShuttleVersionQueueProcessor = syncShuttleVersionQueue.process(as
     }
 
     // Abort if the version already existed -> was created using a custom server
-    if (shuttleServerVersionRecord.oid != newShuttleServerVersionRecord) {
+    if (shuttleServerVersionRecord.oid !== newShuttleServerVersionRecord) {
       return;
     }
 
@@ -110,7 +110,7 @@ export let syncShuttleVersionQueueProcessor = syncShuttleVersionQueue.process(as
       if (!customProvider) {
         throw new Error('No custom provider found for tenant-specific shuttle server');
       }
-      if (tenant.oid != customProvider.tenantOid) {
+      if (tenant.oid !== customProvider.tenantOid) {
         throw new Error('Tenant mismatch for custom provider shuttle server');
       }
       if (!customProvider.shuttleCustomServerOid) {

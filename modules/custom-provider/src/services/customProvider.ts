@@ -2,11 +2,11 @@ import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
-  Actor,
+  type Actor,
   addAfterTransactionHook,
   type CustomProvider,
   type CustomProviderStatus,
-  CustomProviderType,
+  type CustomProviderType,
   db,
   type Environment,
   getId,
@@ -24,7 +24,7 @@ import { providerInternalService } from '@metorial-subspace/module-provider-inte
 import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { backend } from '../_shuttle/backend';
-import { CustomProviderConfig, CustomProviderFrom } from '../_shuttle/types';
+import type { CustomProviderConfig, CustomProviderFrom } from '../_shuttle/types';
 import { createVersion } from '../internal/createVersion';
 import { ensureEnvironments } from '../internal/ensureEnvironments';
 import {

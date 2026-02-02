@@ -67,7 +67,7 @@ export let customProviderVersionPresenter = (
       id: cev.id,
 
       isCurrentVersionForEnvironment:
-        customProviderVersion.providerVersion?.oid ==
+        customProviderVersion.providerVersion?.oid ===
         cev.providerEnvironment?.currentVersion?.oid,
 
       environment: customProviderEnvironmentPresenter({

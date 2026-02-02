@@ -1,7 +1,7 @@
 import { createQueue, QueueRetryError } from '@lowerdeck/queue';
 import { db } from '@metorial-subspace/db';
 import { getBackend } from '@metorial-subspace/provider';
-import { ProviderSpecificationGetRes } from '@metorial-subspace/provider-utils';
+import type { ProviderSpecificationGetRes } from '@metorial-subspace/provider-utils';
 import { env } from '../../env';
 import { providerSpecificationInternalService } from '../../services/providerSpecification';
 import { providerVersionSetSpecificationQueue } from './setSpec';

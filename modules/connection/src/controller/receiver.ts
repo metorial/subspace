@@ -176,7 +176,7 @@ export let startReceiver = () => {
             ? { type: 'error' as const, data: result.output.error }
             : result.output.data;
 
-        if (output.type == 'mcp' && 'error' in output.data && output.data.error) {
+        if (output.type === 'mcp' && 'error' in output.data && output.data.error) {
           status = 'failed';
         }
 

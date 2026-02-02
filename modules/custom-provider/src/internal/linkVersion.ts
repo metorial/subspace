@@ -1,7 +1,7 @@
 import {
-  CustomProviderVersion,
-  Provider,
-  ProviderVersion,
+  type CustomProviderVersion,
+  type Provider,
+  type ProviderVersion,
   withTransaction
 } from '@metorial-subspace/db';
 

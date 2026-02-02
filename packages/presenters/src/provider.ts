@@ -68,13 +68,13 @@ export let providerPresenter = (
     type,
 
     oauth:
-      type.auth.status == 'enabled' && type.auth.oauth.status == 'enabled'
+      type.auth.status === 'enabled' && type.auth.oauth.status === 'enabled'
         ? {
             status: 'enabled',
             callbackUrl: type.auth.oauth.oauthCallbackUrl,
 
             autoRegistration:
-              type.auth.oauth.oauthAutoRegistration?.status == 'supported'
+              type.auth.oauth.oauthAutoRegistration?.status === 'supported'
                 ? { status: 'supported' }
                 : null
           }

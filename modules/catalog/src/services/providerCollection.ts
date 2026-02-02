@@ -2,7 +2,13 @@ import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import { slugify } from '@lowerdeck/slugify';
-import { db, Environment, getId, type Solution, type Tenant } from '@metorial-subspace/db';
+import {
+  db,
+  type Environment,
+  getId,
+  type Solution,
+  type Tenant
+} from '@metorial-subspace/db';
 import { resolveProviderListings, resolveProviders } from '@metorial-subspace/list-utils';
 
 class providerListingCollectionServiceImpl {

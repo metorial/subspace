@@ -35,7 +35,7 @@ while (true) {
 
   console.log('Deployment status:', deployment.status, deployment.providerId);
 
-  if (deployment.status == 'failed' || deployment.status == 'succeeded') break;
+  if (deployment.status === 'failed' || deployment.status === 'succeeded') break;
 
   await delay(500);
 }

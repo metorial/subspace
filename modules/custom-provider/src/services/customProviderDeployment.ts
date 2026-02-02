@@ -3,8 +3,8 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import { shadowId } from '@lowerdeck/shadow-id';
 import {
-  CustomProviderDeployment,
-  CustomProviderDeploymentStatus,
+  type CustomProviderDeployment,
+  type CustomProviderDeploymentStatus,
   db,
   type Environment,
   type Solution,

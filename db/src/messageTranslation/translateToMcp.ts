@@ -28,7 +28,7 @@ export let translateMessageToMcp = async ({
 
   if (data.type === 'mcp') {
     if ('params' in data.data && data.data.params?.name) {
-      if (recipient == 'client') {
+      if (recipient === 'client') {
         data.data.params.name = `${tool.key}_${sessionProvider.tag}`;
       } else {
         data.data.params.name = tool.callableId;
@@ -36,7 +36,7 @@ export let translateMessageToMcp = async ({
     }
 
     if ('result' in data.data && data.data.result?.name) {
-      if (recipient == 'client') {
+      if (recipient === 'client') {
         data.data.result.name = `${tool.key}_${sessionProvider.tag}`;
       } else {
         data.data.result.name = tool.callableId;
@@ -69,19 +69,20 @@ export let translateMessageToMcp = async ({
   }
 
   if (data.type === 'tool.call') {
-    if (tool.value.mcpToolType.type == 'tool.callable') {
+    if (tool.value.mcpToolType.type === 'tool.callable') {
       return {
         jsonrpc: '2.0',
         method: 'tools/call',
         id: message.clientMcpId ?? message.id,
         params: {
-          name: recipient == 'client' ? `${tool.key}_${sessionProvider.tag}` : tool.callableId,
+          name:
+            recipient === 'client' ? `${tool.key}_${sessionProvider.tag}` : tool.callableId,
           arguments: data.data
         }
       } satisfies JSONRPCMessage & CallToolRequest;
     }
 
-    if (tool.value.mcpToolType.type == 'mcp.resources_list') {
+    if (tool.value.mcpToolType.type === 'mcp.resources_list') {
       return {
         jsonrpc: '2.0',
         method: 'resources/list',
@@ -93,14 +94,14 @@ export let translateMessageToMcp = async ({
       } satisfies JSONRPCMessage & ListResourcesRequest;
     }
 
-    if (tool.value.mcpToolType.type == 'mcp.resources_read') {
+    if (tool.value.mcpToolType.type === 'mcp.resources_read') {
       return {
         jsonrpc: '2.0',
         method: 'resources/read',
         id: message.clientMcpId ?? message.id,
         params: {
           uri:
-            recipient == 'provider_backend'
+            recipient === 'provider_backend'
               ? data.data.uri.replace(`${sessionProvider.tag}_`, '')
               : data.data.uri,
           _meta: data.data._meta
@@ -108,7 +109,7 @@ export let translateMessageToMcp = async ({
       } satisfies JSONRPCMessage & ReadResourceRequest;
     }
 
-    if (tool.value.mcpToolType.type == 'mcp.logging_setLevel') {
+    if (tool.value.mcpToolType.type === 'mcp.logging_setLevel') {
       return {
         jsonrpc: '2.0',
         method: 'logging/setLevel',
@@ -120,7 +121,7 @@ export let translateMessageToMcp = async ({
       } satisfies JSONRPCMessage & SetLevelRequest;
     }
 
-    if (tool.value.mcpToolType.type == 'mcp.completion_complete') {
+    if (tool.value.mcpToolType.type === 'mcp.completion_complete') {
       return {
         jsonrpc: '2.0',
         method: 'completion/complete',
@@ -133,7 +134,7 @@ export let translateMessageToMcp = async ({
       } satisfies JSONRPCMessage & CompleteRequest;
     }
 
-    if (tool.value.mcpToolType.type == 'mcp.resource_template') {
+    if (tool.value.mcpToolType.type === 'mcp.resource_template') {
       return {
         jsonrpc: '2.0',
         id: message.clientMcpId ?? message.id,
@@ -141,13 +142,14 @@ export let translateMessageToMcp = async ({
       } satisfies JSONRPCMessage & ListResourceTemplatesRequest;
     }
 
-    if (tool.value.mcpToolType.type == 'mcp.prompt') {
+    if (tool.value.mcpToolType.type === 'mcp.prompt') {
       return {
         jsonrpc: '2.0',
         method: 'prompts/get',
         id: message.clientMcpId ?? message.id,
         params: {
-          name: recipient == 'client' ? `${tool.key}_${sessionProvider.tag}` : tool.callableId,
+          name:
+            recipient === 'client' ? `${tool.key}_${sessionProvider.tag}` : tool.callableId,
           arguments: data.data
         }
       } satisfies JSONRPCMessage & GetPromptRequest;
@@ -158,7 +160,7 @@ export let translateMessageToMcp = async ({
       method: 'tools/call',
       id: message.clientMcpId ?? message.id,
       params: {
-        name: recipient == 'client' ? `${tool.key}_${sessionProvider.tag}` : tool.callableId,
+        name: recipient === 'client' ? `${tool.key}_${sessionProvider.tag}` : tool.callableId,
         arguments: data.data
       }
     } satisfies JSONRPCMessage & CallToolRequest;

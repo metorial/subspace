@@ -34,8 +34,8 @@ export let oauthCallbackApp = createHono()
     }
 
     if (
-      type.attributes.auth.status == 'disabled' ||
-      type.attributes.auth.oauth.status == 'disabled'
+      type.attributes.auth.status === 'disabled' ||
+      type.attributes.auth.oauth.status === 'disabled'
     ) {
       return c.text('OAuth is disabled for this provider', 400);
     }

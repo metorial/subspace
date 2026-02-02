@@ -5,8 +5,8 @@ import { Service } from '@lowerdeck/service';
 import {
   db,
   getId,
-  ProviderSpecificationType,
   type Provider,
+  type ProviderSpecificationType,
   type ProviderVersion
 } from '@metorial-subspace/db';
 import type {

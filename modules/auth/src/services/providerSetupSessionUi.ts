@@ -4,15 +4,15 @@ import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
   db,
-  Environment,
+  type Environment,
   getId,
-  Provider,
-  ProviderDeployment,
-  ProviderDeploymentVersion,
+  type Provider,
+  type ProviderDeployment,
+  type ProviderDeploymentVersion,
   type ProviderSetupSession,
-  ProviderVariant,
-  Solution,
-  Tenant,
+  type ProviderVariant,
+  type Solution,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
 import { providerConfigService } from '@metorial-subspace/module-deployment';
@@ -129,7 +129,7 @@ class providerSetupSessionUiServiceImpl {
       }
     });
 
-    if (d.providerSetupSession.type == 'config_only') {
+    if (d.providerSetupSession.type === 'config_only') {
       return {
         type: 'none' as const
       };
@@ -315,7 +315,7 @@ class providerSetupSessionUiServiceImpl {
           }
         });
 
-        if (currentSession.status == 'completed' || currentSession.configOid) {
+        if (currentSession.status === 'completed' || currentSession.configOid) {
           throw new ServiceError(
             badRequestError({
               message: 'Cannot update a completed provider setup session'

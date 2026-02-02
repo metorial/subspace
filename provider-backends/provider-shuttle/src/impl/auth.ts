@@ -34,7 +34,7 @@ export class ProviderAuth extends IProviderAuth {
       tenantId: tenant.id,
       serverId: shuttleServer.id,
 
-      ...(data.input.type == 'oauth'
+      ...(data.input.type === 'oauth'
         ? {
             scopes: data.input.scopes,
             clientId: data.input.clientId,
@@ -55,7 +55,7 @@ export class ProviderAuth extends IProviderAuth {
     return {
       type: 'oauth',
       shuttleOAuthCredentials,
-      isAutoRegistration: data.input.type == 'auto_registration'
+      isAutoRegistration: data.input.type === 'auto_registration'
     };
   }
 

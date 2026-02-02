@@ -214,7 +214,7 @@ class ProviderRunConnection extends IProviderRunConnection {
         await this.emitClose();
       },
       onMessage: async data => {
-        if (data.type == 'mcp.message') {
+        if (data.type === 'mcp.message') {
           // Handle response to a specific tool invocation
           let id = 'id' in data.data && data.data.id ? data.data.id : undefined;
           if (id !== undefined) {
@@ -228,7 +228,7 @@ class ProviderRunConnection extends IProviderRunConnection {
           }
 
           await this.emitMcpMessage(data.data);
-        } else if (data.type == 'error') {
+        } else if (data.type === 'error') {
           this.close();
         }
       }

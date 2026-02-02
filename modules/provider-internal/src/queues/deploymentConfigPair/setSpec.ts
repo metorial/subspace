@@ -112,7 +112,7 @@ export let providerDeploymentConfigPairSetSpecificationQueueProcessor =
             })
           : null;
 
-        if (versionSpec?.type != 'full' && newPairVersion.specification?.type == 'full') {
+        if (versionSpec?.type !== 'full' && newPairVersion.specification?.type === 'full') {
           // Update the version in this transaction
           // to avoid eventually consistent issues
           await db.providerVersion.update({

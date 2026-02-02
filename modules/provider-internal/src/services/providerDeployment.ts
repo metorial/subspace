@@ -3,10 +3,10 @@ import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
 import {
   db,
-  Environment,
-  ProviderDeploymentVersion,
+  type Environment,
   type Provider,
   type ProviderDeployment,
+  type ProviderDeploymentVersion,
   type ProviderVariant,
   type ProviderVersion
 } from '@metorial-subspace/db';

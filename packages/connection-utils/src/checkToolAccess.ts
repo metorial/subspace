@@ -14,8 +14,8 @@ export let checkToolAccess = (
   _operation: 'list' | 'call'
 ) => {
   if (
-    tool.value.mcpToolType.type == 'mcp.logging_setLevel' ||
-    tool.value.mcpToolType.type == 'mcp.completion_complete'
+    tool.value.mcpToolType.type === 'mcp.logging_setLevel' ||
+    tool.value.mcpToolType.type === 'mcp.completion_complete'
   ) {
     return { allowed: false };
   }
@@ -25,8 +25,8 @@ export let checkToolAccess = (
   if (provider.toolFilter.type === 'v1.filter') {
     for (let filter of provider.toolFilter.filters) {
       let mcpToolName: string | null = null;
-      if (tool.value.mcpToolType.type == 'mcp.tool') mcpToolName = tool.value.mcpToolType.key;
-      if (tool.value.mcpToolType.type == 'mcp.prompt')
+      if (tool.value.mcpToolType.type === 'mcp.tool') mcpToolName = tool.value.mcpToolType.key;
+      if (tool.value.mcpToolType.type === 'mcp.prompt')
         mcpToolName = tool.value.mcpToolType.key;
 
       switch (filter.type) {
@@ -101,7 +101,7 @@ export let checkResourceAccessManager = (provider: SessionProvider) => {
           }
         }
 
-        if (filter.type == 'resource_uris') {
+        if (filter.type === 'resource_uris') {
           if (filter.uris.includes(resourceUri)) {
             return { allowed: true };
           }

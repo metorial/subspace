@@ -36,7 +36,7 @@ export let commitApplyQueueProcessor = commitApplyQueue.process(async data => {
     let targetVersion = commit.targetCustomProviderVersion;
     let targetGlobalEnvironment = commit.toEnvironment.environment;
 
-    if (targetVersion.status == 'deployment_failed') {
+    if (targetVersion.status === 'deployment_failed') {
       await db.customProviderCommit.updateMany({
         where: { oid: commit.oid },
         data: {
@@ -49,7 +49,7 @@ export let commitApplyQueueProcessor = commitApplyQueue.process(async data => {
     }
 
     if (
-      targetVersion.status != 'deployment_succeeded' ||
+      targetVersion.status !== 'deployment_succeeded' ||
       !targetVersion.providerVersionOid ||
       !customProvider.providerOid ||
       !customProvider.providerVariantOid

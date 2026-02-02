@@ -3,8 +3,8 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
-  SessionMessageSource,
   type Environment,
+  type SessionMessageSource,
   type SessionMessageType,
   type Solution,
   type Tenant

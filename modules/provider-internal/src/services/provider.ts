@@ -5,9 +5,9 @@ import {
   getId,
   type Provider,
   type Publisher,
-  ShuttleServer,
+  type ShuttleServer,
   type Slate,
-  Tenant,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
 import { ensureProviderType } from '@metorial-subspace/provider-utils';

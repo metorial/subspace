@@ -5,8 +5,8 @@ import {
   type Backend,
   getId,
   type ProviderVariant,
-  ShuttleServer,
-  ShuttleServerVersion,
+  type ShuttleServer,
+  type ShuttleServerVersion,
   type Slate,
   type SlateVersion,
   withTransaction

@@ -85,7 +85,7 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
     });
 
     // Abort if the version already existed
-    if (slateVersionRecord.oid != newVersionOid) {
+    if (slateVersionRecord.oid !== newVersionOid) {
       return;
     }
 

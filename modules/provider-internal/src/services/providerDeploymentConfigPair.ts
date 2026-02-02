@@ -5,11 +5,11 @@ import {
   db,
   getId,
   type ProviderAuthConfig,
-  ProviderAuthConfigVersion,
+  type ProviderAuthConfigVersion,
   type ProviderConfig,
-  ProviderConfigVersion,
+  type ProviderConfigVersion,
   type ProviderDeployment,
-  ProviderDeploymentVersion,
+  type ProviderDeploymentVersion,
   type ProviderVersion,
   withTransaction
 } from '@metorial-subspace/db';
@@ -163,7 +163,7 @@ class providerDeploymentConfigPairInternalServiceImpl {
       }
     }
 
-    if (res.pair.lastUsedPairVersionOid != res.version.oid) {
+    if (res.pair.lastUsedPairVersionOid !== res.version.oid) {
       res.pair.lastUsedPairVersionOid = res.version.oid;
       await db.providerDeploymentConfigPair.updateMany({
         where: { oid: res.pair.oid },

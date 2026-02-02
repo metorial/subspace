@@ -5,7 +5,7 @@ import { Service } from '@lowerdeck/service';
 import { slugify } from '@lowerdeck/slugify';
 import {
   db,
-  Environment,
+  type Environment,
   getId,
   type ProviderListing,
   type ProviderListingGroup,

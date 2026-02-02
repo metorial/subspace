@@ -4,7 +4,7 @@ import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
   db,
-  Environment,
+  type Environment,
   getId,
   type Provider,
   type ProviderAuthConfig,
@@ -13,7 +13,7 @@ import {
   type ProviderAuthCredentials,
   type ProviderAuthImport,
   type ProviderDeployment,
-  ProviderDeploymentVersion,
+  type ProviderDeploymentVersion,
   type ProviderVariant,
   type ProviderVersion,
   type Solution,

@@ -1,20 +1,20 @@
 import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { generatePlainId } from '@lowerdeck/id';
 import {
-  Actor,
+  type Actor,
   addAfterTransactionHook,
-  CustomProvider,
-  CustomProviderDeploymentTrigger,
+  type CustomProvider,
+  type CustomProviderDeploymentTrigger,
   db,
-  Environment,
+  type Environment,
   getId,
-  Provider,
-  ProviderVersion,
-  ShuttleCustomServer,
-  ShuttleCustomServerDeployment,
-  ShuttleServer,
-  Solution,
-  Tenant,
+  type Provider,
+  type ProviderVersion,
+  type ShuttleCustomServer,
+  type ShuttleCustomServerDeployment,
+  type ShuttleServer,
+  type Solution,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
 import { actorService } from '@metorial-subspace/module-tenant';
@@ -210,7 +210,8 @@ export let syncVersionToCustomProvider = async (d: {
     (a, b) => a.environment.createdAt.getTime() - b.environment.createdAt.getTime()
   );
   let environment =
-    sortedEnvironments.find(e => e.environment.type == 'development') ?? sortedEnvironments[0];
+    sortedEnvironments.find(e => e.environment.type === 'development') ??
+    sortedEnvironments[0];
   if (!environment) {
     throw new ServiceError(
       badRequestError({

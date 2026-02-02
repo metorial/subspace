@@ -11,12 +11,12 @@ let mapAuth = (
   provider: Provider,
   tenant: Tenant
 ) => {
-  if (auth.status == 'disabled') return auth;
+  if (auth.status === 'disabled') return auth;
 
   return {
     ...auth,
     oauth:
-      auth.oauth.status == 'enabled'
+      auth.oauth.status === 'enabled'
         ? {
             ...auth.oauth,
             oauthCallbackUrl: getOAuthCallbackUrl(providerType, provider, tenant)

@@ -1,6 +1,6 @@
-import { CustomProvider, db, snowflake, Tenant } from '@metorial-subspace/db';
+import { type CustomProvider, db, snowflake, type Tenant } from '@metorial-subspace/db';
 import { getTenantForShuttle, shuttle } from '@metorial-subspace/provider-shuttle/src/client';
-import { CustomProviderConfig, CustomProviderFrom } from './types';
+import type { CustomProviderConfig, CustomProviderFrom } from './types';
 
 export let backend = {
   createCustomProvider: async (d: {

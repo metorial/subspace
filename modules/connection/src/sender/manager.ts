@@ -404,7 +404,7 @@ export class SenderManager {
 
     let message = await this.createMessage({
       status: 'waiting_for_response',
-      type: d.transport == 'mcp' ? 'mcp_message' : 'tool_call',
+      type: d.transport === 'mcp' ? 'mcp_message' : 'tool_call',
       source: 'client',
       input: d.input,
       senderParticipant: connection.participant,
