@@ -89,7 +89,8 @@ export class ProviderAuth extends IProviderAuth {
       serverId: shuttleServer.id,
       input: data.input,
       redirectUrl: data.redirectUrl,
-      serverCredentialsId: shuttleOAuthCredentials.id
+      serverCredentialsId: shuttleOAuthCredentials.id,
+      callbackUrlOverride: data.callbackUrlOverride ?? undefined
     });
 
     let shuttleOAuthSetup = await db.shuttleOAuthSetup.create({

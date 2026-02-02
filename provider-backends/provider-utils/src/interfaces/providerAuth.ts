@@ -81,6 +81,7 @@ export interface ProviderOAuthSetupCreateParam {
   credentials: ProviderAuthCredentials;
   authMethod: ProviderAuthMethod;
   redirectUrl: string;
+  callbackUrlOverride: string | null;
   input: Record<string, any>;
 }
 

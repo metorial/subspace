@@ -6,6 +6,7 @@ import {
   db,
   Environment,
   getId,
+  getOAuthCallbackUrl,
   ID,
   type Provider,
   type ProviderAuthCredentials,
@@ -234,6 +235,8 @@ class providerOAuthSetupServiceImpl {
       let newId = getId('providerOAuthSetup');
       let clientSecret = await ID.generateId('providerOAuthSetup_clientSecret');
 
+      let callbackUrlOverride = getOAuthCallbackUrl(d.provider.type, d.provider, d.tenant);
+
       let backendProviderOAuthSetup = await backend.auth.createProviderOAuthSetup({
         tenant: d.tenant,
         provider: d.provider,
@@ -241,6 +244,7 @@ class providerOAuthSetupServiceImpl {
         input: d.input.config,
         credentials,
         authMethod,
+        callbackUrlOverride,
         redirectUrl: `${env.service.PUBLIC_SERVICE_URL}/oauth-setup/${newId.id}/callback?client_secret=${clientSecret}`
       });
 
