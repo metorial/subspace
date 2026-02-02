@@ -410,7 +410,7 @@ export class McpSender {
               title: presented.title,
               description: presented.description || undefined,
               mimeType: mcp?.mimeType,
-              uriTemplate: `${t.sessionProvider.tag}_${mcp?.uriTemplate}`,
+              uriTemplate: `${mcp?.uriTemplate}_${t.sessionProvider.tag}`,
               icons: mcp?.icons
             };
           })
@@ -429,8 +429,9 @@ export class McpSender {
     let internalCursor: string | undefined = undefined;
 
     if (opts?.cursor) {
-      let [tag, ...rest] = opts.cursor.split('_');
-      let remainingCursor = rest.join('_').trim();
+      let parts = opts.cursor.split('_');
+      let tag = parts.pop()!;
+      let remainingCursor = parts.join('_').trim();
 
       let firstToolIndex = resourceListTools.findIndex(t => t.sessionProvider.tag === tag);
       if (firstToolIndex < 0) {
@@ -555,8 +556,9 @@ export class McpSender {
     id: ID,
     opts: { uri: string; waitForResponse: boolean }
   ) {
-    let [tag, ...rest] = opts.uri.split('_');
-    let remainingUri = rest.join('_').trim();
+    let parts = opts.uri.split('_');
+    let tag = parts.pop()!;
+    let remainingUri = parts.join('_').trim();
 
     let allTools = await this.manager.listToolsIncludingInternalAndNonAllowed();
     let resourceReadTool = allTools.find(

@@ -29,7 +29,7 @@ export let translateMessageToMcp = async ({
   if (data.type === 'mcp') {
     if ('params' in data.data && data.data.params?.name) {
       if (recipient == 'client') {
-        data.data.params.name = `${sessionProvider.tag}_${tool.key}`;
+        data.data.params.name = `${tool.key}_${sessionProvider.tag}`;
       } else {
         data.data.params.name = tool.callableId;
       }
@@ -37,7 +37,7 @@ export let translateMessageToMcp = async ({
 
     if ('result' in data.data && data.data.result?.name) {
       if (recipient == 'client') {
-        data.data.result.name = `${sessionProvider.tag}_${tool.key}`;
+        data.data.result.name = `${tool.key}_${sessionProvider.tag}`;
       } else {
         data.data.result.name = tool.callableId;
       }
@@ -75,7 +75,7 @@ export let translateMessageToMcp = async ({
         method: 'tools/call',
         id: message.clientMcpId ?? message.id,
         params: {
-          name: recipient == 'client' ? `${sessionProvider.tag}_${tool.key}` : tool.callableId,
+          name: recipient == 'client' ? `${tool.key}_${sessionProvider.tag}` : tool.callableId,
           arguments: data.data
         }
       } satisfies JSONRPCMessage & CallToolRequest;
@@ -147,7 +147,7 @@ export let translateMessageToMcp = async ({
         method: 'prompts/get',
         id: message.clientMcpId ?? message.id,
         params: {
-          name: recipient == 'client' ? `${sessionProvider.tag}_${tool.key}` : tool.callableId,
+          name: recipient == 'client' ? `${tool.key}_${sessionProvider.tag}` : tool.callableId,
           arguments: data.data
         }
       } satisfies JSONRPCMessage & GetPromptRequest;
@@ -158,7 +158,7 @@ export let translateMessageToMcp = async ({
       method: 'tools/call',
       id: message.clientMcpId ?? message.id,
       params: {
-        name: recipient == 'client' ? `${sessionProvider.tag}_${tool.key}` : tool.callableId,
+        name: recipient == 'client' ? `${tool.key}_${sessionProvider.tag}` : tool.callableId,
         arguments: data.data
       }
     } satisfies JSONRPCMessage & CallToolRequest;

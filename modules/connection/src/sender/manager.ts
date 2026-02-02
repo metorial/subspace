@@ -274,7 +274,7 @@ export class SenderManager {
 
     return tools.map(t => ({
       ...t,
-      key: `${provider.tag}_${t.key}`,
+      key: `${t.key}_${provider.tag}`,
       sessionProvider: provider,
       sessionProviderInstance: instance
     }));
@@ -324,7 +324,9 @@ export class SenderManager {
   }
 
   async getToolById(d: { toolId: string }) {
-    let [providerTag, ...toolKeyParts] = d.toolId.split('_');
+    let parts = d.toolId.split('_');
+    let providerTag = parts.pop();
+    let toolKeyParts = parts;
     if (toolKeyParts.length === 0 || !providerTag?.trim()) {
       throw new ServiceError(badRequestError({ message: 'Invalid tool ID format' }));
     }
@@ -362,7 +364,7 @@ export class SenderManager {
       instance,
       tool: {
         ...tool,
-        key: `${provider.tag}_${tool.key}`,
+        key: `${tool.key}_${provider.tag}`,
         sessionProvider: provider,
         sessionProviderInstance: instance
       }
