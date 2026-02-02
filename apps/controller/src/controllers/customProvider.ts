@@ -146,8 +146,8 @@ export let customProviderController = app.controller({
           description: ctx.input.description,
           metadata: ctx.input.metadata,
 
-          from: ctx.input.from,
-          config: ctx.input.config
+          from: ctx.input.from as any,
+          config: ctx.input.config as any
         }
       });
 

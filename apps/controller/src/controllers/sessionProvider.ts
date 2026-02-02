@@ -60,7 +60,7 @@ let normalizeToolFilters = (
 
   return {
     type: 'v1.filter',
-    filters: filtersArray
+    filters: filtersArray as any
   };
 };
 

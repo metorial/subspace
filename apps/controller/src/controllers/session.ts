@@ -116,7 +116,7 @@ export let sessionController = app.controller({
             deploymentId: p.providerDeploymentId,
             configId: p.providerConfigId,
             authConfigId: p.providerAuthConfigId,
-            toolFilters: p.toolFilters,
+            toolFilters: p.toolFilters as any,
             sessionTemplateId: p.sessionTemplateId
           }))
         }

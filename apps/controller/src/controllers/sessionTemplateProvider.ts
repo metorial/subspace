@@ -114,7 +114,7 @@ export let sessionTemplateProviderController = app.controller({
             configId: ctx.input.providerConfigId,
             authConfigId: ctx.input.providerAuthConfigId,
 
-            toolFilters: ctx.input.toolFilters
+            toolFilters: ctx.input.toolFilters as any
           }
         });
 
@@ -142,7 +142,7 @@ export let sessionTemplateProviderController = app.controller({
           solution: ctx.solution,
 
           input: {
-            toolFilters: ctx.input.toolFilters
+            toolFilters: ctx.input.toolFilters as any
           }
         });
 

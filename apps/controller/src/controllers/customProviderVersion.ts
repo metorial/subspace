@@ -117,8 +117,8 @@ export let customProviderVersionController = app.controller({
           customProvider,
 
           input: {
-            from: ctx.input.from,
-            config: ctx.input.config
+            from: ctx.input.from as any,
+            config: ctx.input.config as any
           }
         });
 
