@@ -22,8 +22,6 @@ jobs:
     strategy:
       matrix:
         service:
-          - name: connection-endpoint
-            dockerfile: apps/connection-endpoint/Dockerfile
           - name: controller
             dockerfile: apps/controller/Dockerfile
           - name: public
