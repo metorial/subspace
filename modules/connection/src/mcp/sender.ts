@@ -361,7 +361,7 @@ export class McpSender {
   }
 
   private async handlePromptListMessage(id: ID) {
-    let allTools = await this.manager.listTools();
+    let allTools = await this.manager.listToolsIncludingInternalSystemTools();
     let mcpPrompts = allTools.filter(t => t.value.mcpToolType.type == 'mcp.prompt');
 
     return {
@@ -388,7 +388,7 @@ export class McpSender {
   }
 
   private async handleResourceTemplatesListMessage(id: ID) {
-    let allTools = await this.manager.listTools();
+    let allTools = await this.manager.listToolsIncludingInternalSystemTools();
     let mcpResourceTemplates = allTools.filter(
       t => t.value.mcpToolType.type == 'mcp.resource_template'
     );
@@ -419,7 +419,7 @@ export class McpSender {
   }
 
   private async handleResourcesListMessage(id: ID, opts: { cursor?: string }) {
-    let allTools = await this.manager.listTools();
+    let allTools = await this.manager.listToolsIncludingInternalSystemTools();
     let resourceListTools = uniqBy(
       allTools.filter(t => t.value.mcpToolType.type == 'mcp.resources_list'),
       t => t.sessionProvider.tag
@@ -552,7 +552,7 @@ export class McpSender {
     let [tag, ...rest] = opts.uri.split('_');
     let remainingUri = rest.join('_').trim();
 
-    let allTools = await this.manager.listTools();
+    let allTools = await this.manager.listToolsIncludingInternalSystemTools();
     let resourceReadTool = allTools.find(
       t => t.value.mcpToolType.type == 'mcp.resources_read' && t.sessionProvider.tag === tag
     );

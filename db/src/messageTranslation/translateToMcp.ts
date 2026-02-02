@@ -2,11 +2,13 @@ import type { ProviderTool, SessionMessage, SessionProvider } from '@metorial-su
 import type {
   CallToolRequest,
   CallToolResult,
+  CompleteRequest,
   GetPromptRequest,
   JSONRPCMessage,
   ListResourcesRequest,
   ListResourceTemplatesRequest,
-  ReadResourceRequest
+  ReadResourceRequest,
+  SetLevelRequest
 } from '@modelcontextprotocol/sdk/types.js';
 
 export let translateMessageToMcp = async ({
@@ -104,6 +106,31 @@ export let translateMessageToMcp = async ({
           _meta: data.data._meta
         }
       } satisfies JSONRPCMessage & ReadResourceRequest;
+    }
+
+    if (tool.value.mcpToolType.type == 'mcp.logging_setLevel') {
+      return {
+        jsonrpc: '2.0',
+        method: 'logging/setLevel',
+        id: message.clientMcpId ?? message.id,
+        params: {
+          level: data.data.level,
+          _meta: data.data._meta
+        }
+      } satisfies JSONRPCMessage & SetLevelRequest;
+    }
+
+    if (tool.value.mcpToolType.type == 'mcp.completion_complete') {
+      return {
+        jsonrpc: '2.0',
+        method: 'completion/complete',
+        id: message.clientMcpId ?? message.id,
+        params: {
+          ref: data.data.ref,
+          argument: data.data.argument,
+          _meta: data.data._meta
+        }
+      } satisfies JSONRPCMessage & CompleteRequest;
     }
 
     if (tool.value.mcpToolType.type == 'mcp.resource_template') {

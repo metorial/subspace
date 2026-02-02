@@ -61,7 +61,11 @@ export interface SpecificationTool {
         _meta: { [key: string]: any } | undefined;
       }
     | {
-        type: 'mcp.resources_list' | 'mcp.resources_read';
+        type:
+          | 'mcp.resources_list'
+          | 'mcp.resources_read'
+          | 'mcp.completion_complete'
+          | 'mcp.logging_setLevel';
       };
 
   capabilities: {

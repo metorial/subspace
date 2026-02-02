@@ -11,7 +11,12 @@ import {
 import { UriTemplate } from '@modelcontextprotocol/sdk/shared/uriTemplate.js';
 import z from 'zod';
 import { getTenantForShuttle, shuttle, shuttleDefaultReaderTenant } from '../client';
-import { RESOURCES_LIST_KEY, RESOURCES_READ_KEY } from '../const';
+import {
+  COMPLETION_COMPLETE_KEY,
+  LOGGING_SETLEVEL_KEY,
+  RESOURCES_LIST_KEY,
+  RESOURCES_READ_KEY
+} from '../const';
 
 let toolSlug = (name: string) =>
   slugify(name.replaceAll('_', '-').replaceAll(' ', '-').toLowerCase());
@@ -307,6 +312,52 @@ export class ProviderCapabilities extends IProviderCapabilities {
                     capabilities: {},
                     mcpToolType: {
                       type: 'mcp.resources_read' as const
+                    },
+                    tags: {},
+                    metadata: {}
+                  }
+                ]
+              : []),
+
+            ...(discovery.capabilities.completions
+              ? [
+                  {
+                    specId: `shuttle::${server.id}::tool::completion_complete`,
+                    callableId: COMPLETION_COMPLETE_KEY,
+                    key: `completion_complete`,
+                    name: 'completion_complete',
+                    title: 'List Resources',
+                    description: 'List all resources',
+                    inputJsonSchema: emptyConfigSchema,
+                    outputJsonSchema: emptyConfigSchema,
+                    constraints: [],
+                    instructions: [],
+                    capabilities: {},
+                    mcpToolType: {
+                      type: 'mcp.completion_complete' as const
+                    },
+                    tags: {},
+                    metadata: {}
+                  }
+                ]
+              : []),
+
+            ...(discovery.capabilities.logging
+              ? [
+                  {
+                    specId: `shuttle::${server.id}::tool::logging_setLevel`,
+                    callableId: LOGGING_SETLEVEL_KEY,
+                    key: `logging_setLevel`,
+                    name: 'logging_setLevel',
+                    title: 'List Resources',
+                    description: 'List all resources',
+                    inputJsonSchema: emptyConfigSchema,
+                    outputJsonSchema: emptyConfigSchema,
+                    constraints: [],
+                    instructions: [],
+                    capabilities: {},
+                    mcpToolType: {
+                      type: 'mcp.logging_setLevel' as const
                     },
                     tags: {},
                     metadata: {}

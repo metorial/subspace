@@ -52,6 +52,10 @@ export class McpManager {
     return this._connection.listTools();
   }
 
+  listToolsIncludingInternalSystemTools() {
+    return this._connection.listToolsIncludingInternalSystemTools();
+  }
+
   listProviders() {
     return this._connection.listProviders();
   }

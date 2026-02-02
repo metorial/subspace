@@ -198,9 +198,17 @@ class ProviderRunConnection extends IProviderRunConnection {
   }
 
   async close(): Promise<void> {
+    console.log(
+      'Closing provider run connection for shuttle connection:',
+      this.shuttleConnection.oid
+    );
     this.#readyPromise.resolve();
     await this.emitClose();
     if (this.#conRef) {
+      console.log(
+        'Closing underlying shuttle live connection for shuttle connection:',
+        this.shuttleConnection.oid
+      );
       await this.#conRef.close();
     }
   }
@@ -218,6 +226,8 @@ class ProviderRunConnection extends IProviderRunConnection {
         await this.emitClose();
       },
       onMessage: async data => {
+        console.log('Received MCP message on shuttle connection:', data);
+
         if (data.type == 'mcp.message') {
           // Handle response to a specific tool invocation
           let id = 'id' in data.data && data.data.id ? data.data.id : undefined;

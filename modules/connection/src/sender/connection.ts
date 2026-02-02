@@ -106,6 +106,10 @@ export class SenderConnection {
     return this.manager.listToolsForProvider(provider);
   }
 
+  listToolsIncludingInternalSystemTools() {
+    return this.manager.listToolsIncludingInternalSystemTools();
+  }
+
   listTools() {
     return this.manager.listTools();
   }

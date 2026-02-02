@@ -289,11 +289,20 @@ export class SenderManager {
     });
   }
 
-  async listTools() {
+  async listToolsIncludingInternalSystemTools() {
     let providers = await this.listProviders();
     return await Promise.all(
       providers.map(provider => this.listToolsForProvider(provider))
     ).then(results => results.flat().sort((a, b) => a.id.localeCompare(b.id)));
+  }
+
+  async listTools() {
+    let allTools = await this.listToolsIncludingInternalSystemTools();
+
+    return allTools.filter(tool => {
+      let mcpType = tool.value.mcpToolType.type;
+      return mcpType !== 'mcp.logging_setLevel' && mcpType !== 'mcp.completion_complete';
+    });
   }
 
   async getProviderByTag(d: { tag: string }) {
