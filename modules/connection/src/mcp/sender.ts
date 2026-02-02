@@ -2,6 +2,7 @@ import { Cases } from '@lowerdeck/case';
 import { internalServerError, isServiceError } from '@lowerdeck/error';
 import { getSentry } from '@lowerdeck/sentry';
 import {
+  checkResourceAccessManager,
   conduitResultToMcpMessage,
   markdownList,
   mcpValidate
@@ -361,7 +362,7 @@ export class McpSender {
   }
 
   private async handlePromptListMessage(id: ID) {
-    let allTools = await this.manager.listToolsIncludingInternalSystemTools();
+    let allTools = await this.manager.listToolsIncludingInternal();
     let mcpPrompts = allTools.filter(t => t.value.mcpToolType.type == 'mcp.prompt');
 
     return {
@@ -388,7 +389,7 @@ export class McpSender {
   }
 
   private async handleResourceTemplatesListMessage(id: ID) {
-    let allTools = await this.manager.listToolsIncludingInternalSystemTools();
+    let allTools = await this.manager.listToolsIncludingInternal();
     let mcpResourceTemplates = allTools.filter(
       t => t.value.mcpToolType.type == 'mcp.resource_template'
     );
@@ -419,13 +420,11 @@ export class McpSender {
   }
 
   private async handleResourcesListMessage(id: ID, opts: { cursor?: string }) {
-    let allTools = await this.manager.listToolsIncludingInternalSystemTools();
+    let allTools = await this.manager.listToolsIncludingInternalAndNonAllowed();
     let resourceListTools = uniqBy(
       allTools.filter(t => t.value.mcpToolType.type == 'mcp.resources_list'),
       t => t.sessionProvider.tag
     );
-
-    console.log({ resourceListTools });
 
     let internalCursor: string | undefined = undefined;
 
@@ -469,13 +468,17 @@ export class McpSender {
 
     let resources: Resource[] = [];
 
-    console.log({ resourceListTools, internalCursor });
-
     let i = 0;
     while (resources.length < 50 && resourceListTools.length) {
       if (i++ > 100) break; // Safety break to avoid infinite loops
 
       let tool = resourceListTools[0]!;
+      let resourceFilters =
+        tool.sessionProvider.toolFilter.type == 'v1.filter'
+          ? tool.sessionProvider.toolFilter.filters.filter(
+              f => f.type == 'resource_regex' || f.type == 'resource_uris'
+            )
+          : [];
 
       let toolResources = await this.manager.callTool({
         toolId: tool.id,
@@ -486,8 +489,6 @@ export class McpSender {
         waitForResponse: true,
         transport: 'system'
       });
-
-      console.log({ toolResources });
 
       if (
         !toolResources.output ||
@@ -517,12 +518,19 @@ export class McpSender {
       let res = toolResources.output.data as JSONRPCResponse & { result: ListResourcesResult };
 
       try {
-        resources.push(
-          ...res?.result?.resources?.map(r => ({
-            ...r,
-            uri: `${tool.sessionProvider.tag}_${r.uri}`
-          }))
-        );
+        let newResources = (res?.result?.resources ?? []).map(r => ({
+          ...r,
+          uri: `${r.uri}_${tool.sessionProvider.tag}`
+        }));
+
+        if (resourceFilters.length) {
+          let checkResourceAccess = checkResourceAccessManager(tool.sessionProvider);
+          newResources = newResources.filter(
+            resource => checkResourceAccess(resource.uri).allowed
+          );
+        }
+
+        resources.push(...newResources);
       } catch (e) {}
 
       if (!res?.result?.resources?.length || !res?.result?.nextCursor) {
@@ -532,8 +540,6 @@ export class McpSender {
         internalCursor = res.result.nextCursor;
       }
     }
-
-    console.log({ resources });
 
     return {
       store: true,
@@ -552,7 +558,7 @@ export class McpSender {
     let [tag, ...rest] = opts.uri.split('_');
     let remainingUri = rest.join('_').trim();
 
-    let allTools = await this.manager.listToolsIncludingInternalSystemTools();
+    let allTools = await this.manager.listToolsIncludingInternalAndNonAllowed();
     let resourceReadTool = allTools.find(
       t => t.value.mcpToolType.type == 'mcp.resources_read' && t.sessionProvider.tag === tag
     );

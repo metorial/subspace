@@ -183,7 +183,7 @@ export class SenderManager {
     );
   }
 
-  async ensureProviderInstance(provider: SessionProvider) {
+  private async ensureProviderInstance(provider: SessionProvider) {
     let currentInstance = await db.sessionProviderInstance.findFirst({
       where: {
         sessionProviderOid: provider.oid,
@@ -256,7 +256,7 @@ export class SenderManager {
     });
   }
 
-  async listToolsForProvider(provider: SessionProvider) {
+  private async listToolsForProvider(provider: SessionProvider) {
     let instance = await this.ensureProviderInstance(provider);
     if (!instance) return [];
 
@@ -272,14 +272,12 @@ export class SenderManager {
       }
     });
 
-    return tools
-      .filter(tool => checkToolAccess(tool, provider, 'list').allowed)
-      .map(t => ({
-        ...t,
-        key: `${provider.tag}_${t.key}`,
-        sessionProvider: provider,
-        sessionProviderInstance: instance
-      }));
+    return tools.map(t => ({
+      ...t,
+      key: `${provider.tag}_${t.key}`,
+      sessionProvider: provider,
+      sessionProviderInstance: instance
+    }));
   }
 
   async listProviders() {
@@ -289,15 +287,23 @@ export class SenderManager {
     });
   }
 
-  async listToolsIncludingInternalSystemTools() {
+  async listToolsIncludingInternalAndNonAllowed() {
     let providers = await this.listProviders();
     return await Promise.all(
       providers.map(provider => this.listToolsForProvider(provider))
     ).then(results => results.flat().sort((a, b) => a.id.localeCompare(b.id)));
   }
 
+  async listToolsIncludingInternal() {
+    let allTools = await this.listToolsIncludingInternalAndNonAllowed();
+
+    return allTools.filter(
+      tool => checkToolAccess(tool, tool.sessionProvider, 'list').allowed
+    );
+  }
+
   async listTools() {
-    let allTools = await this.listToolsIncludingInternalSystemTools();
+    let allTools = await this.listToolsIncludingInternal();
 
     return allTools.filter(tool => {
       let mcpType = tool.value.mcpToolType.type;
@@ -305,7 +311,7 @@ export class SenderManager {
     });
   }
 
-  async getProviderByTag(d: { tag: string }) {
+  private async getProviderByTag(d: { tag: string }) {
     let provider = await db.sessionProvider.findFirst({
       where: {
         sessionOid: this.session.oid,

@@ -48,12 +48,16 @@ export class McpManager {
     return await this._connection.createConnection();
   }
 
-  listTools() {
-    return this._connection.listTools();
+  listToolsIncludingInternal() {
+    return this._connection.listToolsIncludingInternal();
   }
 
-  listToolsIncludingInternalSystemTools() {
-    return this._connection.listToolsIncludingInternalSystemTools();
+  listToolsIncludingInternalAndNonAllowed() {
+    return this._connection.listToolsIncludingInternalAndNonAllowed();
+  }
+
+  listTools() {
+    return this._connection.listTools();
   }
 
   listProviders() {

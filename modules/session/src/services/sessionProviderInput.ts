@@ -23,7 +23,7 @@ import { normalizeJsonSchema } from '@metorial-subspace/provider-utils';
 import { sessionProviderInclude } from './sessionProvider';
 import { sessionTemplateProviderInclude } from './sessionTemplateProvider';
 
-export type SessionProviderInputToolFilters = { toolKeys?: string[] } | null;
+export type SessionProviderInputToolFilters = PrismaJson.ToolFilter | null;
 
 export type SessionProviderInput = {
   sessionTemplateId?: string;
@@ -319,20 +319,6 @@ class sessionProviderInputServiceImpl {
     );
   }
 
-  async mapToolFilters(d: { filters: SessionProviderInputToolFilters | undefined }) {
-    if (!d.filters) return { type: 'v1.allow_all' } satisfies PrismaJson.ToolFilter;
-
-    return {
-      type: 'v1.whitelist',
-      filters: [
-        {
-          type: 'tool_keys',
-          keys: d.filters.toolKeys || []
-        }
-      ]
-    } satisfies PrismaJson.ToolFilter;
-  }
-
   async createSessionProvidersForInput(d: {
     tenant: Tenant;
     solution: Solution;
@@ -383,7 +369,7 @@ class sessionProviderInputServiceImpl {
             fromTemplateOid: ps.template?.oid,
             fromTemplateProviderOid: ps.templateProvider?.oid,
 
-            toolFilter: await this.mapToolFilters({ filters: ps.toolFilters })
+            toolFilter: ps.toolFilters ?? { type: 'v1.allow_all' }
           }))
         ),
         include: sessionProviderInclude
@@ -439,7 +425,7 @@ class sessionProviderInputServiceImpl {
             configOid: ps.config.oid,
             authConfigOid: ps.authConfig?.oid,
 
-            toolFilter: await this.mapToolFilters({ filters: ps.toolFilters })
+            toolFilter: ps.toolFilters ?? { type: 'v1.allow_all' }
           }))
         ),
         include: sessionTemplateProviderInclude

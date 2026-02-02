@@ -1,5 +1,5 @@
 import { Paginator } from '@lowerdeck/pagination';
-import { v } from '@lowerdeck/validation';
+import { v, type ValidationTypeValue } from '@lowerdeck/validation';
 import { sessionProviderService, sessionService } from '@metorial-subspace/module-session';
 import { sessionProviderPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
@@ -20,13 +20,49 @@ export let sessionProviderApp = tenantApp.use(async ctx => {
   return { sessionProvider };
 });
 
+export let toolFilterValidator = v.union([
+  v.object({
+    type: v.literal('tool_keys'),
+    keys: v.array(v.string())
+  }),
+  v.object({
+    type: v.literal('tool_regex'),
+    pattern: v.string()
+  }),
+  v.object({
+    type: v.literal('resource_regex'),
+    pattern: v.string()
+  }),
+  v.object({
+    type: v.literal('resource_uris'),
+    uris: v.array(v.string())
+  }),
+  v.object({
+    type: v.literal('prompt_keys'),
+    keys: v.array(v.string())
+  }),
+  v.object({
+    type: v.literal('prompt_regex'),
+    pattern: v.string()
+  })
+]);
+
 export let toolFiltersValidator = v.nullable(
-  v.optional(
-    v.object({
-      toolKeys: v.optional(v.array(v.string()))
-    })
-  )
+  v.optional(v.union([toolFilterValidator, v.array(toolFilterValidator)]))
 );
+
+let normalizeToolFilters = (
+  t: ValidationTypeValue<typeof toolFiltersValidator>
+): PrismaJson.ToolFilter => {
+  if (!t) return { type: 'v1.allow_all' };
+
+  let filtersArray = Array.isArray(t) ? t : [t];
+
+  return {
+    type: 'v1.filter',
+    filters: filtersArray
+  };
+};
 
 export let sessionProviderController = app.controller({
   list: tenantApp
@@ -109,7 +145,7 @@ export let sessionProviderController = app.controller({
           configId: ctx.input.providerConfigId,
           authConfigId: ctx.input.providerAuthConfigId,
 
-          toolFilters: ctx.input.toolFilters
+          toolFilters: normalizeToolFilters(ctx.input.toolFilters)
         }
       });
 
@@ -136,7 +172,7 @@ export let sessionProviderController = app.controller({
         solution: ctx.solution,
 
         input: {
-          toolFilters: ctx.input.toolFilters
+          toolFilters: normalizeToolFilters(ctx.input.toolFilters)
         }
       });
 

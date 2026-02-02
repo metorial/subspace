@@ -20,6 +20,7 @@
     "@metorial-subspace/db": "^1.0.0",
     "@modelcontextprotocol/sdk": "^1.25.2",
     "object-storage-client": "^0.2.5",
+    "safe-regex2": "^5.0.0",
     "zod": "^4.3.5"
   }
 }
