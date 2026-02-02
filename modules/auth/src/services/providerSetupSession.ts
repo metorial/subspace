@@ -43,6 +43,7 @@ import {
 import { providerAuthConfigInclude } from './providerAuthConfig';
 import { providerAuthConfigInternalService } from './providerAuthConfigInternal';
 import { providerSetupSessionInternalService } from './providerSetupSessionInternal';
+import { providerSetupSessionUiService } from './providerSetupSessionUi';
 
 let include = {
   authConfig: { include: providerAuthConfigInclude },
@@ -153,7 +154,7 @@ class providerSetupSessionServiceImpl {
     credentials?: ProviderAuthCredentials;
     brand?: Brand;
     input: {
-      name: string;
+      name?: string;
       authMethodId?: string;
       description?: string;
       metadata?: Record<string, any>;
@@ -277,6 +278,21 @@ class providerSetupSessionServiceImpl {
         inner = { ...inner, ...authConfigInner };
       }
 
+      // If we don't really need a config for the provider, just create an empty one
+      if (d.input.type != 'auth_only' && !d.input.configInput) {
+        let configRes = await providerSetupSessionUiService.getConfigSchemaWithoutSession({
+          tenant: d.tenant,
+          solution: d.solution,
+          environment: d.environment,
+          provider: d.provider,
+          deployment: d.providerDeployment
+        });
+
+        if (configRes.type == 'none') {
+          d.input.configInput = {};
+        }
+      }
+
       if (d.input.configInput && d.input.type !== 'auth_only') {
         let configInner = await providerSetupSessionInternalService.createProviderConfig({
           tenant: d.tenant,
@@ -309,6 +325,7 @@ class providerSetupSessionServiceImpl {
           name: d.input.name?.trim() || undefined,
           description: d.input.description?.trim() || undefined,
           metadata: d.input.metadata,
+          redirectUrl: d.input.redirectUrl,
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,

@@ -248,6 +248,10 @@ class providerSetupSessionInternalServiceImpl {
       return d.session;
 
     return withTransaction(async db => {
+      d.session = await db.providerSetupSession.findFirstOrThrow({
+        where: { oid: d.session.oid }
+      });
+
       let result = d.session;
 
       let hasAuthConfig = d.session.authConfigOid !== null;

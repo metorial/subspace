@@ -44,19 +44,50 @@ let providerDeployment = await client.providerDeployment.create({
   name: 'Deployment 1',
   providerId: deployment.providerId!,
   config: {
-    type: 'inline',
-    data: {}
+    type: 'none'
   }
 });
 
 console.log('Created provider deployment:', providerDeployment);
+
+let authSetup = await client.providerSetupSession.create({
+  ...ts,
+  uiMode: 'metorial_elements',
+
+  type: 'auth_and_config',
+  ip: '0.0.0.0',
+  ua: 'unknown',
+  providerId: providerDeployment.providerId,
+
+  redirectUrl: 'https://example.com'
+});
+
+console.log('Created auth setup session:', authSetup);
+
+while (authSetup.status != 'completed') {
+  authSetup = await client.providerSetupSession.get({
+    ...ts,
+    providerSetupSessionId: authSetup.id
+  });
+
+  console.log('Auth setup status:', authSetup.status, authSetup.authConfig);
+
+  if (authSetup.status == 'completed') break;
+
+  if (authSetup.status == 'failed') {
+    throw new Error('Auth setup failed');
+  }
+
+  await delay(500);
+}
 
 let session = await client.session.create({
   ...ts,
   name: 'Session 1',
   providers: [
     {
-      providerDeploymentId: providerDeployment.id
+      providerDeploymentId: providerDeployment.id,
+      providerAuthConfigId: authSetup.authConfig?.id
     }
   ]
 });
