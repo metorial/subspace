@@ -30,4 +30,6 @@ model Publisher {
   providers        Provider[]
   providerListings ProviderListing[]
   providerVariants ProviderVariant[]
+
+  @@index([type])
 }

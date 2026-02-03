@@ -11,8 +11,9 @@ enum CustomProviderStatus {
 }
 
 model CustomProvider {
-  oid    BigInt               @id
-  id     String               @unique
+  oid BigInt @id
+  id  String @unique
+
   type   CustomProviderType
   status CustomProviderStatus @default(active)
 
@@ -47,4 +48,5 @@ model CustomProvider {
   customProviderCommits      CustomProviderCommit[]
 
   @@index([status])
+  @@index([type])
 }
