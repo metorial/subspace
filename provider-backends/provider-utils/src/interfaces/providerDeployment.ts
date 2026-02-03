@@ -18,6 +18,10 @@ export abstract class IProviderDeployment extends IProviderFunctionality {
   abstract createProviderConfig(
     data: ProviderConfigCreateParam
   ): Promise<ProviderConfigCreateRes>;
+
+  abstract validateNetworkingRulesetIds(
+    data: ValidateNetworkingRulesetIdsParam
+  ): Promise<ValidateNetworkingRulesetIdsRes>;
 }
 
 export interface ProviderDeploymentCreateParam {
@@ -49,3 +53,11 @@ export interface ProviderConfigCreateRes {
   slateInstance?: SlateInstance | null;
   shuttleServerConfig?: ShuttleServerConfig | null;
 }
+
+export interface ValidateNetworkingRulesetIdsParam {
+  tenant: Tenant;
+  provider: Provider;
+  networkingRulesetIds: string[];
+}
+
+export interface ValidateNetworkingRulesetIdsRes {}

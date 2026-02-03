@@ -61,9 +61,13 @@ export class ProviderRun extends IProviderRun {
         name: data.participant.name,
         version: '1.0.0'
       },
-      capabilities: data.mcp?.capabilities ?? {}
+      capabilities: data.mcp?.capabilities ?? {},
 
-      // TODO: @herber add networkRulesetIds
+      networkRulesetIds:
+        data.providerDeployment.networkingRulesetIds.length &&
+        shuttleServer.type == 'container'
+          ? data.providerDeployment.networkingRulesetIds
+          : undefined
     });
 
     let shuttleConnection = await db.shuttleConnection.create({

@@ -1,14 +1,27 @@
+import { ServiceError, badRequestError } from '@lowerdeck/error';
 import { snowflake, withTransaction } from '@metorial-subspace/db';
 import {
   IProviderDeployment,
   type ProviderConfigCreateParam,
   type ProviderConfigCreateRes,
   type ProviderDeploymentCreateParam,
-  type ProviderDeploymentCreateRes
+  type ProviderDeploymentCreateRes,
+  type ValidateNetworkingRulesetIdsParam,
+  type ValidateNetworkingRulesetIdsRes
 } from '@metorial-subspace/provider-utils';
 import { getTenantForSlates, slates } from '../client';
 
 export class ProviderDeployment extends IProviderDeployment {
+  override async validateNetworkingRulesetIds(
+    data: ValidateNetworkingRulesetIdsParam
+  ): Promise<ValidateNetworkingRulesetIdsRes> {
+    throw new ServiceError(
+      badRequestError({
+        message: 'Networking rulesets cannot be assigned to this provider type'
+      })
+    );
+  }
+
   override async createProviderDeployment(
     _data: ProviderDeploymentCreateParam
   ): Promise<ProviderDeploymentCreateRes> {

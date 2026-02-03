@@ -10,6 +10,7 @@ import { customProviderDeploymentController } from './customProviderDeployment';
 import { customProviderEnvironmentController } from './customProviderEnvironment';
 import { customProviderVersionController } from './customProviderVersion';
 import { environmentController } from './environment';
+import { networkingRulesetController } from './networkingRuleset';
 import { providerController } from './provider';
 import { providerAuthConfigController } from './providerAuthConfig';
 import { providerAuthCredentialsController } from './providerAuthCredentials';
@@ -89,6 +90,7 @@ export let rootController = app.controller({
 
   containerRegistry: containerRegistryController,
   containerRepository: containerRepositoryController,
+  networkingRuleset: networkingRulesetController,
 
   providerRun: providerRunController
 });
