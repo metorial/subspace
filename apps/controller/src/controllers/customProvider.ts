@@ -31,7 +31,7 @@ export let customProviderFromValidator = v.union([
   v.object({
     type: v.literal('remote'),
     remoteUrl: v.string(),
-    config: v.optional(v.record(v.any())),
+    oauthConfig: v.optional(v.record(v.any())),
     protocol: v.enumOf(['sse', 'streamable_http'])
   }),
   v.object({
