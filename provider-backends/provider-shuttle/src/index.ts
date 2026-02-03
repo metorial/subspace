@@ -4,3 +4,5 @@ import { syncQueues } from './queues/sync';
 export let shuttleProviderQueues = combineQueueProcessors([syncQueues]);
 
 export * from './impl';
+export * from './presenters';
+export * from './services';

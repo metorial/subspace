@@ -39,3 +39,6 @@ export let getTenantForShuttle = async (tenant: Tenant) => {
     identifier: tenant.shuttleTenantIdentifier!
   };
 };
+
+export type ContainerRegistry = Awaited<ReturnType<typeof shuttle.containerRegistry.get>>;
+export type ContainerRepository = Awaited<ReturnType<typeof shuttle.containerRepository.get>>;
