@@ -8,7 +8,14 @@ import { providerVersionSetSpecificationQueue } from './setSpec';
 
 export let providerVersionSyncSpecificationQueue = createQueue<{ providerVersionId: string }>({
   name: 'sub/pint/pver/spec/sync',
-  redisUrl: env.service.REDIS_URL
+  redisUrl: env.service.REDIS_URL,
+  workerOpts: {
+    concurrency: 10,
+    limiter: {
+      max: 20,
+      duration: 1000
+    }
+  }
 });
 
 export let providerVersionSyncSpecificationQueueProcessor =
