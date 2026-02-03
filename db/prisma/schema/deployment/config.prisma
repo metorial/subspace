@@ -57,6 +57,7 @@ model ProviderConfig {
   providerConfigVersions   ProviderConfigVersion[]
   providerConfigUpdates    ProviderConfigUpdate[]
 
+  @@index([isEphemeral])
   @@index([isDefault])
   @@index([status])
 }

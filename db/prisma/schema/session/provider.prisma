@@ -62,4 +62,5 @@ model SessionProvider {
 
   @@unique([sessionOid, tag])
   @@index([status])
+  @@index([isEphemeral])
 }

@@ -55,6 +55,7 @@ model ProviderListing {
 
   ProviderListingUpdate ProviderListingUpdate[]
 
+  @@index([isPublic])
   @@index([rank])
   @@index([status])
 }

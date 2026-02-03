@@ -66,4 +66,5 @@ model ProviderOAuthSetup {
 
   @@index([status])
   @@index([expiresAt])
+  @@index([isEphemeral])
 }

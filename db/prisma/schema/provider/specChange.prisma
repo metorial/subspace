@@ -52,4 +52,6 @@ model ProviderSpecificationChangeNotification {
 
   pairSpecificationChangeOid BigInt?                                          @unique
   pairSpecificationChange    ProviderDeploymentConfigPairSpecificationChange? @relation(fields: [pairSpecificationChangeOid], references: [oid])
+
+  @@index([target])
 }

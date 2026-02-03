@@ -23,10 +23,11 @@ model ProviderSetupSession {
   oid BigInt @id
   id  String @unique
 
-  status          ProviderSetupSessionStatus
-  type            ProviderSetupSessionType
-  uiMode          ProviderSetupSessionUiMode @default(metorial_elements)
-  isParentDeleted Boolean                    @default(false)
+  status ProviderSetupSessionStatus
+  type   ProviderSetupSessionType
+  uiMode ProviderSetupSessionUiMode @default(metorial_elements)
+
+  isParentDeleted Boolean @default(false)
 
   clientSecret String
 
@@ -76,6 +77,7 @@ model ProviderSetupSession {
   events ProviderSetupSessionEvent[]
 
   @@index([status])
+  @@index([type])
 }
 
 enum ProviderSetupSessionEventType {
@@ -105,4 +107,6 @@ model ProviderSetupSessionEvent {
   session    ProviderSetupSession @relation(fields: [sessionOid], references: [oid], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+
+  @@index([type])
 }

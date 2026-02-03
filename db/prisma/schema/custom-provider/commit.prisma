@@ -58,4 +58,8 @@ model CustomProviderCommit {
 
   customProviderDeployment          CustomProviderDeployment?
   customProviderEnvironmentVersions CustomProviderEnvironmentVersion[]
+
+  @@index([status])
+  @@index([trigger])
+  @@index([type])
 }

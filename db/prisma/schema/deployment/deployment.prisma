@@ -54,6 +54,7 @@ model ProviderDeployment {
   sessionTemplateProviders   SessionTemplateProvider[]
   providerDeploymentVersions ProviderDeploymentVersion[]
 
+  @@index([isEphemeral])
   @@index([isDefault])
   @@index([status])
 }
