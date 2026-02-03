@@ -339,7 +339,8 @@ class providerDeploymentServiceImpl {
     solution: Solution;
     environment: Environment;
     providerDeployment: ProviderDeployment & {
-      provider: Provider & { defaultVariant: ProviderVariant | null };
+      providerVariant: ProviderVariant;
+      provider: Provider;
     };
     input: {
       name?: string;
@@ -351,11 +352,7 @@ class providerDeploymentServiceImpl {
     checkDeletedEdit(d.providerDeployment, 'update');
 
     return withTransaction(async db => {
-      if (!d.providerDeployment.provider.defaultVariant) {
-        throw new Error('Provider has no default variant');
-      }
-
-      let backend = await getBackend({ entity: d.providerDeployment.provider.defaultVariant });
+      let backend = await getBackend({ entity: d.providerDeployment.providerVariant });
 
       if (d.input.networkingRulesetIds?.length) {
         await backend.deployment.validateNetworkingRulesetIds({
