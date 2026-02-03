@@ -90,6 +90,8 @@ export let providerDeploymentController = app.controller({
         providerId: v.string(),
         lockedProviderVersionId: v.optional(v.string()),
 
+        networkingRulesetIds: v.optional(v.array(v.string())),
+
         config: v.union([
           v.object({
             type: v.literal('none')

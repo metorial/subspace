@@ -2,6 +2,7 @@ import type {
   Provider,
   ProviderAuthConfigVersion,
   ProviderConfigVersion,
+  ProviderDeployment,
   ProviderRun,
   ProviderTool,
   ProviderVariant,
@@ -80,6 +81,7 @@ export interface ProviderRunCreateParam {
 
   providerVariant: ProviderVariant;
   providerVersion: ProviderVersion;
+  providerDeployment: ProviderDeployment;
   providerConfigVersion: ProviderConfigVersion;
   providerAuthConfigVersion: ProviderAuthConfigVersion | null;
 

@@ -139,6 +139,7 @@ class providerDeploymentServiceImpl {
       metadata?: Record<string, any>;
       isEphemeral?: boolean;
       isDefault?: boolean;
+      networkingRulesetIds?: string[];
 
       config:
         | {
@@ -175,6 +176,16 @@ class providerDeploymentServiceImpl {
         throw new Error('Provider has no default variant');
       }
 
+      let backend = await getBackend({ entity: d.provider.defaultVariant });
+
+      if (d.input.networkingRulesetIds?.length) {
+        await backend.deployment.validateNetworkingRulesetIds({
+          tenant: d.tenant,
+          provider: d.provider,
+          networkingRulesetIds: d.input.networkingRulesetIds
+        });
+      }
+
       let environmentProvider = await db.environmentProvider.findFirst({
         where: { tenantOid: d.tenant.oid, providerOid: d.provider.oid }
       });
@@ -198,8 +209,6 @@ class providerDeploymentServiceImpl {
         });
       }
 
-      let backend = await getBackend({ entity: d.provider.defaultVariant });
-
       let ids = getId('providerDeployment');
 
       let inner = await backend.deployment.createProviderDeployment({
@@ -222,6 +231,8 @@ class providerDeploymentServiceImpl {
           name: d.input.name?.trim() || undefined,
           description: d.input.description?.trim() || undefined,
           metadata: d.input.metadata,
+
+          networkingRulesetIds: d.input.networkingRulesetIds || [],
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,
@@ -327,16 +338,33 @@ class providerDeploymentServiceImpl {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
-    providerDeployment: ProviderDeployment;
+    providerDeployment: ProviderDeployment & {
+      provider: Provider & { defaultVariant: ProviderVariant | null };
+    };
     input: {
       name?: string;
       description?: string;
       metadata?: Record<string, any>;
+      networkingRulesetIds?: string[];
     };
   }) {
     checkDeletedEdit(d.providerDeployment, 'update');
 
     return withTransaction(async db => {
+      if (!d.providerDeployment.provider.defaultVariant) {
+        throw new Error('Provider has no default variant');
+      }
+
+      let backend = await getBackend({ entity: d.providerDeployment.provider.defaultVariant });
+
+      if (d.input.networkingRulesetIds?.length) {
+        await backend.deployment.validateNetworkingRulesetIds({
+          tenant: d.tenant,
+          provider: d.providerDeployment.provider,
+          networkingRulesetIds: d.input.networkingRulesetIds
+        });
+      }
+
       let providerDeployment = await db.providerDeployment.update({
         where: {
           oid: d.providerDeployment.oid,
@@ -347,7 +375,9 @@ class providerDeploymentServiceImpl {
         data: {
           name: d.input.name ?? d.providerDeployment.name,
           description: d.input.description ?? d.providerDeployment.description,
-          metadata: d.input.metadata ?? d.providerDeployment.metadata
+          metadata: d.input.metadata ?? d.providerDeployment.metadata,
+          networkingRulesetIds:
+            d.input.networkingRulesetIds ?? d.providerDeployment.networkingRulesetIds
         },
         include
       });

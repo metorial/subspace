@@ -17,6 +17,8 @@ model ProviderDeployment {
   description String?
   metadata    Json?
 
+  networkingRulesetIds String[]
+
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
 
