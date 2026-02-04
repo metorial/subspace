@@ -192,7 +192,15 @@ let getImmutableBucketForFiles = async (d: {
   let originTenant = await getTenantForOrigin(d.tenant);
 
   if (d.from.files.length) {
-    // TODO: sync to draft bucket
+    await origin.codeBucket.setFiles({
+      tenantId: originTenant.id,
+      codeBucketId: provider.draftCodeBucket.id,
+      files: d.from.files.map(f => ({
+        path: f.filename,
+        data: f.content,
+        encoding: f.encoding ?? 'utf-8'
+      }))
+    });
   }
 
   let immutableBucketOrigin = d.from.files.length
