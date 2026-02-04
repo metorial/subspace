@@ -3,3 +3,8 @@ export * from './customProviderCommit';
 export * from './customProviderDeployment';
 export * from './customProviderEnvironment';
 export * from './customProviderVersion';
+export * from './scmConnection';
+export * from './scmConnectionSetupSession';
+export * from './scmProvider';
+export * from './scmProviderSetupSession';
+export * from './scmRepository';

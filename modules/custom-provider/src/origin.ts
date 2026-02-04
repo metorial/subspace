@@ -27,3 +27,18 @@ export let getTenantForOrigin = async (tenant: Tenant) => {
     identifier: tenant.originTenantIdentifier!
   };
 };
+
+export type ScmConnection = Awaited<ReturnType<typeof origin.scmInstallation.get>>;
+export type ScmProvider = Awaited<ReturnType<typeof origin.scmBackend.get>>;
+export type ScmProviderSetupSession = Awaited<
+  ReturnType<typeof origin.scmBackendSetupSession.get>
+>;
+export type ScmConnectionSetupSession = Awaited<
+  ReturnType<typeof origin.scmInstallationSession.get>
+>;
+export type ScmAccountPreview = Awaited<
+  ReturnType<typeof origin.scmRepository.listAccountPreviews>
+>['accounts'][0];
+export type ScmRepositoryPreview = Awaited<
+  ReturnType<typeof origin.scmRepository.listRepositoryPreviews>
+>['repositories'][0];

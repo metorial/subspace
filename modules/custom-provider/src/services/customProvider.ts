@@ -20,7 +20,8 @@ import {
   checkDeletedEdit,
   normalizeStatusForGet,
   normalizeStatusForList,
-  resolveProviders
+  resolveProviders,
+  resolveScmRepos
 } from '@metorial-subspace/list-utils';
 import { providerInternalService } from '@metorial-subspace/module-provider-internal';
 import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
@@ -69,8 +70,10 @@ class customProviderServiceImpl {
 
     ids?: string[];
     providerIds?: string[];
+    scmRepositoryIds?: string[];
   }) {
     let providers = await resolveProviders(d, d.providerIds);
+    let scmRepos = await resolveScmRepos(d, d.scmRepositoryIds);
 
     let search = d.search
       ? await voyager.record.search({
@@ -96,7 +99,8 @@ class customProviderServiceImpl {
                 d.type ? { type: { in: d.type } } : undefined!,
                 d.ids ? { id: { in: d.ids } } : undefined!,
                 search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
-                providers ? { providerOid: providers.in } : undefined!
+                providers ? { providerOid: providers.in } : undefined!,
+                scmRepos ? { scmRepoOid: scmRepos.in } : undefined!
               ].filter(Boolean)
             },
             include

@@ -6,6 +6,7 @@ import { searchQueues } from './queues/search';
 import { upcomingQueues } from './queues/upcoming';
 
 export { syncVersionToCustomProvider } from './internal/createVersion';
+export * from './presenters';
 export * from './services';
 
 export let customProviderQueueProcessor = combineQueueProcessors([
