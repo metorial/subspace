@@ -98,7 +98,7 @@ declare global {
       [key: string]: any;
     };
 
-    type UpcomingCustomProviderPayload = {
+    type CustomProviderPayload = {
       from: CustomProviderFrom;
       config: CustomProviderConfig;
     };

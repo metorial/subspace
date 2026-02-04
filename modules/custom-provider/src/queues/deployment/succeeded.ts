@@ -6,6 +6,7 @@ import { env } from '../../env';
 import { ensureEnvironments } from '../../internal/ensureEnvironments';
 import { linkNewShuttleVersionToCustomProvider } from '../../internal/linkVersion';
 import { commitApplyQueue } from '../commit/apply';
+import { customDeploymentPropagateToOtherEnvironmentsQueue } from './propagateToOtherEnvironments';
 
 export let customDeploymentSucceededQueue = createQueue<{
   customProviderDeploymentId: string;
@@ -94,6 +95,12 @@ export let customDeploymentSucceededQueueProcessor = customDeploymentSucceededQu
 
       await addAfterTransactionHook(() =>
         commitApplyQueue.add({ customProviderCommitId: commit.id })
+      );
+
+      await addAfterTransactionHook(() =>
+        customDeploymentPropagateToOtherEnvironmentsQueue.add({
+          customProviderDeploymentId: deployment.id
+        })
       );
 
       await db.customProviderDeployment.updateMany({

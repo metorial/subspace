@@ -1,12 +1,5 @@
-import { createLock } from '@lowerdeck/lock';
 import { Actor, db, snowflake, Solution, Tenant } from '@metorial-subspace/db';
-import { env } from '../env';
 import { getTenantForOrigin, origin } from '../origin';
-
-let createCodeBucketLock = createLock({
-  name: 'sub/cpr/code-bucket/create',
-  redisUrl: env.service.REDIS_URL
-});
 
 export let linkRepo = async (d: {
   tenant: Tenant;
@@ -73,17 +66,17 @@ export let linkRepo = async (d: {
   let codeBucketFilter = {
     scmRepoOid: repo.oid,
     scmRepoPath: d.repo.path ?? '/',
-    isImmutable: true,
+    isImmutable: false,
     isReadOnly: true,
-    scmRepo: {
-      oid: repo.oid
-    }
+    isSynced: true,
+    tenantOid: d.tenant.oid,
+    solutionOid: d.solution.oid
   };
-  let immutableSyncedCodeBucket = await db.codeBucket.findFirst({
+  let syncedCodeBucket = await db.codeBucket.findFirst({
     where: codeBucketFilter
   });
 
-  if (!immutableSyncedCodeBucket) {
+  if (!syncedCodeBucket) {
     let bucket = await origin.codeBucket.createFromRepo({
       tenantId: originTenant.id,
       scmRepoId: originRepo.id,
@@ -93,25 +86,17 @@ export let linkRepo = async (d: {
       isSynced: true
     });
 
-    immutableSyncedCodeBucket = await db.codeBucket.create({
+    syncedCodeBucket = await db.codeBucket.create({
       data: {
         oid: snowflake.nextId(),
         id: bucket.id,
-
-        scmRepoOid: repo.oid,
-        scmRepoPath: d.repo.path ?? '/',
-
-        tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid,
-
-        isImmutable: false,
-        isReadOnly: true
+        ...codeBucketFilter
       }
     });
   }
 
   return {
     repo,
-    immutableSyncedCodeBucket
+    syncedCodeBucket
   };
 };

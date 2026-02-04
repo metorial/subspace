@@ -179,7 +179,16 @@ class customProviderServiceImpl {
           metadata: d.input.metadata,
 
           scmRepoOid: repo?.repo.oid,
-          draftCodeBucketOid: repo?.immutableSyncedCodeBucket.oid,
+          draftCodeBucketOid: repo?.syncedCodeBucket.oid,
+
+          payload: {
+            from:
+              d.input.from.type == 'function'
+                ? { ...d.input.from, files: undefined }
+                : d.input.from,
+
+            config: d.input.config!
+          },
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid
@@ -271,7 +280,7 @@ class customProviderServiceImpl {
           })
         : undefined;
 
-      let immutableSyncedCodeBucket = repo?.immutableSyncedCodeBucket;
+      let draftCodeBucket = repo?.syncedCodeBucket;
       if (d.input.repository === null && d.customProvider.draftCodeBucketOid) {
         // If the repo link is removed we need to retain the current code
         // but in a new code bucket that has write access
@@ -287,7 +296,7 @@ class customProviderServiceImpl {
           codeBucketId: record.id
         });
 
-        immutableSyncedCodeBucket = await db.codeBucket.create({
+        draftCodeBucket = await db.codeBucket.create({
           data: {
             oid: snowflake.nextId(),
             id: originClone.id,
@@ -296,7 +305,8 @@ class customProviderServiceImpl {
             solutionOid: d.solution.oid,
 
             isReadOnly: false,
-            isImmutable: false
+            isImmutable: false,
+            isSynced: false
           }
         });
       }
@@ -313,7 +323,7 @@ class customProviderServiceImpl {
           metadata: d.input.metadata,
 
           scmRepoOid: d.input.repository === null ? null : repo?.repo.oid,
-          draftCodeBucketOid: immutableSyncedCodeBucket?.oid
+          draftCodeBucketOid: draftCodeBucket?.oid
         },
         include: { provider: true }
       });

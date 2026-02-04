@@ -90,19 +90,21 @@ class customProviderVersionServiceImpl {
       );
     }
 
-    if (
-      d.input.from.type === 'function' &&
-      !d.input.from.repository &&
-      !d.input.from.files?.length
-    ) {
-      throw new ServiceError(
-        badRequestError({
-          message: 'Custom provider of type function requires a repository or files'
-        })
-      );
-    }
-
     return withTransaction(async db => {
+      await db.customProvider.updateMany({
+        where: { oid: d.customProvider.oid },
+        data: {
+          payload: {
+            from:
+              d.input.from.type == 'function'
+                ? { ...d.input.from, files: undefined }
+                : d.input.from,
+
+            config: d.input.config!
+          }
+        }
+      });
+
       let versionPrep = await prepareVersion({
         actor: d.actor,
         tenant: d.tenant,
