@@ -67,7 +67,13 @@ export let networkingRulesetController = app.controller({
     .do(async ctx => {
       let res = await networkingRulesetService.createNetworkingRulesetById({
         tenant: ctx.tenant,
-        input: ctx.input
+        input: {
+          name: ctx.input.name,
+          description: ctx.input.description,
+          isDefault: ctx.input.isDefault,
+          defaultAction: ctx.input.defaultAction,
+          rules: ctx.input.rules as any
+        }
       });
 
       return networkingRulesetPresenter(res);
@@ -113,7 +119,12 @@ export let networkingRulesetController = app.controller({
       let res = await networkingRulesetService.updateNetworkingRuleset({
         networkingRuleset: ctx.networkingRuleset,
         tenant: ctx.tenant,
-        input: ctx.input
+        input: {
+          name: ctx.input.name,
+          description: ctx.input.description,
+          defaultAction: ctx.input.defaultAction,
+          rules: ctx.input.rules as any
+        }
       });
 
       return networkingRulesetPresenter(res);

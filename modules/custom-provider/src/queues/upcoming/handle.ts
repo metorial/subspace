@@ -66,8 +66,8 @@ let mapFrom = async (d: {
       env: d.from.env,
       runtime: d.from.runtime,
 
-      files: files.files.map((f: any) => ({
-        filename: f.path,
+      files: files.files.map((f: { path: string; content: string; encoding: 'base64' }) => ({
+        filename: f.path.startsWith('/') ? f.path.slice(1) : f.path,
         content: f.content,
         encoding: f.encoding
       }))
@@ -93,19 +93,23 @@ export let handleUpcomingCustomProviderQueueProcessor =
     });
     if (!upcoming) throw new QueueRetryError();
 
+    console.log('Processing upcoming custom provider:', upcoming.payload);
+
     let from = await mapFrom({
       isInitial: false,
 
       deployment: upcoming.customProviderDeployment,
       version: upcoming.customProviderVersion,
       provider: upcoming.customProvider,
-      from: upcoming.payload?.from,
+      from: upcoming.payload.from,
 
       tenant: upcoming.tenant,
       solution: upcoming.solution,
       environment: upcoming.environment,
       actor: upcoming.actor
     });
+
+    console.log('Processing upcoming custom provider:', from);
 
     let backendProvider =
       upcoming.type == 'create_custom_provider'
@@ -122,7 +126,7 @@ export let handleUpcomingCustomProviderQueueProcessor =
             tenant: upcoming.tenant,
             customProvider: upcoming.customProvider,
 
-            config: upcoming.payload?.config ?? {},
+            config: upcoming.payload.config,
             from
           });
 

@@ -205,7 +205,8 @@ class customProviderServiceImpl {
         tenant: d.tenant,
         solution: d.solution,
         environment: d.environment,
-        customProvider
+        customProvider,
+        trigger: 'manual'
       });
 
       let upcoming = await db.upcomingCustomProvider.create({
@@ -226,7 +227,7 @@ class customProviderServiceImpl {
 
           payload: {
             from: d.input.from,
-            config: d.input.config!
+            config: d.input.config
           }
         }
       });

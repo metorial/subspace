@@ -110,7 +110,8 @@ class customProviderVersionServiceImpl {
         tenant: d.tenant,
         solution: d.solution,
         environment: d.environment,
-        customProvider: d.customProvider
+        customProvider: d.customProvider,
+        trigger: 'manual'
       });
 
       let upcoming = await db.upcomingCustomProvider.create({

@@ -185,16 +185,42 @@ let getImmutableBucketForFiles = async (d: {
   if (d.from.type != 'function' || !d.from.files) {
     throw new Error('Can only get files for function providers');
   }
-  if (!provider.draftCodeBucket || !provider.scmRepo) {
-    throw new Error('Cannot create function deployment without linked SCM repository');
-  }
 
   let originTenant = await getTenantForOrigin(d.tenant);
+
+  if (!provider.draftCodeBucket) {
+    let originDraftBucket = await origin.codeBucket.create({
+      tenantId: originTenant.id,
+      purpose: 'subspace.custom_provider_draft'
+    });
+
+    let draftBucket = await db.codeBucket.create({
+      data: {
+        oid: snowflake.nextId(),
+        id: originDraftBucket.id,
+
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid,
+
+        isSynced: false,
+        isReadOnly: false,
+        isImmutable: false
+      }
+    });
+
+    provider = await db.customProvider.update({
+      where: { oid: d.version.customProviderOid },
+      data: {
+        draftCodeBucketOid: draftBucket.oid
+      },
+      include: { scmRepo: true, draftCodeBucket: true }
+    });
+  }
 
   if (d.from.files.length) {
     await origin.codeBucket.setFiles({
       tenantId: originTenant.id,
-      codeBucketId: provider.draftCodeBucket.id,
+      codeBucketId: provider.draftCodeBucket!.id,
       files: d.from.files.map(f => ({
         path: f.filename,
         data: f.content,
@@ -216,7 +242,7 @@ let getImmutableBucketForFiles = async (d: {
       })
     : await origin.codeBucket.clone({
         tenantId: originTenant.id,
-        codeBucketId: provider.draftCodeBucket.id
+        codeBucketId: provider.draftCodeBucket!.id
       });
 
   let immutableBucket = await db.codeBucket.create({

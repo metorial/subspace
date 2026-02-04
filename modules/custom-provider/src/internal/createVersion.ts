@@ -5,6 +5,7 @@ import {
   addAfterTransactionHook,
   type CustomProvider,
   CustomProviderDeployment,
+  CustomProviderDeploymentTrigger,
   CustomProviderVersion,
   db,
   type Environment,
@@ -24,60 +25,63 @@ import { customProviderDeploymentCreatedQueue } from '../queues/lifecycle/custom
 import { ensureEnvironments } from './ensureEnvironments';
 import { linkNewShuttleVersionToCustomProvider } from './linkVersion';
 
-export let prepareVersion = async (d: {
+export let prepareVersion = (d: {
   actor: Actor;
   tenant: Tenant;
   solution: Solution;
   environment: Environment;
 
+  trigger: CustomProviderDeploymentTrigger;
+
   customProvider: CustomProvider;
   repoPush?: ScmRepoPush;
-}) => {
-  let deployment = await db.customProviderDeployment.create({
-    data: {
-      ...getId('customProviderDeployment'),
-      status: 'queued',
-      trigger: 'manual',
+}) =>
+  withTransaction(async db => {
+    let deployment = await db.customProviderDeployment.create({
+      data: {
+        ...getId('customProviderDeployment'),
+        status: 'queued',
+        trigger: d.trigger,
 
-      tenantOid: d.tenant.oid,
-      solutionOid: d.solution.oid,
-      creatorActorOid: d.actor.oid,
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid,
+        creatorActorOid: d.actor.oid,
 
-      scmRepoPushOid: d.repoPush?.oid,
-      scmRepoOid: d.repoPush?.repoOid ?? d.customProvider.scmRepoOid,
+        scmRepoPushOid: d.repoPush?.oid,
+        scmRepoOid: d.repoPush?.repoOid ?? d.customProvider.scmRepoOid,
 
-      customProviderOid: d.customProvider.oid
-    }
+        customProviderOid: d.customProvider.oid
+      }
+    });
+
+    let { maxVersionIndex } = await db.customProvider.update({
+      where: { oid: d.customProvider.oid },
+      data: {
+        maxVersionIndex: { increment: 1 }
+      }
+    });
+
+    let version = await db.customProviderVersion.create({
+      data: {
+        ...getId('customProviderVersion'),
+        status: 'queued',
+
+        versionIndex: maxVersionIndex,
+        versionIdentifier: generatePlainId(8),
+
+        deploymentOid: deployment.oid,
+        customProviderOid: d.customProvider.oid,
+
+        scmRepoOid: d.repoPush?.repoOid ?? d.customProvider.scmRepoOid,
+
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid,
+        creatorActorOid: d.actor.oid
+      }
+    });
+
+    return { deployment, version };
   });
-
-  let { maxVersionIndex } = await db.customProvider.update({
-    where: { oid: d.customProvider.oid },
-    data: {
-      maxVersionIndex: { increment: 1 }
-    }
-  });
-
-  let version = await db.customProviderVersion.create({
-    data: {
-      ...getId('customProviderVersion'),
-      status: 'queued',
-
-      versionIndex: maxVersionIndex,
-      versionIdentifier: generatePlainId(8),
-
-      deploymentOid: deployment.oid,
-      customProviderOid: d.customProvider.oid,
-
-      scmRepoOid: d.repoPush?.repoOid ?? d.customProvider.scmRepoOid,
-
-      tenantOid: d.tenant.oid,
-      solutionOid: d.solution.oid,
-      creatorActorOid: d.actor.oid
-    }
-  });
-
-  return { deployment, version };
-};
 
 export let createVersion = (d: {
   actor: Actor;
@@ -251,7 +255,8 @@ export let syncVersionToCustomProvider = async (d: {
       tenant: customProvider.tenant,
       solution: customProvider.solution,
       environment: environment.environment,
-      customProvider
+      customProvider,
+      trigger: 'system'
     });
 
     await createVersion({

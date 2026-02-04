@@ -220,8 +220,8 @@ services:
       - subspace-network
 
   code-bucket:
-    image: ghcr.io/metorial/origin:latest
-    container_name: origin-code-bucket
+    image: ghcr.io/metorial/origin-code-bucket:latest
+    container_name: subspace-origin-code-bucket
     restart: unless-stopped
     ports:
       - '52091:52091'  # HTTP API
@@ -291,6 +291,7 @@ services:
       SHUTTLE_LIVE_URL: http://shuttle:52080
       SHUTTLE_PUBLIC_URL: http://localhost:52081
       SLATES_HUB_PUBLIC_URL: http://localhost:52045
+      ORIGIN_URL: http://origin:52090/metorial-origin
 
     volumes:
       - ./apps/controller:/app/apps/controller:ro
@@ -312,6 +313,7 @@ services:
       - shuttle
       - nats-1
       - nats-2
+      - origin
     networks:
       - subspace-network
 
@@ -337,6 +339,7 @@ services:
       SHUTTLE_LIVE_URL: http://shuttle:52080
       SHUTTLE_PUBLIC_URL: http://localhost:52081
       SLATES_HUB_PUBLIC_URL: http://localhost:52045
+      ORIGIN_URL: http://origin:52090/metorial-origin
 
     volumes:
       - ./apps/public/src:/app/apps/public/src:ro
@@ -382,6 +385,7 @@ services:
       SHUTTLE_LIVE_URL: http://shuttle:52080
       SHUTTLE_PUBLIC_URL: http://localhost:52081
       SLATES_HUB_PUBLIC_URL: http://localhost:52045
+      ORIGIN_URL: http://origin:52090/metorial-origin
 
     volumes:
       - ./apps/worker:/app/apps/worker:ro

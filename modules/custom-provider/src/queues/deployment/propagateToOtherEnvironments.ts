@@ -57,8 +57,9 @@ export let customDeploymentPropagateToOtherEnvironmentsQueueProcessor =
           tenant: deployment.tenant,
           solution: deployment.solution,
           environment: env.environment,
+          _trigger: 'scm',
           input: {
-            message: `Propagate deployment to environment ${env.environment.name}`,
+            message: `Propagate Git deployment (sha: ${deployment.scmRepoPush!.sha})`,
             action: {
               type: 'merge_version_into_environment',
               fromEnvironment: deployment.commit!.toEnvironment,

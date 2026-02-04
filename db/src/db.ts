@@ -100,7 +100,7 @@ declare global {
 
     type CustomProviderPayload = {
       from: CustomProviderFrom;
-      config: CustomProviderConfig;
+      config: CustomProviderConfig | undefined;
     };
 
     type ProviderTypeAttributes = {

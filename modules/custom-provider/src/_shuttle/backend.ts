@@ -41,7 +41,7 @@ export let backend = {
     description?: string;
 
     from: CustomProviderFromInternal;
-    config: CustomProviderConfig;
+    config: CustomProviderConfig | undefined;
   }) => {
     let shuttleTenant = await getTenantForShuttle(d.tenant);
 
@@ -98,7 +98,7 @@ export let backend = {
     customProvider: CustomProvider;
 
     from: CustomProviderFromInternal;
-    config: CustomProviderConfig;
+    config: CustomProviderConfig | undefined;
   }) => {
     let shuttleTenant = await getTenantForShuttle(d.tenant);
 
