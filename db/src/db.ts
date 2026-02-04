@@ -9,6 +9,7 @@ import type { InitializeRequest, JSONRPCMessage } from '@modelcontextprotocol/sd
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../prisma/generated/client';
 import { env } from './env';
+import { CustomProviderConfig, CustomProviderFrom } from './types';
 
 let adapter = new PrismaPg({ connectionString: env.service.DATABASE_URL });
 
@@ -95,6 +96,11 @@ declare global {
       identifier: string;
       name: string;
       [key: string]: any;
+    };
+
+    type UpcomingCustomProviderPayload = {
+      from: CustomProviderFrom;
+      config: CustomProviderConfig;
     };
 
     type ProviderTypeAttributes = {

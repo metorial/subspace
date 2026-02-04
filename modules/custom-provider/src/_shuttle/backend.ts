@@ -1,6 +1,37 @@
-import { type CustomProvider, db, snowflake, type Tenant } from '@metorial-subspace/db';
+import {
+  type CustomProvider,
+  CustomProviderConfig,
+  db,
+  snowflake,
+  type Tenant
+} from '@metorial-subspace/db';
 import { getTenantForShuttle, shuttle } from '@metorial-subspace/provider-shuttle/src/client';
-import type { CustomProviderConfig, CustomProviderFrom } from './types';
+
+export type CustomProviderFromInternal =
+  | {
+      type: 'container.from_image_ref';
+      imageRef: string;
+      username?: string;
+      password?: string;
+    }
+  | {
+      type: 'remote';
+      remoteUrl: string;
+      protocol: 'sse' | 'streamable_http';
+      oauthConfig?: Record<string, any>;
+    }
+  | {
+      type: 'function';
+      env: Record<string, string>;
+      runtime:
+        | { identifier: 'nodejs'; version: '24.x' | '22.x' }
+        | { identifier: 'python'; version: '3.14' | '3.13' | '3.12' };
+      files: {
+        filename: string;
+        content: string;
+        encoding?: 'utf-8' | 'base64';
+      }[];
+    };
 
 export let backend = {
   createCustomProvider: async (d: {
@@ -9,7 +40,7 @@ export let backend = {
     name: string;
     description?: string;
 
-    from: CustomProviderFrom;
+    from: CustomProviderFromInternal;
     config: CustomProviderConfig;
   }) => {
     let shuttleTenant = await getTenantForShuttle(d.tenant);
@@ -66,7 +97,7 @@ export let backend = {
     tenant: Tenant;
     customProvider: CustomProvider;
 
-    from: CustomProviderFrom;
+    from: CustomProviderFromInternal;
     config: CustomProviderConfig;
   }) => {
     let shuttleTenant = await getTenantForShuttle(d.tenant);

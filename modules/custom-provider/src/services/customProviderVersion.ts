@@ -1,8 +1,11 @@
-import { notFoundError, ServiceError } from '@lowerdeck/error';
+import { badRequestError, notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
+import type { CustomProviderConfig, CustomProviderFrom } from '@metorial-subspace/db';
 import {
+  addAfterTransactionHook,
   db,
+  getId,
   withTransaction,
   type Actor,
   type CustomProvider,
@@ -19,10 +22,8 @@ import {
   resolveProviders
 } from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
-import { backend } from '../_shuttle/backend';
-import type { CustomProviderConfig, CustomProviderFrom } from '../_shuttle/types';
-import { createVersion } from '../internal/createVersion';
-import { ensureEnvironments } from '../internal/ensureEnvironments';
+import { prepareVersion } from '../internal/createVersion';
+import { handleUpcomingCustomProviderQueue } from '../queues/upcoming/handle';
 
 let include = {
   customProvider: {
@@ -70,36 +71,75 @@ class customProviderVersionServiceImpl {
     checkTenant(d, d.customProvider);
     checkDeletedRelation(d.customProvider);
 
-    let backendProvider = await backend.createCustomProviderVersion({
-      tenant: d.tenant,
+    if (d.customProvider.type != d.input.from.type) {
+      throw new ServiceError(
+        badRequestError({
+          message: `Custom provider type '${d.customProvider.type}' does not match deployment from type '${d.input.from.type}'`,
+          hint: 'Please ensure the deployment from type matches the custom provider type.'
+        })
+      );
+    }
 
-      from: d.input.from,
-      config: d.input.config!,
+    if (d.input.from.type == 'function' && d.input.from.files && d.customProvider.scmRepoOid) {
+      throw new ServiceError(
+        badRequestError({
+          message:
+            'Cannot create deployment from files when SCM repo is set on custom provider',
+          hint: 'Unlink the SCM repo from the custom provider or remove the files from the deployment input.'
+        })
+      );
+    }
 
-      customProvider: d.customProvider
-    });
+    if (
+      d.input.from.type === 'function' &&
+      !d.input.from.repository &&
+      !d.input.from.files?.length
+    ) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Custom provider of type function requires a repository or files'
+        })
+      );
+    }
 
     return withTransaction(async db => {
-      await ensureEnvironments(d);
-
-      let versionRes = await createVersion({
+      let versionPrep = await prepareVersion({
         actor: d.actor,
         tenant: d.tenant,
         solution: d.solution,
         environment: d.environment,
-
-        message: d.input.message,
-
-        trigger: 'manual',
-        customProvider: d.customProvider,
-
-        shuttleServer: backendProvider.shuttleServer,
-        shuttleCustomServer: backendProvider.shuttleCustomServer,
-        shuttleCustomDeployment: backendProvider.shuttleCustomDeployment
+        customProvider: d.customProvider
       });
 
+      let upcoming = await db.upcomingCustomProvider.create({
+        data: {
+          ...getId('upcomingCustomProvider'),
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid,
+          actorOid: d.actor.oid,
+
+          message: d.input.message,
+
+          type: 'create_custom_provider',
+
+          customProviderOid: d.customProvider.oid,
+          customProviderVersionOid: versionPrep.version.oid,
+          customProviderDeploymentOid: versionPrep.deployment.oid,
+
+          payload: {
+            from: d.input.from,
+            config: d.input.config!
+          }
+        }
+      });
+
+      await addAfterTransactionHook(async () =>
+        handleUpcomingCustomProviderQueue.add({ upcomingCustomProviderId: upcoming.id })
+      );
+
       return await db.customProviderVersion.findUniqueOrThrow({
-        where: { oid: versionRes.version.oid, tenantOid: d.tenant.oid },
+        where: { oid: versionPrep.version.oid, tenantOid: d.tenant.oid },
         include
       });
     });

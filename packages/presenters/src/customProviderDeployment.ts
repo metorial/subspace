@@ -28,7 +28,7 @@ export let customProviderDeploymentPresenter = (
 
   customProviderId: customProviderDeployment.customProvider.id,
   providerId: customProviderDeployment.customProvider.provider?.id,
-  customProviderVersionId: customProviderDeployment.customProviderVersion?.id!,
+  customProviderVersionId: customProviderDeployment.customProviderVersion?.id,
 
   commit: customProviderDeployment.commit
     ? {
