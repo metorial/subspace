@@ -44,6 +44,9 @@ model CustomProvider {
   draftCodeBucketOid BigInt?     @unique
   draftCodeBucket    CodeBucket? @relation(fields: [draftCodeBucketOid], references: [oid])
 
+  /// [CustomProviderPayload]
+  payload Json
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
   deletedAt DateTime?
