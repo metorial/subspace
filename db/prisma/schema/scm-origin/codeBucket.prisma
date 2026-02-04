@@ -18,9 +18,9 @@ model CodeBucket {
 
   createdAt DateTime @default(now())
 
-  customProviderVersion    CustomProviderVersion?
-  customProviderDeployment CustomProviderDeployment?
-  customProvider           CustomProvider?
+  customProviders           CustomProvider[]
+  customProviderDeployments CustomProviderDeployment[]
+  customProviderVersions    CustomProviderVersion[]
 
   @@index([tenantOid])
 }

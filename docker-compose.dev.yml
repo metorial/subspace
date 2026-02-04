@@ -219,6 +219,28 @@ services:
     networks:
       - subspace-network
 
+  code-bucket:
+    image: ghcr.io/metorial/origin:latest
+    container_name: origin-code-bucket
+    restart: unless-stopped
+    ports:
+      - '52091:52091'  # HTTP API
+      - '52092:52092'  # VSCode Workspace
+    environment:
+      CODE_BUCKET_JWT_SECRET: dev-secret-change-in-production
+      CODE_BUCKET_OBJECT_STORAGE_BUCKET: code-bucket
+      CODE_BUCKET_OBJECT_STORAGE_ENDPOINT: http://object-storage:52010
+      CODE_BUCKET_REDIS_URL: redis://redis:6379
+      CODE_BUCKET_HTTP_ADDRESS: ':52091'
+      CODE_BUCKET_WORKSPACE_ADDRESS: ':52092'
+      CODE_BUCKET_RPC_ADDRESS: ':5050'
+    depends_on:
+      - postgres
+      - redis
+      - object-storage
+    networks:
+      - subspace-network
+
   origin:  
     image: ghcr.io/metorial/origin-service:latest
     container_name: subspace-origin
@@ -238,27 +260,13 @@ services:
       SCM_GITHUB_APP_CLIENT_ID: ${SCM_GITHUB_APP_CLIENT_ID}
       SCM_GITHUB_APP_CLIENT_SECRET: ${SCM_GITHUB_APP_CLIENT_SECRET}
       SCM_GITHUB_APP_SLUG: ${SCM_GITHUB_APP_SLUG}
-
-  code-bucket:
-    image: ghcr.io/metorial/origin:latest
-    container_name: origin-code-bucket
-    restart: unless-stopped
-    ports:
-      - '52091:52091'  # HTTP API
-      - '52092:52092'  # VSCode Workspace
-    environment:
-      CODE_BUCKET_JWT_SECRET: dev-secret-change-in-production
-      CODE_BUCKET_OBJECT_STORAGE_BUCKET: code-bucket
-      CODE_BUCKET_OBJECT_STORAGE_ENDPOINT: http://object-storage:52010
-      CODE_BUCKET_REDIS_URL: redis://redis:6379
-      CODE_BUCKET_HTTP_ADDRESS: ':52091'
-      CODE_BUCKET_WORKSPACE_ADDRESS: ':52092'
-      CODE_BUCKET_RPC_ADDRESS: ':5050'
     depends_on:
+      - postgres
       - redis
       - object-storage
+      - code-bucket
     networks:
-      - origin-network
+      - subspace-network
 
   subspace-controller:
     build:

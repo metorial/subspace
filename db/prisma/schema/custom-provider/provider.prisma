@@ -38,10 +38,10 @@ model CustomProvider {
   shuttleCustomServerOid BigInt?              @unique
   shuttleCustomServer    ShuttleCustomServer? @relation(fields: [shuttleCustomServerOid], references: [oid])
 
-  scmRepoOid BigInt?  @unique
+  scmRepoOid BigInt?
   scmRepo    ScmRepo? @relation(fields: [scmRepoOid], references: [oid])
 
-  draftCodeBucketOid BigInt?     @unique
+  draftCodeBucketOid BigInt?
   draftCodeBucket    CodeBucket? @relation(fields: [draftCodeBucketOid], references: [oid])
 
   /// [CustomProviderPayload]

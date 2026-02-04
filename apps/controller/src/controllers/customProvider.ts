@@ -23,10 +23,12 @@ export let customProviderApp = tenantApp.use(async ctx => {
 
 export let customProviderFromValidator = v.union([
   v.object({
-    type: v.literal('container.from_image_ref'),
-    imageRef: v.string(),
-    username: v.optional(v.string()),
-    password: v.optional(v.string())
+    type: v.literal('container'),
+    repository: v.object({
+      imageRef: v.string(),
+      username: v.optional(v.string()),
+      password: v.optional(v.string())
+    })
   }),
   v.object({
     type: v.literal('remote'),
@@ -53,7 +55,20 @@ export let customProviderFromValidator = v.union([
         identifier: v.literal('python'),
         version: v.enumOf(['3.14', '3.13', '3.12'])
       })
-    ])
+    ]),
+    repository: v.optional(
+      v.union([
+        v.object({
+          repositoryId: v.string(),
+          branch: v.string()
+        }),
+        v.object({
+          type: v.literal('git'),
+          repositoryUrl: v.string(),
+          branch: v.string()
+        })
+      ])
+    )
   })
 ]);
 
@@ -160,6 +175,8 @@ export let customProviderController = app.controller({
       v.object({
         tenantId: v.string(),
         environmentId: v.string(),
+        actorId: v.string(),
+
         customProviderId: v.string(),
         allowDeleted: v.optional(v.boolean()),
 
@@ -169,11 +186,17 @@ export let customProviderController = app.controller({
       })
     )
     .do(async ctx => {
+      let actor = await actorService.getActorById({
+        tenant: ctx.tenant,
+        id: ctx.input.actorId
+      });
+
       let customProvider = await customProviderService.updateCustomProvider({
         customProvider: ctx.customProvider,
         tenant: ctx.tenant,
         environment: ctx.environment,
         solution: ctx.solution,
+        actor,
 
         input: {
           name: ctx.input.name,

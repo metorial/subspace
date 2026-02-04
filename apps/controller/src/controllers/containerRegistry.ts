@@ -25,7 +25,8 @@ export let containerRegistryController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+          environmentId: v.string()
         })
       )
     )
@@ -46,6 +47,7 @@ export let containerRegistryController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         containerRegistryId: v.string()
       })
     )

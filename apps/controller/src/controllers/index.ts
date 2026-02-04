@@ -32,6 +32,11 @@ import { providerToolController } from './providerTool';
 import { providerVariantController } from './providerVariant';
 import { providerVersionController } from './providerVersion';
 import { publisherController } from './publisher';
+import { scmConnectionController } from './scmConnection';
+import { scmConnectionSetupSessionController } from './scmConnectionSetupSession';
+import { scmProviderController } from './scmProvider';
+import { scmProviderSetupSessionController } from './scmProviderSetupSession';
+import { scmRepositoryController } from './scmRepository';
 import { sessionController } from './session';
 import { sessionConnectionController } from './sessionConnection';
 import { sessionErrorController } from './sessionError';
@@ -92,7 +97,13 @@ export let rootController = app.controller({
   containerRepository: containerRepositoryController,
   networkingRuleset: networkingRulesetController,
 
-  providerRun: providerRunController
+  providerRun: providerRunController,
+
+  scmConnection: scmConnectionController,
+  scmConnectionSetupSession: scmConnectionSetupSessionController,
+  scmProvider: scmProviderController,
+  scmProviderSetupSession: scmProviderSetupSessionController,
+  scmRepository: scmRepositoryController
 });
 
 export let subspaceControllerRPC = createServer({})(rootController);

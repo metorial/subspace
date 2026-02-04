@@ -41,10 +41,10 @@ model CustomProviderVersion {
   shuttleCustomServerDeploymentOid BigInt?                        @unique
   shuttleCustomServerDeployment    ShuttleCustomServerDeployment? @relation(fields: [shuttleCustomServerDeploymentOid], references: [oid])
 
-  scmRepoOid BigInt?  @unique
+  scmRepoOid BigInt?
   scmRepo    ScmRepo? @relation(fields: [scmRepoOid], references: [oid])
 
-  immutableCodeBucketOid BigInt?     @unique
+  immutableCodeBucketOid BigInt?
   immutableCodeBucket    CodeBucket? @relation(fields: [immutableCodeBucketOid], references: [oid])
 
   createdAt DateTime @default(now())
