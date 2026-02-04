@@ -31,7 +31,8 @@ export let containerRepositoryController = app.controller({
     )
     .do(async ctx => {
       let paginator = await containerRepositoryService.listContainerRepositories({
-        tenant: ctx.tenant
+        tenant: ctx.tenant,
+        ...ctx.input
       });
 
       return {
