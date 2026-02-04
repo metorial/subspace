@@ -1,0 +1,90 @@
+enum ScmProvider {
+  github
+  gitlab
+}
+
+model CodeBucket {
+  oid BigInt @id
+  id  String @unique
+
+  isImmutable Boolean
+  isReadOnly  Boolean
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid Int
+  solution    Solution @relation(fields: [solutionOid], references: [oid])
+
+  scmRepoOid  BigInt?
+  scmRepo     ScmRepo? @relation(fields: [scmRepoOid], references: [oid])
+  scmRepoPath String?
+
+  createdAt DateTime @default(now())
+
+  customProviderVersion    CustomProviderVersion?
+  customProviderDeployment CustomProviderDeployment?
+  customProvider           CustomProvider?
+
+  @@index([tenantOid])
+}
+
+model ScmRepo {
+  oid BigInt @id
+  id  String @unique
+
+  provider ScmProvider
+
+  fromRepoUrl String?
+
+  name       String
+  identifier String
+
+  externalId        String
+  externalName      String
+  externalOwner     String
+  externalUrl       String
+  externalIsPrivate Boolean
+
+  defaultBranch String @default("main")
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid Int
+  solution    Solution @relation(fields: [solutionOid], references: [oid])
+
+  createdAt                DateTime                  @default(now())
+  customProviderVersion    CustomProviderVersion?
+  customProviderDeployment CustomProviderDeployment?
+  customProvider           CustomProvider?
+  codeBuckets              CodeBucket[]
+  scmRepoPushes            ScmRepoPush[]
+
+  @@unique([provider, tenantOid, externalId])
+}
+
+model ScmRepoPush {
+  oid BigInt @id
+  id  String @unique
+
+  pusherName       String?
+  pusherEmail      String?
+  senderIdentifier String?
+  commitMessage    String?
+
+  branchName String
+  sha        String
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid Int
+  solution    Solution @relation(fields: [solutionOid], references: [oid])
+
+  repoOid BigInt
+  repo    ScmRepo @relation(fields: [repoOid], references: [oid])
+
+  createdAt                DateTime                  @default(now())
+  customProviderDeployment CustomProviderDeployment?
+}

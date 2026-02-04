@@ -41,12 +41,19 @@ model CustomProviderVersion {
   shuttleCustomServerDeploymentOid BigInt?                        @unique
   shuttleCustomServerDeployment    ShuttleCustomServerDeployment? @relation(fields: [shuttleCustomServerDeploymentOid], references: [oid])
 
+  scmRepoOid BigInt?  @unique
+  scmRepo    ScmRepo? @relation(fields: [scmRepoOid], references: [oid])
+
+  immutableCodeBucketOid BigInt?     @unique
+  immutableCodeBucket    CodeBucket? @relation(fields: [immutableCodeBucketOid], references: [oid])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
   customProviderEnvironmentVersions CustomProviderEnvironmentVersion[]
   customProviderCommits             CustomProviderCommit[]
   customProviderCommitsBefore       CustomProviderCommit[]             @relation("CustomProviderCommitToEnvVersionBefore")
+  upcomingCustomProviders           UpcomingCustomProvider[]
 
   @@unique([customProviderOid, versionIndex])
   @@unique([customProviderOid, versionIdentifier])

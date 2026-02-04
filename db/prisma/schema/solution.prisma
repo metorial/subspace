@@ -37,4 +37,8 @@ model Solution {
   customProviderCommits                    CustomProviderCommit[]
   customProviderEnvironments               CustomProviderEnvironment[]
   providerEnvironments                     ProviderEnvironment[]
+  upcomingCustomProviders                  UpcomingCustomProvider[]
+  codeBuckets                              CodeBucket[]
+  scmRepos                                 ScmRepo[]
+  scmRepoPushes                            ScmRepoPush[]
 }

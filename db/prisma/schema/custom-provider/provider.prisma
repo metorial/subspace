@@ -38,6 +38,12 @@ model CustomProvider {
   shuttleCustomServerOid BigInt?              @unique
   shuttleCustomServer    ShuttleCustomServer? @relation(fields: [shuttleCustomServerOid], references: [oid])
 
+  scmRepoOid BigInt?  @unique
+  scmRepo    ScmRepo? @relation(fields: [scmRepoOid], references: [oid])
+
+  draftCodeBucketOid BigInt?     @unique
+  draftCodeBucket    CodeBucket? @relation(fields: [draftCodeBucketOid], references: [oid])
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
   deletedAt DateTime?
@@ -46,6 +52,7 @@ model CustomProvider {
   customProviderVersions     CustomProviderVersion[]
   customProviderEnvironments CustomProviderEnvironment[]
   customProviderCommits      CustomProviderCommit[]
+  upcomingCustomProviders    UpcomingCustomProvider[]
 
   @@index([status])
   @@index([type])
