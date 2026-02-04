@@ -1,6 +1,7 @@
-import { notFoundError, ServiceError } from '@lowerdeck/error';
+import { badRequestError, notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
+import type { CustomProviderConfig, CustomProviderFrom } from '@metorial-subspace/db';
 import {
   type Actor,
   addAfterTransactionHook,
@@ -10,6 +11,7 @@ import {
   db,
   type Environment,
   getId,
+  snowflake,
   type Solution,
   type Tenant,
   withTransaction
@@ -18,19 +20,17 @@ import {
   checkDeletedEdit,
   normalizeStatusForGet,
   normalizeStatusForList,
-  resolveProviders
+  resolveProviders,
+  resolveScmRepos
 } from '@metorial-subspace/list-utils';
 import { providerInternalService } from '@metorial-subspace/module-provider-internal';
 import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { checkTenant } from '@metorial-subspace/module-tenant';
-import { backend } from '../_shuttle/backend';
-import type { CustomProviderConfig, CustomProviderFrom } from '../_shuttle/types';
-import { createVersion } from '../internal/createVersion';
-import { ensureEnvironments } from '../internal/ensureEnvironments';
-import {
-  customProviderCreatedQueue,
-  customProviderUpdatedQueue
-} from '../queues/lifecycle/customProvider';
+import { prepareVersion } from '../internal/createVersion';
+import { linkRepo } from '../internal/linkRepo';
+import { getTenantForOrigin, origin } from '../origin';
+import { customProviderUpdatedQueue } from '../queues/lifecycle/customProvider';
+import { handleUpcomingCustomProviderQueue } from '../queues/upcoming/handle';
 
 let include = {
   provider: {
@@ -70,8 +70,10 @@ class customProviderServiceImpl {
 
     ids?: string[];
     providerIds?: string[];
+    scmRepositoryIds?: string[];
   }) {
     let providers = await resolveProviders(d, d.providerIds);
+    let scmRepos = await resolveScmRepos(d, d.scmRepositoryIds);
 
     let search = d.search
       ? await voyager.record.search({
@@ -97,7 +99,8 @@ class customProviderServiceImpl {
                 d.type ? { type: { in: d.type } } : undefined!,
                 d.ids ? { id: { in: d.ids } } : undefined!,
                 search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
-                providers ? { providerOid: providers.in } : undefined!
+                providers ? { providerOid: providers.in } : undefined!,
+                scmRepos ? { scmRepoOid: scmRepos.in } : undefined!
               ].filter(Boolean)
             },
             include
@@ -143,22 +146,34 @@ class customProviderServiceImpl {
       config?: CustomProviderConfig;
     };
   }) {
-    let backendProvider = await backend.createCustomProvider({
-      tenant: d.tenant,
-
-      name: d.input.name,
-      description: d.input.description,
-
-      from: d.input.from,
-      config: d.input.config!
-    });
+    if (
+      d.input.from.type === 'function' &&
+      !d.input.from.repository &&
+      !d.input.from.files?.length
+    ) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Custom provider of type function requires a repository or files'
+        })
+      );
+    }
 
     return withTransaction(async db => {
+      let repo =
+        d.input.from.type == 'function' && d.input.from.repository
+          ? await linkRepo({
+              tenant: d.tenant,
+              solution: d.solution,
+              actor: d.actor,
+              repo: d.input.from.repository
+            })
+          : undefined;
+
       let customProvider = await db.customProvider.create({
         data: {
           ...getId('customProvider'),
 
-          type: backendProvider.shuttleServer.type,
+          type: d.input.from.type,
           status: 'active',
 
           maxVersionIndex: 0,
@@ -167,39 +182,61 @@ class customProviderServiceImpl {
           description: d.input.description,
           metadata: d.input.metadata,
 
-          tenantOid: d.tenant.oid,
-          solutionOid: d.solution.oid,
+          scmRepoOid: repo?.repo.oid,
+          draftCodeBucketOid: repo?.syncedCodeBucket.oid,
 
-          shuttleCustomServerOid: backendProvider.shuttleCustomServer.oid
-        }
+          payload: {
+            from:
+              d.input.from.type == 'function'
+                ? { ...d.input.from, files: undefined }
+                : d.input.from,
+
+            config: d.input.config!
+          },
+
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid
+        },
+        include
       });
 
-      await ensureEnvironments({ customProvider });
-
-      await createVersion({
+      let versionPrep = await prepareVersion({
         actor: d.actor,
         tenant: d.tenant,
         solution: d.solution,
         environment: d.environment,
-
-        trigger: 'manual',
         customProvider,
+        trigger: 'manual'
+      });
 
-        message: 'Initial commit',
+      let upcoming = await db.upcomingCustomProvider.create({
+        data: {
+          ...getId('upcomingCustomProvider'),
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid,
+          actorOid: d.actor.oid,
 
-        shuttleServer: backendProvider.shuttleServer,
-        shuttleCustomServer: backendProvider.shuttleCustomServer,
-        shuttleCustomDeployment: backendProvider.shuttleCustomDeployment
+          message: 'Initial commit',
+
+          type: 'create_custom_provider',
+
+          customProviderOid: customProvider.oid,
+          customProviderDeploymentOid: versionPrep.deployment.oid,
+          customProviderVersionOid: versionPrep.version.oid,
+
+          payload: {
+            from: d.input.from,
+            config: d.input.config
+          }
+        }
       });
 
       await addAfterTransactionHook(async () =>
-        customProviderCreatedQueue.add({ customProviderId: customProvider.id })
+        handleUpcomingCustomProviderQueue.add({ upcomingCustomProviderId: upcoming.id })
       );
 
-      return await db.customProvider.findUniqueOrThrow({
-        where: { oid: customProvider.oid },
-        include
-      });
+      return customProvider;
     });
   }
 
@@ -207,17 +244,78 @@ class customProviderServiceImpl {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
+    actor: Actor;
     customProvider: CustomProvider;
     input: {
       name?: string;
       description?: string;
       metadata?: Record<string, any>;
+
+      repository?:
+        | {
+            repositoryId: string;
+            branch: string;
+          }
+        | {
+            type: 'git';
+            repositoryUrl: string;
+            branch: string;
+          }
+        | null;
     };
   }) {
     checkTenant(d, d.customProvider);
     checkDeletedEdit(d.customProvider, 'update');
 
+    if (d.input.repository && d.customProvider.type !== 'function') {
+      throw new ServiceError(
+        badRequestError({
+          message: `Cannot link SCM repository to custom provider of type ${d.customProvider.type}`
+        })
+      );
+    }
+
     return withTransaction(async db => {
+      let repo = d.input.repository
+        ? await linkRepo({
+            tenant: d.tenant,
+            solution: d.solution,
+            actor: d.actor,
+            repo: d.input.repository
+          })
+        : undefined;
+
+      let draftCodeBucket = repo?.syncedCodeBucket;
+      if (d.input.repository === null && d.customProvider.draftCodeBucketOid) {
+        // If the repo link is removed we need to retain the current code
+        // but in a new code bucket that has write access
+
+        let tenant = await getTenantForOrigin(d.tenant);
+
+        let record = await db.codeBucket.findUniqueOrThrow({
+          where: { oid: d.customProvider.draftCodeBucketOid }
+        });
+
+        let originClone = await origin.codeBucket.clone({
+          tenantId: tenant.id,
+          codeBucketId: record.id
+        });
+
+        draftCodeBucket = await db.codeBucket.create({
+          data: {
+            oid: snowflake.nextId(),
+            id: originClone.id,
+
+            tenantOid: d.tenant.oid,
+            solutionOid: d.solution.oid,
+
+            isReadOnly: false,
+            isImmutable: false,
+            isSynced: false
+          }
+        });
+      }
+
       let customProvider = await db.customProvider.update({
         where: {
           oid: d.customProvider.oid,
@@ -227,7 +325,10 @@ class customProviderServiceImpl {
         data: {
           name: d.input.name,
           description: d.input.description,
-          metadata: d.input.metadata
+          metadata: d.input.metadata,
+
+          scmRepoOid: d.input.repository === null ? null : repo?.repo.oid,
+          draftCodeBucketOid: draftCodeBucket?.oid
         },
         include: { provider: true }
       });

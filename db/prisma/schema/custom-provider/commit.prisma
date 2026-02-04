@@ -7,7 +7,7 @@ enum CustomProviderCommitStatus {
 enum CustomProviderCommitTrigger {
   manual
   system
-  // git
+  scm
 }
 
 enum CustomProviderCommitType {

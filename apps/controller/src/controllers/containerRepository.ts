@@ -25,13 +25,15 @@ export let containerRepositoryController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+          environmentId: v.string()
         })
       )
     )
     .do(async ctx => {
       let paginator = await containerRepositoryService.listContainerRepositories({
-        tenant: ctx.tenant
+        tenant: ctx.tenant,
+        ...ctx.input
       });
 
       return {
@@ -45,6 +47,7 @@ export let containerRepositoryController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         containerRepositoryId: v.string()
       })
     )

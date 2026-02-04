@@ -4,12 +4,15 @@ import {
   type Actor,
   addAfterTransactionHook,
   type CustomProvider,
-  type CustomProviderDeploymentTrigger,
+  CustomProviderDeployment,
+  CustomProviderDeploymentTrigger,
+  CustomProviderVersion,
   db,
   type Environment,
   getId,
   type Provider,
   type ProviderVersion,
+  ScmRepoPush,
   type ShuttleCustomServer,
   type ShuttleCustomServerDeployment,
   type ShuttleServer,
@@ -22,35 +25,18 @@ import { customProviderDeploymentCreatedQueue } from '../queues/lifecycle/custom
 import { ensureEnvironments } from './ensureEnvironments';
 import { linkNewShuttleVersionToCustomProvider } from './linkVersion';
 
-export let createVersion = (d: {
+export let prepareVersion = (d: {
   actor: Actor;
   tenant: Tenant;
   solution: Solution;
   environment: Environment;
 
-  message: string | undefined;
-
   trigger: CustomProviderDeploymentTrigger;
 
   customProvider: CustomProvider;
-
-  shuttleServer: ShuttleServer;
-  shuttleCustomServer: ShuttleCustomServer;
-  shuttleCustomDeployment: ShuttleCustomServerDeployment;
-
-  forVersion?: {
-    provider: Provider;
-    providerVersion: ProviderVersion;
-  };
+  repoPush?: ScmRepoPush;
 }) =>
   withTransaction(async db => {
-    await db.customProvider.updateMany({
-      where: { oid: d.customProvider.oid },
-      data: {
-        shuttleCustomServerOid: d.shuttleCustomServer.oid
-      }
-    });
-
     let deployment = await db.customProviderDeployment.create({
       data: {
         ...getId('customProviderDeployment'),
@@ -61,10 +47,10 @@ export let createVersion = (d: {
         solutionOid: d.solution.oid,
         creatorActorOid: d.actor.oid,
 
-        customProviderOid: d.customProvider.oid,
+        scmRepoPushOid: d.repoPush?.oid,
+        scmRepoOid: d.repoPush?.repoOid ?? d.customProvider.scmRepoOid,
 
-        shuttleCustomServerOid: d.shuttleCustomServer.oid,
-        shuttleCustomServerDeploymentOid: d.shuttleCustomDeployment.oid
+        customProviderOid: d.customProvider.oid
       }
     });
 
@@ -86,14 +72,59 @@ export let createVersion = (d: {
         deploymentOid: deployment.oid,
         customProviderOid: d.customProvider.oid,
 
-        shuttleCustomServerOid: d.shuttleCustomServer.oid,
-        shuttleCustomServerDeploymentOid: d.shuttleCustomDeployment.oid,
+        scmRepoOid: d.repoPush?.repoOid ?? d.customProvider.scmRepoOid,
 
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
-        creatorActorOid: d.actor.oid,
+        creatorActorOid: d.actor.oid
+      }
+    });
 
-        providerVersionOid: d.forVersion?.providerVersion.oid || null
+    return { deployment, version };
+  });
+
+export let createVersion = (d: {
+  actor: Actor;
+  tenant: Tenant;
+  solution: Solution;
+  environment: Environment;
+
+  message: string | undefined;
+
+  customProvider: CustomProvider;
+  deployment: CustomProviderDeployment;
+  version: CustomProviderVersion;
+
+  shuttleServer: ShuttleServer;
+  shuttleCustomServer: ShuttleCustomServer;
+  shuttleCustomDeployment: ShuttleCustomServerDeployment;
+
+  forVersion?: {
+    provider: Provider;
+    providerVersion: ProviderVersion;
+  };
+}) =>
+  withTransaction(async db => {
+    await db.customProvider.updateMany({
+      where: { oid: d.customProvider.oid },
+      data: {
+        shuttleCustomServerOid: d.shuttleCustomServer.oid
+      }
+    });
+
+    await db.customProviderDeployment.updateMany({
+      where: { oid: d.deployment.oid },
+      data: {
+        shuttleCustomServerOid: d.shuttleCustomServer.oid,
+        shuttleCustomServerDeploymentOid: d.shuttleCustomDeployment.oid
+      }
+    });
+
+    await db.customProviderVersion.updateMany({
+      where: { oid: d.version.oid },
+      data: {
+        shuttleCustomServerOid: d.shuttleCustomServer.oid,
+        shuttleCustomServerDeploymentOid: d.shuttleCustomDeployment.oid
       }
     });
 
@@ -123,7 +154,7 @@ export let createVersion = (d: {
       data: {
         ...getId('customProviderCommit'),
         status: 'pending',
-        trigger: d.trigger,
+        trigger: d.deployment.trigger,
         type: 'create_version',
 
         message: d.message,
@@ -136,7 +167,7 @@ export let createVersion = (d: {
         toEnvironmentVersionBeforeOid:
           env.providerEnvironment?.currentVersion?.customProviderVersion?.oid || null,
 
-        targetCustomProviderVersionOid: version.oid,
+        targetCustomProviderVersionOid: d.version.oid,
         customProviderOid: d.customProvider.oid
       }
     });
@@ -145,14 +176,14 @@ export let createVersion = (d: {
       data: {
         ...getId('customProviderEnvironmentVersion'),
         customProviderEnvironmentOid: env.oid,
-        customProviderVersionOid: version.oid,
+        customProviderVersionOid: d.version.oid,
         environmentOid: d.environment.oid,
         commitOid: commit.oid
       }
     });
 
     await db.customProviderDeployment.updateMany({
-      where: { oid: deployment.oid },
+      where: { oid: d.deployment.oid },
       data: {
         sourceEnvironmentOid: env.oid,
         commitOid: commit.oid
@@ -161,11 +192,9 @@ export let createVersion = (d: {
 
     await addAfterTransactionHook(() =>
       customProviderDeploymentCreatedQueue.add({
-        customProviderDeploymentId: deployment.id
+        customProviderDeploymentId: d.deployment.id
       })
     );
-
-    return { deployment, version };
   });
 
 export let syncVersionToCustomProvider = async (d: {
@@ -221,14 +250,24 @@ export let syncVersionToCustomProvider = async (d: {
   }
 
   await withTransaction(async db => {
+    let versionPrep = await prepareVersion({
+      actor,
+      tenant: customProvider.tenant,
+      solution: customProvider.solution,
+      environment: environment.environment,
+      customProvider,
+      trigger: 'system'
+    });
+
     await createVersion({
       actor,
       tenant: customProvider.tenant,
       solution: customProvider.solution,
       environment: environment.environment,
 
+      ...versionPrep,
+
       message: d.message,
-      trigger: 'system',
 
       customProvider,
 

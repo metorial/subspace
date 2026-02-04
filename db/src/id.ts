@@ -73,6 +73,7 @@ export let ID = createIdGenerator({
   customProviderDeployment: idType.sorted('cpd'),
   customProviderEnvironment: idType.sorted('cpe'),
   customProviderEnvironmentVersion: idType.sorted('cpev'),
+  upcomingCustomProvider: idType.sorted('ucp'),
 
   session: idType.sorted('ses'),
   sessionTemplate: idType.sorted('set'),

@@ -2,6 +2,8 @@ model CustomProviderEnvironment {
   oid BigInt @id
   id  String @unique
 
+  branchName String?
+
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
 

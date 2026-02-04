@@ -2,6 +2,7 @@ import { badRequestError, notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
+  CustomProviderCommitTrigger,
   db,
   getId,
   type Actor,
@@ -76,6 +77,8 @@ class customProviderCommitServiceImpl {
     solution: Solution;
     environment: Environment;
 
+    _trigger?: CustomProviderCommitTrigger;
+
     input: {
       message: string;
 
@@ -96,7 +99,7 @@ class customProviderCommitServiceImpl {
       ...getId('customProviderCommit'),
 
       status: 'pending' as const,
-      trigger: 'manual' as const,
+      trigger: d._trigger ?? ('manual' as const),
       type: d.input.action.type,
 
       message: d.input.message,
