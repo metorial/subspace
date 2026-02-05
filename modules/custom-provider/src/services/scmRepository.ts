@@ -95,9 +95,6 @@ class scmRepositoryServiceImpl {
     input: {
       scmConnectionId: string;
       externalId: string;
-      name: string;
-      description?: string;
-      isPrivate: boolean;
     };
   }) {
     let tenant = await getTenantForOrigin(d.tenant);

@@ -103,5 +103,66 @@ export let scmRepositoryController = app.controller({
       });
 
       return items.repositories.map(item => scmRepositoryPreviewPresenter(item));
+    }),
+
+  createRepository: tenantApp
+    .handler()
+    .input(
+      v.object({
+        tenantId: v.string(),
+        environmentId: v.string(),
+
+        scmConnectionId: v.string(),
+        externalAccountId: v.string(),
+        name: v.string(),
+        description: v.optional(v.string()),
+        isPrivate: v.boolean()
+      })
+    )
+    .do(async ctx => {
+      let res = await scmRepositoryService.createScmRepository({
+        tenant: ctx.tenant,
+        solution: ctx.solution,
+        environment: ctx.environment,
+
+        input: {
+          scmConnectionId: ctx.input.scmConnectionId,
+          externalAccountId: ctx.input.externalAccountId,
+          name: ctx.input.name,
+          description: ctx.input.description,
+          isPrivate: ctx.input.isPrivate
+        }
+      });
+
+      return scmRepositoryPresenter(res);
+    }),
+
+  linkRepository: tenantApp
+    .handler()
+    .input(
+      v.object({
+        tenantId: v.string(),
+        environmentId: v.string(),
+
+        scmConnectionId: v.string(),
+        externalId: v.string(),
+        name: v.string(),
+        description: v.optional(v.string()),
+        isPrivate: v.boolean()
+      })
+    )
+    .do(async ctx => {
+      let res = await scmRepositoryService.linkScmRepository({
+        tenant: ctx.tenant,
+        solution: ctx.solution,
+        environment: ctx.environment,
+
+        input: {
+          scmConnectionId: ctx.input.scmConnectionId,
+          externalId: ctx.input.externalId
+        }
+      });
+
+      return scmRepositoryPresenter(res);
     })
 });
