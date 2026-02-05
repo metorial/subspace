@@ -38,7 +38,7 @@ let include = {
     }
   },
   providerVersion: true,
-
+  immutableCodeBucket: { include: { scmRepo: true } },
   customProviderEnvironmentVersions: {
     include: {
       customProviderEnvironment: {

@@ -4,6 +4,7 @@ export * from './authCredentials';
 export * from './authExport';
 export * from './authImport';
 export * from './brand';
+export * from './bucket';
 export * from './config';
 export * from './customProvider';
 export * from './customProviderCommit';

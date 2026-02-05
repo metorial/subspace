@@ -7,7 +7,7 @@ import { resolveScmRepos } from '@metorial-subspace/list-utils';
 let include = { repo: true };
 
 class scmPushServiceImpl {
-  async listScmRepositories(d: {
+  async listScmPushes(d: {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;

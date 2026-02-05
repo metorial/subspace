@@ -2,6 +2,7 @@ import { apiMux } from '@lowerdeck/api-mux';
 import { createServer, type InferClient, rpcMux } from '@lowerdeck/rpc-server';
 import { app } from './_app';
 import { actorController } from './actor';
+import { bucketController } from './bucket';
 import { containerRegistryController } from './containerRegistry';
 import { containerRepositoryController } from './containerRepository';
 import { customProviderController } from './customProvider';
@@ -105,7 +106,8 @@ export let rootController = app.controller({
   scmProvider: scmProviderController,
   scmProviderSetupSession: scmProviderSetupSessionController,
   scmRepository: scmRepositoryController,
-  scmPush: scmPushController
+  scmPush: scmPushController,
+  bucket: bucketController
 });
 
 export let subspaceControllerRPC = createServer({})(rootController);

@@ -1,5 +1,6 @@
 import type {
   Actor,
+  CodeBucket,
   CustomProvider,
   CustomProviderCommit,
   CustomProviderDeployment,
@@ -9,6 +10,7 @@ import type {
   ScmRepoPush
 } from '@metorial-subspace/db';
 import { actorPresenter } from './actor';
+import { bucketPresenter } from './bucket';
 import { scmPushPresenter } from './scmPush';
 
 export let customProviderDeploymentPresenter = (
@@ -21,6 +23,8 @@ export let customProviderDeploymentPresenter = (
     commit: CustomProviderCommit | null;
 
     creatorActor: Actor;
+
+    immutableCodeBucket: (CodeBucket & { scmRepo: ScmRepo | null }) | null;
 
     scmRepoPush: (ScmRepoPush & { repo: ScmRepo }) | null;
   }
@@ -43,6 +47,10 @@ export let customProviderDeploymentPresenter = (
         message: customProviderDeployment.commit.message,
         createdAt: customProviderDeployment.commit.createdAt
       }
+    : null,
+
+  immutableBucket: customProviderDeployment.immutableCodeBucket
+    ? bucketPresenter(customProviderDeployment.immutableCodeBucket)
     : null,
 
   actor: actorPresenter(customProviderDeployment.creatorActor),

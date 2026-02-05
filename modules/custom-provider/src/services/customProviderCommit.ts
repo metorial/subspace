@@ -56,7 +56,8 @@ let verInclude = {
         }
       }
     },
-    creatorActor: true
+    creatorActor: true,
+    immutableCodeBucket: { include: { scmRepo: true } }
   }
 };
 
