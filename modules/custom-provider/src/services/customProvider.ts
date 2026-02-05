@@ -153,7 +153,8 @@ class customProviderServiceImpl {
     ) {
       throw new ServiceError(
         badRequestError({
-          message: 'Custom provider of type function requires a repository or files'
+          message: 'Custom provider of type function requires a repository or files',
+          hint: 'Please provide either a repository or deployment files for the custom provider.'
         })
       );
     }

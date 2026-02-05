@@ -63,24 +63,26 @@ class customProviderVersionServiceImpl {
     customProvider: CustomProvider;
     input: {
       message?: string;
-
-      from: CustomProviderFrom;
+      from?: CustomProviderFrom;
       config?: CustomProviderConfig;
     };
   }) {
     checkTenant(d, d.customProvider);
     checkDeletedRelation(d.customProvider);
 
-    if (d.customProvider.type != d.input.from.type) {
+    let from = d.input.from || d.customProvider.payload.from;
+    let config = d.input.config || d.customProvider.payload.config;
+
+    if (d.customProvider.type != from.type) {
       throw new ServiceError(
         badRequestError({
-          message: `Custom provider type '${d.customProvider.type}' does not match deployment from type '${d.input.from.type}'`,
+          message: `Custom provider type '${d.customProvider.type}' does not match deployment from type '${from.type}'`,
           hint: 'Please ensure the deployment from type matches the custom provider type.'
         })
       );
     }
 
-    if (d.input.from.type == 'function' && d.input.from.files && d.customProvider.scmRepoOid) {
+    if (from.type == 'function' && from.files && from.repository) {
       throw new ServiceError(
         badRequestError({
           message:
@@ -90,17 +92,24 @@ class customProviderVersionServiceImpl {
       );
     }
 
+    if (from.type == 'function' && !from.files?.length && !from.repository) {
+      throw new ServiceError(
+        badRequestError({
+          message:
+            'No deployment source provided. Either files or an SCM repository must be set to create a deployment.',
+          hint: 'Please provide either deployment files or link an SCM repository.'
+        })
+      );
+    }
+
     return withTransaction(async db => {
       await db.customProvider.updateMany({
         where: { oid: d.customProvider.oid },
         data: {
           payload: {
-            from:
-              d.input.from.type == 'function'
-                ? { ...d.input.from, files: undefined }
-                : d.input.from,
-
-            config: d.input.config!
+            // @ts-ignore - strip files
+            from: { ...from, files: undefined },
+            config
           }
         }
       });
@@ -131,8 +140,8 @@ class customProviderVersionServiceImpl {
           customProviderDeploymentOid: versionPrep.deployment.oid,
 
           payload: {
-            from: d.input.from,
-            config: d.input.config!
+            from,
+            config
           }
         }
       });

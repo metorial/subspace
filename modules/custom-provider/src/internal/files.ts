@@ -180,7 +180,7 @@ let getImmutableBucketForFiles = async (d: {
 }) => {
   let provider = await db.customProvider.findUniqueOrThrow({
     where: { oid: d.version.customProviderOid },
-    include: { scmRepo: true, draftCodeBucket: true }
+    include: { draftCodeBucket: true }
   });
   if (d.from.type != 'function' || !d.from.files) {
     throw new Error('Can only get files for function providers');
@@ -188,7 +188,10 @@ let getImmutableBucketForFiles = async (d: {
 
   let originTenant = await getTenantForOrigin(d.tenant);
 
-  if (!provider.draftCodeBucket) {
+  // If we don't have a draft bucket, or the custom provider
+  // used to be linked to a repo but now switched to files,
+  // create a new draft bucket
+  if (!provider.draftCodeBucket || provider.scmRepoOid) {
     let originDraftBucket = await origin.codeBucket.create({
       tenantId: originTenant.id,
       purpose: 'subspace.custom_provider_draft'
@@ -211,9 +214,10 @@ let getImmutableBucketForFiles = async (d: {
     provider = await db.customProvider.update({
       where: { oid: d.version.customProviderOid },
       data: {
-        draftCodeBucketOid: draftBucket.oid
+        draftCodeBucketOid: draftBucket.oid,
+        scmRepoOid: null
       },
-      include: { scmRepo: true, draftCodeBucket: true }
+      include: { draftCodeBucket: true }
     });
   }
 
@@ -271,7 +275,8 @@ let getImmutableBucketForFiles = async (d: {
     where: { oid: d.version.deploymentOid },
     data: {
       immutableCodeBucketOid: immutableBucket.oid,
-      scmRepoOid: null
+      scmRepoOid: null,
+      scmRepoPushOid: null
     }
   });
 
