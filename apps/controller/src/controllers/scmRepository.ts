@@ -2,10 +2,10 @@ import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
 import {
   scmAccountPreviewPresenter,
-  scmRepositoryPresenter,
   scmRepositoryPreviewPresenter,
   scmRepositoryService
 } from '@metorial-subspace/module-custom-provider';
+import { scmRepositoryPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 
@@ -16,7 +16,8 @@ export let scmRepositoryApp = tenantApp.use(async ctx => {
   let scmRepository = await scmRepositoryService.getScmRepositoryById({
     scmRepositoryId,
     tenant: ctx.tenant,
-    solution: ctx.solution
+    solution: ctx.solution,
+    environment: ctx.environment
   });
 
   return { scmRepository };

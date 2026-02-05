@@ -7,9 +7,11 @@ import type {
   ProviderVariant,
   ProviderVersion,
   Publisher,
+  ScmRepo,
   Tenant
 } from '@metorial-subspace/db';
 import { providerPresenter } from './provider';
+import { scmRepositoryPresenter } from './scmRepository';
 
 export let customProviderPresenter = (
   customProvider: CustomProvider & {
@@ -33,6 +35,8 @@ export let customProviderPresenter = (
           type: ProviderType;
         })
       | null;
+
+    scmRepo: ScmRepo | null;
   },
   d: { tenant: Tenant }
 ) => ({
@@ -44,6 +48,8 @@ export let customProviderPresenter = (
   name: customProvider.name,
   description: customProvider.description,
   metadata: customProvider.metadata,
+
+  scmRepo: customProvider.scmRepo ? scmRepositoryPresenter(customProvider.scmRepo) : undefined,
 
   provider: customProvider.provider
     ? providerPresenter(customProvider.provider, d)

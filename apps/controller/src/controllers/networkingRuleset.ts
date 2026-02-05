@@ -25,13 +25,15 @@ export let networkingRulesetController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+          environmentId: v.string()
         })
       )
     )
     .do(async ctx => {
       let paginator = await networkingRulesetService.listNetworkingRulesets({
-        tenant: ctx.tenant
+        tenant: ctx.tenant,
+        ...ctx.input
       });
 
       return {
@@ -45,6 +47,7 @@ export let networkingRulesetController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
 
         name: v.string(),
         description: v.optional(v.string()),
@@ -84,6 +87,7 @@ export let networkingRulesetController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         networkingRulesetId: v.string()
       })
     )
@@ -94,6 +98,7 @@ export let networkingRulesetController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         networkingRulesetId: v.string(),
 
         name: v.optional(v.string()),

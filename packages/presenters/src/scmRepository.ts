@@ -1,11 +1,13 @@
-import { ScmRepo } from '@metorial-subspace/db';
+import type { ScmRepo } from '@metorial-subspace/db';
 
 export let scmRepositoryPresenter = (scmRepository: ScmRepo) => ({
-  object: 'scm_repository',
+  object: 'scm.repository',
 
   id: scmRepository.id,
 
   provider: {
+    object: 'scm.provider',
+
     type: scmRepository.provider,
     id: scmRepository.externalId,
     name: scmRepository.externalName,

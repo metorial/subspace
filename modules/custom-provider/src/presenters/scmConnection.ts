@@ -1,7 +1,8 @@
 import { ScmConnection } from '../origin';
 
 export let scmConnectionPresenter = (scmConnection: ScmConnection) => ({
-  object: 'scm_connection',
+  object: 'scm.connection',
+
   id: scmConnection.id,
   provider: scmConnection.provider,
 

@@ -7,4 +7,5 @@ export * from './scmConnection';
 export * from './scmConnectionSetupSession';
 export * from './scmProvider';
 export * from './scmProviderSetupSession';
+export * from './scmPush';
 export * from './scmRepository';
