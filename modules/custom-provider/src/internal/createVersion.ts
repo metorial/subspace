@@ -168,7 +168,9 @@ export let createVersion = (d: {
           env.providerEnvironment?.currentVersion?.customProviderVersion?.oid || null,
 
         targetCustomProviderVersionOid: d.version.oid,
-        customProviderOid: d.customProvider.oid
+        customProviderOid: d.customProvider.oid,
+
+        scmRepoPushOid: d.deployment.scmRepoPushOid
       }
     });
 

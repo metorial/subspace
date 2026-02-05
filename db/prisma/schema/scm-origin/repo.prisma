@@ -63,4 +63,5 @@ model ScmRepoPush {
   createdAt DateTime @default(now())
 
   customProviderDeployments CustomProviderDeployment[]
+  customProviderCommits     CustomProviderCommit[]
 }

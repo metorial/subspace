@@ -5,6 +5,7 @@ import {
   CustomProviderCommitTrigger,
   db,
   getId,
+  ScmRepoPush,
   type Actor,
   type CustomProviderCommit,
   type CustomProviderEnvironment,
@@ -77,7 +78,10 @@ class customProviderCommitServiceImpl {
     solution: Solution;
     environment: Environment;
 
-    _trigger?: CustomProviderCommitTrigger;
+    _internal: {
+      trigger?: CustomProviderCommitTrigger;
+      scmPush?: ScmRepoPush;
+    };
 
     input: {
       message: string;
@@ -99,14 +103,15 @@ class customProviderCommitServiceImpl {
       ...getId('customProviderCommit'),
 
       status: 'pending' as const,
-      trigger: d._trigger ?? ('manual' as const),
+      trigger: d._internal.trigger ?? ('manual' as const),
       type: d.input.action.type,
 
       message: d.input.message,
 
+      scmRepoPushOid: d._internal.scmPush?.oid,
+
       tenantOid: d.tenant.oid,
       solutionOid: d.solution.oid,
-
       creatorActorOid: d.actor.oid
     };
 
