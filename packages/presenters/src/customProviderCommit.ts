@@ -1,5 +1,6 @@
 import type {
   Actor,
+  CodeBucket,
   CustomProvider,
   CustomProviderCommit,
   CustomProviderDeployment,
@@ -55,6 +56,7 @@ export let customProviderCommitPresenter = (
             })
           | null;
       };
+      immutableCodeBucket: (CodeBucket & { scmRepo: ScmRepo | null }) | null;
       providerVersion: ProviderVersion | null;
       customProviderEnvironmentVersions: (CustomProviderEnvironmentVersion & {
         customProviderEnvironment: CustomProviderEnvironment & {
@@ -79,6 +81,7 @@ export let customProviderCommitPresenter = (
                 })
               | null;
           };
+          immutableCodeBucket: (CodeBucket & { scmRepo: ScmRepo | null }) | null;
           providerVersion: ProviderVersion | null;
           customProviderEnvironmentVersions: (CustomProviderEnvironmentVersion & {
             customProviderEnvironment: CustomProviderEnvironment & {

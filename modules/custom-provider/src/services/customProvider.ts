@@ -54,8 +54,8 @@ let include = {
       }
     }
   },
-
-  scmRepo: true
+  scmRepo: true,
+  draftCodeBucket: { include: { scmRepo: true } }
 };
 
 class customProviderServiceImpl {

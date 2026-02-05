@@ -1,5 +1,6 @@
 import type {
   Actor,
+  CodeBucket,
   CustomProvider,
   CustomProviderCommit,
   CustomProviderDeployment,
@@ -14,6 +15,7 @@ import type {
   ScmRepoPush
 } from '@metorial-subspace/db';
 import { actorPresenter } from './actor';
+import { bucketPresenter } from './bucket';
 import { customProviderDeploymentPresenter } from './customProviderDeployment';
 import { customProviderEnvironmentPresenter } from './customProviderEnvironment';
 
@@ -32,6 +34,8 @@ export let customProviderVersionPresenter = (
           })
         | null;
     };
+
+    immutableCodeBucket: (CodeBucket & { scmRepo: ScmRepo | null }) | null;
 
     providerVersion: ProviderVersion | null;
 
@@ -66,7 +70,8 @@ export let customProviderVersionPresenter = (
       ...customProviderVersion.deployment,
       customProvider: customProviderVersion.customProvider,
       creatorActor: customProviderVersion.creatorActor,
-      customProviderVersion: customProviderVersion
+      customProviderVersion: customProviderVersion,
+      immutableCodeBucket: customProviderVersion.immutableCodeBucket
     }),
 
     environments: customEnvironments.map(cev => ({
@@ -83,6 +88,10 @@ export let customProviderVersionPresenter = (
         customProvider: customProviderVersion.customProvider
       })
     })),
+
+    immutableBucket: customProviderVersion.immutableCodeBucket
+      ? bucketPresenter(customProviderVersion.immutableCodeBucket)
+      : null,
 
     customProviderId: customProviderVersion.customProvider.id,
     providerId: customProviderVersion.customProvider.provider?.id,

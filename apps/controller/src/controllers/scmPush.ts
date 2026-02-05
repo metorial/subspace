@@ -34,7 +34,7 @@ export let scmPushController = app.controller({
       )
     )
     .do(async ctx => {
-      let paginator = await scmPushService.listScmRepositories({
+      let paginator = await scmPushService.listScmPushes({
         tenant: ctx.tenant,
         environment: ctx.environment,
         solution: ctx.solution,

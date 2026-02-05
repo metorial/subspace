@@ -37,7 +37,7 @@ export let scmPushPresenter = (
     createdAt: scmPush.createdAt
   },
 
-  repo: scmRepositoryPresenter(scmPush.repo),
+  repository: scmRepositoryPresenter(scmPush.repo),
 
   createdAt: scmPush.createdAt
 });
