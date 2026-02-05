@@ -106,7 +106,8 @@ export let processProviderPushQueueProcessor = processProviderPushQueue.process(
       solution: provider.solution,
       environment: env.environment,
       customProvider: provider,
-      trigger: 'scm'
+      trigger: 'scm',
+      repoPush: push
     });
 
     let upcoming = await db.upcomingCustomProvider.create({

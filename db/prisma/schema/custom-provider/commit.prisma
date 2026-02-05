@@ -47,6 +47,9 @@ model CustomProviderCommit {
   customProviderOid BigInt
   customProvider    CustomProvider @relation(fields: [customProviderOid], references: [oid])
 
+  scmRepoPushOid BigInt?
+  scmRepoPush    ScmRepoPush? @relation(fields: [scmRepoPushOid], references: [oid])
+
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
 
