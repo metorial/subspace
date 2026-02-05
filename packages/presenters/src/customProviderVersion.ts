@@ -9,7 +9,9 @@ import type {
   Environment,
   Provider,
   ProviderEnvironment,
-  ProviderVersion
+  ProviderVersion,
+  ScmRepo,
+  ScmRepoPush
 } from '@metorial-subspace/db';
 import { actorPresenter } from './actor';
 import { customProviderDeploymentPresenter } from './customProviderDeployment';
@@ -23,6 +25,12 @@ export let customProviderVersionPresenter = (
 
     deployment: CustomProviderDeployment & {
       commit: CustomProviderCommit | null;
+
+      scmRepoPush:
+        | (ScmRepoPush & {
+            repo: ScmRepo;
+          })
+        | null;
     };
 
     providerVersion: ProviderVersion | null;

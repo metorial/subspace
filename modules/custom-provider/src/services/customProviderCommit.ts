@@ -36,7 +36,10 @@ let envInclude = {
 let verInclude = {
   include: {
     deployment: {
-      include: { commit: true }
+      include: {
+        commit: true,
+        scmRepoPush: { include: { repo: true } }
+      }
     },
     providerVersion: true,
     customProviderEnvironmentVersions: {

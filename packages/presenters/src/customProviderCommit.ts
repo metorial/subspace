@@ -49,6 +49,11 @@ export let customProviderCommitPresenter = (
     targetCustomProviderVersion: CustomProviderVersion & {
       deployment: CustomProviderDeployment & {
         commit: CustomProviderCommit | null;
+        scmRepoPush:
+          | (ScmRepoPush & {
+              repo: ScmRepo;
+            })
+          | null;
       };
       providerVersion: ProviderVersion | null;
       customProviderEnvironmentVersions: (CustomProviderEnvironmentVersion & {
@@ -68,6 +73,11 @@ export let customProviderCommitPresenter = (
       | (CustomProviderVersion & {
           deployment: CustomProviderDeployment & {
             commit: CustomProviderCommit | null;
+            scmRepoPush:
+              | (ScmRepoPush & {
+                  repo: ScmRepo;
+                })
+              | null;
           };
           providerVersion: ProviderVersion | null;
           customProviderEnvironmentVersions: (CustomProviderEnvironmentVersion & {
