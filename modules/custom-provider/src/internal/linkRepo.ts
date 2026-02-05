@@ -36,31 +36,10 @@ export let linkRepo = async (d: {
           repositoryUrl: d.repo.repositoryUrl
         });
 
-  let inner = {
-    identifier: originRepo.identifier,
-    provider: originRepo.provider,
-    fromRepoUrl: 'repositoryUrl' in d.repo ? d.repo.repositoryUrl : undefined,
-    name: originRepo.name,
-
-    externalId: originRepo.externalId,
-    externalName: originRepo.externalName,
-    externalOwner: originRepo.externalOwner,
-    externalUrl: originRepo.externalUrl,
-    externalIsPrivate: originRepo.externalIsPrivate,
-
-    defaultBranch: originRepo.defaultBranch
-  };
-
-  let repo = await db.scmRepo.upsert({
-    where: { id: originRepo.id },
-    create: {
-      oid: snowflake.nextId(),
-      id: originRepo.id,
-      ...inner,
-      tenantOid: d.tenant.oid,
-      solutionOid: d.solution.oid
-    },
-    update: inner
+  let repo = await ensureScmRepoForOrigin({
+    originRepo,
+    tenant: d.tenant,
+    solution: d.solution
   });
 
   let codeBucketFilter = {
@@ -99,4 +78,38 @@ export let linkRepo = async (d: {
     repo,
     syncedCodeBucket
   };
+};
+
+export let ensureScmRepoForOrigin = async (d: {
+  originRepo: Awaited<ReturnType<typeof origin.scmRepository.get>>;
+  tenant: Tenant;
+  solution: Solution;
+  fromRepoUrl?: string;
+}) => {
+  let inner = {
+    identifier: d.originRepo.identifier,
+    provider: d.originRepo.provider,
+    fromRepoUrl: d.fromRepoUrl,
+    name: d.originRepo.name,
+
+    externalId: d.originRepo.externalId,
+    externalName: d.originRepo.externalName,
+    externalOwner: d.originRepo.externalOwner,
+    externalUrl: d.originRepo.externalUrl,
+    externalIsPrivate: d.originRepo.externalIsPrivate,
+
+    defaultBranch: d.originRepo.defaultBranch
+  };
+
+  return await db.scmRepo.upsert({
+    where: { id: d.originRepo.id },
+    create: {
+      oid: snowflake.nextId(),
+      id: d.originRepo.id,
+      ...inner,
+      tenantOid: d.tenant.oid,
+      solutionOid: d.solution.oid
+    },
+    update: inner
+  });
 };

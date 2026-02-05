@@ -36,6 +36,7 @@ import { scmConnectionController } from './scmConnection';
 import { scmConnectionSetupSessionController } from './scmConnectionSetupSession';
 import { scmProviderController } from './scmProvider';
 import { scmProviderSetupSessionController } from './scmProviderSetupSession';
+import { scmPushController } from './scmPush';
 import { scmRepositoryController } from './scmRepository';
 import { sessionController } from './session';
 import { sessionConnectionController } from './sessionConnection';
@@ -103,7 +104,8 @@ export let rootController = app.controller({
   scmConnectionSetupSession: scmConnectionSetupSessionController,
   scmProvider: scmProviderController,
   scmProviderSetupSession: scmProviderSetupSessionController,
-  scmRepository: scmRepositoryController
+  scmRepository: scmRepositoryController,
+  scmPush: scmPushController
 });
 
 export let subspaceControllerRPC = createServer({})(rootController);

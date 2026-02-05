@@ -4,7 +4,7 @@ import { scmProviderPresenter } from './scmProvider';
 export let scmProviderSetupSessionPresenter = (
   scmProviderSetupSession: ScmProviderSetupSession
 ) => ({
-  object: 'scm_provider.setup_session',
+  object: 'scm.provider.setup_session',
 
   id: scmProviderSetupSession.id,
 

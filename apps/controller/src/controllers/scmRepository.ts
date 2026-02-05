@@ -2,10 +2,10 @@ import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
 import {
   scmAccountPreviewPresenter,
-  scmRepositoryPresenter,
   scmRepositoryPreviewPresenter,
   scmRepositoryService
 } from '@metorial-subspace/module-custom-provider';
+import { scmRepositoryPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 
@@ -16,7 +16,8 @@ export let scmRepositoryApp = tenantApp.use(async ctx => {
   let scmRepository = await scmRepositoryService.getScmRepositoryById({
     scmRepositoryId,
     tenant: ctx.tenant,
-    solution: ctx.solution
+    solution: ctx.solution,
+    environment: ctx.environment
   });
 
   return { scmRepository };
@@ -102,5 +103,66 @@ export let scmRepositoryController = app.controller({
       });
 
       return items.repositories.map(item => scmRepositoryPreviewPresenter(item));
+    }),
+
+  createRepository: tenantApp
+    .handler()
+    .input(
+      v.object({
+        tenantId: v.string(),
+        environmentId: v.string(),
+
+        scmConnectionId: v.string(),
+        externalAccountId: v.string(),
+        name: v.string(),
+        description: v.optional(v.string()),
+        isPrivate: v.boolean()
+      })
+    )
+    .do(async ctx => {
+      let res = await scmRepositoryService.createScmRepository({
+        tenant: ctx.tenant,
+        solution: ctx.solution,
+        environment: ctx.environment,
+
+        input: {
+          scmConnectionId: ctx.input.scmConnectionId,
+          externalAccountId: ctx.input.externalAccountId,
+          name: ctx.input.name,
+          description: ctx.input.description,
+          isPrivate: ctx.input.isPrivate
+        }
+      });
+
+      return scmRepositoryPresenter(res);
+    }),
+
+  linkRepository: tenantApp
+    .handler()
+    .input(
+      v.object({
+        tenantId: v.string(),
+        environmentId: v.string(),
+
+        scmConnectionId: v.string(),
+        externalId: v.string(),
+        name: v.string(),
+        description: v.optional(v.string()),
+        isPrivate: v.boolean()
+      })
+    )
+    .do(async ctx => {
+      let res = await scmRepositoryService.linkScmRepository({
+        tenant: ctx.tenant,
+        solution: ctx.solution,
+        environment: ctx.environment,
+
+        input: {
+          scmConnectionId: ctx.input.scmConnectionId,
+          externalId: ctx.input.externalId
+        }
+      });
+
+      return scmRepositoryPresenter(res);
     })
 });

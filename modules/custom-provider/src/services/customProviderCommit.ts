@@ -36,7 +36,10 @@ let envInclude = {
 let verInclude = {
   include: {
     deployment: {
-      include: { commit: true }
+      include: {
+        commit: true,
+        scmRepoPush: { include: { repo: true } }
+      }
     },
     providerVersion: true,
     customProviderEnvironmentVersions: {
@@ -68,7 +71,8 @@ let include = {
   targetCustomProviderVersion: verInclude,
   toEnvironmentVersionBefore: verInclude,
   creatorActor: true,
-  customProviderDeployment: true
+  customProviderDeployment: true,
+  scmRepoPush: { include: { repo: true } }
 };
 
 class customProviderCommitServiceImpl {
@@ -78,7 +82,7 @@ class customProviderCommitServiceImpl {
     solution: Solution;
     environment: Environment;
 
-    _internal: {
+    _internal?: {
       trigger?: CustomProviderCommitTrigger;
       scmPush?: ScmRepoPush;
     };
@@ -103,12 +107,12 @@ class customProviderCommitServiceImpl {
       ...getId('customProviderCommit'),
 
       status: 'pending' as const,
-      trigger: d._internal.trigger ?? ('manual' as const),
+      trigger: d._internal?.trigger ?? ('manual' as const),
       type: d.input.action.type,
 
       message: d.input.message,
 
-      scmRepoPushOid: d._internal.scmPush?.oid,
+      scmRepoPushOid: d._internal?.scmPush?.oid,
 
       tenantOid: d.tenant.oid,
       solutionOid: d.solution.oid,

@@ -27,6 +27,8 @@ export * from './providerTool';
 export * from './providerVariant';
 export * from './providerVersion';
 export * from './publisher';
+export * from './scmPush';
+export * from './scmRepository';
 export * from './session';
 export * from './sessionConnection';
 export * from './sessionError';

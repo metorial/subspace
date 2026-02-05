@@ -53,7 +53,9 @@ let include = {
         }
       }
     }
-  }
+  },
+
+  scmRepo: true
 };
 
 class customProviderServiceImpl {

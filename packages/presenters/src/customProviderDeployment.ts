@@ -4,9 +4,12 @@ import type {
   CustomProviderCommit,
   CustomProviderDeployment,
   CustomProviderVersion,
-  Provider
+  Provider,
+  ScmRepo,
+  ScmRepoPush
 } from '@metorial-subspace/db';
 import { actorPresenter } from './actor';
+import { scmPushPresenter } from './scmPush';
 
 export let customProviderDeploymentPresenter = (
   customProviderDeployment: CustomProviderDeployment & {
@@ -18,6 +21,8 @@ export let customProviderDeploymentPresenter = (
     commit: CustomProviderCommit | null;
 
     creatorActor: Actor;
+
+    scmRepoPush: (ScmRepoPush & { repo: ScmRepo }) | null;
   }
 ) => ({
   object: 'custom_provider.deployment',
@@ -41,6 +46,10 @@ export let customProviderDeploymentPresenter = (
     : null,
 
   actor: actorPresenter(customProviderDeployment.creatorActor),
+
+  scmPush: customProviderDeployment.scmRepoPush
+    ? scmPushPresenter(customProviderDeployment.scmRepoPush)
+    : null,
 
   createdAt: customProviderDeployment.createdAt,
   updatedAt: customProviderDeployment.updatedAt

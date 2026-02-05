@@ -1,7 +1,7 @@
 import { ScmAccountPreview } from '../origin';
 
 export let scmAccountPreviewPresenter = (scmAccountPreview: ScmAccountPreview) => ({
-  object: 'scm_account_preview',
+  object: 'scm.account_preview',
 
   provider: scmAccountPreview.provider,
   externalId: scmAccountPreview.externalId,

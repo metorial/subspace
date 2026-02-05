@@ -1,7 +1,7 @@
 import { ScmProvider } from '../origin';
 
 export let scmProviderPresenter = (scmProvider: ScmProvider) => ({
-  object: 'scm_provider',
+  object: 'scm.provider',
 
   id: scmProvider.id,
 
