@@ -1,5 +1,4 @@
-import { setupPrismaTestDb, setupTestGlobals } from '@lowerdeck/testing-tools';
-import { createFetchRouter } from '@lowerdeck/testing-tools';
+import { setupPrismaTestDb, setupTestGlobals, createFetchRouter } from '@lowerdeck/testing-tools';
 import { serialize } from '@lowerdeck/serialize';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@metorial-subspace/db';

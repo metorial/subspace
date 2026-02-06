@@ -13,7 +13,6 @@ export type McpE2eContext = {
   solutionId: string;
   tenantId: string;
   sessionId: string;
-  proxyPath: string;
   proxyUrl: string;
 };
 
@@ -68,7 +67,6 @@ export let createMcpE2eContext = async (
     solutionId: providerSetup.solution.id,
     tenantId: providerSetup.tenant.id,
     sessionId: session.id,
-    proxyPath,
     proxyUrl
   };
 };

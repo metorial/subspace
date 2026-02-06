@@ -9,11 +9,8 @@ import {
   type Environment,
   type PrismaClient,
   type Provider,
-  type ProviderAuthConfigVersion,
   type ProviderConfig,
-  type ProviderConfigVersion,
   type ProviderDeployment,
-  type ProviderDeploymentVersion,
   type ProviderSpecification,
   type ProviderVariant,
   type ProviderVersion,
@@ -57,8 +54,58 @@ type RemoteMcpProviderOptions = {
   environment?: Environment;
 };
 
+// Per-call timeout bounds each individual RPC/capabilities call
+// Discovery timeout bounds the overall retry loop across multiple attempts
+const DISCOVERY_TIMEOUT_MS = 30000;
+const DISCOVERY_CALL_TIMEOUT_MS = 10000;
+const REMOTE_SERVER_NAME = 'Subspace Test Remote MCP';
+
+const mcpRemoteType = {
+  name: 'MCP',
+  attributes: {
+    provider: 'metorial-shuttle',
+    backend: 'mcp.remote',
+    triggers: { status: 'disabled' },
+    auth: { status: 'disabled' },
+    config: { status: 'disabled' }
+  }
+} as const;
+
+const retryUntilTimeout = async <T>(opts: {
+  fn: () => Promise<T | null>;
+  timeoutMs: number;
+  intervalMs: number;
+  label: string;
+}): Promise<T> => {
+  let start = Date.now();
+  let lastError: unknown;
+
+  while (true) {
+    try {
+      let result = await opts.fn();
+      if (result !== null) return result;
+    } catch (err) {
+      lastError = err;
+    }
+
+    if (Date.now() - start > opts.timeoutMs) {
+      let message = (lastError as Error)?.message ?? String(lastError ?? 'none');
+      throw new Error(`${opts.label}. Last error: ${message}`);
+    }
+
+    await delay(opts.intervalMs);
+  }
+};
+
+const withTimeout = async <T>(promise: Promise<T>, ms: number, label: string): Promise<T> => {
+  let timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+  );
+  return Promise.race([promise, timeout]);
+};
+
 const getShuttleClient = () => {
-  const endpoint = process.env.SHUTTLE_URL;
+  let endpoint = process.env.SHUTTLE_URL;
   if (!endpoint) {
     throw new Error('SHUTTLE_URL is required to create a remote MCP provider');
   }
@@ -88,28 +135,16 @@ const ensureShuttleTenant = async (db: PrismaClient, tenant: Tenant) => {
   }
 
   let shuttleClient = getShuttleClient();
-  let shuttleTenant = await (async () => {
-    let start = Date.now();
-    let lastError: unknown;
-
-    while (true) {
-      try {
-        return await shuttleClient.tenant.upsert({
-          identifier: tenant.identifier,
-          name: tenant.name
-        });
-      } catch (err) {
-        lastError = err;
-        if (Date.now() - start > 30000) {
-          throw new Error(
-            `Shuttle not reachable at ${process.env.SHUTTLE_URL}. ` +
-              `Last error: ${(lastError as Error)?.message ?? String(lastError)}`
-          );
-        }
-        await delay(500);
-      }
-    }
-  })();
+  let shuttleTenant = await retryUntilTimeout({
+    fn: () =>
+      shuttleClient.tenant.upsert({
+        identifier: tenant.identifier,
+        name: tenant.name
+      }),
+    timeoutMs: 30000,
+    intervalMs: 500,
+    label: `Shuttle not reachable at ${process.env.SHUTTLE_URL}`
+  });
 
   let updatedTenant = await db.tenant.update({
     where: { oid: tenant.oid },
@@ -156,12 +191,17 @@ const waitForDeploymentVersion = async (opts: {
   }
 };
 
-const ensureShuttleServerRecords = async (db: PrismaClient, d: {
-  serverId: string;
-  serverType: 'container' | 'function' | 'remote';
-  tenantId?: string | null;
-  versionId: string;
-}) => {
+// Syncs Shuttle server/version records into the local Subspace DB
+// so domain services can reference them via foreign keys
+const ensureShuttleServerRecords = async (
+  db: PrismaClient,
+  d: {
+    serverId: string;
+    serverType: 'container' | 'function' | 'remote';
+    tenantId?: string | null;
+    versionId: string;
+  }
+) => {
   let shuttleServer = await db.shuttleServer.upsert({
     where: { id: d.serverId },
     create: {
@@ -188,29 +228,6 @@ const ensureShuttleServerRecords = async (db: PrismaClient, d: {
 
   return { shuttleServer, shuttleServerVersion };
 };
-
-const DISCOVERY_TIMEOUT_MS = 30000;
-const DISCOVERY_CALL_TIMEOUT_MS = 10000;
-
-const withTimeout = async <T>(promise: Promise<T>, ms: number, label: string): Promise<T> =>
-  await new Promise<T>((resolve, reject) => {
-    let timer = setTimeout(() => {
-      reject(new Error(`${label} timed out after ${ms}ms`));
-    }, ms);
-
-    promise.then(
-      value => {
-        clearTimeout(timer);
-        resolve(value);
-      },
-      err => {
-        clearTimeout(timer);
-        reject(err);
-      }
-    );
-  });
-
-const getStableRemoteServerName = () => 'Subspace Test Remote MCP';
 
 const findRemoteServerByName = async (opts: {
   shuttleClient: ReturnType<typeof createShuttleClient>;
@@ -242,23 +259,28 @@ const findRemoteServerByName = async (opts: {
   return null;
 };
 
+// Creates or reuses a remote MCP server in Shuttle, deploying a new version
+// if the URL or protocol changed. Uses a stable name so test runs share the same server.
 const ensureRemoteServerVersion = async (opts: {
   shuttleClient: ReturnType<typeof createShuttleClient>;
   tenantId: string;
   remoteUrl: string;
   protocol: 'sse' | 'streamable_http';
 }) => {
-  let serverName = getStableRemoteServerName();
+  let resolveVersionId = async (deployment: { serverVersionId?: string | null; id: string }) =>
+    deployment.serverVersionId ??
+    (await waitForDeploymentVersion({ tenantId: opts.tenantId, deploymentId: deployment.id }));
+
   let existing = await findRemoteServerByName({
     shuttleClient: opts.shuttleClient,
     tenantId: opts.tenantId,
-    serverName
+    serverName: REMOTE_SERVER_NAME
   });
 
   if (!existing) {
     let { server, deployment } = await opts.shuttleClient.server.create({
       tenantId: opts.tenantId,
-      name: serverName,
+      name: REMOTE_SERVER_NAME,
       description: 'Fixture remote MCP server',
       from: {
         type: 'remote',
@@ -268,13 +290,7 @@ const ensureRemoteServerVersion = async (opts: {
       }
     });
 
-    let serverVersionId = deployment.serverVersionId
-      ? deployment.serverVersionId
-      : await waitForDeploymentVersion({
-          tenantId: opts.tenantId,
-          deploymentId: deployment.id
-        });
-
+    let serverVersionId = await resolveVersionId(deployment);
     return { server, serverVersionId };
   }
 
@@ -299,12 +315,7 @@ const ensureRemoteServerVersion = async (opts: {
       }
     });
 
-    let serverVersionId = deployment.serverVersionId
-      ? deployment.serverVersionId
-      : await waitForDeploymentVersion({
-          tenantId: opts.tenantId,
-          deploymentId: deployment.id
-        });
+    let serverVersionId = await resolveVersionId(deployment);
 
     server = await opts.shuttleClient.server.get({
       tenantId: opts.tenantId,
@@ -341,109 +352,49 @@ const waitForPairVersionDiscovery = async (
   }
 };
 
-const discoverVersionSpecification = async (d: {
-  tenant: Tenant;
+// Discovers a provider's specification (tools, auth methods, features) by calling
+// the Shuttle backend capabilities API with retries, then persists the result locally
+const discoverSpecification = async (d: {
   provider: Provider;
   providerVersion: ProviderVersion;
   providerVariant: ProviderVariant;
-}) => {
+  getCapabilities: (backend: Awaited<ReturnType<typeof getBackend>>) => Promise<any>;
+  label: string;
+}): Promise<ProviderSpecification> => {
   let backend = await getBackend({ entity: d.providerVariant });
-  let start = Date.now();
-  let lastError: unknown;
 
-  while (true) {
-    try {
+  return retryUntilTimeout({
+    timeoutMs: DISCOVERY_TIMEOUT_MS,
+    intervalMs: 1000,
+    label: d.label,
+    fn: async () => {
       let capabilities = await withTimeout(
-        backend.capabilities.getSpecificationForProviderVersion({
-          tenant: d.tenant,
-          provider: d.provider,
-          providerVariant: d.providerVariant,
-          providerVersion: d.providerVersion
-        }),
+        d.getCapabilities(backend),
         DISCOVERY_CALL_TIMEOUT_MS,
-        'provider version discovery call'
+        d.label
       );
-
-      if (capabilities) {
-        return await providerSpecificationInternalService.ensureProviderSpecification({
-          provider: d.provider,
-          providerVersion: d.providerVersion,
-          type: capabilities.type,
-          specification: capabilities.specification,
-          authMethods: capabilities.authMethods,
-          features: capabilities.features,
-          tools: capabilities.tools
-        });
-      }
-    } catch (err) {
-      lastError = err;
+      if (!capabilities) return null;
+      return providerSpecificationInternalService.ensureProviderSpecification({
+        provider: d.provider,
+        providerVersion: d.providerVersion,
+        type: capabilities.type,
+        specification: capabilities.specification,
+        authMethods: capabilities.authMethods,
+        features: capabilities.features,
+        tools: capabilities.tools
+      });
     }
-
-    if (Date.now() - start > DISCOVERY_TIMEOUT_MS) {
-      let message = (lastError as Error)?.message ?? String(lastError ?? 'none');
-      throw new Error(
-        `Timed out waiting for Shuttle version specification discovery. Last error: ${message}`
-      );
-    }
-
-    await delay(1000);
-  }
-};
-
-const discoverPairSpecification = async (d: {
-  tenant: Tenant;
-  provider: Provider;
-  providerVersion: ProviderVersion;
-  providerVariant: ProviderVariant;
-  deploymentVersion: ProviderDeploymentVersion;
-  configVersion: ProviderConfigVersion;
-  authConfigVersion: ProviderAuthConfigVersion | null;
-}) => {
-  let backend = await getBackend({ entity: d.providerVariant });
-  let start = Date.now();
-  let lastError: unknown;
-
-  while (true) {
-    try {
-      let capabilities = await withTimeout(
-        backend.capabilities.getSpecificationForProviderPair({
-          tenant: d.tenant,
-          provider: d.provider,
-          providerVariant: d.providerVariant,
-          providerVersion: d.providerVersion,
-          deploymentVersion: d.deploymentVersion,
-          configVersion: d.configVersion,
-          authConfigVersion: d.authConfigVersion
-        }),
-        DISCOVERY_CALL_TIMEOUT_MS,
-        'provider pair discovery call'
-      );
-
-      if (capabilities) {
-        return await providerSpecificationInternalService.ensureProviderSpecification({
-          provider: d.provider,
-          providerVersion: d.providerVersion,
-          type: capabilities.type,
-          specification: capabilities.specification,
-          authMethods: capabilities.authMethods,
-          features: capabilities.features,
-          tools: capabilities.tools
-        });
-      }
-    } catch (err) {
-      lastError = err;
-    }
-
-    if (Date.now() - start > DISCOVERY_TIMEOUT_MS) {
-      let message = (lastError as Error)?.message ?? String(lastError ?? 'none');
-      throw new Error(`Timed out waiting for Shuttle specification discovery. Last error: ${message}`);
-    }
-
-    await delay(1000);
-  }
+  });
 };
 
 export const RemoteMcpProviderFixtures = (db: PrismaClient) => {
+  // Orchestrates a complete remote MCP provider setup:
+  // 1. Resolve/create tenant, solution, environment, backend
+  // 2. Register tenant with Shuttle and create/reuse a remote MCP server
+  // 3. Sync Shuttle records to local DB, create publisher + provider + version
+  // 4. Discover specification (tools, auth) via Shuttle capabilities API
+  // 5. Create deployment + config pair, wait for pair discovery
+  // 6. Optionally attempt full pair-level specification discovery (best-effort)
   const complete = async (opts: RemoteMcpProviderOptions): Promise<RemoteMcpProviderResult> => {
     let shuttleClient = getShuttleClient();
 
@@ -498,16 +449,7 @@ export const RemoteMcpProviderFixtures = (db: PrismaClient) => {
         description: server.description ?? undefined,
         slug: slugify(`${server.name}-${generateCode(5)}`)
       },
-      type: {
-        name: 'MCP',
-        attributes: {
-          provider: 'metorial-shuttle',
-          backend: 'mcp.remote',
-          triggers: { status: 'disabled' },
-          auth: { status: 'disabled' },
-          config: { status: 'disabled' }
-        }
-      }
+      type: mcpRemoteType
     });
 
     let providerWithVariant = await db.provider.findFirstOrThrow({
@@ -515,12 +457,13 @@ export const RemoteMcpProviderFixtures = (db: PrismaClient) => {
       include: { defaultVariant: true }
     });
 
-    if (!providerWithVariant.defaultVariant) {
+    let defaultVariant = providerWithVariant.defaultVariant;
+    if (!defaultVariant) {
       throw new Error('Provider default variant missing');
     }
 
     let providerVersion = await providerVersionInternalService.upsertVersion({
-      variant: providerWithVariant.defaultVariant,
+      variant: defaultVariant,
       isCurrent: true,
       source: {
         type: 'shuttle',
@@ -531,23 +474,21 @@ export const RemoteMcpProviderFixtures = (db: PrismaClient) => {
       info: {
         name: version.id
       },
-      type: {
-        name: 'MCP',
-        attributes: {
-          provider: 'metorial-shuttle',
-          backend: 'mcp.remote',
-          triggers: { status: 'disabled' },
-          auth: { status: 'disabled' },
-          config: { status: 'disabled' }
-        }
-      }
+      type: mcpRemoteType
     });
 
-    let preliminarySpecification = await discoverVersionSpecification({
-      tenant,
+    let preliminarySpecification = await discoverSpecification({
       provider: providerWithVariant,
       providerVersion,
-      providerVariant: providerWithVariant.defaultVariant
+      providerVariant: defaultVariant,
+      label: 'Shuttle version specification discovery',
+      getCapabilities: backend =>
+        backend.capabilities.getSpecificationForProviderVersion({
+          tenant,
+          provider: providerWithVariant,
+          providerVariant: defaultVariant,
+          providerVersion
+        })
     });
 
     providerVersion = await db.providerVersion.update({
@@ -611,15 +552,23 @@ export const RemoteMcpProviderFixtures = (db: PrismaClient) => {
     } else {
       specification = preliminarySpecification;
 
+      // Best-effort: attempt full pair-level discovery for a more complete specification
       try {
-        let fullSpecification = await discoverPairSpecification({
-          tenant,
+        let fullSpecification = await discoverSpecification({
           provider: providerWithVariant,
           providerVersion,
-          providerVariant: providerWithVariant.defaultVariant,
-          deploymentVersion: providerDeployment.currentVersion,
-          configVersion: providerConfig.currentVersion,
-          authConfigVersion: null
+          providerVariant: defaultVariant,
+          label: 'Shuttle pair specification discovery',
+          getCapabilities: backend =>
+            backend.capabilities.getSpecificationForProviderPair({
+              tenant,
+              provider: providerWithVariant,
+              providerVariant: defaultVariant,
+              providerVersion,
+              deploymentVersion: providerDeployment.currentVersion!,
+              configVersion: providerConfig.currentVersion!,
+              authConfigVersion: null
+            })
         });
 
         specification = fullSpecification;

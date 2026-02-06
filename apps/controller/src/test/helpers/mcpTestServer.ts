@@ -23,17 +23,18 @@ export let startMcpTestServer = async (): Promise<McpTestServerHandle> => {
     });
 
   let preferredPort = Number(process.env.TEST_MCP_SERVER_PORT ?? 52198);
-  let listener = await (async () => {
-    try {
-      return await startListening(preferredPort);
-    } catch (err) {
-      let code = (err as NodeJS.ErrnoException).code;
-      if (code !== 'EADDRINUSE') throw err;
-      return await startListening(0);
-    }
-  })();
+  let listener: ReturnType<typeof app.listen>;
+  try {
+    listener = await startListening(preferredPort);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== 'EADDRINUSE') throw err;
+    listener = await startListening(0);
+  }
 
   let port = (listener.address() as AddressInfo).port;
+  // The test server runs on the host machine, but Shuttle (inside Docker) reaches it
+  // via host.docker.internal. On Linux, ensure Docker is configured with
+  // --add-host=host.docker.internal:host-gateway
   let host = process.env.TEST_MCP_SERVER_HOST ?? 'host.docker.internal';
   let baseUrl = `http://${host}:${port}`;
 

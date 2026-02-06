@@ -9,7 +9,7 @@ import {
 
 export let setupMcpE2ELifecycle = () => {
   let serverHandle: McpTestServerHandle | null = null;
-  let receiver: Awaited<ReturnType<typeof startReceiver>> | null = null;
+  let receiver: ReturnType<typeof startReceiver> | null = null;
 
   beforeAll(async () => {
     serverHandle = await startMcpTestServer();
@@ -27,6 +27,7 @@ export let setupMcpE2ELifecycle = () => {
   beforeEach(async () => {
     await cleanDatabase();
     receiver = startReceiver();
+    await receiver.started;
   });
 
   afterEach(
