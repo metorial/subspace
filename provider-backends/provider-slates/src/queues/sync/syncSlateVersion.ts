@@ -60,13 +60,23 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
   let parsedUrl = new URL(registry.url);
   let isMetorialHosted = metorialDomains.some(domain => parsedUrl.hostname.endsWith(domain));
 
+  let registryRecord = await slates.slate.getRegistryRecord({
+    slateId: slate.id
+  });
+  let registryVersionRecord = await slates.slateVersion.getRegistryRecord({
+    slateId: slate.id,
+    slateVersionId: version.id
+  });
+
   await withTransaction(async db => {
     let slateRecord = await db.slate.upsert({
       where: { id: data.slateId },
       create: {
         oid: snowflake.nextId(),
         id: data.slateId,
-        identifier: slate.identifier
+        identifier: slate.identifier,
+        registryUrl: registry.url,
+        identifierInRegistry: registryRecord.fullIdentifier
       },
       update: {}
     });
@@ -89,13 +99,6 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
       return;
     }
 
-    let registryRecord = await slates.slate.getRegistryRecord({
-      slateId: slate.id
-    });
-    let registryVersionRecord = await slates.slateVersion.getRegistryRecord({
-      slateId: slate.id,
-      slateVersionId: version.id
-    });
     let readmeNames = ['readme.md'];
     let readme = registryVersionRecord.documents.find((d: any) =>
       readmeNames.some(n => d.path.toLocaleLowerCase().endsWith(n))

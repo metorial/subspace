@@ -4,6 +4,9 @@ model Slate {
 
   identifier String @unique
 
+  identifierInRegistry String?
+  registryUrl          String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
