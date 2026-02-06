@@ -15,6 +15,8 @@ export function fixtures(db: PrismaClient) {
   };
 }
 
+export { createMcpE2eContext } from './mcpE2eContextFixture';
+
 export {
   EnvironmentFixtures,
   RemoteMcpProviderFixtures,
