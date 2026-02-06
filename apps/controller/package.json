@@ -5,10 +5,18 @@
   "private": true,
   "scripts": {
     "start:dev": "bun --watch ./src/server.ts",
-    "start": "bun ./src/server.ts"
+    "start": "bun ./src/server.ts",
+    "infra:up": "docker compose -p subspace -f ../../docker-compose.dev.yml up -d postgres redis object-storage nats-1 nats-2 shuttle",
+    "infra:down": "docker compose -p subspace -f ../../docker-compose.dev.yml stop postgres redis object-storage nats-1 nats-2 shuttle",
+    "db:push:test": "sh -c 'set -a; . .env.test; set +a; bunx prisma db push --schema ../../db/prisma/schema --config ../../db/prisma.config.ts'",
+    "test": "bunx vitest run --passWithNoTests",
+    "test:watch": "bunx vitest watch"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@lowerdeck/testing-tools": "^1.0.1",
+    "@prisma/adapter-pg": "^7.2.0",
+    "@types/bun": "latest",
+    "vitest": "4.0.17"
   },
   "peerDependencies": {
     "typescript": "^5"

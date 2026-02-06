@@ -1,16 +1,17 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16-alpine
     container_name: subspace-postgres
     restart: unless-stopped
+    ports:
+      - '55432:5432'
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     volumes:
       - postgres_data2:/var/lib/postgresql/data
+      - ./init-test-db.sh:/docker-entrypoint-initdb.d/init-test-db.sh
     networks:
       - subspace-network
 
@@ -18,12 +19,16 @@ services:
     image: redis:7-alpine
     container_name: subspace-redis
     restart: unless-stopped
+    ports:
+      - '56379:6379'
     networks:
       - subspace-network
 
   nats-1:
     image: nats
     command: '--cluster_name NATS --cluster nats://0.0.0.0:6222 --http_port 8222 '
+    ports:
+      - '56222:4222'
     networks:
       - subspace-network
   nats-2:
@@ -35,21 +40,29 @@ services:
 
   object-storage:
     image: ghcr.io/metorial/object-storage:latest
+    ports:
+      - '55010:52010'
     volumes:
       - object-store-data:/app/data
     environment:
       RUST_LOG: info
-      AWS_ACCESS_KEY_ID: ${OBJECT_STORAGE_AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${OBJECT_STORAGE_AWS_SECRET_ACCESS_KEY}
-      AWS_REGION: ${OBJECT_STORAGE_AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${OBJECT_STORAGE_AWS_ACCESS_KEY_ID:-test}
+      AWS_SECRET_ACCESS_KEY: ${OBJECT_STORAGE_AWS_SECRET_ACCESS_KEY:-test}
+      AWS_REGION: ${OBJECT_STORAGE_AWS_REGION:-us-east-1}
       OBJECT_STORE__SERVER__HOST: 0.0.0.0
       OBJECT_STORE__SERVER__PORT: 52010
-      OBJECT_STORE__BACKEND__TYPE: s3
-      OBJECT_STORE__BACKEND__REGION: ${OBJECT_STORAGE_AWS_REGION}
-      OBJECT_STORE__BACKEND__PHYSICAL_BUCKET: ${OBJECT_STORAGE_AWS_S3_BUCKET}
+      OBJECT_STORE__BACKEND__TYPE: ${OBJECT_STORAGE_BACKEND_TYPE:-local}
+      OBJECT_STORE__BACKEND__ROOT_PATH: ${OBJECT_STORAGE_BACKEND_ROOT_PATH:-/app/data}
+      OBJECT_STORE__BACKEND__REGION: ${OBJECT_STORAGE_AWS_REGION:-us-east-1}
+      OBJECT_STORE__BACKEND__PHYSICAL_BUCKET: ${OBJECT_STORAGE_AWS_S3_BUCKET:-subspace-local}
 
     container_name: subspace-object-storage
     restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:52010/health || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - subspace-network
 
@@ -211,6 +224,10 @@ services:
       FUNCTION_BAY_TENANT_IDENTIFIER: dev-tenant
       FUNCTION_BAY_DEFAULT_MEMORY_MB: 512
       FUNCTION_BAY_DEFAULT_TIMEOUT_SECONDS: 15
+      SHUTTLE_ALLOW_PRIVATE_URLS: "1"
+    volumes:
+      - ./dev/shuttle/fetchSsrf.ts:/app/src/lib/http/fetchSsrf.ts:ro
+      - ./dev/shuttle/axiosSsrf.ts:/app/src/lib/http/axiosSsrf.ts:ro
 
     depends_on:
       - postgres

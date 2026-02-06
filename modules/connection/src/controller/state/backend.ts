@@ -21,6 +21,7 @@ export let getConnectionBackendConnection = async (state: ConnectionState) => {
     providerVersion: state.version,
     provider: state.version.provider,
     providerVariant: state.version.providerVariant,
+    providerDeployment: state.instance.sessionProvider.deployment,
 
     providerRun: state.providerRun,
 

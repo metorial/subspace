@@ -292,4 +292,6 @@ export let startReceiver = () => {
   receiver.start().catch(err => {
     console.error('Error starting Connection Controller receiver:', err);
   });
+
+  return receiver;
 };
