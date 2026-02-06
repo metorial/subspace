@@ -1,7 +1,10 @@
 import express from 'express';
-import { beforeAll, beforeEach, afterAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { AddressInfo } from 'net';
 import type { Server } from 'http';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { startReceiver } from '@metorial-subspace/module-connection';
 import { createHono } from '@lowerdeck/hono';
 import { mcpRouter } from '../api/mcp';
@@ -10,21 +13,6 @@ import { fixtures } from '../../test/fixtures';
 import { createFullFeaturedServer } from '../../../../../test-servers/src/servers/full-featured';
 import { setupTransports } from '../../../../../test-servers/src/shared/transport';
 
-const parseFirstSseData = (payload: string) => {
-  const lines = payload.split(/\r?\n/);
-  const dataLines = lines.filter(line => line.startsWith('data:'));
-  if (!dataLines.length) {
-    throw new Error(`No SSE data line found. Payload:\n${payload}`);
-  }
-
-  const json = dataLines
-    .map(line => line.replace(/^data:\s?/, ''))
-    .join('\n')
-    .trim();
-
-  return JSON.parse(json);
-};
-
 const createStepLogger = (label: string) => {
   const startedAt = Date.now();
   return (message: string) => {
@@ -32,6 +20,29 @@ const createStepLogger = (label: string) => {
     console.log(`[${label} +${elapsed}s] ${message}`);
   };
 };
+
+const toRequest = (input: RequestInfo | URL, init?: RequestInit) => {
+  if (input instanceof Request) {
+    return new Request(input, init);
+  }
+
+  return new Request(input.toString(), init);
+};
+
+const transportCases = [
+  {
+    name: 'streamable_http',
+    providerProtocol: 'streamable_http',
+    upstreamPath: '/full/mcp',
+    clientTransport: 'streamable_http'
+  },
+  {
+    name: 'sse',
+    providerProtocol: 'sse',
+    upstreamPath: '/full/sse',
+    clientTransport: 'sse'
+  }
+] as const;
 
 const startMcpTestServer = async () => {
   const app = express();
@@ -64,7 +75,7 @@ const startMcpTestServer = async () => {
 describe('mcp.e2e', () => {
   let receiver: Awaited<ReturnType<typeof startReceiver>> | null = null;
   let listener: Server | null = null;
-  let remoteUrl: string | null = null;
+  let remoteServerBaseUrl: string | null = null;
   let api = createHono().route(
     `/:solutionId/:tenantId/sessions/:sessionId/mcp`,
     mcpRouter
@@ -72,40 +83,57 @@ describe('mcp.e2e', () => {
 
   beforeAll(async () => {
     const log = createStepLogger('mcp.e2e/beforeAll');
-    log('starting connection receiver');
-    receiver = startReceiver();
-
     log('starting local MCP test server');
     const server = await startMcpTestServer();
     listener = server.listener;
 
     const host = process.env.TEST_MCP_SERVER_HOST ?? 'host.docker.internal';
-    remoteUrl = `http://${host}:${server.port}/full/mcp`;
-    log(`MCP test server ready at ${remoteUrl}`);
+    remoteServerBaseUrl = `http://${host}:${server.port}`;
+    log(`MCP test server ready at ${remoteServerBaseUrl}`);
   });
 
-  afterAll(async () => {
-    if (receiver) {
-      await receiver.stop();
-    }
+  afterEach(
+    async () => {
+      if (receiver) {
+        await receiver.stop();
+        receiver = null;
+      }
+    },
+    60_000
+  );
 
-    if (listener) {
-      let activeListener = listener;
-      await new Promise<void>(resolve => activeListener.close(() => resolve()));
-    }
-  });
+  afterAll(
+    async () => {
+      if (listener) {
+        const activeListener = listener as Server & {
+          closeAllConnections?: () => void;
+          closeIdleConnections?: () => void;
+        };
+
+        await new Promise<void>(resolve => {
+          activeListener.close(() => resolve());
+          activeListener.closeIdleConnections?.();
+          activeListener.closeAllConnections?.();
+        });
+      }
+    },
+    60_000
+  );
 
   beforeEach(async () => {
     await cleanDatabase();
+    receiver = startReceiver();
   });
 
-  it(
-    'initializes and calls a tool via a real MCP connection',
-    { timeout: 90_000 },
-    async () => {
-      const log = createStepLogger('mcp.e2e/test');
-      if (!remoteUrl) throw new Error('Remote MCP URL not initialized');
-      log(`using remote URL ${remoteUrl}`);
+  it.each(transportCases)(
+    'initializes and calls a tool via a real MCP connection over $name',
+    { timeout: 120_000 },
+    async transportCase => {
+      const log = createStepLogger(`mcp.e2e/test/${transportCase.name}`);
+      if (!remoteServerBaseUrl) throw new Error('Remote MCP URL not initialized');
+
+      const upstreamUrl = `${remoteServerBaseUrl}${transportCase.upstreamPath}`;
+      log(`using remote URL ${upstreamUrl}`);
 
       const f = fixtures(testDb);
       log('creating tenant/solution/environment fixtures');
@@ -131,8 +159,8 @@ describe('mcp.e2e', () => {
 
       log('creating or reusing remote MCP provider setup');
       const providerSetup = await f.remoteMcpProvider.complete({
-        remoteUrl,
-        protocol: 'streamable_http',
+        remoteUrl: upstreamUrl,
+        protocol: transportCase.providerProtocol,
         tenant,
         solution,
         environment
@@ -155,95 +183,73 @@ describe('mcp.e2e', () => {
       const baseUrl = `http://subspace-controller.test${basePath}`;
       log(`calling MCP proxy endpoint ${basePath}`);
 
-      log('sending initialize request');
-      const initRes = await api.fetch(
-        new Request(baseUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'initialize',
-            params: {
-              protocolVersion: '2024-11-05',
-              capabilities: {},
-              clientInfo: {
-                name: 'subspace-e2e',
-                version: '1.0.0'
+      const localFetch: typeof fetch = async (input, init) => {
+        return await api.fetch(toRequest(input, init));
+      };
+
+      const transport =
+        transportCase.clientTransport === 'streamable_http'
+          ? new StreamableHTTPClientTransport(new URL(baseUrl), {
+              fetch: localFetch
+            })
+          : new SSEClientTransport(new URL(baseUrl), {
+              fetch: localFetch,
+              eventSourceInit: {
+                fetch: localFetch
               }
-            }
-          })
-        })
-      );
+            });
+      const client = new Client({
+        name: 'subspace-e2e',
+        version: '1.0.0'
+      });
 
-      expect(initRes.status).toBe(200);
-      const sessionId = initRes.headers.get('mcp-session-id');
-      expect(sessionId).toBeTruthy();
-      log(`initialize succeeded (sessionId=${sessionId})`);
+      try {
+        log(`connecting MCP SDK client (initialize, transport=${transportCase.clientTransport})`);
+        await client.connect(transport);
 
-      const initPayload = parseFirstSseData(await initRes.text());
-      expect(initPayload.result?.serverInfo?.name).toBeTruthy();
-      log(`server info: ${initPayload.result?.serverInfo?.name}`);
+        if (transport instanceof StreamableHTTPClientTransport) {
+          expect(transport.sessionId).toBeTruthy();
+          log(`initialize succeeded (sessionId=${transport.sessionId})`);
+        } else {
+          log('initialize succeeded (sse)');
+        }
 
-      log('sending tools/list request');
-      const toolsRes = await api.fetch(
-        new Request(baseUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'mcp-session-id': sessionId!
-          },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            id: 2,
-            method: 'tools/list',
-            params: {}
-          })
-        })
-      );
-      expect(toolsRes.status).toBe(200);
+        const serverInfo = client.getServerVersion();
+        expect(serverInfo?.name).toBeTruthy();
+        log(`server info: ${serverInfo?.name}`);
 
-      const toolsPayload = parseFirstSseData(await toolsRes.text());
-      const toolNames = toolsPayload.result?.tools?.map((tool: any) => tool.name) ?? [];
-      log(`tools/list returned ${toolNames.length} tools`);
-      const addTool =
-        toolNames.find((name: string) => name === 'add') ??
-        toolNames.find((name: string) => /^add([._-]|$)/.test(name)) ??
-        toolNames.find((name: string) => /(^|[._-])add([._-]|$)/.test(name));
-      expect(addTool).toBeTruthy();
-      log(`selected add tool: ${addTool}`);
+        log('calling tools/list via MCP SDK client');
+        const toolsRes = await client.listTools();
+        const toolNames = toolsRes.tools.map(tool => tool.name);
+        log(`tools/list returned ${toolNames.length} tools`);
+        const addTool =
+          toolNames.find(name => name === 'add') ??
+          toolNames.find(name => /^add([._-]|$)/.test(name)) ??
+          toolNames.find(name => /(^|[._-])add([._-]|$)/.test(name));
+        expect(addTool).toBeTruthy();
+        log(`selected add tool: ${addTool}`);
 
-      log('sending tools/call request for add(1,2)');
-      const callRes = await api.fetch(
-        new Request(baseUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'mcp-session-id': sessionId!
-          },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            id: 3,
-            method: 'tools/call',
-            params: {
-              name: addTool,
-              arguments: {
-                a: 1,
-                b: 2
-              }
-            }
-          })
-        })
-      );
-      expect(callRes.status).toBe(200);
+        log('calling tools/call via MCP SDK client for add(1,2)');
+        const callResult = await client.callTool({
+          name: addTool!,
+          arguments: {
+            a: 1,
+            b: 2
+          }
+        });
 
-      const callPayload = parseFirstSseData(await callRes.text());
-      const contentText =
-        callPayload.result?.content?.[0]?.text ?? JSON.stringify(callPayload.result ?? {});
-      expect(contentText).toContain('Result: 3');
-      log(`tools/call completed with payload: ${contentText}`);
+        const content = (callResult as { content?: Array<{ type?: string; text?: string }> })
+          .content;
+        const contentText =
+          content?.find(part => part.type === 'text')?.text ?? JSON.stringify(callResult);
+        expect(contentText).toContain('Result: 3');
+        log(`tools/call completed with payload: ${contentText}`);
+      } finally {
+        if (transport instanceof StreamableHTTPClientTransport) {
+          await transport.terminateSession().catch(() => undefined);
+        }
+        await client.close();
+      }
     }
   );
 });
