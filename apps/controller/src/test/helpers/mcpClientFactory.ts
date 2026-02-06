@@ -40,7 +40,13 @@ export let createMcpTestClient = (opts: {
 
   let cleanup = async () => {
     if (transport instanceof StreamableHTTPClientTransport) {
-      await transport.terminateSession().catch(() => undefined);
+      await transport.terminateSession().catch(err => {
+        console.warn(
+          `Failed to terminate MCP streamable_http session during cleanup: ${
+            (err as Error)?.message ?? String(err)
+          }`
+        );
+      });
     }
     await client.close();
   };

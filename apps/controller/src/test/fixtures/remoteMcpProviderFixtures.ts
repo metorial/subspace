@@ -1,7 +1,7 @@
-import { delay } from '@lowerdeck/delay';
 import { generateCode } from '@lowerdeck/id';
 import { slugify } from '@lowerdeck/slugify';
 import { createShuttleClient } from '@metorial-services/shuttle-client';
+import { retryUntilTimeout } from '@metorial-subspace/connection-utils/src/retryUntilTimeout';
 import {
   getId,
   snowflake,
@@ -54,11 +54,9 @@ type RemoteMcpProviderOptions = {
   environment?: Environment;
 };
 
-// Per-call timeout bounds each individual RPC/capabilities call
-// Discovery timeout bounds the overall retry loop across multiple attempts
 const DISCOVERY_TIMEOUT_MS = 30000;
 const DISCOVERY_CALL_TIMEOUT_MS = 10000;
-const REMOTE_SERVER_NAME = 'Subspace Test Remote MCP';
+const REMOTE_SERVER_NAME = `Subspace Test Remote MCP (${process.pid})`;
 
 const mcpRemoteType = {
   name: 'MCP',
@@ -71,37 +69,19 @@ const mcpRemoteType = {
   }
 } as const;
 
-const retryUntilTimeout = async <T>(opts: {
-  fn: () => Promise<T | null>;
-  timeoutMs: number;
-  intervalMs: number;
-  label: string;
-}): Promise<T> => {
-  let start = Date.now();
-  let lastError: unknown;
-
-  while (true) {
-    try {
-      let result = await opts.fn();
-      if (result !== null) return result;
-    } catch (err) {
-      lastError = err;
-    }
-
-    if (Date.now() - start > opts.timeoutMs) {
-      let message = (lastError as Error)?.message ?? String(lastError ?? 'none');
-      throw new Error(`${opts.label}. Last error: ${message}`);
-    }
-
-    await delay(opts.intervalMs);
-  }
-};
-
 const withTimeout = async <T>(promise: Promise<T>, ms: number, label: string): Promise<T> => {
-  let timeout = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
-  );
-  return Promise.race([promise, timeout]);
+  let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
+  let timeout = new Promise<never>((_, reject) => {
+    timeoutHandle = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutHandle) {
+      clearTimeout(timeoutHandle);
+    }
+  }
 };
 
 const getShuttleClient = () => {
@@ -166,29 +146,30 @@ const waitForDeploymentVersion = async (opts: {
   timeoutMs?: number;
 }) => {
   let timeoutMs = opts.timeoutMs ?? 30000;
-  let start = Date.now();
   let shuttleClient = getShuttleClient();
 
-  while (true) {
-    let deployment = await shuttleClient.serverDeployment.get({
-      tenantId: opts.tenantId,
-      serverDeploymentId: opts.deploymentId
-    });
+  return retryUntilTimeout({
+    timeoutMs,
+    intervalMs: 500,
+    label: 'Timed out waiting for shuttle server version',
+    timeoutMessage: () => 'Timed out waiting for shuttle server version',
+    fn: async () => {
+      let deployment = await shuttleClient.serverDeployment.get({
+        tenantId: opts.tenantId,
+        serverDeploymentId: opts.deploymentId
+      });
 
-    if (deployment.status === 'failed') {
-      throw new Error('Shuttle deployment failed while creating remote MCP server');
+      if (deployment.status === 'failed') {
+        throw new Error('Shuttle deployment failed while creating remote MCP server');
+      }
+
+      if (deployment.status === 'succeeded' && deployment.serverVersionId) {
+        return deployment.serverVersionId;
+      }
+
+      return null;
     }
-
-    if (deployment.status === 'succeeded' && deployment.serverVersionId) {
-      return deployment.serverVersionId;
-    }
-
-    if (Date.now() - start > timeoutMs) {
-      throw new Error('Timed out waiting for shuttle server version');
-    }
-
-    await delay(500);
-  }
+  });
 };
 
 // Syncs Shuttle server/version records into the local Subspace DB
@@ -333,23 +314,41 @@ const waitForPairVersionDiscovery = async (
   pairVersionOid: bigint,
   timeoutMs: number = DISCOVERY_TIMEOUT_MS
 ) => {
-  let start = Date.now();
+  let lastPairVersion:
+    | Awaited<ReturnType<typeof db.providerDeploymentConfigPairProviderVersion.findFirstOrThrow>>
+    | null = null;
 
-  while (true) {
-    let pairVersion = await db.providerDeploymentConfigPairProviderVersion.findFirstOrThrow({
-      where: { oid: pairVersionOid }
-    });
+  return retryUntilTimeout({
+    timeoutMs,
+    intervalMs: 1000,
+    label: 'Timed out waiting for provider deployment pair discovery',
+    fn: async () => {
+      let pairVersion = await db.providerDeploymentConfigPairProviderVersion.findFirstOrThrow({
+        where: { oid: pairVersionOid }
+      });
 
-    if (pairVersion.specificationDiscoveryStatus !== 'discovering') {
+      lastPairVersion = pairVersion;
+      if (pairVersion.specificationDiscoveryStatus !== 'discovering') {
+        return pairVersion;
+      }
+
+      return null;
+    },
+    onTimeout: async ctx => {
+      let pairVersion =
+        lastPairVersion ??
+        (await db.providerDeploymentConfigPairProviderVersion.findFirstOrThrow({
+          where: { oid: pairVersionOid }
+        }));
+
+      console.warn(
+        `Timed out waiting for pair discovery for ${pairVersionOid.toString()} after ${
+          ctx.timeoutMs
+        }ms; using status "${pairVersion.specificationDiscoveryStatus}".`
+      );
       return pairVersion;
     }
-
-    if (Date.now() - start > timeoutMs) {
-      return pairVersion;
-    }
-
-    await delay(1000);
-  }
+  });
 };
 
 // Discovers a provider's specification (tools, auth methods, features) by calling
@@ -553,8 +552,9 @@ export const RemoteMcpProviderFixtures = (db: PrismaClient) => {
       specification = preliminarySpecification;
 
       // Best-effort: attempt full pair-level discovery for a more complete specification
+      let fullSpecification: ProviderSpecification | null = null;
       try {
-        let fullSpecification = await discoverSpecification({
+        fullSpecification = await discoverSpecification({
           provider: providerWithVariant,
           providerVersion,
           providerVariant: defaultVariant,
@@ -570,7 +570,15 @@ export const RemoteMcpProviderFixtures = (db: PrismaClient) => {
               authConfigVersion: null
             })
         });
+      } catch (err) {
+        console.warn(
+          `Skipping full pair discovery for test fixture after timeout/failure: ${
+            (err as Error)?.message ?? String(err)
+          }`
+        );
+      }
 
+      if (fullSpecification) {
         specification = fullSpecification;
 
         providerVersion = await db.providerVersion.update({
@@ -588,12 +596,6 @@ export const RemoteMcpProviderFixtures = (db: PrismaClient) => {
             specificationOid: specification.oid
           }
         });
-      } catch (err) {
-        console.warn(
-          `Skipping full pair discovery for test fixture after timeout/failure: ${
-            (err as Error)?.message ?? String(err)
-          }`
-        );
       }
     }
 

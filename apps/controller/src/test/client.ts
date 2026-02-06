@@ -26,8 +26,12 @@ type ClientOptsLike = {
 };
 
 let fetchRouter = createFetchRouter();
+fetchRouter.install();
+let registeredEndpoints = new Set<string>();
 let registerInMemoryRoute = (endpoint: string) => {
+  if (registeredEndpoints.has(endpoint)) return;
   fetchRouter.registerRoute(endpoint, request => testRpc.fetch(request));
+  registeredEndpoints.add(endpoint);
 };
 
 let defaultEndpoint = 'http://subspace-controller.test/subspace-controller';
@@ -35,7 +39,6 @@ let defaultEndpoint = 'http://subspace-controller.test/subspace-controller';
 export let createSubspaceControllerTestClient = (opts: Partial<ClientOptsLike> = {}) => {
   let endpoint = opts.endpoint ?? defaultEndpoint;
   registerInMemoryRoute(endpoint);
-  fetchRouter.install();
 
   return createClient<SubspaceControllerTestClient>({
     ...opts,
@@ -43,5 +46,4 @@ export let createSubspaceControllerTestClient = (opts: Partial<ClientOptsLike> =
   } as ClientOptsLike);
 };
 
-export let subspaceControllerTestClient = createSubspaceControllerTestClient();
 export type SubspaceControllerTestClient = InferClient<typeof testRootController>;
