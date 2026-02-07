@@ -12,6 +12,11 @@ services:
     volumes:
       - postgres_data2:/var/lib/postgresql/data
       - ./init-test-db.sh:/docker-entrypoint-initdb.d/init-test-db.sh
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - subspace-network
 
@@ -21,6 +26,11 @@ services:
     restart: unless-stopped
     ports:
       - '56379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - subspace-network
 
@@ -78,15 +88,23 @@ services:
       OBJECT_STORAGE_URL: http://object-storage:52010
       LOG_BUCKET_NAME: logs
       ARTIFACT_BUCKET_NAME: artifacts
-      CODE_BUILD_AWS_REGION: ${CODE_BUILD_AWS_REGION:-}
-      CODE_BUILD_AWS_ACCESS_KEY_ID: ${CODE_BUILD_AWS_ACCESS_KEY_ID:-}
-      CODE_BUILD_AWS_SECRET_ACCESS_KEY: ${CODE_BUILD_AWS_SECRET_ACCESS_KEY:-}
+      CODE_BUILD_AWS_REGION: ${CODE_BUILD_AWS_REGION:-us-east-1}
+      CODE_BUILD_AWS_ACCESS_KEY_ID: ${CODE_BUILD_AWS_ACCESS_KEY_ID:-test}
+      CODE_BUILD_AWS_SECRET_ACCESS_KEY: ${CODE_BUILD_AWS_SECRET_ACCESS_KEY:-test}
       CODE_BUILD_PROJECT_NAME: ${CODE_BUILD_PROJECT_NAME:-}
       CODE_BUILD_ROLE_ARN: ${CODE_BUILD_ROLE_ARN:-}
     depends_on:
-      - postgres
-      - redis
-      - object-storage
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -s http://localhost:52020/ > /dev/null || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - subspace-network
 
@@ -98,19 +116,28 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/function-bay
       REDIS_URL: redis://redis:6379/0
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
-      DEFAULT_PROVIDER: ${DEFAULT_PROVIDER}
+      DEFAULT_PROVIDER: ${DEFAULT_PROVIDER:-aws.lambda}
       OBJECT_STORAGE_URL: http://object-storage:52010
       BUNDLE_BUCKET_NAME: bundles
       FORGE_API_URL: http://forge:52020/metorial-forge
-      LAMBDA_AWS_REGION: ${LAMBDA_AWS_REGION:-}
-      LAMBDA_AWS_ACCESS_KEY_ID: ${LAMBDA_AWS_ACCESS_KEY_ID:-}
-      LAMBDA_AWS_SECRET_ACCESS_KEY: ${LAMBDA_AWS_SECRET_ACCESS_KEY:-}
+      LAMBDA_AWS_REGION: ${LAMBDA_AWS_REGION:-us-east-1}
+      LAMBDA_AWS_ACCESS_KEY_ID: ${LAMBDA_AWS_ACCESS_KEY_ID:-test}
+      LAMBDA_AWS_SECRET_ACCESS_KEY: ${LAMBDA_AWS_SECRET_ACCESS_KEY:-test}
       LAMBDA_ROLE_ARN: ${LAMBDA_ROLE_ARN:-}
     depends_on:
-      - postgres
-      - redis
-      - object-storage
-      - forge
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
+      forge:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -s http://localhost:52030/ > /dev/null || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - subspace-network
 
@@ -126,9 +153,17 @@ services:
       OBJECT_STORAGE_URL: http://object-storage:52010
       LOGS_BUCKET_NAME: bundles
     depends_on:
-      - postgres
-      - redis
-      - object-storage
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -s http://localhost:52050/ > /dev/null || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - subspace-network
 
@@ -143,8 +178,15 @@ services:
       SEARCH_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/voyager-search
       REDIS_URL: redis://redis:6379/0
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -s http://localhost:52060/ > /dev/null || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - subspace-network
 
@@ -163,9 +205,21 @@ services:
       SERVICE_PUBLIC_URL: http://localhost:52040
       PUBLIC_ACCESS_PERMITTED: 'true'
     depends_on:
-      - postgres
-      - redis
-      - object-storage
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          "bun -e \"fetch('http://localhost:52040/ping').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - subspace-network
 
@@ -194,13 +248,29 @@ services:
       SERVICE_PUBLIC_URL: http://localhost:52045
 
     depends_on:
-      - postgres
-      - redis
-      - object-storage
-      - slates-registry
-      - forge
-      - function-bay
-      - signal
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
+      slates-registry:
+        condition: service_healthy
+      forge:
+        condition: service_healthy
+      function-bay:
+        condition: service_healthy
+      signal:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          "bun -e \"fetch('http://localhost:52045/').then(()=>process.exit(0)).catch(()=>process.exit(1))\""
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - subspace-network
 
@@ -230,11 +300,25 @@ services:
       - ./dev/shuttle/axiosSsrf.ts:/app/src/lib/http/axiosSsrf.ts:ro
 
     depends_on:
-      - postgres
-      - redis
-      - object-storage
-      - forge
-      - function-bay
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
+      forge:
+        condition: service_healthy
+      function-bay:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          "bun -e \"fetch('http://localhost:52080/').then(()=>process.exit(0)).catch(()=>process.exit(1))\""
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - subspace-network
 
@@ -270,18 +354,30 @@ services:
       - ./provider-backends:/app/provider-backends:ro
       - ./db:/app/db
     depends_on:
-      - postgres
-      - redis
-      - object-storage
-      - slates-registry
-      - forge
-      - function-bay
-      - signal
-      - voyager
-      - slates-hub
-      - shuttle
-      - nats-1
-      - nats-2
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
+      slates-registry:
+        condition: service_healthy
+      forge:
+        condition: service_healthy
+      function-bay:
+        condition: service_healthy
+      signal:
+        condition: service_healthy
+      voyager:
+        condition: service_healthy
+      slates-hub:
+        condition: service_healthy
+      shuttle:
+        condition: service_healthy
+      nats-1:
+        condition: service_started
+      nats-2:
+        condition: service_started
     networks:
       - subspace-network
 
@@ -317,18 +413,30 @@ services:
       - ./provider-backends:/app/provider-backends:ro
       - ./db:/app/db
     depends_on:
-      - postgres
-      - redis
-      - object-storage
-      - slates-registry
-      - forge
-      - function-bay
-      - signal
-      - voyager
-      - slates-hub
-      - shuttle
-      - nats-1
-      - nats-2
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
+      slates-registry:
+        condition: service_healthy
+      forge:
+        condition: service_healthy
+      function-bay:
+        condition: service_healthy
+      signal:
+        condition: service_healthy
+      voyager:
+        condition: service_healthy
+      slates-hub:
+        condition: service_healthy
+      shuttle:
+        condition: service_healthy
+      nats-1:
+        condition: service_started
+      nats-2:
+        condition: service_started
     networks:
       - subspace-network
 
@@ -361,18 +469,30 @@ services:
       - ./provider-backends:/app/provider-backends:ro
       - ./db:/app/db
     depends_on:
-      - postgres
-      - redis
-      - object-storage
-      - slates-registry
-      - forge
-      - function-bay
-      - signal
-      - voyager
-      - slates-hub
-      - shuttle
-      - nats-1
-      - nats-2
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
+      slates-registry:
+        condition: service_healthy
+      forge:
+        condition: service_healthy
+      function-bay:
+        condition: service_healthy
+      signal:
+        condition: service_healthy
+      voyager:
+        condition: service_healthy
+      slates-hub:
+        condition: service_healthy
+      shuttle:
+        condition: service_healthy
+      nats-1:
+        condition: service_started
+      nats-2:
+        condition: service_started
     networks:
       - subspace-network
 
