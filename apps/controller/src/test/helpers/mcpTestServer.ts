@@ -41,14 +41,31 @@ export let startMcpTestServer = async (): Promise<McpTestServerHandle> => {
   return { listener, port, baseUrl };
 };
 
-export let stopMcpTestServer = async (handle: McpTestServerHandle) => {
+export let stopMcpTestServer = async (
+  handle: McpTestServerHandle,
+  opts: { timeoutMs?: number } = {}
+) => {
   let listener = handle.listener as Server & {
     closeAllConnections?: () => void;
     closeIdleConnections?: () => void;
   };
 
+  let timeoutMs = opts.timeoutMs ?? 10_000;
+
   await new Promise<void>(resolve => {
-    listener.close(() => resolve());
+    let settled = false;
+    let finish = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve();
+    };
+
+    let timer = setTimeout(() => {
+      finish();
+    }, timeoutMs);
+
+    listener.close(() => finish());
     listener.closeIdleConnections?.();
     listener.closeAllConnections?.();
   });

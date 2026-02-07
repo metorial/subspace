@@ -1,5 +1,5 @@
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
+import z from 'zod';
 
 export function createFullFeaturedServer(): McpServer {
   const mcpServer = new McpServer(
