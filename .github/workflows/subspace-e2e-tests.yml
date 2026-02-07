@@ -48,7 +48,6 @@ jobs:
       service_directory: .
       compose_project_prefix: subspace-ci
       compose_profiles: 'infra'
-      pre_start_command: echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
       wait_services: |
         subspace-postgres
         subspace-redis
