@@ -43,5 +43,6 @@ COPY . .
 # In case we forgot to copy some package.json files
 RUN bun install 
 
-# Run in dev mode with hot reloading
-CMD ["sh", "-c", "cd db && bun prisma db push --accept-data-loss && bun prisma generate && cd ../apps/worker && bun start:dev"]
+# Run in dev mode with hot reloading.
+# `subspace-controller` performs schema/client initialization before this service starts.
+CMD ["sh", "-c", "cd /app/apps/worker && bun start:dev"]

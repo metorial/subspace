@@ -378,6 +378,15 @@ services:
         condition: service_started
       nats-2:
         condition: service_started
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          "bun -e \"fetch('http://localhost:52070/ping').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - subspace-network
 
@@ -432,6 +441,8 @@ services:
       slates-hub:
         condition: service_healthy
       shuttle:
+        condition: service_healthy
+      subspace-controller:
         condition: service_healthy
       nats-1:
         condition: service_started
@@ -488,6 +499,8 @@ services:
       slates-hub:
         condition: service_healthy
       shuttle:
+        condition: service_healthy
+      subspace-controller:
         condition: service_healthy
       nats-1:
         condition: service_started
