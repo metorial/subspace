@@ -21,12 +21,16 @@ export type Server = Awaited<ReturnType<typeof shuttle.server.get>>;
 export type Version = Awaited<ReturnType<typeof shuttle.serverVersion.get>>;
 
 export let upsertShuttleServerVersion = ({
+  publisherId,
+
   shuttleServer: server,
   shuttleServerVersion: version,
 
   shuttleServerRecord,
   shuttleServerVersionRecord
 }: {
+  publisherId?: string;
+
   shuttleServer: Server;
   shuttleServerVersion: Version;
 
@@ -49,15 +53,40 @@ export let upsertShuttleServerVersion = ({
       }
     }
 
+    if (!publisher && publisherId) {
+      publisher = await db.publisher.findFirst({
+        where: { OR: [{ id: publisherId }, { identifier: publisherId }] }
+      });
+    }
+
     if (!publisher) {
       if (server.type === 'container') {
-        publisher = await publisherInternalService.upsertPublisherForExternal({
-          identifier: `shuttle::registry::${version.repositoryVersion?.repository.registry.id}`,
-          name:
-            version.repositoryVersion?.repository.registry.name ??
-            version.repositoryVersion?.repository.registry.url ??
-            'Unknown Registry'
-        });
+        if (
+          version.repositoryVersion &&
+          (version.repositoryVersion.repository.registry.url == 'https://ghcr.io' ||
+            version.repositoryVersion.repository.registry.url == 'ghcr.io') &&
+          version.repositoryVersion.repository.name.startsWith('metorial/mcp-container--')
+        ) {
+          publisher = await publisherInternalService.upsertPublisherForExternal({
+            identifier: `shuttle::registry::metorial.com/mcp-container`,
+            name: 'Metorial MCP Containers'
+          });
+        } else if (
+          version.repositoryVersion &&
+          (version.repositoryVersion.repository.registry.url == 'https://ghcr.io' ||
+            version.repositoryVersion.repository.registry.url == 'ghcr.io') &&
+          version.repositoryVersion.repository.name.startsWith('metorial/')
+        ) {
+          publisher = await publisherInternalService.upsertPublisherForMetorial();
+        } else {
+          publisher = await publisherInternalService.upsertPublisherForExternal({
+            identifier: `shuttle::registry::${version.repositoryVersion?.repository.registry.id}`,
+            name:
+              version.repositoryVersion?.repository.registry.name ??
+              version.repositoryVersion?.repository.registry.url ??
+              'Unknown Registry'
+          });
+        }
       } else if (server.type === 'remote') {
         publisher = await publisherInternalService.upsertPublisherForExternal({
           identifier: `shuttle::remote::${version.remoteUrl}`,

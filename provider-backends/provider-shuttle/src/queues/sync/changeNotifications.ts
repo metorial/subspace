@@ -50,5 +50,7 @@ export let syncChangeNotificationsQueueProcessor = syncChangeNotificationsQueue.
         create: { backendOid: backend.oid, cursor: lastItem.id },
         update: { cursor: lastItem.id }
       });
+
+      await syncChangeNotificationsQueue.add({});
     })
 );

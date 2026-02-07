@@ -17,6 +17,9 @@ model Publisher {
   tag    String      @unique
   tagRef ProviderTag @relation(fields: [tag], references: [tag])
 
+  /// [EntityImage]
+  image Json?
+
   /// [PublisherSource]
   source Json?
 

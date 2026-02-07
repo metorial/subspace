@@ -79,7 +79,10 @@ class providerListingCollectionServiceImpl {
         ...getId('providerCollection'),
         ...inner
       },
-      update: inner
+      update: {
+        ...inner,
+        description: d.input.description.trim() || undefined
+      }
     });
   }
 }
