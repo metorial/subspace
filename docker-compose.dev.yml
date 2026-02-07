@@ -347,7 +347,7 @@ services:
       SLATES_HUB_PUBLIC_URL: http://localhost:52045
 
     volumes:
-      - ./apps/controller:/app/apps/controller:ro
+      - ./apps/controller:/app/apps/controller:${SUBSPACE_SOURCE_MOUNT_MODE:-ro}
       - ./apps/controller/package.json:/app/apps/controller/package.json:ro
       - ./modules:/app/modules:ro
       - ./packages:/app/packages:ro
