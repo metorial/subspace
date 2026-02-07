@@ -37,6 +37,7 @@ jobs:
     with:
       service_directory: .
       compose_project_prefix: subspace-ci
+      compose_profiles: 'infra'
       wait_services: |
         subspace-postgres
         subspace-redis
