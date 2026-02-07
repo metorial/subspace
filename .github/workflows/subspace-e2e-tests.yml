@@ -39,6 +39,9 @@ permissions:
 jobs:
   e2e-tests:
     name: Run Subspace Controller E2E Tests
+    permissions:
+      contents: read
+      packages: read
     uses: metorial/.github/.github/workflows/reusable-e2e-tests.yml@main
     secrets: inherit
     with:
