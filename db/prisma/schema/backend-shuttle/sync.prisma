@@ -6,3 +6,11 @@ model ShuttleSyncChangeNotificationCursor {
 
   createdAt DateTime @default(now())
 }
+
+model ShuttleSyncMcpServerRegistryCursor {
+  registryUrl String @id
+
+  cursor String
+
+  createdAt DateTime @default(now())
+}
