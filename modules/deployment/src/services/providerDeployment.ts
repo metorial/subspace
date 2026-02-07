@@ -28,9 +28,11 @@ import {
   resolveProviders,
   resolveProviderVersions
 } from '@metorial-subspace/list-utils';
+import { providerDeploymentInternalService } from '@metorial-subspace/module-provider-internal';
 import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
+import { normalizeJsonSchema } from '@metorial-subspace/provider-utils';
 import { env } from '../env';
 import {
   providerDeploymentCreatedQueue,
@@ -258,6 +260,31 @@ class providerDeploymentServiceImpl {
         where: { oid: providerDeployment.oid },
         data: { currentVersionOid: currentVersion.oid }
       });
+
+      if (d.input.config.type == 'none') {
+        let version = await providerDeploymentInternalService.getCurrentVersion({
+          environment: d.environment,
+          deployment: providerDeployment,
+          provider: d.provider
+        });
+
+        if (version?.specificationOid) {
+          let spec = await db.providerSpecification.findFirstOrThrow({
+            where: { oid: version.specificationOid }
+          });
+          let schema = normalizeJsonSchema(spec.value.specification.configJsonSchema);
+
+          // If the schema is empty, we can just create
+          // a default config with empty data, instead of
+          // forcing the user to create a config
+          if (!schema) {
+            d.input.config = {
+              type: 'inline',
+              data: {}
+            };
+          }
+        }
+      }
 
       if (d.input.config.type === 'config') {
         await db.providerDeployment.update({

@@ -2,7 +2,7 @@ import { delay } from '@lowerdeck/delay';
 import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
 import {
-  db,
+  withTransaction,
   type Environment,
   type Provider,
   type ProviderDeployment,
@@ -23,7 +23,7 @@ class providerDeploymentInternalServiceImpl {
         | null;
     };
   }) {
-    return this.getCurrentVersionOptional({
+    return await this.getCurrentVersionOptional({
       environment: d.environment,
       deployment: d.deployment,
       provider: d.provider
@@ -66,72 +66,77 @@ class providerDeploymentInternalServiceImpl {
         | null;
     };
   }) {
-    if (d.deployment && d.deployment.environmentOid !== d.environment.oid) {
-      throw new Error('Environment mismatch between deployment and environment');
-    }
-
-    if (!d.provider.defaultVariantOid) return null;
-
-    if (d.deployment?.currentVersion?.lockedVersionOid) {
-      return await db.providerVersion.findFirstOrThrow({
-        where: {
-          oid: d.deployment?.currentVersion.lockedVersionOid,
-          providerOid: d.provider.oid
+    return withTransaction(
+      async db => {
+        if (d.deployment && d.deployment.environmentOid !== d.environment.oid) {
+          throw new Error('Environment mismatch between deployment and environment');
         }
-      });
-    }
 
-    if (d.provider.hasEnvironments) {
-      let env = await db.providerEnvironment.findUnique({
-        where: {
-          environmentOid_providerOid: {
-            environmentOid: d.environment.oid,
-            providerOid: d.provider.oid
-          }
-        },
-        include: { currentVersion: true }
-      });
-      if (env?.currentVersion) {
-        return env.currentVersion;
-      }
+        if (!d.provider.defaultVariantOid) return null;
 
-      // Check if we have a version for another environment
-      let version = await db.providerVersion.findFirst({
-        where: {
-          providerOid: d.provider.oid,
-          providerEnvironmentVersions: {
-            some: {}
-          }
+        if (d.deployment?.currentVersion?.lockedVersionOid) {
+          return await db.providerVersion.findFirstOrThrow({
+            where: {
+              oid: d.deployment?.currentVersion.lockedVersionOid,
+              providerOid: d.provider.oid
+            }
+          });
         }
-      });
-      if (version) {
-        throw new ServiceError(
-          badRequestError({
-            message:
-              'Provider has deployed versions in other environments, but not in the current one.'
-          })
-        );
-      }
 
-      return null;
-    }
+        if (d.provider.hasEnvironments) {
+          let env = await db.providerEnvironment.findUnique({
+            where: {
+              environmentOid_providerOid: {
+                environmentOid: d.environment.oid,
+                providerOid: d.provider.oid
+              }
+            },
+            include: { currentVersion: true }
+          });
+          if (env?.currentVersion) {
+            return env.currentVersion;
+          }
 
-    let defaultVariant =
-      d.provider.defaultVariant ??
-      (await db.providerVariant.findFirstOrThrow({
-        where: { oid: d.provider.defaultVariantOid }
-      }));
-    if (!defaultVariant.currentVersionOid) {
-      return null;
-    }
+          // Check if we have a version for another environment
+          let version = await db.providerVersion.findFirst({
+            where: {
+              providerOid: d.provider.oid,
+              providerEnvironmentVersions: {
+                some: {}
+              }
+            }
+          });
+          if (version) {
+            throw new ServiceError(
+              badRequestError({
+                message:
+                  'Provider has deployed versions in other environments, but not in the current one.'
+              })
+            );
+          }
 
-    if (d.provider.defaultVariant?.currentVersion) {
-      return d.provider.defaultVariant.currentVersion;
-    }
+          return null;
+        }
 
-    return await db.providerVersion.findFirstOrThrow({
-      where: { oid: defaultVariant.currentVersionOid }
-    });
+        let defaultVariant =
+          d.provider.defaultVariant ??
+          (await db.providerVariant.findFirstOrThrow({
+            where: { oid: d.provider.defaultVariantOid }
+          }));
+        if (!defaultVariant.currentVersionOid) {
+          return null;
+        }
+
+        if (d.provider.defaultVariant?.currentVersion) {
+          return d.provider.defaultVariant.currentVersion;
+        }
+
+        return await db.providerVersion.findFirstOrThrow({
+          where: { oid: defaultVariant.currentVersionOid }
+        });
+      },
+      { ifExists: true }
+    );
   }
 }
 
