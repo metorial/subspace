@@ -10,28 +10,60 @@ export type McpTestServerHandle = {
   baseUrl: string;
 };
 
+let waitForBoundAddress = async (
+  listener: Server,
+  opts: { timeoutMs?: number; pollMs?: number } = {}
+): Promise<AddressInfo | null> => {
+  let timeoutMs = opts.timeoutMs ?? 2_000;
+  let pollMs = opts.pollMs ?? 20;
+  let startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    let address = listener.address();
+    if (address && typeof address !== 'string') {
+      return address;
+    }
+    await new Promise(resolve => setTimeout(resolve, pollMs));
+  }
+
+  return null;
+};
+
+let startListening = async (app: ReturnType<typeof express>, port: number): Promise<Server> =>
+  await new Promise<ReturnType<typeof app.listen>>((resolve, reject) => {
+    let server = app.listen(port, () => resolve(server));
+    server.once('error', reject);
+  });
+
 export let startMcpTestServer = async (): Promise<McpTestServerHandle> => {
   let app = express();
   let mcpServer = createFullFeaturedServer();
 
   await setupTransports(app, mcpServer, '/full');
 
-  let startListening = async (port: number) =>
-    await new Promise<ReturnType<typeof app.listen>>((resolve, reject) => {
-      let server = app.listen(port, () => resolve(server));
-      server.once('error', reject);
-    });
-
   let preferredPort = Number(process.env.TEST_MCP_SERVER_PORT ?? 52198);
-  let listener: ReturnType<typeof app.listen>;
+  let listener: Server;
+  let address: AddressInfo | null = null;
   try {
-    listener = await startListening(preferredPort);
+    listener = await startListening(app, preferredPort);
+    address = await waitForBoundAddress(listener);
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code !== 'EADDRINUSE') throw err;
-    listener = await startListening(0);
+    listener = await startListening(app, 0);
+    address = await waitForBoundAddress(listener);
   }
 
-  let port = (listener.address() as AddressInfo).port;
+  if (!address) {
+    listener.close();
+    listener = await startListening(app, 0);
+    address = await waitForBoundAddress(listener);
+  }
+
+  if (!address) {
+    throw new Error('MCP test server failed to report a bound address');
+  }
+
+  let port = address.port;
   // The test server runs on the host machine, but Shuttle (inside Docker) reaches it
   // via host.docker.internal. On Linux, ensure Docker is configured with
   // --add-host=host.docker.internal:host-gateway
