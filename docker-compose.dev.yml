@@ -323,6 +323,7 @@ services:
       - subspace-network
 
   subspace-controller:
+    profiles: ['app']
     build:
       context: .
       dockerfile: ./apps/controller/dev.Dockerfile
@@ -390,7 +391,55 @@ services:
     networks:
       - subspace-network
 
+  subspace-controller-test:
+    profiles: ['infra']
+    build:
+      context: .
+      dockerfile: ./apps/controller/dev.Dockerfile
+    container_name: subspace-controller-test-service
+    command: ['sh', '-c', 'sleep infinity']
+    volumes:
+      - ./apps/controller:/app/apps/controller:${SUBSPACE_SOURCE_MOUNT_MODE:-ro}
+      - ./apps/controller/package.json:/app/apps/controller/package.json:ro
+      - ./modules:/app/modules:ro
+      - ./packages:/app/packages:ro
+      - ./provider-backends:/app/provider-backends:ro
+      - ./db:/app/db
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
+      slates-registry:
+        condition: service_healthy
+      forge:
+        condition: service_healthy
+      function-bay:
+        condition: service_healthy
+      signal:
+        condition: service_healthy
+      voyager:
+        condition: service_healthy
+      slates-hub:
+        condition: service_healthy
+      shuttle:
+        condition: service_healthy
+      nats-1:
+        condition: service_started
+      nats-2:
+        condition: service_started
+    healthcheck:
+      test: ['CMD-SHELL', 'test -f /app/apps/controller/package.json']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - subspace-network
+
   subspace-public:
+    profiles: ['app']
     build:
       context: .
       dockerfile: ./apps/public/dev.Dockerfile
@@ -452,6 +501,7 @@ services:
       - subspace-network
 
   subspace-worker:
+    profiles: ['app']
     build:
       context: .
       dockerfile: ./apps/worker/dev.Dockerfile

@@ -59,6 +59,6 @@ jobs:
         subspace-slates-registry
         subspace-slates-hub
         subspace-shuttle
-        subspace-controller-service
-      test_container: subspace-controller-service
-      test_command: cd /app/apps/controller && set -a && . ./.env.ci && set +a && bunx prisma db push --schema ../../db/prisma/schema --config ../../db/prisma.config.ts && TEST_MCP_SERVER_HOST=subspace-controller bun run test -- --mode ci --reporter verbose --configLoader native
+        subspace-controller-test-service
+      test_container: subspace-controller-test-service
+      test_command: cd /app/apps/controller && set -a && . ./.env.ci && set +a && bunx prisma db push --schema ../../db/prisma/schema --config ../../db/prisma.config.ts && TEST_MCP_SERVER_HOST=subspace-controller-test bun run test -- --mode ci --reporter verbose --configLoader native
