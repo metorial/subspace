@@ -61,4 +61,4 @@ jobs:
         subspace-shuttle
         subspace-controller-test-service
       test_container: subspace-controller-test-service
-      test_command: cd /app/apps/controller && set -a && . ./.env.ci && set +a && bunx prisma db push --schema ../../db/prisma/schema --config ../../db/prisma.config.ts && TEST_MCP_SERVER_HOST=subspace-controller-test bun run test:ci
+      test_command: cd /app/apps/controller && set -a && . ./.env.ci && set +a && bunx prisma db push --schema ../../db/prisma/schema --config ../../db/prisma.config.ts && bunx prisma generate --schema ../../db/prisma/schema --config ../../db/prisma.config.ts && TEST_MCP_SERVER_HOST=subspace-controller-test bun run test:ci
