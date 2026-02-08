@@ -1,44 +1,12 @@
 import http from 'http';
 import https from 'https';
-import ipaddr from 'ipaddr.js';
 
-const allowPrivate = process.env.SHUTTLE_ALLOW_PRIVATE_URLS === '1';
+// Dev override: allows private/local IPs for local development.
 
-export let checkIp = (ip: string) => {
-  if (allowPrivate) return true;
-  if (!ipaddr.isValid(ip)) return true;
-
-  try {
-    let addr = ipaddr.parse(ip);
-    let range = addr.range();
-    if (range !== 'unicast') return false; // Private IP Range
-  } catch (err) {
-    return false;
-  }
-
-  return true;
-};
+export let checkIp = (_ip: string) => true;
 
 export let ssrfFilter = (url: URL) => {
-  let agent = url.protocol === 'https:' ? new https.Agent() : new http.Agent();
-  let oldCreateConnection = (agent as any).createConnection;
-
-  (agent as any).createConnection = function (options: any, func: any): any {
-    let { host: address } = options;
-    if (!checkIp(address)) {
-      throw new Error(`Call to ${address} is blocked.`);
-    }
-
-    let socket = oldCreateConnection.call(this, options, func);
-    socket.on('lookup', (error: any, address: string) => {
-      if (error || checkIp(address)) return false;
-      return socket.destroy(new Error(`Call to ${address} is blocked.`));
-    });
-
-    return socket;
-  };
-
-  return agent;
+  return url.protocol === 'https:' ? new https.Agent() : new http.Agent();
 };
 
 export let getAxiosSsrfFilter = (url: string) => {
