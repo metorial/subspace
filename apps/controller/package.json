@@ -9,7 +9,8 @@
     "infra:up": "docker compose -p subspace -f ../../docker-compose.dev.yml up -d postgres redis object-storage nats-1 nats-2 shuttle",
     "infra:down": "docker compose -p subspace -f ../../docker-compose.dev.yml stop postgres redis object-storage nats-1 nats-2 shuttle",
     "db:push:test": "sh -c 'set -a; . .env.test; set +a; bunx prisma db push --schema ../../db/prisma/schema --config ../../db/prisma.config.ts'",
-    "test": "bunx vitest run --passWithNoTests",
+    "test": "vitest run --passWithNoTests",
+    "test:ci": "vitest run --mode ci --reporter verbose --configLoader native",
     "test:watch": "bunx vitest watch"
   },
   "devDependencies": {
