@@ -1,6 +1,7 @@
 import express from 'express';
 import type { AddressInfo } from 'net';
 import type { Server } from 'http';
+import { retryUntilTimeout } from '@metorial-subspace/connection-utils';
 import { createFullFeaturedServer } from '../../../../../test-servers/src/servers/full-featured';
 import { setupTransports } from '../../../../../test-servers/src/shared/transport';
 
@@ -14,19 +15,17 @@ let waitForBoundAddress = async (
   listener: Server,
   opts: { timeoutMs?: number; pollMs?: number } = {}
 ): Promise<AddressInfo | null> => {
-  let timeoutMs = opts.timeoutMs ?? 2_000;
-  let pollMs = opts.pollMs ?? 20;
-  let startedAt = Date.now();
-
-  while (Date.now() - startedAt < timeoutMs) {
-    let address = listener.address();
-    if (address && typeof address !== 'string') {
-      return address;
-    }
-    await new Promise(resolve => setTimeout(resolve, pollMs));
-  }
-
-  return null;
+  return retryUntilTimeout({
+    fn: async () => {
+      let address = listener.address();
+      if (address && typeof address !== 'string') return address;
+      return null;
+    },
+    timeoutMs: opts.timeoutMs ?? 2_000,
+    intervalMs: opts.pollMs ?? 20,
+    label: 'Waiting for server to bind',
+    onTimeout: () => null
+  });
 };
 
 let startListening = async (app: ReturnType<typeof express>, port: number): Promise<Server> =>

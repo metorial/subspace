@@ -1,8 +1,9 @@
 import { isServiceError } from '@lowerdeck/error';
 import {
+  formatUnknownError,
   retryUntilTimeout,
   type RetryUntilTimeoutContext
-} from '@metorial-subspace/connection-utils/src/retryUntilTimeout';
+} from '@metorial-subspace/connection-utils';
 
 let nonRetryableErrorCodes = new Set([
   'ENOTFOUND',
@@ -27,11 +28,6 @@ let isNonRetryableShuttleError = (error: unknown) => {
   }
 
   return false;
-};
-
-let formatError = (error: unknown) => {
-  if (error instanceof Error) return error.message;
-  return String(error);
 };
 
 type ShuttleRetryOptions = {
@@ -62,12 +58,12 @@ export let withShuttleRetry = async <T>(
     onRetry: ctx => {
       if (ctx.reason !== 'error') return;
       logger.warn(
-        `[provider-shuttle] Retry ${ctx.attempt} after ${ctx.elapsedMs}ms (${label}): ${formatError(
+        `[provider-shuttle] Retry ${ctx.attempt} after ${ctx.elapsedMs}ms (${label}): ${formatUnknownError(
           ctx.error
         )}`
       );
     },
     timeoutMessage: (ctx: RetryUntilTimeoutContext<T>) =>
-      `${label}. Last error: ${formatError(ctx.lastError)}`
+      `${label}. Last error: ${formatUnknownError(ctx.lastError)}`
   });
 };

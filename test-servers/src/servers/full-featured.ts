@@ -204,7 +204,7 @@ export function createFullFeaturedServer(): McpServer {
             mimeType: 'application/json',
             text: JSON.stringify(
               {
-                id: parseInt(id),
+                id: Number.parseInt(id),
                 name: `User ${id}`,
                 email: `user${id}@example.com`
               },

@@ -4,8 +4,8 @@ import { serialize } from '@lowerdeck/serialize';
 type StubState = { counter: number };
 type RpcCall = { id: string; name: string; payload: any };
 
-const STUB_STATE_KEY = '__voyagerStubState';
-const ROUTER_KEY = '__voyagerFetchRouter';
+let stubState: StubState | null = null;
+let fetchRouter: ReturnType<typeof createFetchRouter> | null = null;
 
 let rpcHandlers: Record<string, (payload: any, state: StubState) => any> = {
   'source:upsert': (p, s) => ({
@@ -37,23 +37,20 @@ let rpcHandlers: Record<string, (payload: any, state: StubState) => any> = {
 };
 
 function getOrCreateRouter(): ReturnType<typeof createFetchRouter> {
-  let existing = (globalThis as any)[ROUTER_KEY];
-  if (existing) return existing;
+  if (fetchRouter) return fetchRouter;
 
-  let router = createFetchRouter();
-  router.install();
-  (globalThis as any)[ROUTER_KEY] = router;
-  return router;
+  fetchRouter = createFetchRouter();
+  fetchRouter.install();
+  return fetchRouter;
 }
 
 export function setupVoyagerStub() {
   let endpoint = process.env.VOYAGER_URL;
   if (!endpoint) return;
 
-  if ((globalThis as any)[STUB_STATE_KEY]) return;
+  if (stubState) return;
 
-  let state: StubState = { counter: 0 };
-  (globalThis as any)[STUB_STATE_KEY] = state;
+  stubState = { counter: 0 };
 
   let router = getOrCreateRouter();
 
@@ -83,7 +80,7 @@ export function setupVoyagerStub() {
         id: call.id,
         name: call.name,
         status: 200,
-        result: handler(call.payload, state)
+        result: handler(call.payload, stubState!)
       });
     }
 
@@ -95,6 +92,5 @@ export function setupVoyagerStub() {
 }
 
 export function resetVoyagerStub() {
-  let state = (globalThis as any)[STUB_STATE_KEY] as StubState | undefined;
-  if (state) state.counter = 0;
+  if (stubState) stubState.counter = 0;
 }

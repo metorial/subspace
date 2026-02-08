@@ -12,18 +12,7 @@ let testRootController = appWithoutSolution.controller({
 
 let testRpc = rpcMux({ path: '/subspace-controller' }, [createServer({})(testRootController)]);
 
-type ClientOptsLike = {
-  endpoint: string;
-  headers?: Record<string, string | undefined>;
-  getHeaders?: () => Promise<Record<string, string>> | Record<string, string>;
-  onRequest?: (d: {
-    endpoint: string;
-    name: string;
-    payload: any;
-    headers: Record<string, string | undefined>;
-    query?: Record<string, string | undefined>;
-  }) => any;
-};
+type ClientOptsLike = Parameters<typeof createClient>[0];
 
 let fetchRouter = createFetchRouter();
 fetchRouter.install();

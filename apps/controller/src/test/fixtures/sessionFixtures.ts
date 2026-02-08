@@ -1,14 +1,13 @@
 import { sessionService } from '@metorial-subspace/module-session';
 import type {
   Environment,
-  PrismaClient,
   ProviderDeployment,
   Session,
   Solution,
   Tenant
 } from '@metorial-subspace/db';
 
-export const SessionFixtures = (_db: PrismaClient) => {
+export const SessionFixtures = () => {
   const withDeployment = async (opts: {
     tenant: Tenant;
     solution: Solution;

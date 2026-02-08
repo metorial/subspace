@@ -11,7 +11,7 @@ export function fixtures(db: PrismaClient) {
     tenant: TenantFixtures(db),
     environment: EnvironmentFixtures(db),
     remoteMcpProvider: RemoteMcpProviderFixtures(db),
-    session: SessionFixtures(db)
+    session: SessionFixtures()
   };
 }
 

@@ -1,7 +1,9 @@
 import { generateCode } from '@lowerdeck/id';
 import { slugify } from '@lowerdeck/slugify';
 import { createShuttleClient } from '@metorial-services/shuttle-client';
-import { retryUntilTimeout } from '@metorial-subspace/connection-utils/src/retryUntilTimeout';
+import { retryUntilTimeout } from '@metorial-subspace/connection-utils';
+import { withTimeout } from '@metorial-subspace/connection-utils/src/withTimeout';
+import { withShuttleRetry } from '@metorial-subspace/provider-shuttle/src/shuttleRetry';
 import {
   getId,
   snowflake,
@@ -56,7 +58,8 @@ type RemoteMcpProviderOptions = {
 
 const DISCOVERY_TIMEOUT_MS = 30000;
 const DISCOVERY_CALL_TIMEOUT_MS = 10000;
-const REMOTE_SERVER_NAME = `Subspace Test Remote MCP (${process.pid})`;
+const REMOTE_SERVER_NAME =
+  process.env.TEST_MCP_REMOTE_SERVER_NAME ?? 'Subspace Test Remote MCP';
 
 const mcpRemoteType = {
   name: 'MCP',
@@ -68,21 +71,6 @@ const mcpRemoteType = {
     config: { status: 'disabled' }
   }
 } as const;
-
-const withTimeout = async <T>(promise: Promise<T>, ms: number, label: string): Promise<T> => {
-  let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
-  let timeout = new Promise<never>((_, reject) => {
-    timeoutHandle = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
-  });
-
-  try {
-    return await Promise.race([promise, timeout]);
-  } finally {
-    if (timeoutHandle) {
-      clearTimeout(timeoutHandle);
-    }
-  }
-};
 
 const getShuttleClient = () => {
   let endpoint = process.env.SHUTTLE_URL;
@@ -115,16 +103,14 @@ const ensureShuttleTenant = async (db: PrismaClient, tenant: Tenant) => {
   }
 
   let shuttleClient = getShuttleClient();
-  let shuttleTenant = await retryUntilTimeout({
-    fn: () =>
+  let shuttleTenant = await withShuttleRetry(
+    () =>
       shuttleClient.tenant.upsert({
         identifier: tenant.identifier,
         name: tenant.name
       }),
-    timeoutMs: 30000,
-    intervalMs: 500,
-    label: `Shuttle not reachable at ${process.env.SHUTTLE_URL}`
-  });
+    { endpoint: process.env.SHUTTLE_URL }
+  );
 
   let updatedTenant = await db.tenant.update({
     where: { oid: tenant.oid },
@@ -152,7 +138,6 @@ const waitForDeploymentVersion = async (opts: {
     timeoutMs,
     intervalMs: 500,
     label: 'Timed out waiting for shuttle server version',
-    timeoutMessage: () => 'Timed out waiting for shuttle server version',
     fn: async () => {
       let deployment = await shuttleClient.serverDeployment.get({
         tenantId: opts.tenantId,

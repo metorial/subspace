@@ -11,7 +11,7 @@ export type RetryUntilTimeoutContext<T> = {
   lastResult: T | null;
 };
 
-export type RetryUntilTimeoutOptions<T> = {
+type RetryUntilTimeoutOptions<T> = {
   fn: (attempt: number) => Promise<T | null>;
   timeoutMs: number;
   intervalMs: number;
@@ -26,7 +26,7 @@ export type RetryUntilTimeoutOptions<T> = {
   timeoutMessage?: (context: RetryUntilTimeoutContext<T>) => string;
 };
 
-let formatUnknownError = (value: unknown) => {
+export let formatUnknownError = (value: unknown) => {
   if (value instanceof Error) return value.message;
   return String(value);
 };
@@ -37,7 +37,7 @@ export let retryUntilTimeout = async <T>(opts: RetryUntilTimeoutOptions<T>): Pro
 
   let start = now();
   let attempt = 0;
-  let lastError: unknown = undefined;
+  let lastError: unknown ;
   let lastResult: T | null = null;
 
   let context = (): RetryUntilTimeoutContext<T> => ({
