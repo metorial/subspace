@@ -349,6 +349,8 @@ services:
 
     volumes:
       - ./apps/controller:/app/apps/controller:${SUBSPACE_SOURCE_MOUNT_MODE:-ro}
+      # Preserve container-installed workspace deps when source is bind-mounted (CI checkout has no node_modules).
+      - /app/apps/controller/node_modules
       - ./apps/controller/package.json:/app/apps/controller/package.json:ro
       - ./modules:/app/modules:ro
       - ./packages:/app/packages:ro
@@ -400,6 +402,8 @@ services:
     command: ['sh', '-c', 'sleep infinity']
     volumes:
       - ./apps/controller:/app/apps/controller:${SUBSPACE_SOURCE_MOUNT_MODE:-ro}
+      # Preserve container-installed workspace deps when source is bind-mounted (CI checkout has no node_modules).
+      - /app/apps/controller/node_modules
       - ./apps/controller/package.json:/app/apps/controller/package.json:ro
       - ./modules:/app/modules:ro
       - ./packages:/app/packages:ro
