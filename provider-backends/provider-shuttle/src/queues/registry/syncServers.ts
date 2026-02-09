@@ -1,6 +1,8 @@
 import { createCron } from '@lowerdeck/cron';
+import { Hash } from '@lowerdeck/hash';
 import { createLock } from '@lowerdeck/lock';
 import { createQueue } from '@lowerdeck/queue';
+import { slugify } from '@lowerdeck/slugify';
 import {
   createMcpRegistryClient,
   createRootRegistryClient
@@ -139,6 +141,19 @@ export let syncServersSingleProcessor = syncServersSingle.process(async data => 
     imageUrl: server.publisher.imageUrl ?? undefined
   });
 
+  let inner = {
+    name: server.name,
+    description: server.description ?? undefined,
+    metadata: {
+      publisherId: publisher.id,
+      registryUrl: data.registryUrl,
+      registryServerId: server.id,
+      globalIdentifier: slugify(
+        `${server.name}-${(await Hash.sha256(JSON.stringify(['shuttle', server.id, data.registryUrl]))).slice(0, 6)}`
+      )
+    }
+  };
+
   if (latestVersion.from.type == 'remote') {
     await shuttle.server.create({
       from: {
@@ -146,9 +161,7 @@ export let syncServersSingleProcessor = syncServersSingle.process(async data => 
         remoteUrl: latestVersion.from.remoteUrl,
         protocol: latestVersion.from.protocol
       },
-      name: server.name,
-      description: server.description ?? undefined,
-      metadata: { publisherId: publisher.id }
+      ...inner
     });
   } else if (latestVersion.from.type == 'container') {
     await shuttle.server.create({
@@ -156,9 +169,7 @@ export let syncServersSingleProcessor = syncServersSingle.process(async data => 
         type: 'container.from_image_ref',
         imageRef: latestVersion.from.imageRef
       },
-      name: server.name,
-      description: server.description ?? undefined,
-      metadata: { publisherId: publisher.id }
+      ...inner
     });
   }
 });

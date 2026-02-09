@@ -37,10 +37,11 @@ model Provider {
 
   hasEnvironments Boolean @default(false)
 
-  identifier  String  @unique
-  slug        String  @unique
-  name        String
-  description String?
+  identifier       String  @unique
+  slug             String  @unique
+  globalIdentifier String? @unique
+  name             String
+  description      String?
 
   metadata Json?
 

@@ -88,6 +88,7 @@ export let syncShuttleVersionQueueProcessor = syncShuttleVersionQueue.process(as
     if (!tenant) {
       await upsertShuttleServerVersion({
         publisherId: (server.metadata as any)?.publisherId,
+        globalIdentifier: (server.metadata as any)?.globalIdentifier,
 
         shuttleServer: server,
         shuttleServerVersion: version,
