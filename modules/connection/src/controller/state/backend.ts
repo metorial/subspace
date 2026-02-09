@@ -13,6 +13,7 @@ export let getConnectionBackendConnection = async (state: ConnectionState) => {
     providerConfigVersion: state.instance.sessionProvider.config.currentVersion!,
     providerAuthConfigVersion:
       state.instance.sessionProvider.authConfig?.currentVersion ?? null,
+    providerDeployment: state.sessionProvider.deployment,
 
     session: state.session,
     connection: state.connection,

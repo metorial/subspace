@@ -2,8 +2,10 @@ import { badRequestError, notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
+  CustomProviderCommitTrigger,
   db,
   getId,
+  ScmRepoPush,
   type Actor,
   type CustomProviderCommit,
   type CustomProviderEnvironment,
@@ -34,7 +36,10 @@ let envInclude = {
 let verInclude = {
   include: {
     deployment: {
-      include: { commit: true }
+      include: {
+        commit: true,
+        scmRepoPush: { include: { repo: true } }
+      }
     },
     providerVersion: true,
     customProviderEnvironmentVersions: {
@@ -51,7 +56,8 @@ let verInclude = {
         }
       }
     },
-    creatorActor: true
+    creatorActor: true,
+    immutableCodeBucket: { include: { scmRepo: true } }
   }
 };
 
@@ -66,7 +72,8 @@ let include = {
   targetCustomProviderVersion: verInclude,
   toEnvironmentVersionBefore: verInclude,
   creatorActor: true,
-  customProviderDeployment: true
+  customProviderDeployment: true,
+  scmRepoPush: { include: { repo: true } }
 };
 
 class customProviderCommitServiceImpl {
@@ -75,6 +82,11 @@ class customProviderCommitServiceImpl {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
+
+    _internal?: {
+      trigger?: CustomProviderCommitTrigger;
+      scmPush?: ScmRepoPush;
+    };
 
     input: {
       message: string;
@@ -96,14 +108,15 @@ class customProviderCommitServiceImpl {
       ...getId('customProviderCommit'),
 
       status: 'pending' as const,
-      trigger: 'manual' as const,
+      trigger: d._internal?.trigger ?? ('manual' as const),
       type: d.input.action.type,
 
       message: d.input.message,
 
+      scmRepoPushOid: d._internal?.scmPush?.oid,
+
       tenantOid: d.tenant.oid,
       solutionOid: d.solution.oid,
-
       creatorActorOid: d.actor.oid
     };
 

@@ -26,7 +26,9 @@ let include = {
   },
   creatorActor: true,
   customProviderVersion: true,
-  commit: true
+  commit: true,
+  scmRepoPush: { include: { repo: true } },
+  immutableCodeBucket: { include: { scmRepo: true } }
 };
 
 class customProviderDeploymentServiceImpl {

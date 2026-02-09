@@ -2,6 +2,7 @@ import { apiMux } from '@lowerdeck/api-mux';
 import { createServer, type InferClient, rpcMux } from '@lowerdeck/rpc-server';
 import { app } from './_app';
 import { actorController } from './actor';
+import { bucketController } from './bucket';
 import { containerRegistryController } from './containerRegistry';
 import { containerRepositoryController } from './containerRepository';
 import { customProviderController } from './customProvider';
@@ -32,6 +33,12 @@ import { providerToolController } from './providerTool';
 import { providerVariantController } from './providerVariant';
 import { providerVersionController } from './providerVersion';
 import { publisherController } from './publisher';
+import { scmConnectionController } from './scmConnection';
+import { scmConnectionSetupSessionController } from './scmConnectionSetupSession';
+import { scmProviderController } from './scmProvider';
+import { scmProviderSetupSessionController } from './scmProviderSetupSession';
+import { scmPushController } from './scmPush';
+import { scmRepositoryController } from './scmRepository';
 import { sessionController } from './session';
 import { sessionConnectionController } from './sessionConnection';
 import { sessionErrorController } from './sessionError';
@@ -92,7 +99,15 @@ export let rootController = app.controller({
   containerRepository: containerRepositoryController,
   networkingRuleset: networkingRulesetController,
 
-  providerRun: providerRunController
+  providerRun: providerRunController,
+
+  scmConnection: scmConnectionController,
+  scmConnectionSetupSession: scmConnectionSetupSessionController,
+  scmProvider: scmProviderController,
+  scmProviderSetupSession: scmProviderSetupSessionController,
+  scmRepository: scmRepositoryController,
+  scmPush: scmPushController,
+  bucket: bucketController
 });
 
 export let subspaceControllerRPC = createServer({})(rootController);

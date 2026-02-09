@@ -25,13 +25,15 @@ export let networkingRulesetController = app.controller({
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string()
+          tenantId: v.string(),
+          environmentId: v.string()
         })
       )
     )
     .do(async ctx => {
       let paginator = await networkingRulesetService.listNetworkingRulesets({
-        tenant: ctx.tenant
+        tenant: ctx.tenant,
+        ...ctx.input
       });
 
       return {
@@ -45,6 +47,7 @@ export let networkingRulesetController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
 
         name: v.string(),
         description: v.optional(v.string()),
@@ -67,7 +70,13 @@ export let networkingRulesetController = app.controller({
     .do(async ctx => {
       let res = await networkingRulesetService.createNetworkingRulesetById({
         tenant: ctx.tenant,
-        input: ctx.input
+        input: {
+          name: ctx.input.name,
+          description: ctx.input.description,
+          isDefault: ctx.input.isDefault,
+          defaultAction: ctx.input.defaultAction,
+          rules: ctx.input.rules as any
+        }
       });
 
       return networkingRulesetPresenter(res);
@@ -78,6 +87,7 @@ export let networkingRulesetController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         networkingRulesetId: v.string()
       })
     )
@@ -88,6 +98,7 @@ export let networkingRulesetController = app.controller({
     .input(
       v.object({
         tenantId: v.string(),
+        environmentId: v.string(),
         networkingRulesetId: v.string(),
 
         name: v.optional(v.string()),
@@ -113,7 +124,12 @@ export let networkingRulesetController = app.controller({
       let res = await networkingRulesetService.updateNetworkingRuleset({
         networkingRuleset: ctx.networkingRuleset,
         tenant: ctx.tenant,
-        input: ctx.input
+        input: {
+          name: ctx.input.name,
+          description: ctx.input.description,
+          defaultAction: ctx.input.defaultAction,
+          rules: ctx.input.rules as any
+        }
       });
 
       return networkingRulesetPresenter(res);

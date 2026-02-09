@@ -1,12 +1,17 @@
 import type {
   Actor,
+  CodeBucket,
   CustomProvider,
   CustomProviderCommit,
   CustomProviderDeployment,
   CustomProviderVersion,
-  Provider
+  Provider,
+  ScmRepo,
+  ScmRepoPush
 } from '@metorial-subspace/db';
 import { actorPresenter } from './actor';
+import { bucketPresenter } from './bucket';
+import { scmPushPresenter } from './scmPush';
 
 export let customProviderDeploymentPresenter = (
   customProviderDeployment: CustomProviderDeployment & {
@@ -18,6 +23,10 @@ export let customProviderDeploymentPresenter = (
     commit: CustomProviderCommit | null;
 
     creatorActor: Actor;
+
+    immutableCodeBucket: (CodeBucket & { scmRepo: ScmRepo | null }) | null;
+
+    scmRepoPush: (ScmRepoPush & { repo: ScmRepo }) | null;
   }
 ) => ({
   object: 'custom_provider.deployment',
@@ -28,7 +37,7 @@ export let customProviderDeploymentPresenter = (
 
   customProviderId: customProviderDeployment.customProvider.id,
   providerId: customProviderDeployment.customProvider.provider?.id,
-  customProviderVersionId: customProviderDeployment.customProviderVersion?.id!,
+  customProviderVersionId: customProviderDeployment.customProviderVersion?.id,
 
   commit: customProviderDeployment.commit
     ? {
@@ -40,7 +49,15 @@ export let customProviderDeploymentPresenter = (
       }
     : null,
 
+  immutableBucket: customProviderDeployment.immutableCodeBucket
+    ? bucketPresenter(customProviderDeployment.immutableCodeBucket)
+    : null,
+
   actor: actorPresenter(customProviderDeployment.creatorActor),
+
+  scmPush: customProviderDeployment.scmRepoPush
+    ? scmPushPresenter(customProviderDeployment.scmRepoPush)
+    : null,
 
   createdAt: customProviderDeployment.createdAt,
   updatedAt: customProviderDeployment.updatedAt

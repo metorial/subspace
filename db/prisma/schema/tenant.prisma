@@ -13,6 +13,9 @@ model Tenant {
   shuttleTenantId         String?
   shuttleTenantIdentifier String?
 
+  originTenantId         String?
+  originTenantIdentifier String?
+
   createdAt DateTime @default(now())
 
   logRetentionInDays Int @default(30)
@@ -64,6 +67,10 @@ model Tenant {
   customProviderEnvironments               CustomProviderEnvironment[]
   actors                                   Actor[]
   customProviderCommits                    CustomProviderCommit[]
+  upcomingCustomProviders                  UpcomingCustomProvider[]
+  codeBuckets                              CodeBucket[]
+  scmRepos                                 ScmRepo[]
+  scmRepoPushes                            ScmRepoPush[]
 }
 
 enum EnvironmentType {
@@ -114,6 +121,7 @@ model Environment {
   customProviderEnvironments               CustomProviderEnvironment[]
   customProviderEnvironmentVersions        CustomProviderEnvironmentVersion[]
   providerEnvironmentVersions              ProviderEnvironmentVersion[]
+  upcomingCustomProviders                  UpcomingCustomProvider[]
 }
 
 enum ActorType {
@@ -139,4 +147,5 @@ model Actor {
   customProviderVersions    CustomProviderVersion[]
   customProviderDeployments CustomProviderDeployment[]
   customProviderCommits     CustomProviderCommit[]
+  upcomingCustomProviders   UpcomingCustomProvider[]
 }

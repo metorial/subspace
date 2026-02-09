@@ -70,3 +70,14 @@ export let resolveProviderAuthMethods = createResolver(async ({ ts, ids }) =>
     select: { oid: true }
   })
 );
+
+export let resolveScmRepos = createResolver(async ({ ts, ids }) =>
+  db.scmRepo.findMany({
+    where: {
+      tenantOid: ts.tenantOid,
+      solutionOid: ts.solutionOid,
+      id: { in: ids }
+    },
+    select: { oid: true }
+  })
+);

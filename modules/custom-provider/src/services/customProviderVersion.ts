@@ -1,8 +1,11 @@
-import { notFoundError, ServiceError } from '@lowerdeck/error';
+import { badRequestError, notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
+import type { CustomProviderConfig, CustomProviderFrom } from '@metorial-subspace/db';
 import {
+  addAfterTransactionHook,
   db,
+  getId,
   withTransaction,
   type Actor,
   type CustomProvider,
@@ -19,10 +22,8 @@ import {
   resolveProviders
 } from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
-import { backend } from '../_shuttle/backend';
-import type { CustomProviderConfig, CustomProviderFrom } from '../_shuttle/types';
-import { createVersion } from '../internal/createVersion';
-import { ensureEnvironments } from '../internal/ensureEnvironments';
+import { prepareVersion } from '../internal/createVersion';
+import { handleUpcomingCustomProviderQueue } from '../queues/upcoming/handle';
 
 let include = {
   customProvider: {
@@ -31,10 +32,13 @@ let include = {
     }
   },
   deployment: {
-    include: { commit: true }
+    include: {
+      commit: true,
+      scmRepoPush: { include: { repo: true } }
+    }
   },
   providerVersion: true,
-
+  immutableCodeBucket: { include: { scmRepo: true } },
   customProviderEnvironmentVersions: {
     include: {
       customProviderEnvironment: {
@@ -62,44 +66,95 @@ class customProviderVersionServiceImpl {
     customProvider: CustomProvider;
     input: {
       message?: string;
-
-      from: CustomProviderFrom;
+      from?: CustomProviderFrom;
       config?: CustomProviderConfig;
     };
   }) {
     checkTenant(d, d.customProvider);
     checkDeletedRelation(d.customProvider);
 
-    let backendProvider = await backend.createCustomProviderVersion({
-      tenant: d.tenant,
+    let from = d.input.from || d.customProvider.payload.from;
+    let config = d.input.config || d.customProvider.payload.config;
 
-      from: d.input.from,
-      config: d.input.config!,
+    if (d.customProvider.type != from.type) {
+      throw new ServiceError(
+        badRequestError({
+          message: `Custom provider type '${d.customProvider.type}' does not match deployment from type '${from.type}'`,
+          hint: 'Please ensure the deployment from type matches the custom provider type.'
+        })
+      );
+    }
 
-      customProvider: d.customProvider
-    });
+    if (from.type == 'function' && from.files && from.repository) {
+      throw new ServiceError(
+        badRequestError({
+          message:
+            'Cannot create deployment from files when SCM repo is set on custom provider',
+          hint: 'Unlink the SCM repo from the custom provider or remove the files from the deployment input.'
+        })
+      );
+    }
+
+    if (from.type == 'function' && !from.files?.length && !from.repository) {
+      throw new ServiceError(
+        badRequestError({
+          message:
+            'No deployment source provided. Either files or an SCM repository must be set to create a deployment.',
+          hint: 'Please provide either deployment files or link an SCM repository.'
+        })
+      );
+    }
 
     return withTransaction(async db => {
-      await ensureEnvironments(d);
+      await db.customProvider.updateMany({
+        where: { oid: d.customProvider.oid },
+        data: {
+          payload: {
+            // @ts-ignore - strip files
+            from: { ...from, files: undefined },
+            config
+          }
+        }
+      });
 
-      let versionRes = await createVersion({
+      let versionPrep = await prepareVersion({
         actor: d.actor,
         tenant: d.tenant,
         solution: d.solution,
         environment: d.environment,
-
-        message: d.input.message,
-
-        trigger: 'manual',
         customProvider: d.customProvider,
-
-        shuttleServer: backendProvider.shuttleServer,
-        shuttleCustomServer: backendProvider.shuttleCustomServer,
-        shuttleCustomDeployment: backendProvider.shuttleCustomDeployment
+        trigger: 'manual'
       });
 
+      let upcoming = await db.upcomingCustomProvider.create({
+        data: {
+          ...getId('upcomingCustomProvider'),
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid,
+          actorOid: d.actor.oid,
+
+          message: d.input.message,
+
+          type: 'create_custom_provider',
+
+          customProviderOid: d.customProvider.oid,
+          customProviderVersionOid: versionPrep.version.oid,
+          customProviderDeploymentOid: versionPrep.deployment.oid,
+
+          payload: {
+            from,
+            config
+          }
+        }
+      });
+
+      await addAfterTransactionHook(async () =>
+        handleUpcomingCustomProviderQueue.add({ upcomingCustomProviderId: upcoming.id })
+      );
+
       return await db.customProviderVersion.findUniqueOrThrow({
-        where: { oid: versionRes.version.oid, tenantOid: d.tenant.oid },
+        where: { oid: versionPrep.version.oid, tenantOid: d.tenant.oid },
         include
       });
     });

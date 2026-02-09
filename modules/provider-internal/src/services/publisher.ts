@@ -12,11 +12,16 @@ import { publisherCreatedQueue, publisherUpdatedQueue } from '../queues/lifecycl
 
 class publisherInternalServiceImpl {
   async upsertPublisherForTenant(d: { tenant: Tenant }) {
+    let brand = await db.brand.findFirst({
+      where: { tenantOid: d.tenant.oid }
+    });
+
     return this.upsertPublisher({
       owner: { type: 'tenant', tenant: d.tenant },
       input: {
         identifier: `tenant::${d.tenant.id}`,
-        name: d.tenant.name
+        name: d.tenant.name,
+        image: brand?.image ?? undefined
       }
     });
   }
@@ -26,7 +31,11 @@ class publisherInternalServiceImpl {
       owner: { type: 'metorial' },
       input: {
         identifier: `metorial`,
-        name: `Metorial`
+        name: `Metorial`,
+        image: {
+          type: 'url',
+          url: 'https://cdn.metorial.com/2025-06-13--14-59-55/logos/metorial/primary_logo/raw.svg'
+        }
       }
     });
   }
@@ -35,13 +44,15 @@ class publisherInternalServiceImpl {
     identifier: string;
     name: string;
     description?: string;
+    imageUrl?: string;
   }) {
     return this.upsertPublisher({
       owner: { type: 'external' },
       input: {
         identifier: `ext::${d.identifier}`,
         name: d.name,
-        description: d.description
+        description: d.description,
+        image: d.imageUrl ? { type: 'url', url: d.imageUrl } : undefined
       }
     });
   }
@@ -63,6 +74,7 @@ class publisherInternalServiceImpl {
       identifier: string;
       description?: string;
       source?: PrismaJson.PublisherSource;
+      image?: PrismaJson.EntityImage;
     };
   }) {
     let publisher = await db.publisher.findFirst({
@@ -76,7 +88,9 @@ class publisherInternalServiceImpl {
       publisher.name === d.input.name &&
       publisher.description === d.input.description &&
       (publisher.source === d.input.source ||
-        canonicalize(publisher.source) === canonicalize(d.input.source))
+        canonicalize(publisher.source) === canonicalize(d.input.source)) &&
+      (publisher.image === d.input.image ||
+        canonicalize(publisher.image) === canonicalize(d.input.image))
     ) {
       return publisher;
     }
@@ -99,6 +113,7 @@ class publisherInternalServiceImpl {
           name: d.input.name,
           identifier: d.input.identifier,
           description: d.input.description,
+          image: d.input.image,
 
           source: d.input.source,
 

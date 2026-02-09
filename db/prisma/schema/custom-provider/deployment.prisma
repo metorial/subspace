@@ -8,7 +8,7 @@ enum CustomProviderDeploymentStatus {
 enum CustomProviderDeploymentTrigger {
   manual
   system
-  // git
+  scm
 }
 
 model CustomProviderDeployment {
@@ -45,12 +45,22 @@ model CustomProviderDeployment {
   shuttleCustomServerDeploymentOid BigInt?                        @unique
   shuttleCustomServerDeployment    ShuttleCustomServerDeployment? @relation(fields: [shuttleCustomServerDeploymentOid], references: [oid])
 
+  scmRepoOid BigInt?
+  scmRepo    ScmRepo? @relation(fields: [scmRepoOid], references: [oid])
+
+  immutableCodeBucketOid BigInt?
+  immutableCodeBucket    CodeBucket? @relation(fields: [immutableCodeBucketOid], references: [oid])
+
+  scmRepoPushOid BigInt?
+  scmRepoPush    ScmRepoPush? @relation(fields: [scmRepoPushOid], references: [oid])
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
   startedAt DateTime?
   endedAt   DateTime?
 
-  customProviderVersion CustomProviderVersion?
+  customProviderVersion   CustomProviderVersion?
+  upcomingCustomProviders UpcomingCustomProvider[]
 
   @@index([status])
   @@index([trigger])

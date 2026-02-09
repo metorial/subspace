@@ -90,6 +90,8 @@ export let customProviderVersionController = app.controller({
 
         customProviderId: v.string(),
 
+        message: v.optional(v.string()),
+
         from: customProviderFromValidator,
         config: customProviderConfigValidator
       })
@@ -117,6 +119,7 @@ export let customProviderVersionController = app.controller({
           customProvider,
 
           input: {
+            message: ctx.input.message,
             from: ctx.input.from as any,
             config: ctx.input.config as any
           }
