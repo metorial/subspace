@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@lowerdeck/testing-tools": "^1.0.1",
+    "@metorial-subspace/connection-utils": "^1.0.0",
     "@prisma/adapter-pg": "^7.2.0",
     "@types/bun": "latest",
     "vitest": "4.0.17"

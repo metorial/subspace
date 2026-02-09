@@ -36,9 +36,8 @@ let startListening = async (app: ReturnType<typeof express>, port: number): Prom
 
 export let startMcpTestServer = async (): Promise<McpTestServerHandle> => {
   let app = express();
-  let mcpServer = createFullFeaturedServer();
 
-  await setupTransports(app, mcpServer, '/full');
+  await setupTransports(app, createFullFeaturedServer, '/full');
 
   let preferredPort = Number(process.env.TEST_MCP_SERVER_PORT ?? 52198);
   let listener: Server;
