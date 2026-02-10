@@ -6,36 +6,55 @@
   "scripts": {
     "start:dev": "bun --watch ./src/server.ts",
     "start": "bun ./src/server.ts",
-    "infra:up": "docker compose -p subspace -f ../../docker-compose.dev.yml up -d postgres redis object-storage nats-1 nats-2 shuttle",
-    "infra:down": "docker compose -p subspace -f ../../docker-compose.dev.yml stop postgres redis object-storage nats-1 nats-2 shuttle",
+    "infra:up": "docker compose -p subspace -f ../../docker-compose.dev.yml --profile infra up -d postgres redis object-storage nats-1 nats-2 shuttle mcp-test-server",
+    "infra:down": "docker compose -p subspace -f ../../docker-compose.dev.yml --profile infra stop postgres redis object-storage nats-1 nats-2 shuttle mcp-test-server",
     "db:push:test": "sh -c 'set -a; . .env.test; set +a; bunx prisma db push --schema ../../db/prisma/schema --config ../../db/prisma.config.ts'",
     "test": "vitest run --passWithNoTests",
     "test:ci": "vitest run --mode ci --reporter verbose --configLoader native",
     "test:watch": "bunx vitest watch"
   },
   "devDependencies": {
+    "@lowerdeck/slugify": "^1.0.4",
     "@lowerdeck/testing-tools": "^1.0.1",
+    "@metorial-services/shuttle-client": "^1.0.8",
     "@metorial-subspace/connection-utils": "^1.0.0",
+    "@metorial-subspace/module-provider-internal": "^1.0.0",
+    "@metorial-subspace/provider": "^1.0.0",
     "@prisma/adapter-pg": "^7.2.0",
     "@types/bun": "latest",
+    "express": "^5.2.1",
     "vitest": "4.0.17"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.7.6",
     "@lowerdeck/api-mux": "^1.0.1",
+    "@lowerdeck/delay": "^1.0.4",
+    "@lowerdeck/env": "^1.0.4",
     "@lowerdeck/error": "^1.0.10",
+    "@lowerdeck/hono": "^1.0.7",
+    "@lowerdeck/id": "^1.0.6",
     "@lowerdeck/pagination": "^1.0.4",
+    "@lowerdeck/rpc-client": "^1.0.5",
     "@lowerdeck/rpc-server": "^1.0.5",
+    "@lowerdeck/sentry": "^1.0.2",
+    "@lowerdeck/serialize": "^1.0.4",
     "@lowerdeck/validation": "^1.0.4",
     "@metorial-subspace/db": "^1.0.0",
     "@metorial-subspace/module-auth": "^1.0.0",
     "@metorial-subspace/module-catalog": "^1.0.0",
+    "@metorial-subspace/module-connection": "^1.0.0",
+    "@metorial-subspace/module-custom-provider": "^1.0.0",
     "@metorial-subspace/module-deployment": "^1.0.0",
     "@metorial-subspace/module-session": "^1.0.0",
     "@metorial-subspace/module-tenant": "^1.0.0",
     "@metorial-subspace/presenters": "^1.0.0",
-    "@sentry/bun": "^10.34.0"
+    "@metorial-subspace/provider-shuttle": "^1.0.0",
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "@sentry/bun": "^10.34.0",
+    "hono": "^4.11.3",
+    "zod": "^4.3.6"
   }
 }

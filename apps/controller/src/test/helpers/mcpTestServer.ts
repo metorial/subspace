@@ -6,9 +6,10 @@ import { createFullFeaturedServer } from '../../../../../test-servers/src/server
 import { setupTransports } from '../../../../../test-servers/src/shared/transport';
 
 export type McpTestServerHandle = {
-  listener: Server;
-  port: number;
+  listener: Server | null;
+  port: number | null;
   baseUrl: string;
+  mode: 'embedded' | 'external';
 };
 
 let waitForBoundAddress = async (
@@ -34,7 +35,19 @@ let startListening = async (app: ReturnType<typeof express>, port: number): Prom
     server.once('error', reject);
   });
 
+let normalizeBaseUrl = (baseUrl: string) => baseUrl.replace(/\/+$/, '');
+
 export let startMcpTestServer = async (): Promise<McpTestServerHandle> => {
+  let externalBaseUrl = process.env.TEST_MCP_SERVER_BASE_URL;
+  if (externalBaseUrl) {
+    return {
+      listener: null,
+      port: null,
+      baseUrl: normalizeBaseUrl(externalBaseUrl),
+      mode: 'external'
+    };
+  }
+
   let app = express();
 
   await setupTransports(app, createFullFeaturedServer, '/full');
@@ -68,13 +81,15 @@ export let startMcpTestServer = async (): Promise<McpTestServerHandle> => {
   let host = process.env.TEST_MCP_SERVER_HOST ?? 'host.docker.internal';
   let baseUrl = `http://${host}:${port}`;
 
-  return { listener, port, baseUrl };
+  return { listener, port, baseUrl, mode: 'embedded' };
 };
 
 export let stopMcpTestServer = async (
   handle: McpTestServerHandle,
   opts: { timeoutMs?: number } = {}
 ) => {
+  if (!handle.listener) return;
+
   let listener = handle.listener as Server & {
     closeAllConnections?: () => void;
     closeIdleConnections?: () => void;

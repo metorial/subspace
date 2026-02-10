@@ -55,11 +55,17 @@ describe('mcp.e2e', () => {
 
         let toolNames = tools.tools.map(t => t.name);
         let addTool = toolNames.find(name => /(^|[_.-])add([_.-]|$)/.test(name));
+        expect(
+          addTool,
+          `Expected an add-like tool for ${transportCase.name}. Discovered tools: ${
+            toolNames.length ? toolNames.join(', ') : '(none)'
+          }`
+        ).toBeTruthy();
         let result = await mcp.client.callTool({ name: addTool!, arguments: { a: 1, b: 2 } });
         let text = (result as { content?: Array<{ type?: string; text?: string }> }).content?.find(
           p => p.type === 'text'
         )?.text;
-        
+
         expect(text).toContain('Result: 3');
       } finally {
         await mcp.cleanup();

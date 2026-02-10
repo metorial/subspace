@@ -440,6 +440,27 @@ services:
     networks:
       - subspace-network
 
+  mcp-test-server:
+    profiles: ['infra']
+    build:
+      context: .
+      dockerfile: ./apps/controller/dev.Dockerfile
+    container_name: subspace-mcp-test-server
+    command: ['sh', '-c', 'PORT=52198 bun ./test-servers/index.ts']
+    ports:
+      - '52198:52198'
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          "bun -e \"fetch('http://localhost:52198/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - subspace-network
+
   subspace-controller-test:
     profiles: ['infra']
     build:
@@ -476,6 +497,8 @@ services:
       slates-hub:
         condition: service_healthy
       shuttle:
+        condition: service_healthy
+      mcp-test-server:
         condition: service_healthy
       nats-1:
         condition: service_started

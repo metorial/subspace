@@ -4,6 +4,7 @@ import { createShuttleClient } from '@metorial-services/shuttle-client';
 import { retryUntilTimeout } from '@metorial-subspace/connection-utils';
 import { withTimeout } from '@metorial-subspace/connection-utils/src/withTimeout';
 import { withShuttleRetry } from '@metorial-subspace/provider-shuttle/src/shuttleRetry';
+import { createHash } from 'node:crypto';
 import {
   getId,
   snowflake,
@@ -54,12 +55,27 @@ type RemoteMcpProviderOptions = {
   solution?: Solution;
   tenant?: Tenant;
   environment?: Environment;
+  requireAtLeastOneTool?: boolean;
 };
 
 const DISCOVERY_TIMEOUT_MS = 30000;
 const DISCOVERY_CALL_TIMEOUT_MS = 10000;
-const REMOTE_SERVER_NAME =
-  process.env.TEST_MCP_REMOTE_SERVER_NAME ?? 'Subspace Test Remote MCP';
+const REMOTE_SERVER_NAME_EXACT = process.env.TEST_MCP_REMOTE_SERVER_NAME;
+const REMOTE_SERVER_NAME_PREFIX =
+  process.env.TEST_MCP_REMOTE_SERVER_NAME_PREFIX ?? 'Subspace Test Remote MCP';
+const REMOTE_SERVER_RUN_ID =
+  process.env.TEST_MCP_REMOTE_SERVER_RUN_ID ?? generateCode(16).toLowerCase();
+
+const resolveRemoteServerName = (opts: { remoteUrl: string; protocol: 'sse' | 'streamable_http' }) => {
+  if (REMOTE_SERVER_NAME_EXACT) return REMOTE_SERVER_NAME_EXACT;
+
+  let baseName = slugify(`${REMOTE_SERVER_NAME_PREFIX}-${REMOTE_SERVER_RUN_ID}`) || 'subspace-remote-mcp';
+  let scopedHash = createHash('sha1')
+    .update(`${opts.remoteUrl}|${opts.protocol}`)
+    .digest('hex')
+    .slice(0, 10);
+  return `${baseName.slice(0, 80)}-${scopedHash}`;
+};
 
 const mcpRemoteType = {
   name: 'MCP',
@@ -226,10 +242,11 @@ const findRemoteServerByName = async (opts: {
 };
 
 // Creates or reuses a remote MCP server in Shuttle, deploying a new version
-// if the URL or protocol changed. Uses a stable name so test runs share the same server.
+// if the URL or protocol changed.
 const ensureRemoteServerVersion = async (opts: {
   shuttleClient: ReturnType<typeof createShuttleClient>;
   tenantId: string;
+  serverName: string;
   remoteUrl: string;
   protocol: 'sse' | 'streamable_http';
 }) => {
@@ -240,13 +257,13 @@ const ensureRemoteServerVersion = async (opts: {
   let existing = await findRemoteServerByName({
     shuttleClient: opts.shuttleClient,
     tenantId: opts.tenantId,
-    serverName: REMOTE_SERVER_NAME
+    serverName: opts.serverName
   });
 
   if (!existing) {
     let { server, deployment } = await opts.shuttleClient.server.create({
       tenantId: opts.tenantId,
-      name: REMOTE_SERVER_NAME,
+      name: opts.serverName,
       description: 'Fixture remote MCP server',
       from: {
         type: 'remote',
@@ -336,6 +353,45 @@ const waitForPairVersionDiscovery = async (
   });
 };
 
+const ensureSpecificationHasTools = async (opts: {
+  db: PrismaClient;
+  specification: ProviderSpecification;
+  providerVersion: {
+    oid: bigint;
+    specificationOid: bigint | null;
+    specificationDiscoveryStatus: string;
+  };
+  pairVersion: {
+    oid: bigint;
+    specificationOid: bigint | null;
+    specificationDiscoveryStatus: string;
+  };
+  remoteUrl: string;
+  protocol: 'sse' | 'streamable_http';
+}) => {
+  let toolCount = await opts.db.providerTool.count({
+    where: { specificationOid: opts.specification.oid }
+  });
+  if (toolCount > 0) return;
+
+  let details = {
+    protocol: opts.protocol,
+    remoteUrl: opts.remoteUrl,
+    specificationOid: opts.specification.oid.toString(),
+    specificationType: opts.specification.type,
+    providerVersionOid: opts.providerVersion.oid.toString(),
+    providerVersionSpecificationOid: opts.providerVersion.specificationOid?.toString() ?? null,
+    providerVersionDiscoveryStatus: opts.providerVersion.specificationDiscoveryStatus,
+    pairVersionOid: opts.pairVersion.oid.toString(),
+    pairVersionSpecificationOid: opts.pairVersion.specificationOid?.toString() ?? null,
+    pairVersionDiscoveryStatus: opts.pairVersion.specificationDiscoveryStatus
+  };
+
+  throw new Error(
+    `MCP specification discovery produced zero tools. Details: ${JSON.stringify(details)}`
+  );
+};
+
 // Discovers a provider's specification (tools, auth methods, features) by calling
 // the Shuttle backend capabilities API with retries, then persists the result locally
 const discoverSpecification = async (d: {
@@ -396,9 +452,11 @@ export const RemoteMcpProviderFixtures = (db: PrismaClient) => {
     let shuttleTenant = await ensureShuttleTenant(db, tenant);
 
     let protocol = opts.protocol ?? 'streamable_http';
+    let remoteServerName = resolveRemoteServerName({ remoteUrl: opts.remoteUrl, protocol });
     let { server, serverVersionId } = await ensureRemoteServerVersion({
       shuttleClient,
       tenantId: shuttleTenant.id,
+      serverName: remoteServerName,
       remoteUrl: opts.remoteUrl,
       protocol
     });
@@ -594,6 +652,17 @@ export const RemoteMcpProviderFixtures = (db: PrismaClient) => {
     providerVersion = await db.providerVersion.findFirstOrThrow({
       where: { oid: providerVersion.oid }
     });
+
+    if (opts.requireAtLeastOneTool) {
+      await ensureSpecificationHasTools({
+        db,
+        specification,
+        providerVersion,
+        pairVersion,
+        remoteUrl: opts.remoteUrl,
+        protocol
+      });
+    }
 
     return {
       solution,

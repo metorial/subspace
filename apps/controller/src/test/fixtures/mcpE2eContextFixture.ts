@@ -46,6 +46,7 @@ export let createMcpE2eContext = async (
   let providerSetup = await f.remoteMcpProvider.complete({
     remoteUrl: upstreamUrl,
     protocol: opts.transportCase.providerProtocol,
+    requireAtLeastOneTool: true,
     tenant,
     solution,
     environment

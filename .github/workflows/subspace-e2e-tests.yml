@@ -59,6 +59,7 @@ jobs:
         subspace-slates-registry
         subspace-slates-hub
         subspace-shuttle
+        subspace-mcp-test-server
         subspace-controller-test-service
       test_container: subspace-controller-test-service
-      test_command: cd /app && bun install --frozen-lockfile && set -a && . ./apps/controller/.env.ci && set +a && cd /app/db && bun prisma db push --schema prisma/schema --config prisma.config.ts && bun prisma generate --schema prisma/schema --config prisma.config.ts && cd /app/apps/controller && TEST_MCP_SERVER_HOST=subspace-controller-test bun run test:ci
+      test_command: cd /app/apps/controller && set -a && . ./.env.ci && set +a && bunx prisma db push --schema ../../db/prisma/schema --config ../../db/prisma.config.ts && bunx prisma generate --schema ../../db/prisma/schema --config ../../db/prisma.config.ts && bun run test:ci
