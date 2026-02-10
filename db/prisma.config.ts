@@ -23,4 +23,4 @@ export default defineConfig({
     url: databaseUrl,
     shadowDatabaseUrl: process.env['SHADOW_DATABASE_URL']
   }
-};
+});
