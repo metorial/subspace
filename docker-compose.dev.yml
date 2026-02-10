@@ -293,10 +293,8 @@ services:
       FUNCTION_BAY_TENANT_IDENTIFIER: dev-tenant
       FUNCTION_BAY_DEFAULT_MEMORY_MB: 512
       FUNCTION_BAY_DEFAULT_TIMEOUT_SECONDS: 15
-      SHUTTLE_ALLOW_PRIVATE_URLS: "1"
-    volumes:
-      - ./dev/shuttle/fetchSsrf.ts:/app/src/lib/http/fetchSsrf.ts:ro
-      - ./dev/shuttle/axiosSsrf.ts:/app/src/lib/http/axiosSsrf.ts:ro
+      SHUTTLE_ALLOW_PRIVATE_URLS: "true"
+      SHUTTLE_UNSAFE_SSRF_BYPASS: "true"
 
     depends_on:
       postgres:
