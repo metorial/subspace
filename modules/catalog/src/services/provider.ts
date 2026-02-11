@@ -53,7 +53,6 @@ class providerServiceImpl {
           {
             OR: [
               { id: d.providerId },
-              { globalIdentifier: d.providerId },
               { listing: { id: d.providerId } },
               { listing: { slug: d.providerId } }
             ]

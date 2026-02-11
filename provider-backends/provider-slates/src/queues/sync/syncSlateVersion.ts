@@ -1,5 +1,4 @@
 import { createLocallyCachedFunction } from '@lowerdeck/cache';
-import { Hash } from '@lowerdeck/hash';
 import { generateCode } from '@lowerdeck/id';
 import { createQueue } from '@lowerdeck/queue';
 import { slugify } from '@lowerdeck/slugify';
@@ -59,7 +58,7 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
 
   let registry = await getRegistries(slate.registryId);
   let parsedUrl = new URL(registry.url);
-  let isMetorialRegistry = metorialDomains.some(domain => parsedUrl.hostname.endsWith(domain));
+  let isMetorialHosted = metorialDomains.some(domain => parsedUrl.hostname.endsWith(domain));
 
   let registryRecord = await slates.slate.getRegistryRecord({
     slateId: slate.id
@@ -105,7 +104,7 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
       readmeNames.some(n => d.path.toLocaleLowerCase().endsWith(n))
     )?.content;
 
-    let publisher = isMetorialRegistry
+    let publisher = isMetorialHosted
       ? await publisherInternalService.upsertPublisherForMetorial()
       : await publisherInternalService.upsertPublisherForExternal({
           identifier: `slates::${slate.registryId}::${slate.scope.id}`,
@@ -176,10 +175,7 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
         image: registryRecord.logoUrl ? { type: 'url', url: registryRecord.logoUrl } : null,
         skills: registryRecord.skills,
         readme: readme,
-        categories: registryRecord.categories?.map((c: any) => c.identifier) ?? [],
-        globalIdentifier: slugify(
-          `${registryRecord.fullIdentifier}-${(await Hash.sha256(JSON.stringify(['slate', registryRecord.fullIdentifier, registry.url]))).slice(0, 6)}`
-        )
+        categories: registryRecord.categories?.map((c: any) => c.identifier) ?? []
       },
       type
     });

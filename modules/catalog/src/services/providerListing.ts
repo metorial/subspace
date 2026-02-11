@@ -39,8 +39,7 @@ class ProviderListingService {
             OR: [
               { id: d.providerListingId },
               { slug: d.providerListingId },
-              { provider: { id: d.providerListingId } },
-              { provider: { globalIdentifier: d.providerListingId } }
+              { provider: { id: d.providerListingId } }
             ]
           },
 
