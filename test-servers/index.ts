@@ -17,13 +17,12 @@ async function main() {
     { name: 'tools-only', path: '/tools', factory: createToolsOnlyServer },
     { name: 'resources-only', path: '/resources', factory: createResourcesOnlyServer },
     { name: 'prompts-only', path: '/prompts', factory: createPromptsOnlyServer },
-    { name: 'resource-templates', path: '/templates', factory: createResourceTemplatesServer },
+    { name: 'resource-templates', path: '/templates', factory: createResourceTemplatesServer }
   ];
 
   // Setup each server with its own path
   for (const { name, path, factory } of servers) {
-    const server = factory();
-    await setupTransports(app, server, path);
+    await setupTransports(app, factory, path);
     console.log(`✓ ${name} server initialized at ${path}/sse and ${path}/mcp`);
   }
 
@@ -35,9 +34,9 @@ async function main() {
         name: s.name,
         endpoints: {
           sse: `${s.path}/sse`,
-          http: `${s.path}/mcp`,
-        },
-      })),
+          http: `${s.path}/mcp`
+        }
+      }))
     });
   });
 

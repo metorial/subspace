@@ -83,7 +83,7 @@ export function createResourceTemplatesServer(): McpServer {
                 username: `user${userId}`,
                 email: `user${userId}@example.com`,
                 name: `Test User ${userId}`,
-                role: parseInt(userId) % 2 === 0 ? 'admin' : 'user'
+                role: Number.parseInt(userId) % 2 === 0 ? 'admin' : 'user'
               },
               null,
               2

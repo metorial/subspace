@@ -1,5 +1,5 @@
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
+import z from 'zod';
 
 export function createFullFeaturedServer(): McpServer {
   const mcpServer = new McpServer(
@@ -204,7 +204,7 @@ export function createFullFeaturedServer(): McpServer {
             mimeType: 'application/json',
             text: JSON.stringify(
               {
-                id: parseInt(id),
+                id: Number.parseInt(id),
                 name: `User ${id}`,
                 email: `user${id}@example.com`
               },

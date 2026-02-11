@@ -3,6 +3,7 @@ import {
   createShuttleClient
 } from '@metorial-services/shuttle-client';
 import { db, type Tenant } from '@metorial-subspace/db';
+import { withShuttleRetry } from './shuttleRetry';
 import { env } from './env';
 
 export let shuttle = createShuttleClient({
@@ -13,10 +14,15 @@ export let shuttleLiveClient = await createLiveConnectionClient({
   endpoint: env.service.SHUTTLE_LIVE_URL
 });
 
-export let shuttleDefaultReaderTenant = await shuttle.tenant.upsert({
-  name: 'Subspace Default Reader',
-  identifier: 'subspace-default-reader'
-});
+export let shuttleDefaultReaderTenant = await withShuttleRetry(() =>
+  shuttle.tenant.upsert({
+    name: 'Subspace Default Reader',
+    identifier: 'subspace-default-reader'
+  }),
+  {
+    endpoint: env.service.SHUTTLE_URL
+  }
+);
 
 export let getTenantForShuttle = async (tenant: Tenant) => {
   if (!tenant.shuttleTenantId) {

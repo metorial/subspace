@@ -1,6 +1,6 @@
 import type { PaginatorInput } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { type Tenant } from '@metorial-subspace/db';
+import type { Tenant } from '@metorial-subspace/db';
 import { getTenantForShuttle, shuttle, type NetworkingRuleset } from '../client';
 
 class networkingRulesetServiceImpl {

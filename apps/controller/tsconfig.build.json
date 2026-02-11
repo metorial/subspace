@@ -13,5 +13,6 @@
     "strict": false,
     "esModuleInterop": true,
     "resolveJsonModule": true
-  }
+  },
+  "files": ["src/server.ts"]
 }

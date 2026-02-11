@@ -46,5 +46,6 @@ RUN bun install
 # Build frontend
 RUN cd apps/public && bun run build
 
-# Run in dev mode with hot reloading
-CMD ["sh", "-c", "cd db && bun prisma db push --accept-data-loss && bun prisma generate && cd ../apps/public && bun run start:dev"]
+# Run in dev mode with hot reloading.
+# `subspace-controller` performs schema/client initialization before this service starts.
+CMD ["sh", "-c", "cd /app/apps/public && bun run start:dev"]

@@ -289,7 +289,10 @@ export let startReceiver = () => {
     });
   });
 
-  receiver.start().catch(err => {
+  let started = receiver.start();
+  started.catch(err => {
     console.error('Error starting Connection Controller receiver:', err);
   });
+
+  return Object.assign(receiver, { started });
 };
