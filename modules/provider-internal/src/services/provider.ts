@@ -37,6 +37,7 @@ class providerInternalServiceImpl {
       name: string;
       description?: string;
       slug: string;
+      globalIdentifier: string | null;
       image?: PrismaJson.EntityImage | null;
       skills?: string[];
       readme?: string;
@@ -97,7 +98,9 @@ class providerInternalServiceImpl {
 
         entryOid: entry.oid,
         publisherOid: d.publisher.oid,
-        typeOid: type.oid
+        typeOid: type.oid,
+
+        globalIdentifier: d.info.globalIdentifier
       };
       let existingProvider = await db.provider.findFirst({
         where: { identifier }

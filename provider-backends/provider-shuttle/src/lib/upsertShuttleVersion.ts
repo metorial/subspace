@@ -22,6 +22,7 @@ export type Version = Awaited<ReturnType<typeof shuttle.serverVersion.get>>;
 
 export let upsertShuttleServerVersion = ({
   publisherId,
+  globalIdentifier,
 
   shuttleServer: server,
   shuttleServerVersion: version,
@@ -30,6 +31,7 @@ export let upsertShuttleServerVersion = ({
   shuttleServerVersionRecord
 }: {
   publisherId?: string;
+  globalIdentifier?: string;
 
   shuttleServer: Server;
   shuttleServerVersion: Version;
@@ -149,7 +151,8 @@ export let upsertShuttleServerVersion = ({
       info: {
         name: server.name,
         description: server.description ?? undefined,
-        slug: slugify(`${server.name}-${generateCode(5)}`)
+        slug: slugify(`${server.name}-${generateCode(5)}`),
+        globalIdentifier: tenant ? null : (globalIdentifier ?? null)
       },
       type
     });
