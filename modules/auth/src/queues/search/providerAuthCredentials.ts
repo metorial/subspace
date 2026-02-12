@@ -20,7 +20,7 @@ export let indexProviderAuthCredentialsQueueProcessor =
 
     if (!providerAuthCredentials.name && !providerAuthCredentials.description) {
       await voyager.record.delete({
-        sourceId: (await voyagerSource).idid,
+        sourceId: (await voyagerSource).id,
         indexId: voyagerIndex.providerAuthCredentials.id,
         documentIds: [providerAuthCredentials.id]
       });
@@ -28,7 +28,7 @@ export let indexProviderAuthCredentialsQueueProcessor =
     }
 
     await voyager.record.index({
-      sourceId: (await voyagerSource).idid,
+      sourceId: (await voyagerSource).id,
       indexId: voyagerIndex.providerAuthCredentials.id,
 
       documentId: providerAuthCredentials.id,

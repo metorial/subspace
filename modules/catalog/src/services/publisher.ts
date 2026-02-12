@@ -42,7 +42,7 @@ class publisherServiceImpl {
     let search = d.search
       ? await voyager.record.search({
           tenantId: d.tenant.id,
-          sourceId: (await voyagerSource).idid,
+          sourceId: (await voyagerSource).id,
           indexId: voyagerIndex.publisher.id,
           query: d.search
         })

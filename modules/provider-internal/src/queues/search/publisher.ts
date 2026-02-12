@@ -16,7 +16,7 @@ export let indexPublisherQueueProcessor = indexPublisherQueue.process(async data
   if (!publisher) throw new QueueRetryError();
 
   await voyager.record.index({
-    sourceId: (await voyagerSource).idid,
+    sourceId: (await voyagerSource).id,
     indexId: voyagerIndex.publisher.id,
 
     documentId: publisher.id,

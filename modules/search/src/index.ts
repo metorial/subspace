@@ -23,7 +23,7 @@ export let voyagerSource = voyagerSourceProm.promise;
         name: 'Subspace',
         identifier: getIndexName()
       });
-      console.log('Successfully created source in Voyager', (await voyagerSource).idid);
+      console.log('Successfully created source in Voyager', (await voyagerSource).id);
       voyagerSourceProm.resolve(voyagerSource);
       return;
     } catch (error) {
@@ -36,49 +36,49 @@ export let voyagerSource = voyagerSourceProm.promise;
 
 export let voyagerIndex = {
   providerListing: await voyager.index.upsert({
-    sourceId: (await voyagerSource).idid,
+    sourceId: (await voyagerSource).id,
     identifier: getIndexName('provider_listing'),
     name: 'Provider Listings'
   }),
 
   publisher: await voyager.index.upsert({
-    sourceId: (await voyagerSource).idid,
+    sourceId: (await voyagerSource).id,
     identifier: getIndexName('publisher'),
     name: 'Publishers'
   }),
 
   providerConfig: await voyager.index.upsert({
-    sourceId: (await voyagerSource).idid,
+    sourceId: (await voyagerSource).id,
     identifier: getIndexName('provider_config'),
     name: 'Provider Configs'
   }),
 
   providerConfigVault: await voyager.index.upsert({
-    sourceId: (await voyagerSource).idid,
+    sourceId: (await voyagerSource).id,
     identifier: getIndexName('provider_config_vault'),
     name: 'Provider Config Vaults'
   }),
 
   providerDeployment: await voyager.index.upsert({
-    sourceId: (await voyagerSource).idid,
+    sourceId: (await voyagerSource).id,
     identifier: getIndexName('provider_deployment'),
     name: 'Provider Deployments'
   }),
 
   providerAuthCredentials: await voyager.index.upsert({
-    sourceId: (await voyagerSource).idid,
+    sourceId: (await voyagerSource).id,
     identifier: getIndexName('provider_auth_credentials'),
     name: 'Provider Auth Credentials'
   }),
 
   providerAuthConfig: await voyager.index.upsert({
-    sourceId: (await voyagerSource).idid,
+    sourceId: (await voyagerSource).id,
     identifier: getIndexName('provider_auth_config'),
     name: 'Provider Auth Configs'
   }),
 
   customProvider: await voyager.index.upsert({
-    sourceId: (await voyagerSource).idid,
+    sourceId: (await voyagerSource).id,
     identifier: getIndexName('custom_provider'),
     name: 'Custom Providers'
   })

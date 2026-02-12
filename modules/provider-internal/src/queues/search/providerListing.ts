@@ -17,7 +17,7 @@ export let indexProviderListingQueueProcessor = indexProviderListingQueue.proces
     if (!providerListing) throw new QueueRetryError();
 
     await voyager.record.index({
-      sourceId: (await voyagerSource).idid,
+      sourceId: (await voyagerSource).id,
       indexId: voyagerIndex.providerListing.id,
 
       documentId: providerListing.id,
