@@ -1,3 +1,4 @@
+import { delay } from '@lowerdeck/delay';
 import { createOriginClient } from '@metorial-services/origin-client';
 import { db, Tenant } from '@metorial-subspace/db';
 import { env } from './env';
@@ -5,6 +6,24 @@ import { env } from './env';
 export let origin = createOriginClient({
   endpoint: env.origin.ORIGIN_URL
 });
+
+(async () => {
+  while (true) {
+    console.log('Attempting to connect to Origin...');
+    try {
+      await origin.tenant.upsert({
+        identifier: 'subspace-test',
+        name: 'Subspace TEST'
+      });
+      console.log('Successfully connected to Origin');
+      return;
+    } catch (error) {
+      console.error('Failed to connect to Origin, retrying in 5 seconds...', error);
+    }
+
+    delay(5000);
+  }
+})();
 
 export let getTenantForOrigin = async (tenant: Tenant) => {
   if (!tenant.originTenantId) {

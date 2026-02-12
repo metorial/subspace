@@ -62,7 +62,7 @@ class providerConfigVaultServiceImpl {
     let search = d.search
       ? await voyager.record.search({
           tenantId: d.tenant.id,
-          sourceId: voyagerSource.id,
+          sourceId: (await voyagerSource).idid,
           indexId: voyagerIndex.providerConfigVault.id,
           query: d.search
         })

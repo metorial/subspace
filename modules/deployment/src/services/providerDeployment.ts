@@ -73,7 +73,7 @@ class providerDeploymentServiceImpl {
     let search = d.search
       ? await voyager.record.search({
           tenantId: d.tenant.id,
-          sourceId: voyagerSource.id,
+          sourceId: (await voyagerSource).idid,
           indexId: voyagerIndex.providerDeployment.id,
           query: d.search
         })

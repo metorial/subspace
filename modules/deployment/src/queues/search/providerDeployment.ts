@@ -18,7 +18,7 @@ export let indexProviderDeploymentQueueProcessor = indexProviderDeploymentQueue.
 
     if (!providerDeployment.name && !providerDeployment.description) {
       await voyager.record.delete({
-        sourceId: voyagerSource.id,
+        sourceId: (await voyagerSource).idid,
         indexId: voyagerIndex.providerDeployment.id,
         documentIds: [providerDeployment.id]
       });
@@ -26,7 +26,7 @@ export let indexProviderDeploymentQueueProcessor = indexProviderDeploymentQueue.
     }
 
     await voyager.record.index({
-      sourceId: voyagerSource.id,
+      sourceId: (await voyagerSource).idid,
       indexId: voyagerIndex.providerDeployment.id,
 
       documentId: providerDeployment.id,

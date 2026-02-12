@@ -17,7 +17,7 @@ export let indexProviderConfigQueueProcessor = indexProviderConfigQueue.process(
 
   if (!providerConfig.name && !providerConfig.description) {
     await voyager.record.delete({
-      sourceId: voyagerSource.id,
+      sourceId: (await voyagerSource).idid,
       indexId: voyagerIndex.providerConfig.id,
       documentIds: [providerConfig.id]
     });
@@ -25,7 +25,7 @@ export let indexProviderConfigQueueProcessor = indexProviderConfigQueue.process(
   }
 
   await voyager.record.index({
-    sourceId: voyagerSource.id,
+    sourceId: (await voyagerSource).idid,
     indexId: voyagerIndex.providerConfig.id,
 
     documentId: providerConfig.id,

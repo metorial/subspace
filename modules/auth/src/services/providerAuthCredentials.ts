@@ -83,7 +83,7 @@ class providerAuthCredentialsServiceImpl {
     let search = d.search
       ? await voyager.record.search({
           tenantId: d.tenant.id,
-          sourceId: voyagerSource.id,
+          sourceId: (await voyagerSource).idid,
           indexId: voyagerIndex.providerAuthCredentials.id,
           query: d.search
         })

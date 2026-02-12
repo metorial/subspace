@@ -88,7 +88,7 @@ class providerConfigServiceImpl {
     let search = d.search
       ? await voyager.record.search({
           tenantId: d.tenant.id,
-          sourceId: voyagerSource.id,
+          sourceId: (await voyagerSource).idid,
           indexId: voyagerIndex.providerConfig.id,
           query: d.search
         })
