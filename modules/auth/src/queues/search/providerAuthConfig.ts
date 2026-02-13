@@ -18,7 +18,7 @@ export let indexProviderAuthConfigQueueProcessor = indexProviderAuthConfigQueue.
 
     if (!providerAuthConfig.name && !providerAuthConfig.description) {
       await voyager.record.delete({
-        sourceId: voyagerSource.id,
+        sourceId: (await voyagerSource).id,
         indexId: voyagerIndex.providerAuthConfig.id,
         documentIds: [providerAuthConfig.id]
       });
@@ -26,7 +26,7 @@ export let indexProviderAuthConfigQueueProcessor = indexProviderAuthConfigQueue.
     }
 
     await voyager.record.index({
-      sourceId: voyagerSource.id,
+      sourceId: (await voyagerSource).id,
       indexId: voyagerIndex.providerAuthConfig.id,
 
       documentId: providerAuthConfig.id,

@@ -80,7 +80,7 @@ class customProviderServiceImpl {
     let search = d.search
       ? await voyager.record.search({
           tenantId: d.tenant.id,
-          sourceId: voyagerSource.id,
+          sourceId: (await voyagerSource).id,
           indexId: voyagerIndex.customProvider.id,
           query: d.search
         })
