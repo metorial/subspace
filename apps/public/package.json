@@ -10,7 +10,9 @@
     "dev": "vite build --watch ./frontend",
     "dev:hmr": "vite ./frontend",
     "start": "bun ./src/server.ts",
-    "build": "vite build ./frontend"
+    "build": "vite build ./frontend",
+    "server:build": "ncc build ./src/server.ts -o ./dist --source-map --external bun:sqlite --external bun && bun run sentry:sourcemaps",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org metorial --project mte-subspace-frontend ./dist && sentry-cli sourcemaps upload --org metorial --project mte-subspace-frontend ./dist"
   },
   "devDependencies": {
     "@types/bun": "latest"
@@ -46,6 +48,8 @@
     "unzipper": "^0.12.3",
     "vite": "^5.4.1",
     "yaml": "^2.8.2",
-    "yup": "^1.7.1"
+    "yup": "^1.7.1",
+    "@vercel/ncc": "^0.38.3",
+    "@sentry/cli": "^3.2.0"
   }
 }

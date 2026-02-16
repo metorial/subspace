@@ -11,6 +11,9 @@ COPY modules ./modules
 COPY provider-backends ./provider-backends
 COPY db ./db
 
+# Install CA certificates for Sentry CLI uploads
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+
 # Install all dependencies (including dev dependencies for build)
 RUN bun install
 
@@ -18,9 +21,8 @@ RUN bun install
 WORKDIR /app/db
 RUN bunx prisma generate
 
-# Install @vercel/ncc for bundling
-WORKDIR /app
-RUN bun add -D @vercel/ncc
+ARG SENTRY_AUTH_TOKEN
+ENV SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
 
 # Build the application using ncc
 # This bundles all dependencies into a single file
@@ -31,7 +33,7 @@ RUN rm -rf frontend/src frontend/tsconfig.* frontend/vite.config.ts frontend/ind
 # Temporarily use the build-friendly tsconfig
 RUN mv tsconfig.json tsconfig.json.bak && \
   mv tsconfig.build.json tsconfig.json && \
-  bunx ncc build src/server.ts -o dist --minify; \
+  bun run server:build; \
   BUILD_EXIT_CODE=$?; \
   mv tsconfig.json tsconfig.build.json && \
   mv tsconfig.json.bak tsconfig.json; \
