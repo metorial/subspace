@@ -2,7 +2,7 @@ import { apiMux } from '@lowerdeck/api-mux';
 import { rpcMux } from '@lowerdeck/rpc-server';
 import { getSentry } from '@lowerdeck/sentry';
 import { db } from '@metorial-subspace/db';
-import { redis } from 'bun';
+import { RedisClient } from 'bun';
 import { subspaceFrontendRPC } from './api/internal';
 import { app } from './api/public';
 
@@ -22,7 +22,12 @@ Bun.serve({
   fetch: async _ => {
     try {
       await db.backend.count();
+
+      let redis = new RedisClient(process.env.REDIS_URL?.replace('rediss://', 'redis://'), {
+        tls: process.env.REDIS_URL?.startsWith('rediss://')
+      });
       await redis.ping();
+
       return new Response('OK');
     } catch (e) {
       Sentry.captureException(e);
