@@ -115,37 +115,5 @@ export let toolCallController = app.controller({
       });
 
       return toolCallPresenter(toolCall);
-    }),
-
-  update: toolCallApp
-    .handler()
-    .input(
-      v.object({
-        tenantId: v.string(),
-        environmentId: v.string(),
-        toolCallId: v.string(),
-
-        allowDeleted: v.optional(v.boolean()),
-
-        name: v.optional(v.string()),
-        description: v.optional(v.string()),
-        metadata: v.optional(v.record(v.any()))
-      })
-    )
-    .do(async ctx => {
-      let toolCall = await toolCallService.updateToolCall({
-        toolCall: ctx.toolCall,
-        tenant: ctx.tenant,
-        environment: ctx.environment,
-        solution: ctx.solution,
-
-        input: {
-          name: ctx.input.name,
-          description: ctx.input.description,
-          metadata: ctx.input.metadata
-        }
-      });
-
-      return toolCallPresenter(toolCall);
     })
 });
