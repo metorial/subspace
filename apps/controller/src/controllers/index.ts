@@ -51,6 +51,7 @@ import { sessionTemplateController } from './sessionTemplate';
 import { sessionTemplateProviderController } from './sessionTemplateProvider';
 import { solutionController } from './solution';
 import { tenantController } from './tenant';
+import { toolCallController } from './toolCall';
 
 export let rootController = app.controller({
   environment: environmentController,
@@ -59,6 +60,8 @@ export let rootController = app.controller({
   tenant: tenantController,
 
   publisher: publisherController,
+
+  toolCall: toolCallController,
 
   provider: providerController,
   providerAuthConfig: providerAuthConfigController,
