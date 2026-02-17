@@ -96,7 +96,7 @@ class ProviderListingService {
         let search = d.search
           ? await voyager.record.search({
               tenantId: d.tenant.id,
-              sourceId: voyagerSource.id,
+              sourceId: (await voyagerSource).id,
               indexId: voyagerIndex.providerListing.id,
               query: d.search
             })

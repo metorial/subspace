@@ -6,6 +6,8 @@
   "scripts": {
     "start:dev": "bun --watch ./src/server.ts",
     "start": "bun ./src/server.ts",
+    "server:build": "ncc build ./src/server.ts -o ./dist --source-map --external bun:sqlite --external bun && bun run sentry:sourcemaps",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org metorial --project mte-subspace-controller ./dist && sentry-cli sourcemaps upload --org metorial --project mte-subspace-controller ./dist",
     "infra:up": "docker compose -p subspace -f ../../docker-compose.dev.yml --profile infra up -d postgres redis object-storage nats-1 nats-2 shuttle mcp-test-server",
     "infra:down": "docker compose -p subspace -f ../../docker-compose.dev.yml --profile infra stop postgres redis object-storage nats-1 nats-2 shuttle mcp-test-server",
     "db:push:test": "sh -c 'set -a; . .env.test; set +a; bunx prisma db push --schema ../../db/prisma/schema --config ../../db/prisma.config.ts'",
@@ -55,6 +57,8 @@
     "@modelcontextprotocol/sdk": "^1.26.0",
     "@sentry/bun": "^10.34.0",
     "hono": "^4.11.3",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "@vercel/ncc": "^0.38.3",
+    "@sentry/cli": "^3.2.0"
   }
 }
