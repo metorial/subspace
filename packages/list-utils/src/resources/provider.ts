@@ -76,6 +76,15 @@ export let resolveProviderListings = createResolver(async ({ ts, ids }) =>
   })
 );
 
+export let resolveProviderTools = createResolver(async ({ ts, ids }) =>
+  db.providerTool.findMany({
+    where: {
+      OR: [{ id: { in: ids } }]
+    },
+    select: { oid: true }
+  })
+);
+
 export let resolveProviderCollections = createResolver(async ({ ts, ids }) =>
   db.providerListingCollection.findMany({
     where: {

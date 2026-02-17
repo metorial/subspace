@@ -520,6 +520,10 @@ export class SenderManager {
     return this.connection;
   }
 
+  async setConnection(connection: SessionConnection) {
+    this.connection = connection;
+  }
+
   async disableConnection() {
     if (!this.connection) {
       throw new ServiceError(badRequestError({ message: 'No connection to disable' }));
@@ -548,17 +552,27 @@ export class SenderManager {
     });
   }
 
-  async initialize(d: InitProps) {
+  async initialize(d: InitProps & { isManualConnection?: boolean }) {
     // Ignore if already initialized
     if (this.connection?.initState === 'completed') return this.connection;
 
+    if (d.client.identifier.startsWith('metorial#') && !d.isManualConnection) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Client identifier cannot start with reserved prefix metorial#'
+        })
+      );
+    }
+
     let participant = await upsertParticipant({
       session: this.session,
-      from: {
-        type: 'connection_client',
-        transport: d.mcpTransport === 'none' ? 'metorial' : 'mcp',
-        participant: d.client
-      }
+      from: d.client.identifier.startsWith('metorial#')
+        ? { type: 'system' }
+        : {
+            type: 'connection_client',
+            transport: d.mcpTransport === 'none' ? 'metorial' : 'mcp',
+            participant: d.client
+          }
     });
 
     let connectionData = {
@@ -599,6 +613,7 @@ export class SenderManager {
         data: {
           ...getId('sessionConnection'),
           ...connectionData,
+          isForManualToolCalls: !!d.isManualConnection,
           isReplaced: false,
           isEphemeral: this.session.isEphemeral,
           status: 'active',
@@ -608,6 +623,12 @@ export class SenderManager {
           token: await ID.generateId('sessionConnection_token')
         }
       });
+    }
+
+    if (d.isManualConnection && !connection.isForManualToolCalls) {
+      throw new ServiceError(
+        internalServerError({ message: 'Connection cannot be used for manual tool calls' })
+      );
     }
 
     await db.session.updateMany({
