@@ -40,10 +40,11 @@ model SessionConnection {
 
   isParentDeleted Boolean @default(false)
 
-  state              SessionConnectionState
-  initState          SessionConnectionInitState
-  isManuallyDisabled Boolean
-  isReplaced         Boolean
+  state                SessionConnectionState
+  initState            SessionConnectionInitState
+  isManuallyDisabled   Boolean
+  isReplaced           Boolean
+  isForManualToolCalls Boolean                    @default(false)
 
   totalProductiveClientMessageCount Int @default(0)
   totalProductiveServerMessageCount Int @default(0)

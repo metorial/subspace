@@ -1,6 +1,9 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { providerListingGroupService } from '@metorial-subspace/module-catalog';
+import {
+  providerListingGroupService,
+  providerListingService
+} from '@metorial-subspace/module-catalog';
 import { providerListingGroupPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
@@ -108,5 +111,57 @@ export let providerListingGroupController = app.controller({
       });
 
       return providerListingGroupPresenter(providerListingGroup);
+    }),
+
+  addProvider: providerListingGroupApp
+    .handler()
+    .input(
+      v.object({
+        tenantId: v.string(),
+        environmentId: v.string(),
+        providerListingGroupId: v.string(),
+        providerListingId: v.string()
+      })
+    )
+    .do(async ctx => {
+      let providerListing = await providerListingService.getProviderListingById({
+        tenant: ctx.tenant,
+        environment: ctx.environment,
+        solution: ctx.solution,
+        providerListingId: ctx.input.providerListingId
+      });
+
+      await providerListingGroupService.addProviderToGroup({
+        providerListingGroup: ctx.providerListingGroup,
+        providerListing
+      });
+
+      return {};
+    }),
+
+  removeProvider: providerListingGroupApp
+    .handler()
+    .input(
+      v.object({
+        tenantId: v.string(),
+        environmentId: v.string(),
+        providerListingGroupId: v.string(),
+        providerListingId: v.string()
+      })
+    )
+    .do(async ctx => {
+      let providerListing = await providerListingService.getProviderListingById({
+        tenant: ctx.tenant,
+        environment: ctx.environment,
+        solution: ctx.solution,
+        providerListingId: ctx.input.providerListingId
+      });
+
+      await providerListingGroupService.removeProviderFromGroup({
+        providerListingGroup: ctx.providerListingGroup,
+        providerListing
+      });
+
+      return {};
     })
 });

@@ -43,6 +43,7 @@ import { sessionController } from './session';
 import { sessionConnectionController } from './sessionConnection';
 import { sessionErrorController } from './sessionError';
 import { sessionErrorGroupController } from './sessionErrorGlobal';
+import { sessionEventController } from './sessionEvent';
 import { sessionMessageController } from './sessionMessage';
 import { sessionParticipantController } from './sessionParticipant';
 import { sessionProviderController } from './sessionProvider';
@@ -84,6 +85,7 @@ export let rootController = app.controller({
   sessionConnection: sessionConnectionController,
   sessionError: sessionErrorController,
   sessionErrorGroup: sessionErrorGroupController,
+  sessionEvent: sessionEventController,
   sessionMessage: sessionMessageController,
   sessionParticipant: sessionParticipantController,
   sessionTemplate: sessionTemplateController,

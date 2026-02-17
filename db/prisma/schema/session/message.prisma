@@ -116,10 +116,11 @@ model ToolCall {
   oid BigInt @id
   id  String @unique
 
-  toolKey String
+  toolKey  String
+  metadata Json?
 
-  messageId String         @unique
-  message   SessionMessage @relation(fields: [messageId], references: [id])
+  messageOid BigInt         @unique
+  message    SessionMessage @relation(fields: [messageOid], references: [oid])
 
   sessionOid BigInt
   session    Session @relation(fields: [sessionOid], references: [oid])
