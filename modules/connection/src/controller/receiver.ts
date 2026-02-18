@@ -273,6 +273,22 @@ export let startReceiver = () => {
       if (data.type === 'mcp.message_from_client') return processMcpResponse(data);
     });
 
+    backend.onClose(async () => {
+      try {
+        await ctx.close();
+      } catch (err) {
+        console.error('Error closing context on backend close:', err);
+        Sentry.captureException(err);
+      }
+
+      try {
+        await state.dispose();
+      } catch (err) {
+        console.error('Error disposing connection state:', err);
+        Sentry.captureException(err);
+      }
+    });
+
     ctx.onClose(async () => {
       try {
         await state.dispose();

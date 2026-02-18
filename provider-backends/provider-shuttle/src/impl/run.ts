@@ -232,6 +232,8 @@ class ProviderRunConnection extends IProviderRunConnection {
           }
 
           await this.emitMcpMessage(data.data);
+        } else if (data.type == 'close') {
+          await this.emitClose();
         } else if (data.type === 'error') {
           this.close();
         }
