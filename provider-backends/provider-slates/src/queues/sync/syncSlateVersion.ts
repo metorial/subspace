@@ -71,10 +71,10 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
 
   await withTransaction(async db => {
     let slateRecord = await db.slate.upsert({
-      where: { id: data.slateId },
+      where: { id: slate.id },
       create: {
         oid: snowflake.nextId(),
-        id: data.slateId,
+        id: slate.id,
         identifier: slate.identifier,
         registryUrl: registry.url,
         identifierInRegistry: registryRecord.fullIdentifier
@@ -84,10 +84,10 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
 
     let newVersionOid = snowflake.nextId();
     let slateVersionRecord = await db.slateVersion.upsert({
-      where: { id: data.slateVersionId },
+      where: { id: version.id },
       create: {
         oid: newVersionOid,
-        id: data.slateVersionId,
+        id: version.id,
         version: version.version,
         identifier: `${slate.identifier}::${version.version}`,
         slateOid: slateRecord.oid

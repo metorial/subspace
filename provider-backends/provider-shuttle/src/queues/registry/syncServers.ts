@@ -96,7 +96,7 @@ export let syncServersManyProcessor = syncServersMany.process(data =>
     await syncServersSingle.addManyWithOps(
       servers.items.map(s => ({
         data: { id: s.id, registryUrl: data.registryUrl },
-        opts: { id: `${data.registryUrl}::${s.id}` }
+        opts: { id: s.id }
       }))
     );
 

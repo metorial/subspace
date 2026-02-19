@@ -39,7 +39,7 @@ export let syncShuttleVersionQueueProcessor = syncShuttleVersionQueue.process(as
 
   await withTransaction(async db => {
     let shuttleServerRecord = await db.shuttleServer.upsert({
-      where: { id: data.serverId },
+      where: { id: server.id },
       create: {
         oid: snowflake.nextId(),
         id: server.id,
