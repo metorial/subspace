@@ -93,10 +93,10 @@ export let syncServersManyProcessor = syncServersMany.process(data =>
       }
     });
 
-    await syncServersSingle.addMany(
+    await syncServersSingle.addManyWithOps(
       servers.items.map(s => ({
-        id: s.id,
-        registryUrl: data.registryUrl
+        data: { id: s.id, registryUrl: data.registryUrl },
+        opts: { id: `${data.registryUrl}::${s.id}` }
       }))
     );
 
@@ -115,8 +115,8 @@ let syncServersSingle = createQueue<{
   workerOpts: {
     concurrency: 1,
     limiter: {
-      max: 1,
-      duration: 60 * 1000
+      max: 2,
+      duration: 5 * 1000
     }
   }
 });
