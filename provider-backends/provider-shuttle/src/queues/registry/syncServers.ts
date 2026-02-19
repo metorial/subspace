@@ -154,8 +154,17 @@ export let syncServersSingleProcessor = syncServersSingle.process(async data => 
     }
   };
 
+  let syncRecord = await db.shuttleSyncServer.create({
+    data: {
+      record: inner,
+      registryUrl: data.registryUrl,
+      shuttleServerId: '',
+      registryServerId: server.id
+    }
+  });
+
   if (latestVersion.from.type == 'remote') {
-    await shuttle.server.create({
+    let res = await shuttle.server.create({
       from: {
         type: 'remote',
         remoteUrl: latestVersion.from.remoteUrl,
@@ -163,13 +172,23 @@ export let syncServersSingleProcessor = syncServersSingle.process(async data => 
       },
       ...inner
     });
+
+    await db.shuttleSyncServer.update({
+      where: { id: syncRecord.id },
+      data: { shuttleServerId: res.server.id }
+    });
   } else if (latestVersion.from.type == 'container') {
-    await shuttle.server.create({
+    let res = await shuttle.server.create({
       from: {
         type: 'container.from_image_ref',
         imageRef: latestVersion.from.imageRef
       },
       ...inner
+    });
+
+    await db.shuttleSyncServer.update({
+      where: { id: syncRecord.id },
+      data: { shuttleServerId: res.server.id }
     });
   }
 });
