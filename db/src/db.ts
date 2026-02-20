@@ -9,7 +9,7 @@ import type { InitializeRequest, JSONRPCMessage } from '@modelcontextprotocol/sd
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../prisma/generated/client';
 import { env } from './env';
-import { CustomProviderConfig, CustomProviderFrom } from './types';
+import type { CustomProviderConfig, CustomProviderFrom } from './types';
 
 let adapter = new PrismaPg({ connectionString: env.service.DATABASE_URL });
 
@@ -23,7 +23,17 @@ declare global {
       | { type: 'url'; url: string }
       | { type: 'default' };
 
-    type PublisherSource = { type: 'github'; url: string; owner: string; repo?: string };
+    type PublisherSource = {
+      type: 'github';
+      url: string;
+      owner: string;
+      repo?: string;
+      defaultBranch?: string;
+      stargazersCount?: number;
+      watchersCount?: number;
+      forksCount?: number;
+      license?: string | null;
+    };
 
     type ProviderSpecificationValue = {
       specification: Specification;

@@ -45,6 +45,7 @@ class publisherInternalServiceImpl {
     name: string;
     description?: string;
     imageUrl?: string;
+    source?: PrismaJson.PublisherSource;
   }) {
     return this.upsertPublisher({
       owner: { type: 'external' },
@@ -52,6 +53,7 @@ class publisherInternalServiceImpl {
         identifier: `ext::${d.identifier}`,
         name: d.name,
         description: d.description,
+        source: d.source,
         image: d.imageUrl ? { type: 'url', url: d.imageUrl } : undefined
       }
     });
