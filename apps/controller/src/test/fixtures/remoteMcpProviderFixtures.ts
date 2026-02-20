@@ -3,8 +3,6 @@ import { slugify } from '@lowerdeck/slugify';
 import { createShuttleClient } from '@metorial-services/shuttle-client';
 import { retryUntilTimeout } from '@metorial-subspace/connection-utils';
 import { withTimeout } from '@metorial-subspace/connection-utils/src/withTimeout';
-import { withShuttleRetry } from '@metorial-subspace/provider-shuttle/src/shuttleRetry';
-import { createHash } from 'node:crypto';
 import {
   getId,
   snowflake,
@@ -22,6 +20,7 @@ import {
   type Solution,
   type Tenant
 } from '@metorial-subspace/db';
+import { providerDeploymentService } from '@metorial-subspace/module-deployment';
 import {
   providerDeploymentConfigPairInternalService,
   providerInternalService,
@@ -29,8 +28,9 @@ import {
   providerVersionInternalService,
   publisherInternalService
 } from '@metorial-subspace/module-provider-internal';
-import { providerDeploymentService } from '@metorial-subspace/module-deployment';
 import { getBackend } from '@metorial-subspace/provider';
+import { withShuttleRetry } from '@metorial-subspace/provider-shuttle/src/shuttleRetry';
+import { createHash } from 'node:crypto';
 import { EnvironmentFixtures } from './environmentFixtures';
 import { SolutionFixtures } from './solutionFixtures';
 import { TenantFixtures } from './tenantFixtures';
@@ -66,10 +66,14 @@ const REMOTE_SERVER_NAME_PREFIX =
 const REMOTE_SERVER_RUN_ID =
   process.env.TEST_MCP_REMOTE_SERVER_RUN_ID ?? generateCode(16).toLowerCase();
 
-const resolveRemoteServerName = (opts: { remoteUrl: string; protocol: 'sse' | 'streamable_http' }) => {
+const resolveRemoteServerName = (opts: {
+  remoteUrl: string;
+  protocol: 'sse' | 'streamable_http';
+}) => {
   if (REMOTE_SERVER_NAME_EXACT) return REMOTE_SERVER_NAME_EXACT;
 
-  let baseName = slugify(`${REMOTE_SERVER_NAME_PREFIX}-${REMOTE_SERVER_RUN_ID}`) || 'subspace-remote-mcp';
+  let baseName =
+    slugify(`${REMOTE_SERVER_NAME_PREFIX}-${REMOTE_SERVER_RUN_ID}`) || 'subspace-remote-mcp';
   let scopedHash = createHash('sha1')
     .update(`${opts.remoteUrl}|${opts.protocol}`)
     .digest('hex')
@@ -225,7 +229,9 @@ const findRemoteServerByName = async (opts: {
       cursor
     });
 
-    let match = page.items.find(item => item.type === 'remote' && item.name === opts.serverName);
+    let match = page.items.find(
+      item => item.type === 'remote' && item.name === opts.serverName
+    );
     if (match) return match;
 
     if (!page.pagination.has_more_after) {
@@ -316,9 +322,9 @@ const waitForPairVersionDiscovery = async (
   pairVersionOid: bigint,
   timeoutMs: number = DISCOVERY_TIMEOUT_MS
 ) => {
-  let lastPairVersion:
-    | Awaited<ReturnType<typeof db.providerDeploymentConfigPairProviderVersion.findFirstOrThrow>>
-    | null = null;
+  let lastPairVersion: Awaited<
+    ReturnType<typeof db.providerDeploymentConfigPairProviderVersion.findFirstOrThrow>
+  > | null = null;
 
   return retryUntilTimeout({
     timeoutMs,
@@ -435,7 +441,9 @@ export const RemoteMcpProviderFixtures = (db: PrismaClient) => {
   // 4. Discover specification (tools, auth) via Shuttle capabilities API
   // 5. Create deployment + config pair, wait for pair discovery
   // 6. Optionally attempt full pair-level specification discovery (best-effort)
-  const complete = async (opts: RemoteMcpProviderOptions): Promise<RemoteMcpProviderResult> => {
+  const complete = async (
+    opts: RemoteMcpProviderOptions
+  ): Promise<RemoteMcpProviderResult> => {
     let shuttleClient = getShuttleClient();
 
     let solutionFixtures = SolutionFixtures(db);
@@ -444,8 +452,7 @@ export const RemoteMcpProviderFixtures = (db: PrismaClient) => {
 
     let solution = opts.solution ?? (await solutionFixtures.default());
     let tenant = opts.tenant ?? (await tenantFixtures.default());
-    let environment =
-      opts.environment ?? (await environmentFixtures.default({ tenant }));
+    let environment = opts.environment ?? (await environmentFixtures.default({ tenant }));
 
     let backend = await ensureBackend(db);
 
@@ -489,7 +496,8 @@ export const RemoteMcpProviderFixtures = (db: PrismaClient) => {
       info: {
         name: server.name,
         description: server.description ?? undefined,
-        slug: slugify(`${server.name}-${generateCode(5)}`)
+        slug: slugify(`${server.name}-${generateCode(5)}`),
+        globalIdentifier: null
       },
       type: mcpRemoteType
     });

@@ -96,7 +96,7 @@ class providerDeploymentServiceImpl {
                 d.ids ? { id: { in: d.ids } } : undefined!,
                 search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
                 providers ? { providerOid: providers.in } : undefined!,
-                versions ? { lockedVersionOid: versions.in } : undefined!
+                versions ? { currentVersion: { lockedVersionOid: versions.in } } : undefined!
               ].filter(Boolean)
             },
             include
