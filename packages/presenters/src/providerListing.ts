@@ -38,9 +38,9 @@ export let providerListingPresenter = (
       type: ProviderType;
     };
 
-    categories: ProviderListingCategory[];
-    collections: ProviderListingCollection[];
-    groups: ProviderListingGroup[];
+    categories?: ProviderListingCategory[];
+    collections?: ProviderListingCollection[];
+    groups?: ProviderListingGroup[];
   } & {
     readme?: string | null;
   },
@@ -73,13 +73,15 @@ export let providerListingPresenter = (
 
   provider: providerPresenter(providerListing.provider, d),
 
-  categories: providerListing.categories.map(category =>
+  categories: (providerListing.categories ?? []).map(category =>
     providerListingCategoryPresenter(category)
   ),
-  collections: providerListing.collections.map(category =>
+  collections: (providerListing.collections ?? []).map(category =>
     providerListingCollectionPresenter(category)
   ),
-  groups: providerListing.groups.map(category => providerListingGroupPresenter(category)),
+  groups: (providerListing.groups ?? []).map(category =>
+    providerListingGroupPresenter(category)
+  ),
 
   createdAt: providerListing.createdAt,
   updatedAt: providerListing.updatedAt
