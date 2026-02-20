@@ -16,9 +16,9 @@ let include = {
 
 class providerVersionServiceImpl {
   async listProviderVersions(d: {
-    tenant: Tenant;
     solution: Solution;
-    environment: Environment;
+    tenant?: Tenant;
+    environment?: Environment;
 
     ids?: string[];
     providerIds?: string[];
@@ -35,10 +35,14 @@ class providerVersionServiceImpl {
 
               OR: [
                 { isEnvironmentLocked: false },
-                {
-                  providerEnvironmentVersions: { some: { environmentOid: d.environment.oid } }
-                }
-              ],
+                d.environment
+                  ? {
+                      providerEnvironmentVersions: {
+                        some: { environmentOid: d.environment.oid }
+                      }
+                    }
+                  : undefined!
+              ].filter(Boolean),
 
               AND: [
                 d.ids ? { id: { in: d.ids } } : undefined!,
@@ -53,9 +57,9 @@ class providerVersionServiceImpl {
 
   async getProviderVersionById(d: {
     providerVersionId: string;
-    tenant: Tenant;
     solution: Solution;
-    environment: Environment;
+    tenant?: Tenant;
+    environment?: Environment;
   }) {
     let providerVersion = await db.providerVersion.findFirst({
       where: {
@@ -64,7 +68,7 @@ class providerVersionServiceImpl {
         OR: [
           { isEnvironmentLocked: false },
           {
-            providerEnvironmentVersions: { some: { environmentOid: d.environment.oid } }
+            providerEnvironmentVersions: { some: { environmentOid: d.environment?.oid } }
           }
         ],
 

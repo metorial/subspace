@@ -3,9 +3,9 @@ import { v } from '@lowerdeck/validation';
 import { providerListingCategoryService } from '@metorial-subspace/module-catalog';
 import { providerListingCategoryPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
-import { tenantApp } from './tenant';
+import { tenantOptionalApp } from './tenant';
 
-export let providerListingCategoryApp = tenantApp.use(async ctx => {
+export let providerListingCategoryApp = tenantOptionalApp.use(async ctx => {
   let providerListingCategoryId = ctx.body.providerListingCategoryId;
   if (!providerListingCategoryId) throw new Error('ProviderListingCategory ID is required');
 
@@ -21,13 +21,13 @@ export let providerListingCategoryApp = tenantApp.use(async ctx => {
 });
 
 export let providerListingCategoryController = app.controller({
-  list: tenantApp
+  list: tenantOptionalApp
     .handler()
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string(),
-          environmentId: v.string(),
+          tenantId: v.optional(v.string()),
+          environmentId: v.optional(v.string()),
 
           ids: v.optional(v.array(v.string())),
           providerIds: v.optional(v.array(v.string())),
@@ -55,8 +55,8 @@ export let providerListingCategoryController = app.controller({
     .handler()
     .input(
       v.object({
-        tenantId: v.string(),
-        environmentId: v.string(),
+        tenantId: v.optional(v.string()),
+        environmentId: v.optional(v.string()),
         providerListingCategoryId: v.string()
       })
     )
@@ -66,8 +66,8 @@ export let providerListingCategoryController = app.controller({
     .handler()
     .input(
       v.object({
-        tenantId: v.string(),
-        environmentId: v.string(),
+        tenantId: v.optional(v.string()),
+        environmentId: v.optional(v.string()),
         name: v.string(),
         slug: v.string(),
         description: v.string()

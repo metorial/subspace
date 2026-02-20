@@ -24,26 +24,28 @@ let include = {
 export let providerInclude = include;
 
 export let getProviderTenantFilter = (d: {
-  tenant: Tenant;
   solution: Solution;
-  environment: Environment;
+  tenant?: Tenant;
+  environment?: Environment;
 }) => ({
   OR: [
     { access: 'public' as const },
-    {
-      access: 'tenant' as const,
-      ownerTenantOid: d.tenant.oid,
-      ownerSolutionOid: d.solution.oid
-    }
-  ]
+    d.environment && d.tenant
+      ? {
+          access: 'tenant' as const,
+          ownerTenantOid: d.tenant.oid,
+          ownerSolutionOid: d.solution.oid
+        }
+      : undefined!
+  ].filter(Boolean)
 });
 
 class providerServiceImpl {
   async getProviderById(d: {
     providerId: string;
-    tenant: Tenant;
     solution: Solution;
-    environment: Environment;
+    tenant?: Tenant;
+    environment?: Environment;
   }) {
     let provider = await db.provider.findFirst({
       where: {
@@ -70,9 +72,9 @@ class providerServiceImpl {
   }
 
   async listProviders(d: {
-    tenant: Tenant;
     solution: Solution;
-    environment: Environment;
+    tenant?: Tenant;
+    environment?: Environment;
     search?: string;
   }) {
     return Paginator.create(({ prisma }) =>

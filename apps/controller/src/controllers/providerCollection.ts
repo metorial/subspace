@@ -3,9 +3,9 @@ import { v } from '@lowerdeck/validation';
 import { providerListingCollectionService } from '@metorial-subspace/module-catalog';
 import { providerListingCollectionPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
-import { tenantApp } from './tenant';
+import { tenantOptionalApp } from './tenant';
 
-export let providerListingCollectionApp = tenantApp.use(async ctx => {
+export let providerListingCollectionApp = tenantOptionalApp.use(async ctx => {
   let providerListingCollectionId = ctx.body.providerListingCollectionId;
   if (!providerListingCollectionId)
     throw new Error('ProviderListingCollection ID is required');
@@ -22,13 +22,13 @@ export let providerListingCollectionApp = tenantApp.use(async ctx => {
 });
 
 export let providerListingCollectionController = app.controller({
-  list: tenantApp
+  list: tenantOptionalApp
     .handler()
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string(),
-          environmentId: v.string(),
+          tenantId: v.optional(v.string()),
+          environmentId: v.optional(v.string()),
 
           ids: v.optional(v.array(v.string())),
           providerIds: v.optional(v.array(v.string())),
@@ -56,8 +56,8 @@ export let providerListingCollectionController = app.controller({
     .handler()
     .input(
       v.object({
-        tenantId: v.string(),
-        environmentId: v.string(),
+        tenantId: v.optional(v.string()),
+        environmentId: v.optional(v.string()),
         providerListingCollectionId: v.string()
       })
     )
@@ -67,8 +67,9 @@ export let providerListingCollectionController = app.controller({
     .handler()
     .input(
       v.object({
-        tenantId: v.string(),
-        environmentId: v.string(),
+        tenantId: v.optional(v.string()),
+        environmentId: v.optional(v.string()),
+
         name: v.string(),
         slug: v.string(),
         description: v.string()

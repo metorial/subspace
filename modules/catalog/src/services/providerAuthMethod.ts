@@ -13,10 +13,9 @@ import { getProviderTenantFilter } from './provider';
 
 class providerAuthMethodServiceImpl {
   async listProviderAuthMethods(d: {
-    tenant: Tenant;
     solution: Solution;
-    environment: Environment;
-
+    tenant?: Tenant;
+    environment?: Environment;
     providerVersion: ProviderVersion;
   }) {
     let versionOid = d.providerVersion?.oid;

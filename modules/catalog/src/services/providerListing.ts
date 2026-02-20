@@ -9,14 +9,16 @@ import {
   resolvePublishers
 } from '@metorial-subspace/list-utils';
 import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
-import { providerInclude } from './provider';
+import { getProviderTenantFilter, providerInclude } from './provider';
 
-let getInclude = (tenant: Tenant, solution: Solution) => ({
+let getInclude = (tenant: Tenant | undefined, solution: Solution) => ({
   categories: true,
   collections: true,
-  groups: {
-    where: { tenantOid: tenant.oid, solutionOid: solution.oid }
-  },
+  groups: tenant
+    ? {
+        where: { tenantOid: tenant.oid, solutionOid: solution.oid }
+      }
+    : false,
 
   publisher: true,
 
@@ -28,9 +30,9 @@ let getInclude = (tenant: Tenant, solution: Solution) => ({
 class ProviderListingService {
   async getProviderListingById(d: {
     providerListingId: string;
-    tenant: Tenant;
     solution: Solution;
-    environment: Environment;
+    tenant?: Tenant;
+    environment?: Environment;
   }) {
     let providerListing = await db.providerListing.findFirst({
       where: {
@@ -47,8 +49,10 @@ class ProviderListingService {
           {
             OR: [
               { isPublic: true },
-              { ownerTenantOid: d.tenant.oid, ownerSolutionOid: d.solution.oid }
-            ]
+              d.tenant && d.environment
+                ? { ownerTenantOid: d.tenant.oid, ownerSolutionOid: d.solution.oid }
+                : undefined!
+            ].filter(Boolean)
           }
         ]
       },
@@ -77,16 +81,20 @@ class ProviderListingService {
     isOfficial?: boolean;
     isMetorial?: boolean;
 
-    tenant: Tenant;
     solution: Solution;
-    environment: Environment;
+    tenant?: Tenant;
+    environment?: Environment;
 
     orderByRank?: boolean;
   }) {
-    let collections = await resolveProviderCollections(d, d.providerCollectionIds);
-    let categories = await resolveProviderCategories(d, d.providerCategoryIds);
-    let groups = await resolveProviderGroups(d, d.providerGroupIds);
-    let publishers = await resolvePublishers(d, d.publisherIds);
+    let collections = await resolveProviderCollections(d.providerCollectionIds);
+    let categories = await resolveProviderCategories(d.providerCategoryIds);
+    let publishers = await resolvePublishers(d.publisherIds);
+
+    let groups =
+      d.environment && d.tenant
+        ? await resolveProviderGroups(d as any, d.providerGroupIds)
+        : undefined;
 
     d.search = d.search?.trim();
     if (!d.search?.length) d.search = undefined;
@@ -95,7 +103,7 @@ class ProviderListingService {
       prisma(async opts => {
         let search = d.search
           ? await voyager.record.search({
-              tenantId: d.tenant.id,
+              tenantId: d.tenant?.id ?? 'global',
               sourceId: (await voyagerSource).id,
               indexId: voyagerIndex.providerListing.id,
               query: d.search
@@ -110,17 +118,12 @@ class ProviderListingService {
           where: {
             status: 'active',
 
+            provider: getProviderTenantFilter(d),
+
             AND: [
               d.ids ? { id: { in: d.ids } } : undefined!,
 
               search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
-
-              {
-                OR: [
-                  { isPublic: true },
-                  { ownerTenantOid: d.tenant.oid, ownerSolutionOid: d.solution.oid }
-                ]
-              },
 
               collections ? { collections: { some: collections.oidIn } } : undefined!,
               categories ? { categories: { some: categories.oidIn } } : undefined!,
@@ -128,10 +131,10 @@ class ProviderListingService {
 
               publishers ? { publisherOid: publishers.in } : undefined!,
 
-              d.onlyFromTenant
+              d.onlyFromTenant && d.tenant && d.solution
                 ? {
-                    ownerTenantOid: d.tenant?.oid ?? -1,
-                    ownerSolutionOid: d.solution?.oid ?? -1
+                    ownerTenantOid: d.tenant.oid,
+                    ownerSolutionOid: d.solution.oid
                   }
                 : undefined!,
 

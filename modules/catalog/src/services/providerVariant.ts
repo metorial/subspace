@@ -22,9 +22,9 @@ export let providerVariantInclude = include;
 
 class providerVariantServiceImpl {
   async listProviderVariants(d: {
-    tenant: Tenant;
     solution: Solution;
-    environment: Environment;
+    tenant?: Tenant;
+    environment?: Environment;
   }) {
     return Paginator.create(({ prisma }) =>
       prisma(
@@ -42,9 +42,9 @@ class providerVariantServiceImpl {
 
   async getProviderVariantById(d: {
     providerVariantId: string;
-    tenant: Tenant;
     solution: Solution;
-    environment: Environment;
+    tenant?: Tenant;
+    environment?: Environment;
     provider?: Provider;
   }) {
     let providerVariant = await db.providerVariant.findFirst({

@@ -6,9 +6,9 @@ import {
 } from '@metorial-subspace/module-catalog';
 import { providerToolPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
-import { tenantApp } from './tenant';
+import { tenantOptionalApp } from './tenant';
 
-export let providerToolApp = tenantApp.use(async ctx => {
+export let providerToolApp = tenantOptionalApp.use(async ctx => {
   let providerToolId = ctx.body.providerToolId;
   if (!providerToolId) throw new Error('ProviderTool ID is required');
 
@@ -23,13 +23,13 @@ export let providerToolApp = tenantApp.use(async ctx => {
 });
 
 export let providerToolController = app.controller({
-  list: tenantApp
+  list: tenantOptionalApp
     .handler()
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string(),
-          environmentId: v.string(),
+          tenantId: v.optional(v.string()),
+          environmentId: v.optional(v.string()),
 
           providerVersion: v.string()
         })
@@ -59,8 +59,9 @@ export let providerToolController = app.controller({
     .handler()
     .input(
       v.object({
-        tenantId: v.string(),
-        environmentId: v.string(),
+        tenantId: v.optional(v.string()),
+        environmentId: v.optional(v.string()),
+
         providerToolId: v.string()
       })
     )

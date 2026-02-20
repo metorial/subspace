@@ -5,3 +5,9 @@ export interface TenantSelector {
   solution: Solution;
   environment: Environment;
 }
+
+export interface TenantSelectorOptional {
+  solution: Solution;
+  tenant?: Tenant;
+  environment?: Environment;
+}

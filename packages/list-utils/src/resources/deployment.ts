@@ -1,5 +1,5 @@
 import { db } from '@metorial-subspace/db';
-import { createResolver } from '../resolver';
+import { createOptionalResolver, createResolver } from '../resolver';
 
 export let resolveProviderDeployments = createResolver(async ({ ts, ids }) =>
   db.providerDeployment.findMany({
@@ -51,7 +51,7 @@ export let resolveProviderAuthCredentials = createResolver(async ({ ts, ids }) =
   })
 );
 
-export let resolveProviderAuthMethods = createResolver(async ({ ts, ids }) =>
+export let resolveProviderAuthMethods = createOptionalResolver(async ({ ts, ids }) =>
   db.providerAuthMethod.findMany({
     where: {
       OR: [{ id: { in: ids } }],
@@ -59,12 +59,14 @@ export let resolveProviderAuthMethods = createResolver(async ({ ts, ids }) =>
       provider: {
         OR: [
           { access: 'public' as const },
-          {
-            access: 'tenant' as const,
-            ownerTenantOid: ts.tenantOid,
-            ownerSolutionOid: ts.solutionOid
-          }
-        ]
+          ts.environmentOid && ts.tenantOid
+            ? {
+                access: 'tenant' as const,
+                ownerTenantOid: ts.tenantOid,
+                ownerSolutionOid: ts.solutionOid
+              }
+            : undefined!
+        ].filter(Boolean)
       }
     },
     select: { oid: true }

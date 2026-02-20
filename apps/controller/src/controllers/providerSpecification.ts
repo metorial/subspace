@@ -3,9 +3,9 @@ import { v } from '@lowerdeck/validation';
 import { providerSpecificationService } from '@metorial-subspace/module-catalog';
 import { providerSpecificationPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
-import { tenantApp } from './tenant';
+import { tenantOptionalApp } from './tenant';
 
-export let providerSpecificationApp = tenantApp.use(async ctx => {
+export let providerSpecificationApp = tenantOptionalApp.use(async ctx => {
   let providerSpecificationId = ctx.body.providerSpecificationId;
   if (!providerSpecificationId) throw new Error('ProviderSpecification ID is required');
 
@@ -20,13 +20,13 @@ export let providerSpecificationApp = tenantApp.use(async ctx => {
 });
 
 export let providerSpecificationController = app.controller({
-  list: tenantApp
+  list: tenantOptionalApp
     .handler()
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string(),
-          environmentId: v.string(),
+          tenantId: v.optional(v.string()),
+          environmentId: v.optional(v.string()),
 
           ids: v.optional(v.array(v.string())),
           providerIds: v.optional(v.array(v.string())),
@@ -58,8 +58,9 @@ export let providerSpecificationController = app.controller({
     .handler()
     .input(
       v.object({
-        tenantId: v.string(),
-        environmentId: v.string(),
+        tenantId: v.optional(v.string()),
+        environmentId: v.optional(v.string()),
+
         providerSpecificationId: v.string()
       })
     )

@@ -3,9 +3,9 @@ import { v } from '@lowerdeck/validation';
 import { providerVersionService } from '@metorial-subspace/module-catalog';
 import { providerVersionPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
-import { tenantApp } from './tenant';
+import { tenantOptionalApp } from './tenant';
 
-export let providerVersionApp = tenantApp.use(async ctx => {
+export let providerVersionApp = tenantOptionalApp.use(async ctx => {
   let providerVersionId = ctx.body.providerVersionId;
   if (!providerVersionId) throw new Error('ProviderVersion ID is required');
 
@@ -20,13 +20,13 @@ export let providerVersionApp = tenantApp.use(async ctx => {
 });
 
 export let providerVersionController = app.controller({
-  list: tenantApp
+  list: tenantOptionalApp
     .handler()
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string(),
-          environmentId: v.string(),
+          tenantId: v.optional(v.string()),
+          environmentId: v.optional(v.string()),
 
           ids: v.optional(v.array(v.string())),
           providerIds: v.optional(v.array(v.string()))
@@ -52,8 +52,9 @@ export let providerVersionController = app.controller({
     .handler()
     .input(
       v.object({
-        tenantId: v.string(),
-        environmentId: v.string(),
+        tenantId: v.optional(v.string()),
+        environmentId: v.optional(v.string()),
+
         providerVersionId: v.string()
       })
     )
