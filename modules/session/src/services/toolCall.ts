@@ -64,7 +64,7 @@ class toolCallServiceImpl {
     let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
     let configs = await resolveProviderConfigs(d, d.providerConfigIds);
     let authConfigs = await resolveProviderAuthConfigs(d, d.providerAuthConfigIds);
-    let tools = await resolveProviderTools(d, d.toolIds);
+    let tools = await resolveProviderTools(d.toolIds);
 
     return Paginator.create(({ prisma }) =>
       prisma(
