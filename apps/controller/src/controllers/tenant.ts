@@ -26,7 +26,7 @@ export let tenantApp = tenantWithoutEnvironmentApp.use(async ctx => {
   return { tenant, environment };
 });
 
-export let tenantOptionalApp = tenantWithoutEnvironmentApp.use(async ctx => {
+export let tenantOptionalApp = app.use(async ctx => {
   let tenantId = ctx.body.tenantId;
   let environmentId = ctx.body.environmentId;
   if (!tenantId || !environmentId) {
