@@ -3,12 +3,13 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import { db, type Environment, type Solution, type Tenant } from '@metorial-subspace/db';
 import { resolveProviders } from '@metorial-subspace/list-utils';
+import { getProviderTenantFilter } from './provider';
 
 class providerSpecificationServiceImpl {
   async listProviderSpecifications(d: {
-    tenant: Tenant;
     solution: Solution;
-    environment: Environment;
+    tenant?: Tenant;
+    environment?: Environment;
 
     ids?: string[];
     providerIds?: string[];
@@ -52,16 +53,7 @@ class providerSpecificationServiceImpl {
             where: {
               AND: [
                 {
-                  provider: {
-                    OR: [
-                      { access: 'public' as const },
-                      {
-                        access: 'tenant' as const,
-                        ownerTenantOid: d.tenant.oid,
-                        ownerSolutionOid: d.solution.oid
-                      }
-                    ]
-                  }
+                  provider: getProviderTenantFilter(d)
                 },
 
                 d.ids ? { id: { in: d.ids } } : undefined!,
@@ -81,23 +73,14 @@ class providerSpecificationServiceImpl {
   }
 
   async getProviderSpecificationById(d: {
-    tenant: Tenant;
     solution: Solution;
-    environment: Environment;
+    tenant?: Tenant;
+    environment?: Environment;
     providerSpecificationId: string;
   }) {
     let providerSpecification = await db.providerSpecification.findFirst({
       where: {
-        provider: {
-          OR: [
-            { access: 'public' as const },
-            {
-              access: 'tenant' as const,
-              ownerTenantOid: d.tenant.oid,
-              ownerSolutionOid: d.solution.oid
-            }
-          ]
-        },
+        provider: getProviderTenantFilter(d),
 
         id: d.providerSpecificationId
       },

@@ -9,12 +9,13 @@ import {
   type Solution,
   type Tenant
 } from '@metorial-subspace/db';
+import { getProviderTenantFilter } from './provider';
 
 class providerToolServiceImpl {
   async listProviderTools(d: {
-    tenant: Tenant;
     solution: Solution;
-    environment: Environment;
+    tenant?: Tenant;
+    environment?: Environment;
 
     providerVersion: ProviderVersion;
   }) {
@@ -34,16 +35,7 @@ class providerToolServiceImpl {
           where: {
             AND: [
               {
-                provider: {
-                  OR: [
-                    { access: 'public' as const },
-                    {
-                      access: 'tenant' as const,
-                      ownerTenantOid: d.tenant.oid,
-                      ownerSolutionOid: d.solution.oid
-                    }
-                  ]
-                }
+                provider: getProviderTenantFilter(d)
               }
             ],
             providerOid: d.providerVersion.providerOid,
@@ -90,23 +82,14 @@ class providerToolServiceImpl {
   }
 
   async getProviderToolById(d: {
-    tenant: Tenant;
     solution: Solution;
-    environment: Environment;
+    tenant?: Tenant;
+    environment?: Environment;
     providerToolId: string;
   }) {
     let providerTool = await db.providerTool.findFirst({
       where: {
-        provider: {
-          OR: [
-            { access: 'public' as const },
-            {
-              access: 'tenant' as const,
-              ownerTenantOid: d.tenant.oid,
-              ownerSolutionOid: d.solution.oid
-            }
-          ]
-        },
+        provider: getProviderTenantFilter(d),
 
         id: d.providerToolId
       },

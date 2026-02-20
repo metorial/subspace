@@ -26,6 +26,21 @@ export let tenantApp = tenantWithoutEnvironmentApp.use(async ctx => {
   return { tenant, environment };
 });
 
+export let tenantOptionalApp = tenantWithoutEnvironmentApp.use(async ctx => {
+  let tenantId = ctx.body.tenantId;
+  let environmentId = ctx.body.environmentId;
+  if (!tenantId || !environmentId) {
+    return { tenant: undefined, environment: undefined };
+  }
+
+  let { tenant, environment } = await tenantService.getTenantAndEnvironmentById({
+    tenantId,
+    environmentId
+  });
+
+  return { tenant, environment };
+});
+
 export let tenantController = app.controller({
   upsert: app
     .handler()

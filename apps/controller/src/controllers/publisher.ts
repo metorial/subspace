@@ -3,9 +3,9 @@ import { v } from '@lowerdeck/validation';
 import { publisherService } from '@metorial-subspace/module-catalog';
 import { publisherPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
-import { tenantApp } from './tenant';
+import { tenantOptionalApp } from './tenant';
 
-export let publisherApp = tenantApp.use(async ctx => {
+export let publisherApp = tenantOptionalApp.use(async ctx => {
   let publisherId = ctx.body.publisherId;
   if (!publisherId) throw new Error('Publisher ID is required');
 
@@ -18,13 +18,13 @@ export let publisherApp = tenantApp.use(async ctx => {
 });
 
 export let publisherController = app.controller({
-  list: tenantApp
+  list: tenantOptionalApp
     .handler()
     .input(
       Paginator.validate(
         v.object({
-          tenantId: v.string(),
-          environmentId: v.string()
+          tenantId: v.optional(v.string()),
+          environmentId: v.optional(v.string())
         })
       )
     )
@@ -42,8 +42,9 @@ export let publisherController = app.controller({
     .handler()
     .input(
       v.object({
-        tenantId: v.string(),
-        environmentId: v.string(),
+        tenantId: v.optional(v.string()),
+        environmentId: v.optional(v.string()),
+
         publisherId: v.string()
       })
     )

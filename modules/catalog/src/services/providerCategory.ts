@@ -13,16 +13,16 @@ import { resolveProviderListings, resolveProviders } from '@metorial-subspace/li
 
 class providerListingCategoryServiceImpl {
   async listProviderListingCategories(d: {
-    tenant: Tenant;
     solution: Solution;
-    environment: Environment;
+    tenant?: Tenant;
+    environment?: Environment;
 
     ids?: string[];
     providerIds?: string[];
     providerListingIds?: string[];
   }) {
-    let providers = await resolveProviders(d, d.providerIds);
-    let providerListings = await resolveProviderListings(d, d.providerListingIds);
+    let providers = await resolveProviders(d as any, d.providerIds);
+    let providerListings = await resolveProviderListings(d as any, d.providerListingIds);
 
     return Paginator.create(({ prisma }) =>
       prisma(
@@ -45,9 +45,9 @@ class providerListingCategoryServiceImpl {
   }
 
   async getProviderListingCategoryById(d: {
-    tenant: Tenant;
     solution: Solution;
-    environment: Environment;
+    tenant?: Tenant;
+    environment?: Environment;
     providerListingCategoryId: string;
   }) {
     let providerListingCategory = await db.providerListingCategory.findFirst({

@@ -1,7 +1,7 @@
 import { db } from '@metorial-subspace/db';
-import { createResolver } from '../resolver';
+import { createOptionalResolver, createPublicResolver, createResolver } from '../resolver';
 
-export let resolveProviders = createResolver(async ({ ts, ids }) =>
+export let resolveProviders = createOptionalResolver(async ({ ts, ids }) =>
   db.provider.findMany({
     where: {
       AND: [
@@ -18,12 +18,14 @@ export let resolveProviders = createResolver(async ({ ts, ids }) =>
         {
           OR: [
             { access: 'public' as const },
-            {
-              access: 'tenant' as const,
-              ownerTenantOid: ts.tenantOid,
-              ownerSolutionOid: ts.solutionOid
-            }
-          ]
+            ts.tenantOid && ts.solutionOid
+              ? {
+                  access: 'tenant' as const,
+                  ownerTenantOid: ts.tenantOid,
+                  ownerSolutionOid: ts.solutionOid
+                }
+              : undefined!
+          ].filter(Boolean)
         }
       ]
     },
@@ -31,7 +33,7 @@ export let resolveProviders = createResolver(async ({ ts, ids }) =>
   })
 );
 
-export let resolveProviderVersions = createResolver(async ({ ts, ids }) =>
+export let resolveProviderVersions = createOptionalResolver(async ({ ts, ids }) =>
   db.providerVersion.findMany({
     where: {
       id: { in: ids },
@@ -39,19 +41,21 @@ export let resolveProviderVersions = createResolver(async ({ ts, ids }) =>
       provider: {
         OR: [
           { access: 'public' as const },
-          {
-            access: 'tenant' as const,
-            ownerTenantOid: ts.tenantOid,
-            ownerSolutionOid: ts.solutionOid
-          }
-        ]
+          ts.tenantOid && ts.solutionOid
+            ? {
+                access: 'tenant' as const,
+                ownerTenantOid: ts.tenantOid,
+                ownerSolutionOid: ts.solutionOid
+              }
+            : undefined!
+        ].filter(Boolean)
       }
     },
     select: { oid: true }
   })
 );
 
-export let resolveProviderListings = createResolver(async ({ ts, ids }) =>
+export let resolveProviderListings = createOptionalResolver(async ({ ts, ids }) =>
   db.providerListing.findMany({
     where: {
       OR: [
@@ -64,19 +68,21 @@ export let resolveProviderListings = createResolver(async ({ ts, ids }) =>
       provider: {
         OR: [
           { access: 'public' as const },
-          {
-            access: 'tenant' as const,
-            ownerTenantOid: ts.tenantOid,
-            ownerSolutionOid: ts.solutionOid
-          }
-        ]
+          ts.tenantOid && ts.solutionOid
+            ? {
+                access: 'tenant' as const,
+                ownerTenantOid: ts.tenantOid,
+                ownerSolutionOid: ts.solutionOid
+              }
+            : undefined!
+        ].filter(Boolean)
       }
     },
     select: { oid: true }
   })
 );
 
-export let resolveProviderTools = createResolver(async ({ ts, ids }) =>
+export let resolveProviderTools = createPublicResolver(async ({ ids }) =>
   db.providerTool.findMany({
     where: {
       OR: [{ id: { in: ids } }]
@@ -85,7 +91,7 @@ export let resolveProviderTools = createResolver(async ({ ts, ids }) =>
   })
 );
 
-export let resolveProviderCollections = createResolver(async ({ ts, ids }) =>
+export let resolveProviderCollections = createPublicResolver(async ({ ids }) =>
   db.providerListingCollection.findMany({
     where: {
       OR: [{ id: { in: ids } }, { slug: { in: ids } }]
@@ -94,8 +100,17 @@ export let resolveProviderCollections = createResolver(async ({ ts, ids }) =>
   })
 );
 
-export let resolveProviderCategories = createResolver(async ({ ts, ids }) =>
+export let resolveProviderCategories = createPublicResolver(async ({ ids }) =>
   db.providerListingCategory.findMany({
+    where: {
+      OR: [{ id: { in: ids } }, { slug: { in: ids } }]
+    },
+    select: { oid: true }
+  })
+);
+
+export let resolvePublishers = createPublicResolver(async ({ ids }) =>
+  db.provider.findMany({
     where: {
       OR: [{ id: { in: ids } }, { slug: { in: ids } }]
     },
@@ -128,15 +143,6 @@ export let resolveProviderSpecifications = createResolver(async ({ ts, ids }) =>
       },
 
       id: { in: ids }
-    },
-    select: { oid: true }
-  })
-);
-
-export let resolvePublishers = createResolver(async ({ ts, ids }) =>
-  db.provider.findMany({
-    where: {
-      OR: [{ id: { in: ids } }, { slug: { in: ids } }]
     },
     select: { oid: true }
   })
