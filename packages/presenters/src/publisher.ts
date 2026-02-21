@@ -11,8 +11,6 @@ export let publisherPresenter = (publisher: Publisher) => ({
   name: publisher.name,
   description: publisher.description,
 
-  source: publisher.source,
-
   createdAt: publisher.createdAt,
   updatedAt: publisher.updatedAt
 });

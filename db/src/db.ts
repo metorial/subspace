@@ -23,18 +23,6 @@ declare global {
       | { type: 'url'; url: string }
       | { type: 'default' };
 
-    type PublisherSource = {
-      type: 'github';
-      url: string;
-      owner: string;
-      repo?: string;
-      defaultBranch?: string;
-      stargazersCount?: number;
-      watchersCount?: number;
-      forksCount?: number;
-      license?: string | null;
-    };
-
     type ProviderSpecificationValue = {
       specification: Specification;
       authMethods: SpecificationAuthMethod[];

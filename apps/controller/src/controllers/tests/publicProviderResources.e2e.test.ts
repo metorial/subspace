@@ -93,18 +93,7 @@ describe('public-provider-resources.e2e', () => {
         identifier: `ext::github::acme-${suffix}`,
         name: `Acme ${suffix}`,
         description: 'Acme publisher fixture',
-        tag: publisherTag.tag,
-        source: {
-          type: 'github',
-          url: 'https://github.com/acme/awesome-mcp',
-          owner: 'acme',
-          repo: 'awesome-mcp',
-          defaultBranch: 'develop',
-          stargazersCount: 4242,
-          watchersCount: 321,
-          forksCount: 77,
-          license: 'Apache-2.0'
-        }
+        tag: publisherTag.tag
       }
     });
 
