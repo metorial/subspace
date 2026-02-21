@@ -76,7 +76,7 @@ class customProviderVersionServiceImpl {
     let from = d.input.from || d.customProvider.payload.from;
     let config = d.input.config || d.customProvider.payload.config;
 
-    if (d.customProvider.type != from.type) {
+    if (d.customProvider.type !== from.type) {
       throw new ServiceError(
         badRequestError({
           message: `Custom provider type '${d.customProvider.type}' does not match deployment from type '${from.type}'`,
@@ -85,7 +85,7 @@ class customProviderVersionServiceImpl {
       );
     }
 
-    if (from.type == 'function' && from.files && from.repository) {
+    if (from.type === 'function' && from.files && from.repository) {
       throw new ServiceError(
         badRequestError({
           message:
@@ -95,7 +95,7 @@ class customProviderVersionServiceImpl {
       );
     }
 
-    if (from.type == 'function' && !from.files?.length && !from.repository) {
+    if (from.type === 'function' && !from.files?.length && !from.repository) {
       throw new ServiceError(
         badRequestError({
           message:

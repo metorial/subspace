@@ -20,7 +20,7 @@ export class ProviderDeployment extends IProviderDeployment {
     let shuttleServer = await db.shuttleServer.findFirst({
       where: { providerVersions: { some: { providerOid: data.provider.oid } } }
     });
-    if (shuttleServer?.type != 'container') {
+    if (shuttleServer?.type !== 'container') {
       throw new ServiceError(
         badRequestError({
           message: 'Networking rulesets cannot be assigned to this provider type'

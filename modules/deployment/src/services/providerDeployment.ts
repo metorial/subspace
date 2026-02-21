@@ -266,7 +266,7 @@ class providerDeploymentServiceImpl {
         data: { currentVersionOid: currentVersion.oid }
       });
 
-      if (d.input.config.type == 'none') {
+      if (d.input.config.type === 'none') {
         let version = await providerDeploymentInternalService.getCurrentVersion({
           environment: d.environment,
           deployment: providerDeployment,

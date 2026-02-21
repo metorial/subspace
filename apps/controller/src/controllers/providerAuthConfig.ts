@@ -2,6 +2,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
 import { providerAuthConfigService } from '@metorial-subspace/module-auth';
 import { providerService, providerVersionService } from '@metorial-subspace/module-catalog';
+import { providerDeploymentService } from '@metorial-subspace/module-deployment';
 import {
   providerAuthConfigPresenter,
   providerAuthConfigSchemaPresenter
