@@ -44,7 +44,7 @@ export let providerListingPresenter = (
   } & {
     readme?: string | null;
   },
-  d: { tenant: Tenant }
+  d: { tenant: Tenant | undefined }
 ) => ({
   object: 'provider.listing',
 

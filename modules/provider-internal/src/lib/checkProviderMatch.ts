@@ -1,5 +1,5 @@
 import { badRequestError, ServiceError } from '@lowerdeck/error';
-import { Provider } from '@metorial-subspace/db';
+import type { Provider } from '@metorial-subspace/db';
 
 export let checkProviderMatch = (
   provider: Provider,

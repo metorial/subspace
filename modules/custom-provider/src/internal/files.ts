@@ -1,14 +1,14 @@
 import {
-  Actor,
-  CustomProvider,
-  CustomProviderDeployment,
-  CustomProviderFrom,
-  CustomProviderVersion,
+  type Actor,
+  type CustomProvider,
+  type CustomProviderDeployment,
+  type CustomProviderFrom,
+  type CustomProviderVersion,
   db,
-  Environment,
+  type Environment,
   snowflake,
-  Solution,
-  Tenant
+  type Solution,
+  type Tenant
 } from '@metorial-subspace/db';
 import { getTenantForOrigin, origin } from '../origin';
 import { linkRepo } from './linkRepo';

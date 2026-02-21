@@ -1,6 +1,6 @@
 import type { PaginatorInput } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { Actor, type Tenant } from '@metorial-subspace/db';
+import type { Actor, Tenant } from '@metorial-subspace/db';
 import { getTenantForOrigin, origin } from '../origin';
 
 class scmConnectionServiceImpl {

@@ -20,7 +20,10 @@ export let deploymentValidator = v.union([
 
 type DeploymentInput = ValidationTypeValue<typeof deploymentValidator>;
 
-export let resolveDeployment = async (ctx: TenantSelector, input: DeploymentInput | undefined | null) => {
+export let resolveDeployment = async (
+  ctx: TenantSelector,
+  input: DeploymentInput | undefined | null
+) => {
   if (!input) return undefined;
   if (input.type === 'reference') {
     return providerDeploymentService.getProviderDeploymentById({

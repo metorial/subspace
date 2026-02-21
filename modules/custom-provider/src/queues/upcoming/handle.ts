@@ -1,18 +1,18 @@
 import { createQueue, QueueRetryError } from '@lowerdeck/queue';
 import {
-  Actor,
+  type Actor,
   addAfterTransactionHook,
-  CustomProvider,
-  CustomProviderDeployment,
-  CustomProviderFrom,
-  CustomProviderVersion,
+  type CustomProvider,
+  type CustomProviderDeployment,
+  type CustomProviderFrom,
+  type CustomProviderVersion,
   db,
-  Environment,
-  Solution,
-  Tenant,
+  type Environment,
+  type Solution,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
-import { backend, CustomProviderFromInternal } from '../../_shuttle/backend';
+import { backend, type CustomProviderFromInternal } from '../../_shuttle/backend';
 import { env } from '../../env';
 import { createVersion } from '../../internal/createVersion';
 import { ensureEnvironments } from '../../internal/ensureEnvironments';

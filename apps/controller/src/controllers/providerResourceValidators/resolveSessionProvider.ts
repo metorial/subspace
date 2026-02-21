@@ -7,11 +7,12 @@ import { resolveDeployment, type deploymentValidator } from './resolveDeployment
 export let resolveSessionProvider = async (
   ctx: TenantSelector,
   input: {
-    providerDeployment: ValidationTypeValue<typeof deploymentValidator>;
+    providerDeployment?: ValidationTypeValue<typeof deploymentValidator> | null;
     providerConfig?: ValidationTypeValue<typeof configValidator> | null;
     providerAuthConfig?: ValidationTypeValue<typeof authConfigValidator> | null;
   }
 ) => {
+  if (!input.providerDeployment) throw new Error('providerDeployment is required');
   let deployment = await resolveDeployment(ctx, input.providerDeployment);
 
   let selectorCtx = {

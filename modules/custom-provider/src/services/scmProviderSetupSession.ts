@@ -1,5 +1,5 @@
 import { Service } from '@lowerdeck/service';
-import { type Tenant } from '@metorial-subspace/db';
+import type { Tenant } from '@metorial-subspace/db';
 import { getTenantForOrigin, origin } from '../origin';
 
 class scmProviderSetupSessionServiceImpl {

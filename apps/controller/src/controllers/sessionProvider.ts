@@ -57,7 +57,7 @@ export let toolFiltersValidator = v.nullable(
   v.optional(v.union([toolFilterValidator, v.array(toolFilterValidator)]))
 );
 
-let normalizeToolFilters = (
+export let normalizeToolFilters = (
   t: ValidationTypeValue<typeof toolFiltersValidator>
 ): PrismaJson.ToolFilter => {
   if (!t) return { type: 'v1.allow_all' };

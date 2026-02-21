@@ -9,7 +9,7 @@ import {
   deploymentValidator,
   resolveSessionProvider
 } from './providerResourceValidators';
-import { toolFiltersValidator } from './sessionProvider';
+import { normalizeToolFilters, toolFiltersValidator } from './sessionProvider';
 import { tenantApp } from './tenant';
 
 export let sessionApp = tenantApp.use(async ctx => {
@@ -115,7 +115,7 @@ export let sessionController = app.controller({
           return {
             ...resolved,
             sessionTemplateId: p.sessionTemplateId,
-            toolFilters: p.toolFilters as PrismaJson.ToolFilter | null | undefined
+            toolFilters: normalizeToolFilters(p.toolFilters)
           };
         })
       );

@@ -5,8 +5,8 @@ import { Service } from '@lowerdeck/service';
 import {
   db,
   type Environment,
-  Session,
-  SessionMessageStatus,
+  type Session,
+  type SessionMessageStatus,
   type Solution,
   type Tenant
 } from '@metorial-subspace/db';
