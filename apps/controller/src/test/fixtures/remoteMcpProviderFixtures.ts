@@ -570,6 +570,15 @@ export const RemoteMcpProviderFixtures = (db: PrismaClient) => {
       include: { currentVersion: true }
     });
 
+    // @vnxdev have another look here!
+    // mark default config as non-ephemeral so it doesn't
+    // expire with 15-second TTL
+    await db.providerConfig.update({
+      where: { oid: providerConfig.oid },
+      data: { isEphemeral: false }
+    });
+    providerConfig = { ...providerConfig, isEphemeral: false };
+
     if (!providerDeployment.currentVersion) {
       throw new Error('Provider deployment version missing');
     }
