@@ -1,56 +1,34 @@
-import { v } from '@lowerdeck/validation';
+import { v, type ValidationTypeValue } from '@lowerdeck/validation';
+import type { TenantSelector } from '@metorial-subspace/list-utils';
 import {
   providerConfigService,
   providerConfigVaultService
 } from '@metorial-subspace/module-deployment';
-import type { TenantSelector } from '@metorial-subspace/list-utils';
 
-export let configSourceValidator = v.union([
-  v.object({ type: v.literal('none') }),
+export let configValidator = v.union([
   v.object({ type: v.literal('reference'), providerConfigId: v.string() }),
   v.object({
-    type: v.literal('new'),
+    type: v.literal('ephemeral'),
     name: v.optional(v.string()),
     config: v.union([
-      v.object({ type: v.literal('new'), data: v.record(v.any()) }),
+      v.object({ type: v.literal('inline'), data: v.record(v.any()) }),
       v.object({ type: v.literal('vault'), providerConfigVaultId: v.string() })
     ])
   })
 ]);
 
-export let configValidator = v.union([
-  v.object({ type: v.literal('reference'), providerConfigId: v.string() }),
-  v.object({
-    type: v.literal('new'),
-    name: v.optional(v.string()),
-    config: v.union([
-      v.object({ type: v.literal('new'), data: v.record(v.any()) }),
-      v.object({ type: v.literal('vault'), providerConfigVaultId: v.string() })
-    ])
-  }),
-  v.string()
+export let configSourceValidator = v.union([
+  v.object({ type: v.literal('none') }),
+  configValidator
 ]);
 
-type ConfigSourceInput =
-  | { type: 'none' }
-  | { type: 'reference'; providerConfigId: string }
-  | {
-      type: 'new';
-      name?: string;
-      config:
-        | { type: 'new'; data: Record<string, unknown> }
-        | { type: 'vault'; providerConfigVaultId: string };
-    };
+type ConfigSourceInput = ValidationTypeValue<typeof configSourceValidator>;
 
 export let resolveDeploymentConfig = async (
   ctx: TenantSelector,
   config: ConfigSourceInput | null | undefined
 ) => {
-  if (!config || config.type === 'none') {
-    return { type: 'none' as const };
-  }
-
-  if (config.type === 'reference') {
+  if (config?.type === 'reference') {
     let providerConfig = await providerConfigService.getProviderConfigById({
       tenant: ctx.tenant,
       solution: ctx.solution,
@@ -60,11 +38,12 @@ export let resolveDeploymentConfig = async (
     return { type: 'config' as const, config: providerConfig };
   }
 
-  if (config.type === 'new') {
+  if (config?.type === 'ephemeral') {
     let innerConfig = config.config;
-    if (innerConfig.type === 'new') {
+    if (innerConfig.type === 'inline') {
       return { type: 'inline' as const, data: innerConfig.data };
     }
+
     if (innerConfig.type === 'vault') {
       let vault = await providerConfigVaultService.getProviderConfigVaultById({
         tenant: ctx.tenant,
@@ -72,6 +51,7 @@ export let resolveDeploymentConfig = async (
         environment: ctx.environment,
         providerConfigVaultId: innerConfig.providerConfigVaultId
       });
+
       return { type: 'vault' as const, vault };
     }
   }

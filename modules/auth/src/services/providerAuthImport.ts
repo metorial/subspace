@@ -22,6 +22,7 @@ import {
   resolveProviderDeployments,
   resolveProviders
 } from '@metorial-subspace/list-utils';
+import { checkProviderMatch } from '@metorial-subspace/module-provider-internal';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { providerAuthConfigInclude, providerAuthConfigService } from './providerAuthConfig';
 import { providerAuthConfigInternalService } from './providerAuthConfigInternal';
@@ -133,6 +134,9 @@ class providerAuthImportServiceImpl {
 
     let checkRes = await this.check(d);
 
+    checkProviderMatch(checkRes.provider, checkRes.providerAuthConfig);
+    checkProviderMatch(checkRes.provider, checkRes.providerDeployment);
+
     let { authMethod } = await providerAuthConfigInternalService.getVersionAndAuthMethod({
       tenant: d.tenant,
       solution: d.solution,
@@ -161,6 +165,9 @@ class providerAuthImportServiceImpl {
     }
   ) {
     let checkRes = await this.check(d);
+
+    checkProviderMatch(checkRes.provider, checkRes.providerAuthConfig);
+    checkProviderMatch(checkRes.provider, checkRes.providerDeployment);
 
     let importOid: bigint;
 

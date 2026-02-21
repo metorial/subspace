@@ -126,7 +126,7 @@ export let providerDeploymentController = app.controller({
 
           config: await resolveDeploymentConfig(
             { tenant: ctx.tenant, solution: ctx.solution, environment: ctx.environment },
-            ctx.input.config as Parameters<typeof resolveDeploymentConfig>[1]
+            ctx.input.config
           )
         }
       });

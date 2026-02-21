@@ -8,6 +8,8 @@ import { versionQueues } from './queues/version';
 
 export * from './services';
 
+export * from './lib/checkProviderMatch';
+
 export let providerInternalQueueProcessor = combineQueueProcessors([
   listingQueues,
   cleanupCron,

@@ -19,6 +19,7 @@ import {
   withTransaction
 } from '@metorial-subspace/db';
 import { providerConfigService } from '@metorial-subspace/module-deployment';
+import { checkProviderMatch } from '@metorial-subspace/module-provider-internal';
 import { providerSetupSessionUpdatedQueue } from '../queues/lifecycle/providerSetupSession';
 import { providerAuthConfigService } from './providerAuthConfig';
 import { providerOAuthSetupService } from './providerOAuthSetup';
@@ -50,6 +51,10 @@ class providerSetupSessionInternalServiceImpl {
       ua: string | undefined;
     };
   }) {
+    checkProviderMatch(d.provider, d.credentials);
+    checkProviderMatch(d.provider, d.providerDeployment);
+    checkProviderMatch(d.provider, d.authMethod);
+
     if (d.authMethod.type === 'oauth') {
       if (
         !d.credentials &&
@@ -134,6 +139,8 @@ class providerSetupSessionInternalServiceImpl {
       config: Record<string, any>;
     };
   }) {
+    checkProviderMatch(d.provider, d.providerDeployment);
+
     let config = await providerConfigService.createProviderConfig({
       tenant: d.tenant,
       solution: d.solution,
