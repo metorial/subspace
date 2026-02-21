@@ -1,9 +1,12 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
 import { providerAuthConfigService } from '@metorial-subspace/module-auth';
-import { providerService } from '@metorial-subspace/module-catalog';
+import { providerService, providerVersionService } from '@metorial-subspace/module-catalog';
 import { providerDeploymentService } from '@metorial-subspace/module-deployment';
-import { providerAuthConfigPresenter } from '@metorial-subspace/presenters';
+import {
+  providerAuthConfigPresenter,
+  providerAuthConfigSchemaPresenter
+} from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 
@@ -92,7 +95,7 @@ export let providerAuthConfigController = app.controller({
 
         providerId: v.string(),
         providerDeploymentId: v.optional(v.string()),
-        providerAuthMethodId: v.string(),
+        providerAuthMethodId: v.optional(v.string()),
 
         config: v.record(v.any())
       })
@@ -141,6 +144,64 @@ export let providerAuthConfigController = app.controller({
       });
 
       return providerAuthConfigPresenter(providerAuthConfig);
+    }),
+
+  getConfigSchema: tenantApp
+    .handler()
+    .input(
+      v.object({
+        tenantId: v.string(),
+        environmentId: v.string(),
+        providerId: v.optional(v.string()),
+
+        providerAuthConfigId: v.optional(v.string()),
+        providerVersionId: v.optional(v.string()),
+        providerDeploymentId: v.optional(v.string()),
+
+        authMethodId: v.optional(v.string())
+      })
+    )
+    .do(async ctx => {
+      let ts = { tenant: ctx.tenant, environment: ctx.environment, solution: ctx.solution };
+      let provider = ctx.input.providerId
+        ? await providerService.getProviderById({
+            ...ts,
+            providerId: ctx.input.providerId
+          })
+        : undefined;
+      let providerDeployment = ctx.input.providerDeploymentId
+        ? await providerDeploymentService.getProviderDeploymentById({
+            ...ts,
+            providerDeploymentId: ctx.input.providerDeploymentId
+          })
+        : undefined;
+      let providerAuthConfig = ctx.input.providerAuthConfigId
+        ? await providerAuthConfigService.getProviderAuthConfigById({
+            ...ts,
+            providerAuthConfigId: ctx.input.providerAuthConfigId
+          })
+        : undefined;
+      let providerVersion = ctx.input.providerVersionId
+        ? await providerVersionService.getProviderVersionById({
+            ...ts,
+            providerVersionId: ctx.input.providerVersionId
+          })
+        : undefined;
+
+      let config = await providerAuthConfigService.getProviderAuthConfigSchema({
+        tenant: ctx.tenant,
+        environment: ctx.environment,
+        solution: ctx.solution,
+
+        authMethodId: ctx.input.authMethodId,
+
+        provider,
+        providerDeployment,
+        providerAuthConfig,
+        providerVersion
+      });
+
+      return providerAuthConfigSchemaPresenter(config);
     }),
 
   update: providerAuthConfigApp

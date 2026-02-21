@@ -41,6 +41,7 @@ export let toolCallPresenter = async (toolCall: ToolCallPresenterProps) => {
 
     sessionId: toolCall.message.session.id,
     messageId: toolCall.message.id,
+    providerId: toolCall.tool.provider.id,
     sessionProviderId: toolCall.message.sessionProvider?.id || null,
     connectionId: toolCall.message.connection?.id || null,
     providerRunId: toolCall.message.providerRun?.id || null,

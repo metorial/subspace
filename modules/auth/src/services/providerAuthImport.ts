@@ -133,18 +133,26 @@ class providerAuthImportServiceImpl {
 
     let checkRes = await this.check(d);
 
-    let { authMethod } = await providerAuthConfigInternalService.getVersionAndAuthMethod({
+    let { authMethod, version } =
+      await providerAuthConfigInternalService.getVersionAndAuthMethod({
+        tenant: d.tenant,
+        solution: d.solution,
+        environment: d.environment,
+        provider: checkRes.provider,
+        providerDeployment: checkRes.providerDeployment,
+        authMethodId: d.input.authMethodId
+      });
+
+    return await providerAuthConfigService.getProviderAuthConfigSchema({
       tenant: d.tenant,
-      solution: d.solution,
       environment: d.environment,
+      solution: d.solution,
+
       provider: checkRes.provider,
       providerDeployment: checkRes.providerDeployment,
-      authMethodId: d.input.authMethodId
+      providerVersion: version,
+      authMethodId: authMethod.id
     });
-
-    return authMethod.type === 'oauth'
-      ? authMethod.value.outputJsonSchema
-      : authMethod.value.inputJsonSchema;
   }
 
   async createProviderAuthImport(

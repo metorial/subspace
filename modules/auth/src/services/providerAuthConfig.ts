@@ -152,9 +152,14 @@ class providerAuthConfigServiceImpl {
   }) {
     if (d.providerAuthConfig) {
       let authMethod = await db.providerAuthMethod.findFirstOrThrow({
-        where: { oid: d.providerAuthConfig.authMethodOid }
+        where: { oid: d.providerAuthConfig.authMethodOid },
+        include: { specification: true, provider: true }
       });
-      return authMethod.value;
+      return {
+        provider: authMethod.provider,
+        authMethod,
+        specification: authMethod.specification
+      };
     }
 
     let provider: (Provider & { defaultVariant: ProviderVariant | null }) | undefined;
@@ -192,7 +197,11 @@ class providerAuthConfigServiceImpl {
       authMethodId: d.authMethodId
     });
 
-    return authMethod.value;
+    return {
+      provider,
+      authMethod,
+      specification: authMethod.specification
+    };
   }
 
   async createProviderAuthConfig(d: {

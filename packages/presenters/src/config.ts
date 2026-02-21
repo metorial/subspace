@@ -32,6 +32,7 @@ export let providerConfigPresenter = (
   metadata: providerConfig.metadata,
 
   providerId: providerConfig.provider.id,
+  specificationId: providerConfig.specification.id,
 
   deployment: providerConfig.deployment
     ? providerDeploymentPreviewPresenter({
@@ -46,8 +47,6 @@ export let providerConfigPresenter = (
         provider: providerConfig.provider
       })
     : null,
-
-  specificationId: providerConfig.specification.id,
 
   createdAt: providerConfig.createdAt,
   updatedAt: providerConfig.updatedAt

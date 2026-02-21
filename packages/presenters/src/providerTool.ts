@@ -22,6 +22,7 @@ export let providerToolPresenter = (
   tags: providerTool.value.tags,
 
   specificationId: providerTool.specification.id,
+  providerId: providerTool.provider.id,
 
   createdAt: providerTool.createdAt,
   updatedAt: providerTool.updatedAt

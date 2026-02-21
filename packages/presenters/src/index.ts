@@ -15,6 +15,7 @@ export * from './deployment';
 export * from './environment';
 export * from './oauthSetup';
 export * from './provider';
+export * from './providerAuthConfig';
 export * from './providerAuthMethod';
 export * from './providerConfig';
 export * from './providerEntry';

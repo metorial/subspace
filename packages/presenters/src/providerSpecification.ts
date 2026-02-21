@@ -22,6 +22,8 @@ export let providerSpecificationPresenter = (
   name: providerSpecification.name,
   description: providerSpecification.description,
 
+  providerId: providerSpecification.provider.id,
+
   configSchema: providerSpecification.value.specification.configJsonSchema,
   configVisibility: providerSpecification.value.specification.configVisibility,
 

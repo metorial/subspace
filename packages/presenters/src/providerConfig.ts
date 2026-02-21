@@ -5,7 +5,7 @@ export let providerConfigSchemaPresenter = (
     provider: Provider;
   }
 ) => ({
-  object: 'provider.capabilities.config_schema',
+  object: 'provider.capabilities.config.schema',
 
   configSchema: providerSpecification.value.specification.configJsonSchema,
   configVisibility: providerSpecification.value.specification.configVisibility,
