@@ -234,7 +234,7 @@ class sessionProviderInputServiceImpl {
                 config = await db.providerConfig.findFirstOrThrow({
                   where: { ...ts, oid: deployment.defaultConfigOid }
                 });
-                checkDeletedRelation(config, d);
+                checkDeletedRelation(config, { allowEphemeral: true });
               } else {
                 let schema = normalizeJsonSchema(spec.value.specification.configJsonSchema);
                 let hasRequired = true;
@@ -266,7 +266,7 @@ class sessionProviderInputServiceImpl {
                   provider,
                   providerDeployment: deployment
                 });
-                checkDeletedRelation(config, d);
+                checkDeletedRelation(config, { allowEphemeral: true });
               }
             }
 
@@ -275,7 +275,7 @@ class sessionProviderInputServiceImpl {
                 authConfig = await db.providerAuthConfig.findFirstOrThrow({
                   where: { ...ts, oid: deployment.defaultAuthConfigOid }
                 });
-                checkDeletedRelation(authConfig, d);
+                checkDeletedRelation(authConfig, { allowEphemeral: true });
               } else {
                 throw new ServiceError(
                   badRequestError({
@@ -331,7 +331,8 @@ class sessionProviderInputServiceImpl {
       tenant: d.tenant,
       solution: d.solution,
       environment: d.environment,
-      providers: d.providers
+      providers: d.providers,
+      allowEphemeral: d.session.isEphemeral
     });
 
     return withTransaction(async db => {
