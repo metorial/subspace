@@ -1,13 +1,10 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
 import { providerService, providerVersionService } from '@metorial-subspace/module-catalog';
-import {
-  providerConfigService,
-  providerConfigVaultService,
-  providerDeploymentService
-} from '@metorial-subspace/module-deployment';
+import { providerDeploymentService } from '@metorial-subspace/module-deployment';
 import { providerDeploymentPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
+import { configSourceValidator, resolveDeploymentConfig } from './providerResourceValidators';
 import { tenantApp } from './tenant';
 
 export let providerDeploymentApp = tenantApp.use(async ctx => {
@@ -92,23 +89,7 @@ export let providerDeploymentController = app.controller({
 
         networkingRulesetIds: v.optional(v.array(v.string())),
 
-        config: v.union([
-          v.object({
-            type: v.literal('none')
-          }),
-          v.object({
-            type: v.literal('inline'),
-            data: v.record(v.any())
-          }),
-          v.object({
-            type: v.literal('config'),
-            providerConfigId: v.string()
-          }),
-          v.object({
-            type: v.literal('vault'),
-            providerConfigVaultId: v.string()
-          })
-        ])
+        config: v.optional(configSourceValidator)
       })
     )
     .do(async ctx => {
@@ -143,34 +124,10 @@ export let providerDeploymentController = app.controller({
 
           isEphemeral: ctx.input.isEphemeral,
 
-          config: await (async () => {
-            if (ctx.input.config.type === 'vault') {
-              return {
-                type: 'vault' as const,
-                vault: await providerConfigVaultService.getProviderConfigVaultById({
-                  providerConfigVaultId: ctx.input.config.providerConfigVaultId,
-                  tenant: ctx.tenant,
-                  environment: ctx.environment,
-                  solution: ctx.solution
-                })
-              };
-            }
-            if (ctx.input.config.type === 'config') {
-              return {
-                type: 'config' as const,
-                config: await providerConfigService.getProviderConfigById({
-                  providerConfigId: ctx.input.config.providerConfigId,
-                  tenant: ctx.tenant,
-                  environment: ctx.environment,
-                  solution: ctx.solution
-                })
-              };
-            }
-            if (ctx.input.config.type === 'inline') {
-              return { type: 'inline' as const, data: ctx.input.config.data };
-            }
-            return { type: 'none' as const };
-          })()
+          config: await resolveDeploymentConfig(
+            { tenant: ctx.tenant, solution: ctx.solution, environment: ctx.environment },
+            ctx.input.config as Parameters<typeof resolveDeploymentConfig>[1]
+          )
         }
       });
 
