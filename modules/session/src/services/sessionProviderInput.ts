@@ -331,8 +331,7 @@ class sessionProviderInputServiceImpl {
       tenant: d.tenant,
       solution: d.solution,
       environment: d.environment,
-      providers: d.providers,
-      allowEphemeral: d.session.isEphemeral
+      providers: d.providers
     });
 
     return withTransaction(async db => {
