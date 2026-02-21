@@ -46,7 +46,7 @@ describe('public-provider-resources.e2e', () => {
     });
   });
 
-  it('exposes publisher and repository metadata on provider listings', async () => {
+  it('exposes publisher metadata on provider listings', async () => {
     let f = fixtures(testDb);
     let suffix = randomBytes(4).toString('hex');
 
@@ -189,19 +189,9 @@ describe('public-provider-resources.e2e', () => {
         id: publisher.id,
         identifier: publisher.identifier,
         name: publisher.name
-      },
-      repository: {
-        object: 'provider.repository',
-        provider: 'github',
-        identifier: 'acme/awesome-mcp',
-        providerUrl: 'https://github.com/acme/awesome-mcp',
-        defaultBranch: 'develop',
-        stargazersCount: 4242,
-        watchersCount: 321,
-        forksCount: 77,
-        license: 'Apache-2.0'
       }
     });
+    expect((listing as Record<string, unknown>).repository).toBeUndefined();
 
     let listings = await client.providerListing.list({
       tenantId: tenant.id,
@@ -213,16 +203,14 @@ describe('public-provider-resources.e2e', () => {
     let item = listings.items.find(i => i.id === providerListing.id);
 
     expect(item).toBeDefined();
+    if (!item) return;
     expect(item).toMatchObject({
       id: providerListing.id,
-      repository: {
-        identifier: 'acme/awesome-mcp',
-        defaultBranch: 'develop',
-        stargazersCount: 4242,
-        watchersCount: 321,
-        forksCount: 77,
-        license: 'Apache-2.0'
+      publisher: {
+        id: publisher.id,
+        name: publisher.name
       }
     });
+    expect((item as Record<string, unknown>).repository).toBeUndefined();
   });
 });
