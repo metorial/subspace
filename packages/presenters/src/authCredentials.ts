@@ -9,6 +9,7 @@ export let providerAuthCredentialsPresenter = (
 
   id: providerAuthCredentials.id,
   type: providerAuthCredentials.type,
+  status: providerAuthCredentials.status,
 
   isEphemeral: providerAuthCredentials.isEphemeral,
   isDefault: providerAuthCredentials.isDefault,

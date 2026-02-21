@@ -9,12 +9,12 @@ import type {
   ProviderSetupSession,
   ProviderSpecification
 } from '@metorial-subspace/db';
-import { providerAuthConfigPresenter } from './authConfig';
 import { providerAuthCredentialsPresenter } from './authCredentials';
-import { providerConfigPresenter } from './config';
 import { providerDeploymentPreviewPresenter } from './deployment';
 import { env } from './env';
+import { providerAuthConfigPresenter } from './providerAuthConfig';
 import { providerAuthMethodPresenter } from './providerAuthMethod';
+import { providerConfigPresenter } from './providerConfig';
 
 export let providerSetupSessionPresenter = (
   providerSetupSession: ProviderSetupSession & {
