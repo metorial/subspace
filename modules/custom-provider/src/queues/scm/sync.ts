@@ -45,7 +45,7 @@ export let scmSyncManyQueueProcessor = scmSyncManyQueue.process(async data =>
       select: { id: true },
       data: changeNotifications.items
         .map(item => {
-          if (item.type != 'repo_push' || !item.repoPush?.repo) return undefined!;
+          if (item.type !== 'repo_push' || !item.repoPush?.repo) return undefined!;
           let repo = repoMap.get(item.repoPush.repo.id);
           if (!repo) return undefined!;
 

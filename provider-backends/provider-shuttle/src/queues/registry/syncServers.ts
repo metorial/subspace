@@ -163,7 +163,7 @@ export let syncServersSingleProcessor = syncServersSingle.process(async data => 
     }
   });
 
-  if (latestVersion.from.type == 'remote') {
+  if (latestVersion.from.type === 'remote') {
     let res = await shuttle.server.create({
       from: {
         type: 'remote',
@@ -177,7 +177,7 @@ export let syncServersSingleProcessor = syncServersSingle.process(async data => 
       where: { id: syncRecord.id },
       data: { shuttleServerId: res.server.id }
     });
-  } else if (latestVersion.from.type == 'container') {
+  } else if (latestVersion.from.type === 'container') {
     let res = await shuttle.server.create({
       from: {
         type: 'container.from_image_ref',

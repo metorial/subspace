@@ -9,7 +9,7 @@ let mapAuth = (
   auth: ProviderType['attributes']['auth'],
   providerType: ProviderType,
   provider: Provider,
-  tenant: Tenant
+  tenant: Tenant | undefined
 ) => {
   if (auth.status === 'disabled') return auth;
 
@@ -19,7 +19,9 @@ let mapAuth = (
       auth.oauth.status === 'enabled'
         ? {
             ...auth.oauth,
-            oauthCallbackUrl: getOAuthCallbackUrl(providerType, provider, tenant)
+            oauthCallbackUrl: tenant
+              ? getOAuthCallbackUrl(providerType, provider, tenant)
+              : null
           }
         : auth.oauth
   };
@@ -27,7 +29,7 @@ let mapAuth = (
 
 export let providerTypePresenter = (
   providerType: ProviderType,
-  d: { tenant: Tenant; provider: Provider }
+  d: { tenant: Tenant | undefined; provider: Provider }
 ) => ({
   object: 'provider.type',
 

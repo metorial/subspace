@@ -65,8 +65,8 @@ export let upsertShuttleServerVersion = ({
       if (server.type === 'container') {
         if (
           version.repositoryVersion &&
-          (version.repositoryVersion.repository.registry.url == 'https://ghcr.io' ||
-            version.repositoryVersion.repository.registry.url == 'ghcr.io') &&
+          (version.repositoryVersion.repository.registry.url === 'https://ghcr.io' ||
+            version.repositoryVersion.repository.registry.url === 'ghcr.io') &&
           version.repositoryVersion.repository.name.startsWith('metorial/mcp-container--')
         ) {
           publisher = await publisherInternalService.upsertPublisherForExternal({
@@ -75,8 +75,8 @@ export let upsertShuttleServerVersion = ({
           });
         } else if (
           version.repositoryVersion &&
-          (version.repositoryVersion.repository.registry.url == 'https://ghcr.io' ||
-            version.repositoryVersion.repository.registry.url == 'ghcr.io') &&
+          (version.repositoryVersion.repository.registry.url === 'https://ghcr.io' ||
+            version.repositoryVersion.repository.registry.url === 'ghcr.io') &&
           version.repositoryVersion.repository.name.startsWith('metorial/')
         ) {
           publisher = await publisherInternalService.upsertPublisherForMetorial();

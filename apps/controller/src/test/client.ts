@@ -2,7 +2,7 @@ import { createClient } from '@lowerdeck/rpc-client';
 import { createServer, type InferClient, rpcMux } from '@lowerdeck/rpc-server';
 import { createFetchRouter } from '@lowerdeck/testing-tools';
 import { appWithoutSolution } from '../controllers/_app';
-import { rootController, subspaceControllerRPC } from '../controllers';
+import { type rootController, subspaceControllerRPC } from '../controllers';
 import { solutionController } from '../controllers/solution';
 import { tenantController } from '../controllers/tenant';
 
@@ -40,7 +40,7 @@ let registerInMemoryRoute = (endpoint: string, owner: RouteOwner, rpc: RpcLike) 
 let defaultEndpoint = 'http://subspace-controller.test/subspace-controller';
 let defaultRootEndpoint = 'http://subspace-controller-root.test/subspace-controller';
 
-let createTestClient = <TClient>(
+let createTestClient = <TClient extends object>(
   opts: Partial<ClientOptsLike>,
   config: {
     defaultEndpoint: string;

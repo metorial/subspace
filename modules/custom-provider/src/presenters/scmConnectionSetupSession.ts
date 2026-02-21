@@ -1,4 +1,4 @@
-import { ScmConnectionSetupSession } from '../origin';
+import type { ScmConnectionSetupSession } from '../origin';
 import { scmConnectionPresenter } from './scmConnection';
 
 export let scmConnectionSetupSessionPresenter = (

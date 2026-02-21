@@ -1,4 +1,4 @@
-import { ScmRepositoryPreview } from '../origin';
+import type { ScmRepositoryPreview } from '../origin';
 
 export let scmRepositoryPreviewPresenter = (scmRepositoryPreview: ScmRepositoryPreview) => ({
   object: 'scm.repository_preview',

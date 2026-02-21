@@ -1,7 +1,7 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import { CodeBucket, db, Environment, Solution, type Tenant } from '@metorial-subspace/db';
+import { type CodeBucket, db, type Environment, type Solution, type Tenant } from '@metorial-subspace/db';
 import {
   resolveCustomProviderDeployments,
   resolveCustomProviders,
@@ -99,7 +99,7 @@ class bucketServiceImpl {
     return files.files.map(
       (f: { path: string; size: string; contentType: string; modifiedAt: Date }) => ({
         filename: f.path,
-        size: parseInt(f.size, 10),
+        size: Number.parseInt(f.size, 10),
         contentType: f.contentType,
         modifiedAt: f.modifiedAt
       })
@@ -116,7 +116,7 @@ class bucketServiceImpl {
 
     return {
       filename: file.path,
-      size: parseInt(file.size, 10),
+      size: Number.parseInt(file.size, 10),
       contentType: file.contentType,
       modifiedAt: file.modifiedAt,
       content: file.content,

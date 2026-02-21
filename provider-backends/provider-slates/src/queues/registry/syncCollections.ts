@@ -46,7 +46,7 @@ export let syncCollectionsRegProcessor = syncCollectionsReg.process(async data =
     endpoint: data.registryUrl
   });
 
-  let cursor: string | undefined = undefined;
+  let cursor: string | undefined;
   while (true) {
     let collections = await client.collection.list({
       limit: 100,

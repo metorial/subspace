@@ -3,6 +3,12 @@ import { v, type ValidationTypeValue } from '@lowerdeck/validation';
 import { sessionProviderService, sessionService } from '@metorial-subspace/module-session';
 import { sessionProviderPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
+import {
+  authConfigValidator,
+  configValidator,
+  deploymentValidator,
+  resolveSessionProvider
+} from './providerResourceValidators';
 import { tenantApp } from './tenant';
 
 export let sessionProviderApp = tenantApp.use(async ctx => {
@@ -51,7 +57,7 @@ export let toolFiltersValidator = v.nullable(
   v.optional(v.union([toolFilterValidator, v.array(toolFilterValidator)]))
 );
 
-let normalizeToolFilters = (
+export let normalizeToolFilters = (
   t: ValidationTypeValue<typeof toolFiltersValidator>
 ): PrismaJson.ToolFilter => {
   if (!t) return { type: 'v1.allow_all' };
@@ -119,9 +125,9 @@ export let sessionProviderController = app.controller({
 
         sessionId: v.string(),
 
-        providerDeploymentId: v.optional(v.string()),
-        providerConfigId: v.optional(v.string()),
-        providerAuthConfigId: v.optional(v.string()),
+        providerDeployment: deploymentValidator,
+        providerConfig: v.optional(configValidator),
+        providerAuthConfig: v.optional(authConfigValidator),
 
         toolFilters: toolFiltersValidator
       })
@@ -134,6 +140,11 @@ export let sessionProviderController = app.controller({
         sessionId: ctx.input.sessionId
       });
 
+      let resolved = await resolveSessionProvider(
+        { tenant: ctx.tenant, solution: ctx.solution, environment: ctx.environment },
+        ctx.input
+      );
+
       let sessionProvider = await sessionProviderService.createSessionProvider({
         tenant: ctx.tenant,
         environment: ctx.environment,
@@ -141,10 +152,7 @@ export let sessionProviderController = app.controller({
         session,
 
         input: {
-          deploymentId: ctx.input.providerDeploymentId,
-          configId: ctx.input.providerConfigId,
-          authConfigId: ctx.input.providerAuthConfigId,
-
+          ...resolved,
           toolFilters: normalizeToolFilters(ctx.input.toolFilters)
         }
       });

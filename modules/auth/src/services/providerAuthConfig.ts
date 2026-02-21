@@ -30,6 +30,7 @@ import {
   resolveProviderDeployments,
   resolveProviders
 } from '@metorial-subspace/list-utils';
+import { checkProviderMatch } from '@metorial-subspace/module-provider-internal';
 import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { providerAuthConfigUpdatedQueue } from '../queues/lifecycle/providerAuthConfig';
@@ -235,15 +236,8 @@ class providerAuthConfigServiceImpl {
   }) {
     checkTenant(d, d.providerDeployment);
     checkDeletedRelation(d.providerDeployment, { allowEphemeral: d.input.isEphemeral });
-
-    if (d.providerDeployment && d.providerDeployment.providerOid !== d.provider.oid) {
-      throw new ServiceError(
-        badRequestError({
-          message: 'Provider deployment does not belong to provider',
-          code: 'provider_mismatch'
-        })
-      );
-    }
+    checkProviderMatch(d.provider, d.providerDeployment);
+    checkProviderMatch(d.provider, d.credentials);
 
     if (d.input.isDefault && !d.providerDeployment) {
       throw new ServiceError(

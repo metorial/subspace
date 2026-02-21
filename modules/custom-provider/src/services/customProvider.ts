@@ -163,7 +163,7 @@ class customProviderServiceImpl {
 
     return withTransaction(async db => {
       let repo =
-        d.input.from.type == 'function' && d.input.from.repository
+        d.input.from.type === 'function' && d.input.from.repository
           ? await linkRepo({
               tenant: d.tenant,
               solution: d.solution,
@@ -190,7 +190,7 @@ class customProviderServiceImpl {
 
           payload: {
             from:
-              d.input.from.type == 'function'
+              d.input.from.type === 'function'
                 ? { ...d.input.from, files: undefined }
                 : d.input.from,
 

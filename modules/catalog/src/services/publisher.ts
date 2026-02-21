@@ -7,7 +7,7 @@ import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-
 let include = {};
 
 class publisherServiceImpl {
-  async getPublisherById(d: { publisherId: string; tenant: Tenant }) {
+  async getPublisherById(d: { publisherId: string; tenant: Tenant | undefined }) {
     let publisher = await db.publisher.findFirst({
       where: {
         AND: [
@@ -24,7 +24,9 @@ class publisherServiceImpl {
             OR: [
               { type: 'metorial' as const },
               { type: 'external' as const },
-              { type: 'tenant' as const, tenantOid: d.tenant.oid }
+              ...(d.tenant
+                ? [{ type: 'tenant' as const, tenantOid: d.tenant.oid }]
+                : [])
             ]
           }
         ]
@@ -38,10 +40,10 @@ class publisherServiceImpl {
     return publisher;
   }
 
-  async listPublishers(d: { tenant: Tenant; search?: string }) {
+  async listPublishers(d: { tenant: Tenant | undefined; search?: string }) {
     let search = d.search
       ? await voyager.record.search({
-          tenantId: d.tenant.id,
+          tenantId: d.tenant?.id ?? 'global',
           sourceId: (await voyagerSource).id,
           indexId: voyagerIndex.publisher.id,
           query: d.search
@@ -57,7 +59,9 @@ class publisherServiceImpl {
               OR: [
                 { type: 'metorial' as const },
                 { type: 'external' as const },
-                { type: 'tenant' as const, tenantOid: d.tenant.oid }
+                ...(d.tenant
+                  ? [{ type: 'tenant' as const, tenantOid: d.tenant.oid }]
+                  : [])
               ],
 
               id: search ? { in: search.map(r => r.documentId) } : undefined!

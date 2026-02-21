@@ -1,6 +1,6 @@
 import { delay } from '@lowerdeck/delay';
 import { createOriginClient } from '@metorial-services/origin-client';
-import { db, Tenant } from '@metorial-subspace/db';
+import { db, type Tenant } from '@metorial-subspace/db';
 import { env } from './env';
 
 export let origin = createOriginClient({

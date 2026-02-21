@@ -37,7 +37,7 @@ export let syncVersionManyCronProcessor = syncVersionManyCron.process(async data
   );
 
   await syncVersionManyCron.add({
-    cursor: versions[versions.length - 1].id
+    cursor: versions[versions.length - 1]!.id
   });
 });
 

@@ -1,18 +1,18 @@
 import { createQueue, QueueRetryError } from '@lowerdeck/queue';
 import {
-  Actor,
+  type Actor,
   addAfterTransactionHook,
-  CustomProvider,
-  CustomProviderDeployment,
-  CustomProviderFrom,
-  CustomProviderVersion,
+  type CustomProvider,
+  type CustomProviderDeployment,
+  type CustomProviderFrom,
+  type CustomProviderVersion,
   db,
-  Environment,
-  Solution,
-  Tenant,
+  type Environment,
+  type Solution,
+  type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
-import { backend, CustomProviderFromInternal } from '../../_shuttle/backend';
+import { backend, type CustomProviderFromInternal } from '../../_shuttle/backend';
 import { env } from '../../env';
 import { createVersion } from '../../internal/createVersion';
 import { ensureEnvironments } from '../../internal/ensureEnvironments';
@@ -40,18 +40,18 @@ let mapFrom = async (d: {
   environment: Environment;
   actor: Actor;
 }): Promise<CustomProviderFromInternal> => {
-  if (d.from.type == 'container') {
+  if (d.from.type === 'container') {
     return {
       type: 'container.from_image_ref',
       ...d.from.repository
     };
   }
 
-  if (d.from.type == 'remote') {
+  if (d.from.type === 'remote') {
     return d.from;
   }
 
-  if (d.from.type == 'function') {
+  if (d.from.type === 'function') {
     let { immutableBucket, originTenant } =
       await getImmutableBucketForCustomProviderVersion(d);
 
@@ -112,7 +112,7 @@ export let handleUpcomingCustomProviderQueueProcessor =
     console.log('Processing upcoming custom provider:', from);
 
     let backendProvider =
-      upcoming.type == 'create_custom_provider'
+      upcoming.type === 'create_custom_provider'
         ? await backend.createCustomProvider({
             tenant: upcoming.tenant,
 
@@ -141,7 +141,7 @@ export let handleUpcomingCustomProviderQueueProcessor =
 
         message:
           upcoming.message ??
-          (upcoming.type == 'create_custom_provider' ? 'Initial commit' : undefined),
+          (upcoming.type === 'create_custom_provider' ? 'Initial commit' : undefined),
 
         customProvider: upcoming.customProvider,
         version: upcoming.customProviderVersion,
@@ -152,7 +152,7 @@ export let handleUpcomingCustomProviderQueueProcessor =
         shuttleCustomDeployment: backendProvider.shuttleCustomDeployment
       });
 
-      if (upcoming.type == 'create_custom_provider') {
+      if (upcoming.type === 'create_custom_provider') {
         await addAfterTransactionHook(async () =>
           customProviderCreatedQueue.add({
             customProviderId: upcoming.customProvider.id

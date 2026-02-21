@@ -1,0 +1,32 @@
+import type { ValidationTypeValue } from '@lowerdeck/validation';
+import type { TenantSelector } from '@metorial-subspace/list-utils';
+import { resolveAuthConfig, type authConfigValidator } from './resolveAuthConfig';
+import { resolveConfig, type configValidator } from './resolveConfig';
+import { resolveDeployment, type deploymentValidator } from './resolveDeployment';
+
+export let resolveSessionProvider = async (
+  ctx: TenantSelector,
+  input: {
+    providerDeployment?: ValidationTypeValue<typeof deploymentValidator> | null;
+    providerConfig?: ValidationTypeValue<typeof configValidator> | null;
+    providerAuthConfig?: ValidationTypeValue<typeof authConfigValidator> | null;
+  }
+) => {
+  if (!input.providerDeployment) throw new Error('providerDeployment is required');
+  let deployment = await resolveDeployment(ctx, input.providerDeployment);
+
+  let selectorCtx = {
+    ...ctx,
+    providerId: deployment!.provider.id,
+    deploymentId: deployment!.id
+  };
+
+  let configId = await resolveConfig(selectorCtx, input.providerConfig);
+  let authConfigId = await resolveAuthConfig(selectorCtx, input.providerAuthConfig);
+
+  return {
+    deploymentId: deployment!.id,
+    configId,
+    authConfigId
+  };
+};

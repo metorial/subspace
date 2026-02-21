@@ -1,4 +1,4 @@
-import { ScmProviderSetupSession } from '../origin';
+import type { ScmProviderSetupSession } from '../origin';
 import { scmProviderPresenter } from './scmProvider';
 
 export let scmProviderSetupSessionPresenter = (

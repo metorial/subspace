@@ -35,6 +35,7 @@ import {
   resolveProviderSpecifications
 } from '@metorial-subspace/list-utils';
 import {
+  checkProviderMatch,
   providerDeploymentConfigPairInternalService,
   providerDeploymentInternalService
 } from '@metorial-subspace/module-provider-internal';
@@ -231,6 +232,7 @@ class providerConfigServiceImpl {
     if (d.input.config.type === 'vault') {
       checkTenant(d, d.input.config.vault);
       checkDeletedRelation(d.input.config.vault, { allowEphemeral: d.input.isEphemeral });
+      checkProviderMatch(d.provider, d.input.config.vault);
     }
 
     if (d.input.isDefault && !d.providerDeployment) {

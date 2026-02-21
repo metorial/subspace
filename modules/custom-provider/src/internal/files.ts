@@ -1,14 +1,14 @@
 import {
-  Actor,
-  CustomProvider,
-  CustomProviderDeployment,
-  CustomProviderFrom,
-  CustomProviderVersion,
+  type Actor,
+  type CustomProvider,
+  type CustomProviderDeployment,
+  type CustomProviderFrom,
+  type CustomProviderVersion,
   db,
-  Environment,
+  type Environment,
   snowflake,
-  Solution,
-  Tenant
+  type Solution,
+  type Tenant
 } from '@metorial-subspace/db';
 import { getTenantForOrigin, origin } from '../origin';
 import { linkRepo } from './linkRepo';
@@ -29,7 +29,7 @@ let getImmutableBucketForRepoVersion = async (d: {
     include: { scmRepo: true, draftCodeBucket: true }
   });
   let deployment = d.deployment;
-  if (d.from.type != 'function' || !d.from.repository) {
+  if (d.from.type !== 'function' || !d.from.repository) {
     throw new Error('Can only get files for function providers');
   }
 
@@ -182,7 +182,7 @@ let getImmutableBucketForFiles = async (d: {
     where: { oid: d.version.customProviderOid },
     include: { draftCodeBucket: true }
   });
-  if (d.from.type != 'function' || !d.from.files) {
+  if (d.from.type !== 'function' || !d.from.files) {
     throw new Error('Can only get files for function providers');
   }
 
@@ -297,7 +297,7 @@ export let getImmutableBucketForCustomProviderVersion = async (d: {
   environment: Environment;
   actor: Actor;
 }) => {
-  if (d.from.type == 'function') {
+  if (d.from.type === 'function') {
     if (d.from.files) {
       return await getImmutableBucketForFiles(d);
     } else {

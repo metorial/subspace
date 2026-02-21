@@ -1,4 +1,4 @@
-import { ScmAccountPreview } from '../origin';
+import type { ScmAccountPreview } from '../origin';
 
 export let scmAccountPreviewPresenter = (scmAccountPreview: ScmAccountPreview) => ({
   object: 'scm.account_preview',

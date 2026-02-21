@@ -2,10 +2,10 @@ import { badRequestError, notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
-  CustomProviderCommitTrigger,
+  type CustomProviderCommitTrigger,
   db,
   getId,
-  ScmRepoPush,
+  type ScmRepoPush,
   type Actor,
   type CustomProviderCommit,
   type CustomProviderEnvironment,

@@ -7,7 +7,7 @@ import type {
   ProviderOAuthSetup,
   ProviderSpecification
 } from '@metorial-subspace/db';
-import { providerAuthConfigPresenter } from './authConfig';
+import { providerAuthConfigPresenter } from './providerAuthConfig';
 import { providerAuthCredentialsPresenter } from './authCredentials';
 import { providerDeploymentPreviewPresenter } from './deployment';
 import { env } from './env';

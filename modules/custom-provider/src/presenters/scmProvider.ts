@@ -1,4 +1,4 @@
-import { ScmProvider } from '../origin';
+import type { ScmProvider } from '../origin';
 
 export let scmProviderPresenter = (scmProvider: ScmProvider) => ({
   object: 'scm.provider',

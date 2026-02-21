@@ -8,6 +8,7 @@ import {
   providerAuthConfigSchemaPresenter
 } from '@metorial-subspace/presenters';
 import { app } from './_app';
+import { deploymentValidator, resolveDeployment } from './providerResourceValidators';
 import { tenantApp } from './tenant';
 
 export let providerAuthConfigApp = tenantApp.use(async ctx => {
@@ -94,8 +95,8 @@ export let providerAuthConfigController = app.controller({
         ua: v.string(),
 
         providerId: v.string(),
-        providerDeploymentId: v.optional(v.string()),
-        providerAuthMethodId: v.optional(v.string()),
+        providerDeployment: v.optional(deploymentValidator),
+        providerAuthMethodId: v.string(),
 
         config: v.record(v.any())
       })
@@ -108,14 +109,10 @@ export let providerAuthConfigController = app.controller({
         solution: ctx.solution
       });
 
-      let providerDeployment = ctx.input.providerDeploymentId
-        ? await providerDeploymentService.getProviderDeploymentById({
-            tenant: ctx.tenant,
-            environment: ctx.environment,
-            solution: ctx.solution,
-            providerDeploymentId: ctx.input.providerDeploymentId
-          })
-        : undefined;
+      let providerDeployment = await resolveDeployment(
+        { tenant: ctx.tenant, solution: ctx.solution, environment: ctx.environment },
+        ctx.input.providerDeployment
+      );
 
       let providerAuthConfig = await providerAuthConfigService.createProviderAuthConfig({
         tenant: ctx.tenant,

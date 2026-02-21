@@ -65,7 +65,7 @@ export class ProviderRun extends IProviderRun {
 
       networkRulesetIds:
         data.providerDeployment.networkingRulesetIds.length &&
-        shuttleServer.type == 'container'
+        shuttleServer.type === 'container'
           ? data.providerDeployment.networkingRulesetIds
           : undefined
     });
@@ -232,7 +232,7 @@ class ProviderRunConnection extends IProviderRunConnection {
           }
 
           await this.emitMcpMessage(data.data);
-        } else if (data.type == 'close') {
+        } else if (data.type === 'close') {
           await this.emitClose();
         } else if (data.type === 'error') {
           this.close();

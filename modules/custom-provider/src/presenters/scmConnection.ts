@@ -1,4 +1,4 @@
-import { ScmConnection } from '../origin';
+import type { ScmConnection } from '../origin';
 
 export let scmConnectionPresenter = (scmConnection: ScmConnection) => ({
   object: 'scm.connection',

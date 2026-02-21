@@ -3,7 +3,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 if (!process.env.REDIS_URL) {
-  process.env.REDIS_URL = `${process.env.REDIS_TLS == 'true' ? 'rediss' : 'redis'}://:${process.env.REDIS_AUTH_TOKEN}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/0`;
+  process.env.REDIS_URL = `${process.env.REDIS_TLS === 'true' ? 'rediss' : 'redis'}://:${process.env.REDIS_AUTH_TOKEN}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/0`;
 } else {
   try {
     let redisUrl = new URL(process.env.REDIS_URL);

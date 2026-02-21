@@ -1,6 +1,6 @@
 import {
   type CustomProvider,
-  CustomProviderConfig,
+  type CustomProviderConfig,
   db,
   snowflake,
   type Tenant

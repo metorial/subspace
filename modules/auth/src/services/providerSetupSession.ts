@@ -34,6 +34,7 @@ import {
   resolveProviderDeployments,
   resolveProviders
 } from '@metorial-subspace/list-utils';
+import { checkProviderMatch } from '@metorial-subspace/module-provider-internal';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { addMinutes } from 'date-fns';
 import {
@@ -177,14 +178,8 @@ class providerSetupSessionServiceImpl {
     checkDeletedRelation(d.providerDeployment);
     checkDeletedRelation(d.credentials);
 
-    if (d.providerDeployment && d.providerDeployment.providerOid !== d.provider.oid) {
-      throw new ServiceError(
-        badRequestError({
-          message: 'Provider deployment does not belong to provider',
-          code: 'provider_mismatch'
-        })
-      );
-    }
+    checkProviderMatch(d.provider, d.credentials);
+    checkProviderMatch(d.provider, d.providerDeployment);
 
     if (d.input.type === 'config_only' && d.input.authConfigInput) {
       throw new ServiceError(

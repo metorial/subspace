@@ -34,7 +34,7 @@ export let providerPresenter = (
 
     type: ProviderType;
   },
-  d: { tenant: Tenant }
+  d: { tenant: Tenant | undefined }
 ) => {
   let type = providerTypePresenter(provider.type, {
     tenant: d.tenant,
