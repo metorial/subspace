@@ -16,6 +16,7 @@ import {
   withTransaction
 } from '@metorial-subspace/db';
 import { providerConfigService } from '@metorial-subspace/module-deployment';
+import { checkProviderMatch } from '@metorial-subspace/module-provider-internal';
 import { normalizeJsonSchema } from '@metorial-subspace/provider-utils';
 import { env } from '../env';
 import { providerSetupSessionUpdatedQueue } from '../queues/lifecycle/providerSetupSession';
@@ -84,6 +85,8 @@ class providerSetupSessionUiServiceImpl {
       currentVersion: ProviderDeploymentVersion | null;
     };
   }) {
+    checkProviderMatch(d.provider, d.deployment);
+
     let schema = await providerConfigService.getProviderConfigSchema({
       tenant: d.tenant,
       solution: d.solution,

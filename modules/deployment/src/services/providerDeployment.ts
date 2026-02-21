@@ -28,7 +28,10 @@ import {
   resolveProviders,
   resolveProviderVersions
 } from '@metorial-subspace/list-utils';
-import { providerDeploymentInternalService } from '@metorial-subspace/module-provider-internal';
+import {
+  checkProviderMatch,
+  providerDeploymentInternalService
+} from '@metorial-subspace/module-provider-internal';
 import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
@@ -166,11 +169,13 @@ class providerDeploymentServiceImpl {
     if (d.input.config.type === 'vault') {
       checkTenant(d, d.input.config.vault);
       checkDeletedRelation(d.input.config.vault, { allowEphemeral: d.input.isEphemeral });
+      checkProviderMatch(d.provider, d.input.config.vault);
     }
 
     if (d.input.config.type === 'config') {
       checkTenant(d, d.input.config.config);
       checkDeletedRelation(d.input.config.config, { allowEphemeral: d.input.isEphemeral });
+      checkProviderMatch(d.provider, d.input.config.config);
     }
 
     return withTransaction(async db => {
@@ -287,6 +292,8 @@ class providerDeploymentServiceImpl {
       }
 
       if (d.input.config.type === 'config') {
+        checkProviderMatch(d.provider, d.input.config.config);
+
         await db.providerDeployment.update({
           where: { oid: providerDeployment.oid },
           data: { defaultConfigOid: d.input.config.config.oid }
@@ -300,9 +307,9 @@ class providerDeploymentServiceImpl {
           environment: d.environment,
           input: {
             name: `Default Config for ${d.input.name}`,
-            isEphemeral: d.input.isEphemeral,
             config: d.input.config,
             metadata: d.input.metadata,
+            isEphemeral: true,
             isDefault: true
           }
         });

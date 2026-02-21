@@ -26,7 +26,10 @@ import {
   normalizeStatusForGet,
   normalizeStatusForList
 } from '@metorial-subspace/list-utils';
-import { providerDeploymentInternalService } from '@metorial-subspace/module-provider-internal';
+import {
+  checkProviderMatch,
+  providerDeploymentInternalService
+} from '@metorial-subspace/module-provider-internal';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
 import { addMinutes } from 'date-fns';
@@ -125,22 +128,9 @@ class providerOAuthSetupServiceImpl {
 
     checkDeletedRelation(d.providerDeployment, { allowEphemeral: d.input.isEphemeral });
 
-    if (d.providerDeployment && d.providerDeployment.providerOid !== d.provider.oid) {
-      throw new ServiceError(
-        badRequestError({
-          message: 'Provider deployment does not belong to provider',
-          code: 'provider_mismatch'
-        })
-      );
-    }
-    if (d.credentials && d.credentials.providerOid !== d.provider.oid) {
-      throw new ServiceError(
-        badRequestError({
-          message: 'Auth credentials do not belong to provider',
-          code: 'provider_mismatch'
-        })
-      );
-    }
+    checkProviderMatch(d.provider, d.credentials);
+    checkProviderMatch(d.provider, d.providerDeployment);
+
     if (
       !d.credentials &&
       d.provider.type.attributes.auth.oauth?.oauthAutoRegistration?.status !== 'supported'

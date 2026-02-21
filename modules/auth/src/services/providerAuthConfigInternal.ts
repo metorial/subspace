@@ -21,7 +21,10 @@ import {
   type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
-import { providerDeploymentInternalService } from '@metorial-subspace/module-provider-internal';
+import {
+  checkProviderMatch,
+  providerDeploymentInternalService
+} from '@metorial-subspace/module-provider-internal';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { getBackend } from '@metorial-subspace/provider';
 import type { ProviderAuthConfigCreateRes } from '@metorial-subspace/provider-utils';
@@ -131,22 +134,8 @@ class providerAuthConfigInternalServiceImpl {
     checkTenant(d, d.backendProviderAuthConfig.slateAuthConfig);
     checkTenant(d, d.backendProviderAuthConfig.shuttleAuthConfig);
 
-    if (d.providerDeployment && d.providerDeployment.providerOid !== d.provider.oid) {
-      throw new ServiceError(
-        badRequestError({
-          message: 'Provider deployment does not belong to provider',
-          code: 'provider_mismatch'
-        })
-      );
-    }
-    if (d.authMethod.providerOid !== d.provider.oid) {
-      throw new ServiceError(
-        badRequestError({
-          message: 'Auth method does not belong to provider',
-          code: 'provider_mismatch'
-        })
-      );
-    }
+    checkProviderMatch(d.provider, d.providerDeployment);
+    checkProviderMatch(d.provider, d.credentials);
 
     if (d.input.isDefault && !d.providerDeployment) {
       throw new ServiceError(
