@@ -63,6 +63,9 @@ class providerAuthConfigInternalServiceImpl {
           providerOid: d.provider.oid,
           specificationOid: version.specificationOid,
           isDefault: true
+        },
+        include: {
+          specification: true
         }
       });
       if (!authMethod) {
@@ -90,6 +93,9 @@ class providerAuthConfigInternalServiceImpl {
             ? [{ type: d.authMethodId as any }]
             : [])
         ]
+      },
+      include: {
+        specification: true
       }
     });
     if (!authMethod) {

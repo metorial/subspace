@@ -13,6 +13,8 @@ export let providerVersionPresenter = (
   tag: providerVersion.tag,
   identifier: providerVersion.identifier,
 
+  providerId: providerVersion.provider.id,
+
   isCurrent: providerVersion.isCurrent,
 
   name: providerVersion.name,

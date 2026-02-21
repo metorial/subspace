@@ -150,7 +150,7 @@ class providerSetupSessionUiServiceImpl {
 
     return {
       type: 'required' as const,
-      schema: schema.inputJsonSchema
+      schema: schema.authMethod.value.inputJsonSchema
     };
   }
 

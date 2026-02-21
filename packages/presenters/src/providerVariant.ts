@@ -21,6 +21,8 @@ export let providerVariantPresenter = (
   tag: providerVariant.tag,
   identifier: providerVariant.identifier,
 
+  providerId: providerVariant.provider.id,
+
   isDefault: providerVariant.isDefault,
 
   name: providerVariant.name,

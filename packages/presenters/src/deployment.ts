@@ -7,7 +7,7 @@ import type {
   ProviderVariant,
   ProviderVersion
 } from '@metorial-subspace/db';
-import { providerConfigPreviewPresenter } from './config';
+import { providerConfigPreviewPresenter } from './providerConfig';
 import { providerVersionPresenter } from './providerVersion';
 
 export let providerDeploymentPresenter = (

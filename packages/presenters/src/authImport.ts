@@ -7,7 +7,7 @@ import type {
   ProviderDeployment,
   ProviderSpecification
 } from '@metorial-subspace/db';
-import { providerAuthConfigPresenter } from './authConfig';
+import { providerAuthConfigPresenter } from './providerAuthConfig';
 
 export let providerAuthImportPresenter = (
   providerAuthImport: ProviderAuthImport & {

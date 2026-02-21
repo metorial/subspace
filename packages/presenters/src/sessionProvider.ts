@@ -8,9 +8,9 @@ import type {
   SessionTemplate,
   SessionTemplateProvider
 } from '@metorial-subspace/db';
-import { providerAuthConfigPreviewPresenter } from './authConfig';
-import { providerConfigPreviewPresenter } from './config';
 import { providerDeploymentPreviewPresenter } from './deployment';
+import { providerAuthConfigPreviewPresenter } from './providerAuthConfig';
+import { providerConfigPreviewPresenter } from './providerConfig';
 
 export let sessionProviderPresenter = (
   provider: SessionProvider & {

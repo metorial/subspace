@@ -7,7 +7,10 @@ import {
 } from '@metorial-subspace/module-auth';
 import { providerService } from '@metorial-subspace/module-catalog';
 import { providerDeploymentService } from '@metorial-subspace/module-deployment';
-import { providerAuthImportPresenter } from '@metorial-subspace/presenters';
+import {
+  providerAuthConfigImportSchemaPresenter,
+  providerAuthImportPresenter
+} from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 
@@ -137,9 +140,7 @@ export let providerAuthImportController = app.controller({
         }
       });
 
-      return {
-        schema
-      };
+      return providerAuthConfigImportSchemaPresenter(schema);
     }),
 
   get: providerAuthImportApp
