@@ -141,6 +141,7 @@ class providerAuthConfigInternalServiceImpl {
     checkTenant(d, d.backendProviderAuthConfig.shuttleAuthConfig);
 
     checkProviderMatch(d.provider, d.providerDeployment);
+    checkProviderMatch(d.provider, d.authMethod);
     checkProviderMatch(d.provider, d.credentials);
 
     if (d.input.isDefault && !d.providerDeployment) {
