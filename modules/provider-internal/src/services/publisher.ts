@@ -73,6 +73,7 @@ class publisherInternalServiceImpl {
       name: string;
       identifier: string;
       description?: string;
+      source?: PrismaJson.PublisherSource;
       image?: PrismaJson.EntityImage;
     };
   }) {
@@ -86,6 +87,8 @@ class publisherInternalServiceImpl {
       publisher &&
       publisher.name === d.input.name &&
       publisher.description === d.input.description &&
+      (publisher.source === d.input.source ||
+        canonicalize(publisher.source) === canonicalize(d.input.source)) &&
       (publisher.image === d.input.image ||
         canonicalize(publisher.image) === canonicalize(d.input.image))
     ) {
@@ -112,11 +115,14 @@ class publisherInternalServiceImpl {
           description: d.input.description,
           image: d.input.image,
 
+          source: d.input.source,
+
           tenantOid: d.owner.type === 'tenant' ? d.owner.tenant.oid : null
         },
         update: {
           name: d.input.name,
-          description: d.input.description
+          description: d.input.description,
+          source: d.input.source
         }
       });
 

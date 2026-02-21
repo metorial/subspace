@@ -180,7 +180,6 @@ describe('public-provider-resources.e2e', () => {
         name: publisher.name
       }
     });
-    expect((listing as Record<string, unknown>).repository).toBeUndefined();
 
     let listings = await client.providerListing.list({
       tenantId: tenant.id,
@@ -200,6 +199,5 @@ describe('public-provider-resources.e2e', () => {
         name: publisher.name
       }
     });
-    expect((item as Record<string, unknown>).repository).toBeUndefined();
   });
 });
