@@ -181,15 +181,6 @@ class providerSetupSessionServiceImpl {
     checkProviderMatch(d.provider, d.credentials);
     checkProviderMatch(d.provider, d.providerDeployment);
 
-    if (d.providerDeployment && d.providerDeployment.providerOid !== d.provider.oid) {
-      throw new ServiceError(
-        badRequestError({
-          message: 'Provider deployment does not belong to provider',
-          code: 'provider_mismatch'
-        })
-      );
-    }
-
     if (d.input.type === 'config_only' && d.input.authConfigInput) {
       throw new ServiceError(
         badRequestError({

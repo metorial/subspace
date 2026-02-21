@@ -11,6 +11,7 @@ import {
   providerConfigSchemaPresenter
 } from '@metorial-subspace/presenters';
 import { app } from './_app';
+import { deploymentValidator, resolveDeployment } from './providerResourceValidators';
 import { tenantApp } from './tenant';
 
 export let providerConfigApp = tenantApp.use(async ctx => {
@@ -147,7 +148,7 @@ export let providerConfigController = app.controller({
         isEphemeral: v.optional(v.boolean()),
 
         providerId: v.string(),
-        providerDeploymentId: v.optional(v.string()),
+        providerDeployment: v.optional(deploymentValidator),
 
         config: v.union([
           v.object({
@@ -169,14 +170,10 @@ export let providerConfigController = app.controller({
         solution: ctx.solution
       });
 
-      let providerDeployment = ctx.input.providerDeploymentId
-        ? await providerDeploymentService.getProviderDeploymentById({
-            providerDeploymentId: ctx.input.providerDeploymentId,
-            tenant: ctx.tenant,
-            environment: ctx.environment,
-            solution: ctx.solution
-          })
-        : undefined;
+      let providerDeployment = await resolveDeployment(
+        { tenant: ctx.tenant, solution: ctx.solution, environment: ctx.environment },
+        ctx.input.providerDeployment
+      );
 
       let providerConfig = await providerConfigService.createProviderConfig({
         tenant: ctx.tenant,

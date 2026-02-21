@@ -3,6 +3,12 @@ import { v } from '@lowerdeck/validation';
 import { sessionService } from '@metorial-subspace/module-session';
 import { sessionPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
+import {
+  authConfigValidator,
+  configValidator,
+  deploymentValidator,
+  resolveSessionProvider
+} from './providerResourceValidators';
 import { toolFiltersValidator } from './sessionProvider';
 import { tenantApp } from './tenant';
 
@@ -90,18 +96,30 @@ export let sessionController = app.controller({
 
         providers: v.array(
           v.object({
-            providerDeploymentId: v.optional(v.string()),
-            providerConfigId: v.optional(v.string()),
-            providerAuthConfigId: v.optional(v.string()),
-
+            providerDeployment: deploymentValidator,
+            providerConfig: v.optional(configValidator),
+            providerAuthConfig: v.optional(authConfigValidator),
             sessionTemplateId: v.optional(v.string()),
-
             toolFilters: toolFiltersValidator
           })
         )
       })
     )
     .do(async ctx => {
+      let resolvedProviders = await Promise.all(
+        ctx.input.providers.map(async p => {
+          let resolved = await resolveSessionProvider(
+            { tenant: ctx.tenant, solution: ctx.solution, environment: ctx.environment },
+            p
+          );
+          return {
+            ...resolved,
+            sessionTemplateId: p.sessionTemplateId,
+            toolFilters: p.toolFilters as PrismaJson.ToolFilter | null | undefined
+          };
+        })
+      );
+
       let session = await sessionService.createSession({
         tenant: ctx.tenant,
         environment: ctx.environment,
@@ -111,14 +129,7 @@ export let sessionController = app.controller({
           name: ctx.input.name,
           description: ctx.input.description,
           metadata: ctx.input.metadata,
-
-          providers: ctx.input.providers.map(p => ({
-            deploymentId: p.providerDeploymentId,
-            configId: p.providerConfigId,
-            authConfigId: p.providerAuthConfigId,
-            toolFilters: p.toolFilters as any,
-            sessionTemplateId: p.sessionTemplateId
-          }))
+          providers: resolvedProviders
         }
       });
 

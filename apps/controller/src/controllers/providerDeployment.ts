@@ -4,7 +4,7 @@ import { providerService, providerVersionService } from '@metorial-subspace/modu
 import { providerDeploymentService } from '@metorial-subspace/module-deployment';
 import { providerDeploymentPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
-import { configSourceValidator, resolveDeploymentConfig } from './providerResourceValidators';
+import { configSourceValidator, resolveConfigSource } from './providerResourceValidators';
 import { tenantApp } from './tenant';
 
 export let providerDeploymentApp = tenantApp.use(async ctx => {
@@ -124,7 +124,7 @@ export let providerDeploymentController = app.controller({
 
           isEphemeral: ctx.input.isEphemeral,
 
-          config: await resolveDeploymentConfig(
+          config: await resolveConfigSource(
             { tenant: ctx.tenant, solution: ctx.solution, environment: ctx.environment },
             ctx.input.config
           )
