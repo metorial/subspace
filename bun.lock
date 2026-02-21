@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "@metorial-subspace/root",
@@ -127,7 +126,7 @@
     },
     "clients/typescript": {
       "name": "@metorial-services/subspace-client",
-      "version": "1.0.2",
+      "version": "1.0.14",
       "dependencies": {
         "@lowerdeck/rpc-client": "^1.0.3",
         "@lowerdeck/validation": "^1.0.4",
@@ -337,7 +336,7 @@
       "dependencies": {
         "@lowerdeck/env": "^1.0.4",
         "@lowerdeck/validation": "^1.0.4",
-        "@metorial-services/voyager-client": "^1.0.0",
+        "@metorial-services/voyager-client": "^1.0.1",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -908,7 +907,7 @@
 
     "@metorial-services/subspace-client": ["@metorial-services/subspace-client@workspace:clients/typescript"],
 
-    "@metorial-services/voyager-client": ["@metorial-services/voyager-client@1.0.0", "", { "dependencies": { "@lowerdeck/rpc-client": "^1.0.2" } }, "sha512-2rXOJwbBRji+cJpko5cS2pVWGuPaZzWB9q1O3+Gj+98ZJtOWa6dBlQuZY+DEsx2jySOsDDEpeTDqcMXe+IblVQ=="],
+    "@metorial-services/voyager-client": ["@metorial-services/voyager-client@1.0.1", "", { "dependencies": { "@lowerdeck/rpc-client": "^1.0.2" } }, "sha512-KBMgQr4/Hb3YOyMmSVbXZle1N1tVPqJr1fdG0DSGCJEAUHebUUZjgOf4pJTjh/BGUFLgEEJ65gDSDPd9V/VjWw=="],
 
     "@metorial-subspace/app-controller": ["@metorial-subspace/app-controller@workspace:apps/controller"],
 

@@ -136,7 +136,11 @@ class customProviderDeploymentServiceImpl {
     customProviderDeployment: CustomProviderDeployment;
   }) {
     if (!d.customProviderDeployment.shuttleCustomServerDeploymentOid) {
-      return [];
+      return {
+        object: 'custom_provider.deployment.logs',
+        customProviderDeploymentId: d.customProviderDeployment.id,
+        steps: []
+      };
     }
 
     let shuttleDeployment = await db.shuttleCustomServerDeployment.findFirstOrThrow({

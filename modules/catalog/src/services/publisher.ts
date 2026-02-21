@@ -24,9 +24,7 @@ class publisherServiceImpl {
             OR: [
               { type: 'metorial' as const },
               { type: 'external' as const },
-              ...(d.tenant
-                ? [{ type: 'tenant' as const, tenantOid: d.tenant.oid }]
-                : [])
+              ...(d.tenant ? [{ type: 'tenant' as const, tenantOid: d.tenant.oid }] : [])
             ]
           }
         ]
@@ -43,7 +41,7 @@ class publisherServiceImpl {
   async listPublishers(d: { tenant: Tenant | undefined; search?: string }) {
     let search = d.search
       ? await voyager.record.search({
-          tenantId: d.tenant?.id ?? 'global',
+          tenantId: d.tenant?.id,
           sourceId: (await voyagerSource).id,
           indexId: voyagerIndex.publisher.id,
           query: d.search
@@ -59,9 +57,7 @@ class publisherServiceImpl {
               OR: [
                 { type: 'metorial' as const },
                 { type: 'external' as const },
-                ...(d.tenant
-                  ? [{ type: 'tenant' as const, tenantOid: d.tenant.oid }]
-                  : [])
+                ...(d.tenant ? [{ type: 'tenant' as const, tenantOid: d.tenant.oid }] : [])
               ],
 
               id: search ? { in: search.map(r => r.documentId) } : undefined!
