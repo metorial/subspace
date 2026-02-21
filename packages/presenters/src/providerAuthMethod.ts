@@ -36,6 +36,7 @@ export let providerAuthMethodPresenter = (
       : null,
 
   specificationId: providerAuthMethod.specification.id,
+  providerId: providerAuthMethod.provider.id,
 
   createdAt: providerAuthMethod.createdAt,
   updatedAt: providerAuthMethod.updatedAt

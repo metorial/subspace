@@ -7,6 +7,7 @@ import type {
   ProviderSpecification
 } from '@metorial-subspace/db';
 import { providerAuthCredentialsPresenter } from './authCredentials';
+import { providerDeploymentPreviewPresenter } from './deployment';
 import { providerAuthMethodPresenter } from './providerAuthMethod';
 
 export let providerAuthConfigPresenter = (
@@ -31,6 +32,13 @@ export let providerAuthConfigPresenter = (
   name: providerAuthConfig.name,
   description: providerAuthConfig.description,
   metadata: providerAuthConfig.metadata,
+
+  deploymentPreview: providerAuthConfig.deployment
+    ? providerDeploymentPreviewPresenter({
+        ...providerAuthConfig.deployment,
+        provider: providerAuthConfig.provider
+      })
+    : null,
 
   credentials: providerAuthConfig.authCredentials
     ? providerAuthCredentialsPresenter({
