@@ -2,6 +2,7 @@ import { apiMux } from '@lowerdeck/api-mux';
 import { createServer, type InferClient, rpcMux } from '@lowerdeck/rpc-server';
 import { app } from './_app';
 import { actorController } from './actor';
+import { brandController } from './brand';
 import { bucketController } from './bucket';
 import { containerRegistryController } from './containerRegistry';
 import { containerRepositoryController } from './containerRepository';
@@ -58,6 +59,8 @@ export let rootController = app.controller({
   actor: actorController,
   solution: solutionController,
   tenant: tenantController,
+
+  brand: brandController,
 
   publisher: publisherController,
 
