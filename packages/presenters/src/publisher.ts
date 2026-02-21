@@ -8,6 +8,8 @@ export let publisherPresenter = (publisher: Publisher) => ({
   type: publisher.type,
   identifier: publisher.identifier,
 
+  image: publisher.image,
+
   name: publisher.name,
   description: publisher.description,
 

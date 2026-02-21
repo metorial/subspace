@@ -68,8 +68,6 @@ declare global {
                 pattern: string;
               }
           )[];
-
-          // TODO: add restrictions for resources and prompts as well
         };
 
     type SessionConnectionMcpData = {

@@ -13,7 +13,6 @@ export let sessionErrorGroupPresenter = async (
 
     code: error.code,
     message: error.message,
-
     data: error.firstOccurrence?.payload || {},
 
     providerId: error.provider?.id || null,

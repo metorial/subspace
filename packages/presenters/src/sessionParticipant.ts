@@ -12,7 +12,6 @@ export let sessionParticipantPresenter = (
 
   identifier: participant.identifier,
   name: participant.name,
-
   data: participant.payload,
 
   providerId: participant.provider?.id,

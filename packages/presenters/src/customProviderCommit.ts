@@ -102,7 +102,7 @@ export let customProviderCommitPresenter = (
     scmRepoPush: (ScmRepoPush & { repo: ScmRepo }) | null;
   }
 ) => ({
-  object: 'custom_provider.deployment',
+  object: 'custom_provider.commit',
 
   id: customProviderCommit.id,
   status: customProviderCommit.status,

@@ -55,7 +55,7 @@ export let toolCallPresenter = async (toolCall: ToolCallPresenterProps) => {
       ? await messageOutputToToolCall(toolCall.message.output, toolCall.message)
       : null,
 
-    error: toolCall.message.error ? sessionErrorPresenter(toolCall.message.error) : null,
+    error: toolCall.message.error ? await sessionErrorPresenter(toolCall.message.error) : null,
 
     createdAt: toolCall.createdAt
   };
