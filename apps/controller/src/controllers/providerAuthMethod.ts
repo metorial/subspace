@@ -31,13 +31,13 @@ export let providerAuthMethodController = app.controller({
           tenantId: v.string(),
           environmentId: v.string(),
 
-          providerVersion: v.string()
+          providerVersionId: v.string()
         })
       )
     )
     .do(async ctx => {
       let providerVersion = await providerVersionService.getProviderVersionById({
-        providerVersionId: ctx.input.providerVersion,
+        providerVersionId: ctx.input.providerVersionId,
         tenant: ctx.tenant,
         environment: ctx.environment,
         solution: ctx.solution

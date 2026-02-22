@@ -30,14 +30,13 @@ export let providerToolController = app.controller({
         v.object({
           tenantId: v.optional(v.string()),
           environmentId: v.optional(v.string()),
-
-          providerVersion: v.string()
+          providerVersionId: v.string()
         })
       )
     )
     .do(async ctx => {
       let providerVersion = await providerVersionService.getProviderVersionById({
-        providerVersionId: ctx.input.providerVersion,
+        providerVersionId: ctx.input.providerVersionId,
         tenant: ctx.tenant,
         environment: ctx.environment,
         solution: ctx.solution
