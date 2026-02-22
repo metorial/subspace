@@ -7,6 +7,7 @@ import {
 } from '@lowerdeck/error';
 import { createLock } from '@lowerdeck/lock';
 import { getSentry } from '@lowerdeck/sentry';
+import { serialize } from '@lowerdeck/serialize';
 import type { ConduitInput, ConduitResult } from '@metorial-subspace/connection-utils';
 import { checkToolAccess } from '@metorial-subspace/connection-utils';
 import {
@@ -306,7 +307,7 @@ export class SenderManager {
 
   async listTools() {
     let allTools = await this.listToolsIncludingInternal();
-    console.log('listTools: allTools', JSON.stringify(allTools));
+    console.log('listTools: allTools', serialize.encode(allTools));
 
     return allTools.filter(tool => {
       let mcpType = tool.value.mcpToolType.type;
@@ -383,7 +384,7 @@ export class SenderManager {
   }
 
   async callTool(d: CallToolProps) {
-    console.log('callTool', JSON.stringify({ input: d, connection: this.connection }));
+    console.log('callTool', serialize.encode({ input: d, connection: this.connection }));
 
     let connection = this.connection;
     if (!connection) {
