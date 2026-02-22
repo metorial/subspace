@@ -145,10 +145,7 @@ export let scmRepositoryController = app.controller({
         environmentId: v.string(),
 
         scmConnectionId: v.string(),
-        externalId: v.string(),
-        name: v.string(),
-        description: v.optional(v.string()),
-        isPrivate: v.boolean()
+        externalId: v.string()
       })
     )
     .do(async ctx => {
