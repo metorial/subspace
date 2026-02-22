@@ -62,7 +62,11 @@ let processSingleRankQueueProcessor = processSingleRankQueue.process(async data 
     where: { id: data.providerListingId, isPublic: true },
     include: {
       publisher: true,
-      provider: true
+      provider: {
+        include: {
+          defaultVariant: true
+        }
+      }
     }
   });
   if (!providerListing) return;
@@ -74,6 +78,10 @@ let processSingleRankQueueProcessor = processSingleRankQueue.process(async data 
 
   let isVerified = providerListing.isVerified;
   let isMetorial = providerListing.isMetorial;
+  let isSlates =
+    providerListing.provider.access == 'public' &&
+    !!providerListing.provider.defaultVariant?.slateOid;
+
   let isOfficial = providerListing.isOfficial;
 
   deploymentsCount = await db.providerDeployment.count({
@@ -100,9 +108,11 @@ let processSingleRankQueueProcessor = processSingleRankQueue.process(async data 
     deploymentsCount * 0.1 + providerSessionsCount * 0.3 + providerMessagesCount * 0.01
   );
 
+  if (isSlates) rank += 10_000;
+
   // Boost rank for official/metorial providers
   if (isOfficial || isVerified) rank = Math.ceil(rank * 3);
-  if (isMetorial) rank = 1000 + Math.ceil(rank * 5);
+  if (isMetorial) rank = 10_000 + Math.ceil(rank * 5);
 
   rank = Math.min(rank, 1_000_000_000);
 

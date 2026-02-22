@@ -21,9 +21,10 @@ export let indexProviderListingQueueProcessor = indexProviderListingQueue.proces
       indexId: voyagerIndex.providerListing.id,
 
       documentId: providerListing.id,
-      tenantIds: providerListing.provider.ownerTenant
-        ? [providerListing.provider.ownerTenant.id]
-        : [],
+      tenantIds:
+        providerListing.provider.access == 'tenant'
+          ? [providerListing.provider.ownerTenant?.id ?? '$$NONE$$']
+          : [],
 
       fields: { providerId: providerListing.provider.id, configId: providerListing.id },
       body: {
