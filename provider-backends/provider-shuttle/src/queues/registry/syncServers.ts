@@ -157,7 +157,8 @@ export let syncServersSingleProcessor = syncServersSingle.process(async data => 
       record: inner,
       registryUrl: data.registryUrl,
       shuttleServerId: '',
-      registryServerId: server.id
+      registryServerId: server.id,
+      readmePending: !!server.readme
     }
   });
 
@@ -181,7 +182,8 @@ export let syncServersSingleProcessor = syncServersSingle.process(async data => 
         {
           shuttleServerId: res.server.id,
           registryServerId: server.id,
-          registryUrl: data.registryUrl
+          registryUrl: data.registryUrl,
+          syncRecordId: syncRecord.id
         },
         { delay: 5 * 60 * 1000 }
       );
@@ -205,7 +207,8 @@ export let syncServersSingleProcessor = syncServersSingle.process(async data => 
         {
           shuttleServerId: res.server.id,
           registryServerId: server.id,
-          registryUrl: data.registryUrl
+          registryUrl: data.registryUrl,
+          syncRecordId: syncRecord.id
         },
         { delay: 5 * 60 * 1000 }
       );

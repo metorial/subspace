@@ -8,6 +8,7 @@ export let setReadmeForShuttleServerQueue = createQueue<{
   registryUrl: string;
   registryServerId: string;
   attempt?: number;
+  syncRecordId: string;
 }>({
   name: 'sub/sht/set/readme',
   redisUrl: env.service.REDIS_URL
@@ -45,12 +46,13 @@ export let setReadmeForShuttleServerQueueProcessor = setReadmeForShuttleServerQu
     if (!regServer) return;
 
     await db.providerListing.updateMany({
-      where: {
-        providerOid: providerVariant.providerOid
-      },
-      data: {
-        readme: regServer.readme
-      }
+      where: { providerOid: providerVariant.providerOid },
+      data: { readme: regServer.readme }
+    });
+
+    await db.shuttleSyncServer.update({
+      where: { id: data.syncRecordId },
+      data: { readmePending: false }
     });
   }
 );
