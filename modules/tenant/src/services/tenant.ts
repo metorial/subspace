@@ -17,41 +17,52 @@ class tenantServiceImpl {
       }[];
     };
   }) {
-    return await db.tenant.upsert({
-      where: { identifier: d.input.identifier },
-      update: {
-        name: d.input.name,
-        environments: {
-          upsert: d.input.environments.map(env => ({
-            where: { identifier: env.identifier },
-            update: { name: env.name },
-            create: {
+    try {
+      return await db.tenant.upsert({
+        where: { identifier: d.input.identifier },
+        update: {
+          name: d.input.name,
+          environments: {
+            upsert: d.input.environments.map(env => ({
+              where: { identifier: env.identifier },
+              update: { name: env.name },
+              create: {
+                ...getId('environment'),
+                name: env.name,
+                identifier: env.identifier,
+                type: env.type
+              }
+            }))
+          }
+        },
+        create: {
+          ...getId('tenant'),
+          name: d.input.name,
+          identifier: d.input.identifier,
+
+          urlKey: generatePlainId(10).toLowerCase(),
+
+          environments: {
+            create: d.input.environments.map(env => ({
               ...getId('environment'),
               name: env.name,
               identifier: env.identifier,
               type: env.type
-            }
-          }))
-        }
-      },
-      create: {
-        ...getId('tenant'),
-        name: d.input.name,
-        identifier: d.input.identifier,
+            }))
+          }
+        },
+        include
+      });
+    } catch (error: any) {
+      if (error.code === 'P2002') {
+        return await db.tenant.findFirst({
+          where: { identifier: d.input.identifier },
+          include
+        });
+      }
 
-        urlKey: generatePlainId(10).toLowerCase(),
-
-        environments: {
-          create: d.input.environments.map(env => ({
-            ...getId('environment'),
-            name: env.name,
-            identifier: env.identifier,
-            type: env.type
-          }))
-        }
-      },
-      include
-    });
+      throw error;
+    }
   }
 
   async getTenantById(d: { id: string }) {

@@ -13,18 +13,32 @@ class environmentServiceImpl {
       type: EnvironmentType;
     };
   }) {
-    return await db.environment.upsert({
-      where: { identifier: d.input.identifier },
-      update: { name: d.input.name },
-      create: {
-        ...getId('environment'),
-        name: d.input.name,
-        identifier: d.input.identifier,
-        type: d.input.type,
-        tenantOid: d.tenant.oid
-      },
-      include
-    });
+    try {
+      return await db.environment.upsert({
+        where: { identifier: d.input.identifier },
+        update: { name: d.input.name },
+        create: {
+          ...getId('environment'),
+          name: d.input.name,
+          identifier: d.input.identifier,
+          type: d.input.type,
+          tenantOid: d.tenant.oid
+        },
+        include
+      });
+    } catch (error: any) {
+      if (error.code === 'P2002') {
+        return await db.environment.findFirst({
+          where: {
+            tenantOid: d.tenant.oid,
+            identifier: d.input.identifier
+          },
+          include
+        });
+      }
+
+      throw error;
+    }
   }
 
   async getEnvironmentById(d: { tenant: Tenant; id: string }) {
