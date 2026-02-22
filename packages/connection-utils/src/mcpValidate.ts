@@ -1,5 +1,5 @@
 import type { JSONRPCErrorResponse } from '@modelcontextprotocol/sdk/types.js';
-import type { z } from 'zod';
+import { z } from 'zod';
 
 export let mcpValidate = <S extends z.ZodSchema>(
   id: string | number | null | undefined,
@@ -8,6 +8,19 @@ export let mcpValidate = <S extends z.ZodSchema>(
 ) => {
   let res = schema.safeParse(data);
   if (!res.success) {
+    console.log(
+      'mcpValidate: Validation failed',
+      JSON.stringify(
+        {
+          error: z.treeifyError(res.error),
+          data,
+          id
+        },
+        null,
+        2
+      )
+    );
+
     return {
       success: false as const,
       error: {
@@ -16,7 +29,7 @@ export let mcpValidate = <S extends z.ZodSchema>(
         error: {
           code: -32602,
           message: 'Invalid params',
-          data: res.error
+          data: z.treeifyError(res.error)
         }
       } satisfies JSONRPCErrorResponse
     };

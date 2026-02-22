@@ -393,6 +393,7 @@ services:
       SHUTTLE_PUBLIC_URL: http://localhost:52081
       SLATES_HUB_PUBLIC_URL: http://localhost:52045
       ORIGIN_URL: http://origin:52090/metorial-origin
+      REGISTRY_URL: https://metorial-saas-staging.registry.metorial-enterprise.com/metorial-registry-root
 
     volumes:
       - ./apps/controller:/app/apps/controller:${SUBSPACE_SOURCE_MOUNT_MODE:-ro}
@@ -540,6 +541,7 @@ services:
       SHUTTLE_PUBLIC_URL: http://localhost:52081
       SLATES_HUB_PUBLIC_URL: http://localhost:52045
       ORIGIN_URL: http://origin:52090/metorial-origin
+      REGISTRY_URL: https://metorial-saas-staging.registry.metorial-enterprise.com/metorial-registry-root
 
     volumes:
       - ./apps/public/src:/app/apps/public/src:ro
@@ -603,6 +605,7 @@ services:
       SHUTTLE_PUBLIC_URL: http://localhost:52081
       SLATES_HUB_PUBLIC_URL: http://localhost:52045
       ORIGIN_URL: http://origin:52090/metorial-origin
+      REGISTRY_URL: https://metorial-saas-staging.registry.metorial-enterprise.com/metorial-registry-root
 
     volumes:
       - ./apps/worker:/app/apps/worker:ro

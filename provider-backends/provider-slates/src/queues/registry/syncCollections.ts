@@ -18,7 +18,7 @@ export let syncCollectionsCron = createCron(
   {
     name: 'sub/slt/sync/collections/cron',
     redisUrl: env.service.REDIS_URL,
-    cron: '0 * * * *'
+    cron: process.env.NODE_ENV == 'production' ? '0 * * * *' : '* * * * *'
   },
   async () => {
     if (!registryClient) return;

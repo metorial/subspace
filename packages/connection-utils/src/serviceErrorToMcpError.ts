@@ -2,6 +2,8 @@ import type { ServiceError } from '@lowerdeck/error';
 import type { JSONRPCErrorResponse } from '@modelcontextprotocol/sdk/types.js';
 
 export let serviceErrorToMcpError = ({ data: error }: ServiceError<any>) => {
+  console.log('serviceErrorToMcpError: ERROR', JSON.stringify({ error }, null, 2));
+
   if (error.status === 404 && error.entity === 'tool') {
     return {
       jsonrpc: '2.0',

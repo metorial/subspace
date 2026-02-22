@@ -28,7 +28,7 @@ export let syncServersCron = createCron(
   {
     name: 'sub/sht/sync/server/cron',
     redisUrl: env.service.REDIS_URL,
-    cron: '0 * * * *'
+    cron: process.env.NODE_ENV == 'production' ? '0 * * * *' : '* * * * *'
   },
   async () => {
     if (!registryClient) return;
