@@ -181,7 +181,7 @@ export let providerConfigController = app.controller({
         solution: ctx.solution,
 
         provider,
-        providerDeployment,
+        providerDeployment: providerDeployment?.deployment,
 
         input: {
           name: ctx.input.name,

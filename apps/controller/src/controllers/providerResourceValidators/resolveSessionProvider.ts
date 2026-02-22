@@ -20,16 +20,20 @@ export let resolveSessionProvider = async (
 
   let selectorCtx = {
     ...ctx,
-    providerId: deployment?.provider.id,
+    providerId: deployment?.id,
     deploymentId: deployment?.id
   };
 
-  let configId = await resolveConfig(selectorCtx, input.providerConfig);
-  let authConfigId = await resolveAuthConfig(selectorCtx, input.providerAuthConfig, opts);
+  let config = await resolveConfig(selectorCtx, input.providerConfig);
+  let authConfig = await resolveAuthConfig(selectorCtx, input.providerAuthConfig, opts);
 
   return {
-    deploymentId: deployment!.id,
-    configId,
-    authConfigId
+    deploymentId: deployment?.id,
+    config: config?.id,
+    authConfig: authConfig?.id,
+
+    hasEphemeral: Boolean(
+      deployment?.isEphemeral || config?.hasEphemeral || authConfig?.hasEphemeral
+    )
   };
 };

@@ -26,12 +26,18 @@ export let resolveDeployment = async (
   if (!input) return undefined;
 
   if (input.type === 'reference') {
-    return providerDeploymentService.getProviderDeploymentById({
+    let deployment = await providerDeploymentService.getProviderDeploymentById({
       tenant: ctx.tenant,
       solution: ctx.solution,
       environment: ctx.environment,
       providerDeploymentId: input.providerDeploymentId
     });
+
+    return {
+      id: input.providerDeploymentId,
+      isEphemeral: false,
+      deployment
+    };
   }
 
   if (input.type === 'ephemeral') {
@@ -53,7 +59,7 @@ export let resolveDeployment = async (
 
     let config = await resolveConfigSource(ctx, input.config);
 
-    return providerDeploymentService.createProviderDeployment({
+    let newDeployment = await providerDeploymentService.createProviderDeployment({
       tenant: ctx.tenant,
       solution: ctx.solution,
       environment: ctx.environment,
@@ -67,6 +73,12 @@ export let resolveDeployment = async (
         isEphemeral: true
       }
     });
+
+    return {
+      id: newDeployment.id,
+      hasEphemeral: true,
+      deployment: newDeployment
+    };
   }
 
   throw new Error('Invalid deployment input');

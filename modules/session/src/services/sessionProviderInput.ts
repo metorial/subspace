@@ -33,6 +33,8 @@ export type SessionProviderInput = {
   authConfigId?: string;
 
   toolFilters?: SessionProviderInputToolFilters;
+
+  __allowEphemeral?: boolean;
 };
 
 let providerMismatchError = badRequestError({

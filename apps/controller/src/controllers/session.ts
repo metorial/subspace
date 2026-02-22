@@ -116,10 +116,12 @@ export let sessionController = app.controller({
             p,
             { ua: ctx.input.ua, ip: ctx.input.ip }
           );
+
           return {
             ...resolved,
             sessionTemplateId: p.sessionTemplateId,
-            toolFilters: normalizeToolFilters(p.toolFilters)
+            toolFilters: normalizeToolFilters(p.toolFilters),
+            __allowEphemeral: resolved.hasEphemeral
           };
         })
       );

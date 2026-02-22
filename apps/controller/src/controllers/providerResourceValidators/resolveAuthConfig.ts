@@ -28,10 +28,15 @@ export let resolveAuthConfig = async (
     ip?: string;
     ua?: string;
   }
-): Promise<string | undefined> => {
+) => {
   if (!input) return undefined;
 
-  if (input.type === 'reference') return input.providerAuthConfigId;
+  if (input.type === 'reference') {
+    return {
+      id: input.providerAuthConfigId,
+      hasEphemeral: false
+    };
+  }
 
   if (input.type === 'ephemeral') {
     let providerId = input.providerId || ctx.providerId;
@@ -91,7 +96,10 @@ export let resolveAuthConfig = async (
       }
     });
 
-    return ac.id;
+    return {
+      id: ac.id,
+      hasEphemeral: true
+    };
   }
 
   return undefined;

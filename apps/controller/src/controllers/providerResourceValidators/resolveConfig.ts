@@ -72,10 +72,15 @@ export let resolveConfig = async (
     deploymentId?: string;
   },
   input: ValidationTypeValue<typeof configValidator> | undefined | null
-): Promise<string | undefined> => {
+) => {
   if (!input) return undefined;
 
-  if (input.type === 'reference') return input.providerConfigId;
+  if (input.type === 'reference') {
+    return {
+      id: input.providerConfigId,
+      hasEphemeral: false
+    };
+  }
 
   if (input.type === 'ephemeral') {
     let providerId = input.providerId ?? ctx.providerId;
@@ -128,7 +133,7 @@ export let resolveConfig = async (
             })
           };
 
-    let c = await providerConfigService.createProviderConfig({
+    let newConfig = await providerConfigService.createProviderConfig({
       tenant: ctx.tenant,
       solution: ctx.solution,
       environment: ctx.environment,
@@ -141,7 +146,10 @@ export let resolveConfig = async (
       }
     });
 
-    return c.id;
+    return {
+      id: newConfig.id,
+      hasEphemeral: true
+    };
   }
 
   return undefined;

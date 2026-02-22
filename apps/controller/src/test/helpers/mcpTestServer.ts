@@ -1,7 +1,8 @@
-import express from 'express';
-import type { AddressInfo } from 'net';
-import type { Server } from 'http';
 import { retryUntilTimeout } from '@metorial-subspace/connection-utils';
+// @ts-ignore
+import express from 'express';
+import type { Server } from 'http';
+import type { AddressInfo } from 'net';
 import { createFullFeaturedServer } from '../../../../../test-servers/src/servers/full-featured';
 import { setupTransports } from '../../../../../test-servers/src/shared/transport';
 

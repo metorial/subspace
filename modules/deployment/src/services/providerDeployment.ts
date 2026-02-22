@@ -309,7 +309,7 @@ class providerDeploymentServiceImpl {
             name: `Default Config for ${d.input.name}`,
             config: d.input.config,
             metadata: d.input.metadata,
-            isEphemeral: true,
+            isEphemeral: false,
             isDefault: true
           }
         });

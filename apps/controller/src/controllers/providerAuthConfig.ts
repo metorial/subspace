@@ -122,7 +122,7 @@ export let providerAuthConfigController = app.controller({
         source: 'manual',
 
         provider,
-        providerDeployment,
+        providerDeployment: providerDeployment?.deployment,
 
         import: {
           ip: ctx.input.ip,
