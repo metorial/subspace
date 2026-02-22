@@ -11,6 +11,7 @@ import { db } from '@metorial-subspace/db';
 import { publisherInternalService } from '@metorial-subspace/module-provider-internal';
 import { shuttle } from '../../client';
 import { env } from '../../env';
+import { setReadmeForShuttleServerQueue } from './setReadme';
 
 let registryClient = env.service.REGISTRY_URL
   ? createRootRegistryClient({
@@ -79,8 +80,12 @@ export let syncServersManyProcessor = syncServersMany.process(data =>
     });
     if (!servers.items.length) return;
 
-    let server = await db.providerListingCollection.findMany({});
-    let serverMap = new Map(server.map(c => [c.slug, c.id]));
+    await syncServersSingle.addManyWithOps(
+      servers.items.map(s => ({
+        data: { id: s.id, registryUrl: data.registryUrl },
+        opts: { id: s.id }
+      }))
+    );
 
     await db.shuttleSyncMcpServerRegistryCursor.upsert({
       where: { registryUrl: data.registryUrl },
@@ -92,13 +97,6 @@ export let syncServersManyProcessor = syncServersMany.process(data =>
         cursor: servers.items[servers.items.length - 1]!.id as string
       }
     });
-
-    await syncServersSingle.addManyWithOps(
-      servers.items.map(s => ({
-        data: { id: s.id, registryUrl: data.registryUrl },
-        opts: { id: s.id }
-      }))
-    );
 
     await syncServersMany.add({
       registryUrl: data.registryUrl
@@ -177,6 +175,17 @@ export let syncServersSingleProcessor = syncServersSingle.process(async data => 
       where: { id: syncRecord.id },
       data: { shuttleServerId: res.server.id }
     });
+
+    if (server.readme) {
+      await setReadmeForShuttleServerQueue.add(
+        {
+          shuttleServerId: res.server.id,
+          registryServerId: server.id,
+          registryUrl: data.registryUrl
+        },
+        { delay: 5 * 60 * 1000 }
+      );
+    }
   } else if (latestVersion.from.type === 'container') {
     let res = await shuttle.server.create({
       from: {
@@ -190,5 +199,16 @@ export let syncServersSingleProcessor = syncServersSingle.process(async data => 
       where: { id: syncRecord.id },
       data: { shuttleServerId: res.server.id }
     });
+
+    if (server.readme) {
+      await setReadmeForShuttleServerQueue.add(
+        {
+          shuttleServerId: res.server.id,
+          registryServerId: server.id,
+          registryUrl: data.registryUrl
+        },
+        { delay: 5 * 60 * 1000 }
+      );
+    }
   }
 });
