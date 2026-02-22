@@ -10,15 +10,11 @@ export let mcpValidate = <S extends z.ZodSchema>(
   if (!res.success) {
     console.log(
       'mcpValidate: Validation failed',
-      JSON.stringify(
-        {
-          error: z.treeifyError(res.error),
-          data,
-          id
-        },
-        null,
-        2
-      )
+      JSON.stringify({
+        error: z.treeifyError(res.error),
+        data,
+        id
+      })
     );
 
     return {

@@ -306,6 +306,7 @@ export class SenderManager {
 
   async listTools() {
     let allTools = await this.listToolsIncludingInternal();
+    console.log('listTools: allTools', JSON.stringify(allTools));
 
     return allTools.filter(tool => {
       let mcpType = tool.value.mcpToolType.type;
@@ -382,6 +383,8 @@ export class SenderManager {
   }
 
   async callTool(d: CallToolProps) {
+    console.log('callTool', JSON.stringify({ input: d, connection: this.connection }));
+
     let connection = this.connection;
     if (!connection) {
       throw new ServiceError(
