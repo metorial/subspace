@@ -93,8 +93,6 @@ export let handleUpcomingCustomProviderQueueProcessor =
     });
     if (!upcoming) throw new QueueRetryError();
 
-    console.log('Processing upcoming custom provider:', upcoming.payload);
-
     let from = await mapFrom({
       isInitial: false,
 
@@ -108,8 +106,6 @@ export let handleUpcomingCustomProviderQueueProcessor =
       environment: upcoming.environment,
       actor: upcoming.actor
     });
-
-    console.log('Processing upcoming custom provider:', from);
 
     let backendProvider =
       upcoming.type === 'create_custom_provider'
