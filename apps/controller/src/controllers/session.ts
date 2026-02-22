@@ -102,7 +102,10 @@ export let sessionController = app.controller({
             sessionTemplateId: v.optional(v.string()),
             toolFilters: toolFiltersValidator
           })
-        )
+        ),
+
+        ua: v.optional(v.string()),
+        ip: v.optional(v.string())
       })
     )
     .do(async ctx => {
@@ -110,7 +113,8 @@ export let sessionController = app.controller({
         ctx.input.providers.map(async p => {
           let resolved = await resolveSessionProvider(
             { tenant: ctx.tenant, solution: ctx.solution, environment: ctx.environment },
-            p
+            p,
+            { ua: ctx.input.ua, ip: ctx.input.ip }
           );
           return {
             ...resolved,
