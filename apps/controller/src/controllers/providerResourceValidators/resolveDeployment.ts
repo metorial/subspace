@@ -2,8 +2,7 @@ import { v, type ValidationTypeValue } from '@lowerdeck/validation';
 import type { TenantSelector } from '@metorial-subspace/list-utils';
 import { providerService, providerVersionService } from '@metorial-subspace/module-catalog';
 import { providerDeploymentService } from '@metorial-subspace/module-deployment';
-import { configValidator } from './resolveConfig';
-import { resolveConfigSource } from './resolveConfig';
+import { configValidator, resolveConfigSource } from './resolveConfig';
 
 export let deploymentValidator = v.union([
   v.object({ type: v.literal('reference'), providerDeploymentId: v.string() }),
@@ -25,6 +24,7 @@ export let resolveDeployment = async (
   input: DeploymentInput | undefined | null
 ) => {
   if (!input) return undefined;
+
   if (input.type === 'reference') {
     return providerDeploymentService.getProviderDeploymentById({
       tenant: ctx.tenant,

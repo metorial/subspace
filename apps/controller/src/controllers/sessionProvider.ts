@@ -125,11 +125,14 @@ export let sessionProviderController = app.controller({
 
         sessionId: v.string(),
 
-        providerDeployment: deploymentValidator,
+        providerDeployment: v.optional(deploymentValidator),
         providerConfig: v.optional(configValidator),
         providerAuthConfig: v.optional(authConfigValidator),
 
-        toolFilters: toolFiltersValidator
+        toolFilters: toolFiltersValidator,
+
+        ua: v.optional(v.string()),
+        ip: v.optional(v.string())
       })
     )
     .do(async ctx => {
@@ -142,7 +145,8 @@ export let sessionProviderController = app.controller({
 
       let resolved = await resolveSessionProvider(
         { tenant: ctx.tenant, solution: ctx.solution, environment: ctx.environment },
-        ctx.input
+        ctx.input,
+        { ua: ctx.input.ua, ip: ctx.input.ip }
       );
 
       let sessionProvider = await sessionProviderService.createSessionProvider({

@@ -96,7 +96,7 @@ export let sessionController = app.controller({
 
         providers: v.array(
           v.object({
-            providerDeployment: deploymentValidator,
+            providerDeployment: v.optional(deploymentValidator),
             providerConfig: v.optional(configValidator),
             providerAuthConfig: v.optional(authConfigValidator),
             sessionTemplateId: v.optional(v.string()),

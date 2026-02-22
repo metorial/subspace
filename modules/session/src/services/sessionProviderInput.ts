@@ -301,6 +301,10 @@ class sessionProviderInputServiceImpl {
             checkDeletedRelation(deployment, d);
             checkDeletedRelation(authConfig, d);
 
+            checkProviderMatch(config, deployment);
+            checkProviderMatch(authConfig, deployment);
+            checkProviderMatch(config, authConfig);
+
             return {
               deployment,
               provider,

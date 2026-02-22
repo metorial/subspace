@@ -1,15 +1,9 @@
+import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { v, type ValidationTypeValue } from '@lowerdeck/validation';
 import type { TenantSelector } from '@metorial-subspace/list-utils';
 import { providerAuthConfigService } from '@metorial-subspace/module-auth';
 import { providerService } from '@metorial-subspace/module-catalog';
 import { providerDeploymentService } from '@metorial-subspace/module-deployment';
-
-type AuthConfigTenantSelector = TenantSelector & {
-  providerId: string;
-  deploymentId: string;
-  ip?: string;
-  ua?: string;
-};
 
 export let authConfigValidator = v.union([
   v.object({ type: v.literal('reference'), providerAuthConfigId: v.string() }),
@@ -17,34 +11,65 @@ export let authConfigValidator = v.union([
     type: v.literal('ephemeral'),
     name: v.optional(v.string()),
     providerAuthMethodId: v.string(),
-    credentials: v.record(v.any())
+    credentials: v.record(v.any()),
+    providerId: v.optional(v.string())
   })
 ]);
 
 type AuthConfigInput = ValidationTypeValue<typeof authConfigValidator>;
 
 export let resolveAuthConfig = async (
-  ctx: AuthConfigTenantSelector,
-  input: AuthConfigInput | undefined | null
+  ctx: TenantSelector & {
+    providerId?: string;
+    deploymentId?: string;
+  },
+  input: AuthConfigInput | undefined | null,
+  opts: {
+    ip?: string;
+    ua?: string;
+  }
 ): Promise<string | undefined> => {
   if (!input) return undefined;
 
   if (input.type === 'reference') return input.providerAuthConfigId;
 
   if (input.type === 'ephemeral') {
-    let provider = await providerService.getProviderById({
-      tenant: ctx.tenant,
-      solution: ctx.solution,
-      environment: ctx.environment,
-      providerId: ctx.providerId
-    });
+    let providerId = input.providerId || ctx.providerId;
 
-    let providerDeployment = await providerDeploymentService.getProviderDeploymentById({
-      tenant: ctx.tenant,
-      solution: ctx.solution,
-      environment: ctx.environment,
-      providerDeploymentId: ctx.deploymentId
-    });
+    let provider = providerId
+      ? await providerService.getProviderById({
+          tenant: ctx.tenant,
+          solution: ctx.solution,
+          environment: ctx.environment,
+          providerId
+        })
+      : undefined;
+
+    let providerDeployment = ctx.deploymentId
+      ? await providerDeploymentService.getProviderDeploymentById({
+          tenant: ctx.tenant,
+          solution: ctx.solution,
+          environment: ctx.environment,
+          providerDeploymentId: ctx.deploymentId
+        })
+      : undefined;
+
+    if (!provider && providerDeployment) {
+      provider = await providerService.getProviderById({
+        tenant: ctx.tenant,
+        solution: ctx.solution,
+        environment: ctx.environment,
+        providerId: providerDeployment.provider.id
+      });
+    }
+
+    if (!provider) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Unable to resolve provider. Please provide a valid provider ID.'
+        })
+      );
+    }
 
     let ac = await providerAuthConfigService.createProviderAuthConfig({
       tenant: ctx.tenant,
@@ -54,8 +79,8 @@ export let resolveAuthConfig = async (
       providerDeployment,
       source: 'manual',
       import: {
-        ip: ctx.ip,
-        ua: ctx.ua,
+        ip: opts.ip,
+        ua: opts.ua,
         note: 'Created via ephemeral provider configuration'
       },
       input: {

@@ -10,19 +10,22 @@ export let resolveSessionProvider = async (
     providerDeployment?: ValidationTypeValue<typeof deploymentValidator> | null;
     providerConfig?: ValidationTypeValue<typeof configValidator> | null;
     providerAuthConfig?: ValidationTypeValue<typeof authConfigValidator> | null;
+  },
+  opts: {
+    ua?: string;
+    ip?: string;
   }
 ) => {
-  if (!input.providerDeployment) throw new Error('providerDeployment is required');
   let deployment = await resolveDeployment(ctx, input.providerDeployment);
 
   let selectorCtx = {
     ...ctx,
-    providerId: deployment!.provider.id,
-    deploymentId: deployment!.id
+    providerId: deployment?.provider.id,
+    deploymentId: deployment?.id
   };
 
   let configId = await resolveConfig(selectorCtx, input.providerConfig);
-  let authConfigId = await resolveAuthConfig(selectorCtx, input.providerAuthConfig);
+  let authConfigId = await resolveAuthConfig(selectorCtx, input.providerAuthConfig, opts);
 
   return {
     deploymentId: deployment!.id,

@@ -1,3 +1,4 @@
+import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { v, type ValidationTypeValue } from '@lowerdeck/validation';
 import type { TenantSelector } from '@metorial-subspace/list-utils';
 import { providerService } from '@metorial-subspace/module-catalog';
@@ -15,7 +16,8 @@ export let configValidator = v.union([
     config: v.union([
       v.object({ type: v.literal('inline'), data: v.record(v.any()) }),
       v.object({ type: v.literal('vault'), providerConfigVaultId: v.string() })
-    ])
+    ]),
+    providerId: v.optional(v.string())
   })
 ]);
 
@@ -26,13 +28,11 @@ export let configSourceValidator = v.union([
 
 type ConfigSourceInput = ValidationTypeValue<typeof configSourceValidator>;
 
-export type ConfigTenantSelector = TenantSelector & {
-  providerId: string;
-  deploymentId: string;
-};
-
 export let resolveConfigSource = async (
-  ctx: TenantSelector,
+  ctx: TenantSelector & {
+    providerId?: string;
+    deploymentId?: string;
+  },
   config: ConfigSourceInput | null | undefined
 ) => {
   if (config?.type === 'reference') {
@@ -67,7 +67,10 @@ export let resolveConfigSource = async (
 };
 
 export let resolveConfig = async (
-  ctx: ConfigTenantSelector,
+  ctx: TenantSelector & {
+    providerId?: string;
+    deploymentId?: string;
+  },
   input: ValidationTypeValue<typeof configValidator> | undefined | null
 ): Promise<string | undefined> => {
   if (!input) return undefined;
@@ -75,19 +78,42 @@ export let resolveConfig = async (
   if (input.type === 'reference') return input.providerConfigId;
 
   if (input.type === 'ephemeral') {
-    let provider = await providerService.getProviderById({
-      tenant: ctx.tenant,
-      solution: ctx.solution,
-      environment: ctx.environment,
-      providerId: ctx.providerId
-    });
+    let providerId = input.providerId ?? ctx.providerId;
 
-    let providerDeployment = await providerDeploymentService.getProviderDeploymentById({
-      tenant: ctx.tenant,
-      solution: ctx.solution,
-      environment: ctx.environment,
-      providerDeploymentId: ctx.deploymentId
-    });
+    let provider = providerId
+      ? await providerService.getProviderById({
+          tenant: ctx.tenant,
+          solution: ctx.solution,
+          environment: ctx.environment,
+          providerId
+        })
+      : undefined;
+
+    let providerDeployment = ctx.deploymentId
+      ? await providerDeploymentService.getProviderDeploymentById({
+          tenant: ctx.tenant,
+          solution: ctx.solution,
+          environment: ctx.environment,
+          providerDeploymentId: ctx.deploymentId
+        })
+      : undefined;
+
+    if (!provider && providerDeployment?.provider) {
+      provider = await providerService.getProviderById({
+        tenant: ctx.tenant,
+        solution: ctx.solution,
+        environment: ctx.environment,
+        providerId: providerDeployment.provider.id
+      });
+    }
+
+    if (!provider) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Unable to resolve provider. Please provide a valid provider ID.'
+        })
+      );
+    }
 
     let config =
       input.config.type === 'inline'
