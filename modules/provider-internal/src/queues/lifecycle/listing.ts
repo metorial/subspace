@@ -1,7 +1,7 @@
 import { createQueue } from '@lowerdeck/queue';
 import { env } from '../../env';
 import { processSingleRankQueue } from '../listing/rank';
-import { indexProviderListingQueue } from '../listing/search';
+import { indexProviderListingQueue } from '../search/providerListing';
 
 export let listingCreatedQueue = createQueue<{ providerListingId: string }>({
   name: 'sub/pint/lc/listing/created',
