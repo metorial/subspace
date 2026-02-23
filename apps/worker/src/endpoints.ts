@@ -1,14 +1,15 @@
 import { db } from '@metorial-subspace/db';
 import { RedisClient } from 'bun';
 
+let redis = new RedisClient(process.env.REDIS_URL?.replace('rediss://', 'redis://'), {
+  tls: process.env.REDIS_URL?.startsWith('rediss://')
+});
+
 Bun.serve({
   fetch: async _ => {
     try {
       await db.backend.count();
 
-      let redis = new RedisClient(process.env.REDIS_URL?.replace('rediss://', 'redis://'), {
-        tls: process.env.REDIS_URL?.startsWith('rediss://')
-      });
       await redis.ping();
 
       return new Response('OK');
