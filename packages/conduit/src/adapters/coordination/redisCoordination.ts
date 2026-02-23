@@ -23,8 +23,10 @@ export class RedisCoordination implements ICoordinationAdapter {
     this.redis = new Redis({
       host: config.host,
       port: config.port,
+      username: config.username,
       password: config.password,
       db: config.db ?? 0,
+      tls: config.tls,
       retryStrategy: (times: number) => Math.min(times * 50, 3000),
 
       // Connection optimization
@@ -32,6 +34,17 @@ export class RedisCoordination implements ICoordinationAdapter {
       enableReadyCheck: true,
       lazyConnect: false,
       keepAlive: 30000
+    });
+    this.redis.on('connect', () => {
+      console.log(
+        `CONDUIT.redis.connected host=${config.host} port=${config.port} tls=${config.tls ? 'true' : 'false'}`
+      );
+    });
+    this.redis.on('error', err => {
+      console.error(`CONDUIT.redis.error host=${config.host} port=${config.port} error=${err.message}`);
+    });
+    this.redis.on('close', () => {
+      console.log(`CONDUIT.redis.closed host=${config.host} port=${config.port}`);
     });
 
     this.keyPrefix = `conduit:${conduitId}:`;
