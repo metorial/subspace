@@ -14,7 +14,7 @@ export let createErrorQueue = createQueue<{ errorId: string }>({
 export let createErrorQueueProcessor = createErrorQueue.process(async data => {
   let error = await db.sessionError.findFirst({
     where: { id: data.errorId },
-    include: { session: true, providerRun: true }
+    include: { session: true, providerRun: true, connection: true }
   });
   if (!error) throw new QueueRetryError();
 
@@ -27,6 +27,20 @@ export let createErrorQueueProcessor = createErrorQueue.process(async data => {
       error.message
     ])
   );
+
+  if (!error.session.hasErrors) {
+    await db.session.updateMany({
+      where: { oid: error.sessionOid },
+      data: { hasErrors: true }
+    });
+  }
+
+  if (error.connection && !error.connection.hasErrors) {
+    await db.sessionConnection.updateMany({
+      where: { oid: error.connection.oid },
+      data: { hasErrors: true }
+    });
+  }
 
   let group = await db.sessionErrorGroup.findUnique({
     where: {

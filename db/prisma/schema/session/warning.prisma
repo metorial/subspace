@@ -12,6 +12,9 @@ model SessionWarning {
   sessionOid BigInt
   session    Session @relation(fields: [sessionOid], references: [oid])
 
+  connectionOid BigInt?
+  connection    SessionConnection? @relation(fields: [connectionOid], references: [oid])
+
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
 

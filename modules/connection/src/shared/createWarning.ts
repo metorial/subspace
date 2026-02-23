@@ -1,4 +1,5 @@
 import { db, getId, type Session, type SessionConnection } from '@metorial-subspace/db';
+import { createWarningQueue } from '../queues/error/createWarning';
 
 export interface CreateWarningProps {
   connection: SessionConnection | null | undefined;
@@ -22,22 +23,13 @@ export let createWarning = async (props: CreateWarningProps) => {
 
       sessionOid: props.session.oid,
       tenantOid: props.session.tenantOid,
+      connectionOid: props.connection?.oid,
       solutionOid: props.session.solutionOid,
       environmentOid: props.session.environmentOid
     }
   });
 
-  await db.sessionEvent.createMany({
-    data: {
-      ...getId('sessionEvent'),
-      type: 'warning_occurred',
-      sessionOid: warning.sessionOid,
-      warningOid: warning.oid,
-      tenantOid: warning.tenantOid,
-      environmentOid: warning.environmentOid,
-      solutionOid: warning.solutionOid
-    }
-  });
+  await createWarningQueue.add({ warningId: warning.id });
 
   return warning;
 };

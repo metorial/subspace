@@ -86,6 +86,7 @@ model SessionConnection {
   providerRuns    ProviderRun[]
   sessionMessages SessionMessage[]
   sessionErrors   SessionError[]
+  sessionWarnings SessionWarning[]
 
   @@index([lastActiveAt])
   @@index([state])

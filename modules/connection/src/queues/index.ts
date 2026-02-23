@@ -2,6 +2,7 @@ import { combineQueueProcessors } from '@lowerdeck/queue';
 import { expireSessionConnectionsQueues } from './connectionCleanup/expireSessionConnections';
 import { expireSessionsCron } from './connectionCleanup/expireSessions';
 import { createErrorQueueProcessor } from './error/createError';
+import { createWarningQueueProcessor } from './error/createWarning';
 import { messageCreatedQueueProcessor } from './message/messageCreated';
 import { offloadQueues } from './message/offloadMessage';
 import { postprocessMessageQueueProcessor } from './message/postprocessMessage';
@@ -13,6 +14,7 @@ export let queues = combineQueueProcessors([
   postprocessMessageQueueProcessor,
   offloadQueues,
   createErrorQueueProcessor,
+  createWarningQueueProcessor,
   messageCreatedQueueProcessor,
   stopProviderRunsCron
 ]);
