@@ -2,6 +2,10 @@ import { db } from '@metorial-subspace/db';
 import { RedisClient } from 'bun';
 import { subspaceControllerApi } from './controllers';
 
+let redis = new RedisClient(process.env.REDIS_URL?.replace('rediss://', 'redis://'), {
+  tls: process.env.REDIS_URL?.startsWith('rediss://')
+});
+
 let server = Bun.serve({
   fetch: subspaceControllerApi,
   port: 52070
@@ -14,9 +18,6 @@ Bun.serve({
     try {
       await db.backend.count();
 
-      let redis = new RedisClient(process.env.REDIS_URL?.replace('rediss://', 'redis://'), {
-        tls: process.env.REDIS_URL?.startsWith('rediss://')
-      });
       await redis.ping();
 
       return new Response('OK');
