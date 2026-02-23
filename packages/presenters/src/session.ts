@@ -32,6 +32,9 @@ export let sessionPresenter = (
 
   connectionState: session.connectionState,
 
+  hasErrors: session.hasErrors,
+  hasWarnings: session.hasWarnings,
+
   usage: {
     totalProductiveClientMessageCount: session.totalProductiveClientMessageCount,
     totalProductiveServerMessageCount: session.totalProductiveServerMessageCount

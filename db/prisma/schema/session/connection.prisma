@@ -39,6 +39,8 @@ model SessionConnection {
   transport SessionConnectionTransport
 
   isParentDeleted Boolean @default(false)
+  hasErrors       Boolean @default(false)
+  hasWarnings     Boolean @default(false)
 
   state                SessionConnectionState
   initState            SessionConnectionInitState
