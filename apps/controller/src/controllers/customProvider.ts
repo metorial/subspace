@@ -60,12 +60,14 @@ export let customProviderFromValidator = v.union([
       v.union([
         v.object({
           repositoryId: v.string(),
-          branch: v.string()
+          branch: v.string(),
+          path: v.optional(v.string())
         }),
         v.object({
           type: v.literal('git'),
           repositoryUrl: v.string(),
-          branch: v.string()
+          branch: v.string(),
+          path: v.optional(v.string())
         })
       ])
     )

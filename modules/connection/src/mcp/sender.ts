@@ -518,7 +518,7 @@ export class McpSender {
           : [];
 
       let toolResources = await this.manager.callTool({
-        toolId: tool.id,
+        toolId: tool.key,
         input: {
           type: 'mcp',
           data: {
