@@ -85,7 +85,7 @@ class customProviderVersionServiceImpl {
       );
     }
 
-    if (from.type === 'function' && from.files && from.repository) {
+    if (from.type === 'function' && from.files?.length && from.repository) {
       throw new ServiceError(
         badRequestError({
           message:

@@ -298,10 +298,12 @@ export let getImmutableBucketForCustomProviderVersion = async (d: {
   actor: Actor;
 }) => {
   if (d.from.type === 'function') {
+    if (d.from.repository) {
+      return await getImmutableBucketForRepoVersion(d);
+    }
+
     if (d.from.files) {
       return await getImmutableBucketForFiles(d);
-    } else {
-      return await getImmutableBucketForRepoVersion(d);
     }
   }
 
