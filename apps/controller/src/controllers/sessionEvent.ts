@@ -65,11 +65,7 @@ export let sessionEventController = app.controller({
 
       let list = await paginator.run(ctx.input);
 
-      let res = await Paginator.presentLight(list, sessionEventPresenter);
-
-      console.log('SessionEvent List Result', res);
-
-      return res;
+      return Paginator.presentLight(list, sessionEventPresenter);
     }),
 
   get: sessionEventApp

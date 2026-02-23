@@ -18,15 +18,18 @@ import {
   resolveSessionProviders,
   resolveSessions
 } from '@metorial-subspace/list-utils';
+import { providerRunInclude } from './providerRun';
+import { sessionConnectionInclude } from './sessionConnection';
 import { sessionErrorInclude } from './sessionError';
+import { sessionMessageInclude } from './sessionMessage';
 
 let include = {
   session: true,
-  // providerRun: { include: providerRunInclude },
-  // message: { include: sessionMessageInclude },
-  // connection: { include: sessionConnectionInclude },
-  error: { include: sessionErrorInclude }
-  // warning: { include: { session: true } }
+  providerRun: { include: providerRunInclude },
+  message: { include: sessionMessageInclude },
+  connection: { include: sessionConnectionInclude },
+  error: { include: sessionErrorInclude },
+  warning: { include: { session: true } }
 };
 
 class sessionEventServiceImpl {
@@ -54,37 +57,34 @@ class sessionEventServiceImpl {
     let errors = await resolveSessionErrors(d, d.sessionErrorIds);
 
     return Paginator.create(({ prisma }) =>
-      prisma(async opts => {
-        let events = await db.sessionEvent.findMany({
-          ...opts,
-          where: {
-            tenantOid: d.tenant.oid,
-            solutionOid: d.solution.oid,
-            environmentOid: d.environment.oid,
+      prisma(
+        async opts =>
+          await db.sessionEvent.findMany({
+            ...opts,
+            where: {
+              tenantOid: d.tenant.oid,
+              solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
 
-            ...normalizeStatusForList(d).onlyParent,
+              ...normalizeStatusForList(d).onlyParent,
 
-            AND: [
-              d.ids ? { id: { in: d.ids } } : undefined!,
-              d.types ? { type: { in: d.types } } : undefined!,
+              AND: [
+                d.ids ? { id: { in: d.ids } } : undefined!,
+                d.types ? { type: { in: d.types } } : undefined!,
 
-              sessions ? { sessionOid: sessions.in } : undefined!,
-              sessionProviders
-                ? { providerRun: { sessionProviderOid: sessionProviders.in } }
-                : undefined!,
-              connections ? { connectionOid: connections.in } : undefined!,
-              providerRuns ? { providerRunOid: providerRuns.in } : undefined!,
-              messages ? { messageOid: messages.in } : undefined!,
-              errors ? { errorOid: errors.in } : undefined!
-            ].filter(Boolean)
-          },
-          include
-        });
-
-        console.log('Raw Session Events', events);
-
-        return events;
-      })
+                sessions ? { sessionOid: sessions.in } : undefined!,
+                sessionProviders
+                  ? { providerRun: { sessionProviderOid: sessionProviders.in } }
+                  : undefined!,
+                connections ? { connectionOid: connections.in } : undefined!,
+                providerRuns ? { providerRunOid: providerRuns.in } : undefined!,
+                messages ? { messageOid: messages.in } : undefined!,
+                errors ? { errorOid: errors.in } : undefined!
+              ].filter(Boolean)
+            },
+            include
+          })
+      )
     );
   }
 

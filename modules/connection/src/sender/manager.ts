@@ -264,7 +264,6 @@ export class SenderManager {
       });
 
       let rec = pair.version.latestDiscoveryRecord;
-      console.log('ensureProviderInstance: got pair', rec);
 
       if (rec) {
         for (let warning of rec.warnings) {
