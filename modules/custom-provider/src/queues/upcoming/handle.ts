@@ -18,6 +18,7 @@ import { createVersion } from '../../internal/createVersion';
 import { ensureEnvironments } from '../../internal/ensureEnvironments';
 import { getImmutableBucketForCustomProviderVersion } from '../../internal/files';
 import { origin } from '../../origin';
+import { customDeploymentFailedQueue } from '../deployment/failed';
 import { customProviderCreatedQueue } from '../lifecycle/customProvider';
 
 export let handleUpcomingCustomProviderQueue = createQueue<{
@@ -92,72 +93,89 @@ export let handleUpcomingCustomProviderQueueProcessor =
       }
     });
     if (!upcoming) throw new QueueRetryError();
+    try {
+      let from = await mapFrom({
+        isInitial: false,
 
-    let from = await mapFrom({
-      isInitial: false,
+        deployment: upcoming.customProviderDeployment,
+        version: upcoming.customProviderVersion,
+        provider: upcoming.customProvider,
+        from: upcoming.payload.from,
 
-      deployment: upcoming.customProviderDeployment,
-      version: upcoming.customProviderVersion,
-      provider: upcoming.customProvider,
-      from: upcoming.payload.from,
-
-      tenant: upcoming.tenant,
-      solution: upcoming.solution,
-      environment: upcoming.environment,
-      actor: upcoming.actor
-    });
-
-    let backendProvider =
-      upcoming.type === 'create_custom_provider'
-        ? await backend.createCustomProvider({
-            tenant: upcoming.tenant,
-
-            name: upcoming.customProvider.name,
-            description: upcoming.customProvider.description ?? undefined,
-
-            config: upcoming.payload.config,
-            from
-          })
-        : await backend.createCustomProviderVersion({
-            tenant: upcoming.tenant,
-            customProvider: upcoming.customProvider,
-
-            config: upcoming.payload.config,
-            from
-          });
-
-    await withTransaction(async db => {
-      await ensureEnvironments({ customProvider: upcoming.customProvider });
-
-      await createVersion({
-        actor: upcoming.actor,
         tenant: upcoming.tenant,
         solution: upcoming.solution,
         environment: upcoming.environment,
-
-        message:
-          upcoming.message ??
-          (upcoming.type === 'create_custom_provider' ? 'Initial commit' : undefined),
-
-        customProvider: upcoming.customProvider,
-        version: upcoming.customProviderVersion,
-        deployment: upcoming.customProviderDeployment,
-
-        shuttleServer: backendProvider.shuttleServer,
-        shuttleCustomServer: backendProvider.shuttleCustomServer,
-        shuttleCustomDeployment: backendProvider.shuttleCustomDeployment
+        actor: upcoming.actor
       });
 
-      if (upcoming.type === 'create_custom_provider') {
-        await addAfterTransactionHook(async () =>
-          customProviderCreatedQueue.add({
-            customProviderId: upcoming.customProvider.id
-          })
-        );
-      }
+      let backendProvider =
+        upcoming.type === 'create_custom_provider'
+          ? await backend.createCustomProvider({
+              tenant: upcoming.tenant,
 
-      await db.upcomingCustomProvider.deleteMany({
-        where: { id: upcoming.id }
+              name: upcoming.customProvider.name,
+              description: upcoming.customProvider.description ?? undefined,
+
+              config: upcoming.payload.config,
+              from
+            })
+          : await backend.createCustomProviderVersion({
+              tenant: upcoming.tenant,
+              customProvider: upcoming.customProvider,
+
+              config: upcoming.payload.config,
+              from
+            });
+
+      await withTransaction(async db => {
+        await ensureEnvironments({ customProvider: upcoming.customProvider });
+
+        await createVersion({
+          actor: upcoming.actor,
+          tenant: upcoming.tenant,
+          solution: upcoming.solution,
+          environment: upcoming.environment,
+
+          message:
+            upcoming.message ??
+            (upcoming.type === 'create_custom_provider' ? 'Initial commit' : undefined),
+
+          customProvider: upcoming.customProvider,
+          version: upcoming.customProviderVersion,
+          deployment: upcoming.customProviderDeployment,
+
+          shuttleServer: backendProvider.shuttleServer,
+          shuttleCustomServer: backendProvider.shuttleCustomServer,
+          shuttleCustomDeployment: backendProvider.shuttleCustomDeployment
+        });
+
+        if (upcoming.type === 'create_custom_provider') {
+          await addAfterTransactionHook(async () =>
+            customProviderCreatedQueue.add({
+              customProviderId: upcoming.customProvider.id
+            })
+          );
+        }
+
+        await db.upcomingCustomProvider.deleteMany({
+          where: { id: upcoming.id }
+        });
       });
-    });
+    } catch (error) {
+      if (error instanceof QueueRetryError) throw error;
+
+      let message = error instanceof Error ? error.message : 'Unknown deployment error';
+
+      await db.upcomingCustomProvider.updateMany({
+        where: { id: upcoming.id },
+        data: {
+          errorCode: 'deployment_failed',
+          errorMessage: message.slice(0, 1000)
+        }
+      });
+
+      await customDeploymentFailedQueue.add({
+        customProviderDeploymentId: upcoming.customProviderDeployment.id
+      });
+    }
   });
