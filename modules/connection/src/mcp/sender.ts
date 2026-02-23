@@ -162,10 +162,16 @@ export class McpSender {
         responderParticipant,
 
         input: { type: 'mcp', data: msg },
-        output: {
-          type: 'error',
-          data: error.toResponse()
-        },
+        output: error.data._mcpError
+          ? {
+              type: 'mcp',
+              data: {
+                jsonrpc: '2.0',
+                id,
+                error: error.data._mcpError
+              } satisfies JSONRPCErrorResponse
+            }
+          : { type: 'error', data: error.toResponse() },
 
         methodOrToolKey: method,
         clientMcpId: id,
@@ -326,7 +332,14 @@ export class McpSender {
 
   private async handleToolListMessage(id: ID) {
     let allTools = await this.manager.listTools();
-    let mcpTools = allTools.filter(
+    if (allTools.status == 'discovery_failed') {
+      return {
+        store: true,
+        mcp: { jsonrpc: '2.0', id, error: allTools.mcpError } satisfies JSONRPCErrorResponse
+      };
+    }
+
+    let mcpTools = allTools.tools.filter(
       t =>
         t.value.mcpToolType.type === 'tool.callable' || t.value.mcpToolType.type === 'mcp.tool'
     );
@@ -374,7 +387,14 @@ export class McpSender {
 
   private async handlePromptListMessage(id: ID) {
     let allTools = await this.manager.listToolsIncludingInternal();
-    let mcpPrompts = allTools.filter(t => t.value.mcpToolType.type === 'mcp.prompt');
+    if (allTools.status == 'discovery_failed') {
+      return {
+        store: true,
+        mcp: { jsonrpc: '2.0', id, error: allTools.mcpError } satisfies JSONRPCErrorResponse
+      };
+    }
+
+    let mcpPrompts = allTools.tools.filter(t => t.value.mcpToolType.type === 'mcp.prompt');
 
     return {
       store: true,
@@ -401,7 +421,14 @@ export class McpSender {
 
   private async handleResourceTemplatesListMessage(id: ID) {
     let allTools = await this.manager.listToolsIncludingInternal();
-    let mcpResourceTemplates = allTools.filter(
+    if (allTools.status == 'discovery_failed') {
+      return {
+        store: true,
+        mcp: { jsonrpc: '2.0', id, error: allTools.mcpError } satisfies JSONRPCErrorResponse
+      };
+    }
+
+    let mcpResourceTemplates = allTools.tools.filter(
       t => t.value.mcpToolType.type === 'mcp.resource_template'
     );
 
@@ -457,8 +484,19 @@ export class McpSender {
     });
 
     let allTools = await this.manager.listToolsIncludingInternalAndNonAllowed();
+    if (allTools.status == 'discovery_failed') {
+      return {
+        store: true,
+        mcp: {
+          jsonrpc: '2.0',
+          id,
+          error: allTools.mcpError
+        } satisfies JSONRPCErrorResponse
+      };
+    }
+
     let resourceListTools = uniqBy(
-      allTools.filter(t => t.value.mcpToolType.type === 'mcp.resources_list'),
+      allTools.tools.filter(t => t.value.mcpToolType.type === 'mcp.resources_list'),
       t => t.sessionProvider.tag
     );
 
@@ -608,7 +646,14 @@ export class McpSender {
     let remainingUri = parts.join('_').trim();
 
     let allTools = await this.manager.listToolsIncludingInternalAndNonAllowed();
-    let resourceReadTool = allTools.find(
+    if (allTools.status == 'discovery_failed') {
+      return {
+        store: true,
+        mcp: { jsonrpc: '2.0', id, error: allTools.mcpError } satisfies JSONRPCErrorResponse
+      };
+    }
+
+    let resourceReadTool = allTools.tools.find(
       t => t.value.mcpToolType.type === 'mcp.resources_read' && t.sessionProvider.tag === tag
     );
 

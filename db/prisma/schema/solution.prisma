@@ -41,4 +41,5 @@ model Solution {
   codeBuckets                              CodeBucket[]
   scmRepos                                 ScmRepo[]
   scmRepoPushes                            ScmRepoPush[]
+  sessionWarnings                          SessionWarning[]
 }

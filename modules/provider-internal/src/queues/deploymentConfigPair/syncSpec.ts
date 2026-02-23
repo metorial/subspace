@@ -1,5 +1,5 @@
 import { createQueue, QueueRetryError } from '@lowerdeck/queue';
-import { db } from '@metorial-subspace/db';
+import { db, getId } from '@metorial-subspace/db';
 import { getBackend } from '@metorial-subspace/provider';
 import type { ProviderSpecificationGetRes } from '@metorial-subspace/provider-utils';
 import { env } from '../../env';
@@ -71,7 +71,6 @@ export let providerDeploymentConfigPairSyncSpecificationQueueProcessor =
       }
 
       let capabilities: ProviderSpecificationGetRes = null;
-
       try {
         capabilities =
           await backend.capabilities.getSpecificationForProviderPair(discoverParams);
@@ -79,12 +78,27 @@ export let providerDeploymentConfigPairSyncSpecificationQueueProcessor =
         console.error('Error discovering capabilities:', e);
       }
 
+      let record =
+        capabilities?.warnings?.length || capabilities?.status == 'failure'
+          ? await db.providerDeploymentConfigPairDiscovery.create({
+              data: {
+                ...getId('providerDeploymentConfigPairDiscovery'),
+                status:
+                  capabilities.status === 'success' ? 'succeeded_with_warnings' : 'failed',
+                error: capabilities.status === 'failure' ? capabilities.error : null,
+                warnings: capabilities.warnings,
+                pairOid: pair.oid,
+                versionOid: version.oid
+              }
+            })
+          : undefined;
+
       // Some backends might need a config to be able to discover specifications
-      if (!capabilities) {
+      if (!capabilities || capabilities.status == 'failure') {
         await providerDeploymentConfigPairSetSpecificationQueue.add({
           providerDeploymentConfigPairOid: pair.oid,
           versionOid: version.oid,
-          result: { status: 'failure' }
+          result: { status: 'failure', discoveryRecordOid: record?.oid }
         });
         return;
       }
@@ -104,7 +118,11 @@ export let providerDeploymentConfigPairSyncSpecificationQueueProcessor =
       await providerDeploymentConfigPairSetSpecificationQueue.add({
         providerDeploymentConfigPairOid: pair.oid,
         versionOid: version.oid,
-        result: { status: 'success', specificationOid: spec.oid }
+        result: {
+          status: 'success',
+          specificationOid: spec.oid,
+          discoveryRecordOid: record?.oid
+        }
       });
     } catch (e) {
       await providerDeploymentConfigPairSetSpecificationQueue.add({

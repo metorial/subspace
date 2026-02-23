@@ -49,13 +49,49 @@ export interface ProviderSpecificationGetForPairParam {
   providerVersion: ProviderVersion;
 }
 
-export type ProviderSpecificationGetRes = {
-  specification: Specification;
-  features: SpecificationFeatures;
-  tools: SpecificationTool[];
-  authMethods: SpecificationAuthMethod[];
-  type: ProviderSpecificationType;
-} | null;
+export type ProviderSpecificationGetRes =
+  | {
+      status: 'success';
+      specification: Specification;
+      features: SpecificationFeatures;
+      tools: SpecificationTool[];
+      authMethods: SpecificationAuthMethod[];
+      type: ProviderSpecificationType;
+      warnings?: {
+        code: string;
+        message: string;
+        data?: any;
+      }[];
+    }
+  | {
+      status: 'failure';
+      warnings?: {
+        code: string;
+        message: string;
+        data?: any;
+      }[];
+      error:
+        | {
+            type: 'mcp_error';
+            error: {
+              code: number;
+              message: string;
+              data?: any;
+            };
+          }
+        | {
+            type: 'connection_error';
+            error: {
+              code: string;
+              message?: string;
+            };
+          }
+        | {
+            type: 'timeout_error';
+            message?: string;
+          };
+    }
+  | null;
 
 export interface ProviderSpecificationBehaviorParam {}
 

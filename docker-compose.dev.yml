@@ -41,12 +41,12 @@ services:
       - '56222:4222'
     networks:
       - subspace-network
-  nats-2:
-    image: nats
-    command: '--cluster_name NATS --cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats-1:6222'
-    depends_on: ['nats-1']
-    networks:
-      - subspace-network
+  # nats-2:
+  #   image: nats
+  #   command: '--cluster_name NATS --cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats-1:6222'
+  #   depends_on: ['nats-1']
+  #   networks:
+  #     - subspace-network
 
   object-storage:
     image: ghcr.io/metorial/object-storage:latest
@@ -286,7 +286,7 @@ services:
       ENCRYPTION_KEY: key
       PROVIDER_OAUTH_TICKET_SECRET: dev-secret
       PROVIDER_OAUTH_URL: http://localhost:52081
-      HOLOPOD_HTTP_ENDPOINT: test-isolation-wrapper.orb.local:50051
+      HOLOPOD_HTTP_ENDPOINT: http://holopod:3000
       OBJECT_STORAGE_URL: http://object-storage:52010
       LOGS_BUCKET_NAME: shuttle-logs
       FUNCTION_BAY_API_URL: http://function-bay:52030/metorial-function-bay
@@ -381,7 +381,7 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0
-      NATS_URL: nats://nats-1:4222,nats://nats-2:4222
+      NATS_URL: nats://nats-1:4222
       METORIAL_ENV: development
       PUBLIC_SERVICE_URL: http://localhost:52071
       SLATES_HUB_URL: http://slates-hub:52046/slates-hub
@@ -426,8 +426,6 @@ services:
       shuttle:
         condition: service_healthy
       nats-1:
-        condition: service_started
-      nats-2:
         condition: service_started
       origin:
         condition: service_healthy
@@ -505,8 +503,6 @@ services:
         condition: service_healthy
       nats-1:
         condition: service_started
-      nats-2:
-        condition: service_started
       origin:
         condition: service_healthy
     healthcheck:
@@ -529,7 +525,7 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0
-      NATS_URL: nats://nats-1:4222,nats://nats-2:4222
+      NATS_URL: nats://nats-1:4222
       METORIAL_ENV: development
       PUBLIC_SERVICE_URL: http://localhost:52071
       SLATES_HUB_URL: http://slates-hub:52046/slates-hub
@@ -576,8 +572,6 @@ services:
         condition: service_healthy
       nats-1:
         condition: service_started
-      nats-2:
-        condition: service_started
       origin:
         condition: service_healthy
     networks:
@@ -593,7 +587,7 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0
-      NATS_URL: nats://nats-1:4222,nats://nats-2:4222
+      NATS_URL: nats://nats-1:4222
       METORIAL_ENV: development
       PUBLIC_SERVICE_URL: http://localhost:52071
       SLATES_HUB_URL: http://slates-hub:52046/slates-hub
@@ -638,8 +632,6 @@ services:
       subspace-controller:
         condition: service_healthy
       nats-1:
-        condition: service_started
-      nats-2:
         condition: service_started
     networks:
       - subspace-network

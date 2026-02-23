@@ -34,6 +34,7 @@ model ProviderDeploymentConfigPair {
   versions                                 ProviderDeploymentConfigPairProviderVersion[]
   providerSpecificationChangeNotifications ProviderSpecificationChangeNotification[]
   sessionProviderInstances                 SessionProviderInstance[]
+  providerDeploymentConfigPairDiscoveries  ProviderDeploymentConfigPairDiscovery[]
 }
 
 model ProviderDeploymentConfigPairProviderVersion {
@@ -45,6 +46,9 @@ model ProviderDeploymentConfigPairProviderVersion {
 
   versionOid BigInt
   version    ProviderVersion @relation(fields: [versionOid], references: [oid])
+
+  latestDiscoveryRecordOid BigInt?
+  latestDiscoveryRecord    ProviderDeploymentConfigPairDiscovery? @relation(fields: [latestDiscoveryRecordOid], references: [oid])
 
   previousPairVersionOid BigInt?
   previousPairVersion    ProviderDeploymentConfigPairProviderVersion?  @relation("lastUsedVersion", fields: [previousPairVersionOid], references: [oid])
@@ -86,4 +90,32 @@ model ProviderDeploymentConfigPairSpecificationChange {
   providerSpecificationChangeNotifications ProviderSpecificationChangeNotification[]
 
   @@unique([fromPairVersionOid, toPairVersionOid, fromSpecificationOid, toSpecificationOid])
+}
+
+enum ProviderDeploymentConfigPairDiscoveryStatus {
+  failed
+  succeeded_with_warnings
+}
+
+// Only created when there is an error or warning during discovery
+model ProviderDeploymentConfigPairDiscovery {
+  oid BigInt @id
+  id  String @unique
+
+  status ProviderDeploymentConfigPairDiscoveryStatus
+
+  pairOid BigInt
+  pair    ProviderDeploymentConfigPair @relation(fields: [pairOid], references: [oid])
+
+  versionOid BigInt
+  version    ProviderVersion @relation(fields: [versionOid], references: [oid])
+
+  /// [ProviderDeploymentConfigPairDiscoveryWarning]
+  warnings Json[]
+
+  /// [ProviderDeploymentConfigPairDiscoveryError]
+  error Json
+
+  createdAt                                    DateTime                                      @default(now())
+  providerDeploymentConfigPairProviderVersions ProviderDeploymentConfigPairProviderVersion[]
 }

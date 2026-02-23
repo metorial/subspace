@@ -6,6 +6,7 @@ import {
 } from './sessionConnection';
 import { type SessionErrorPresenterProps, sessionErrorPresenter } from './sessionError';
 import { type SessionMessagePresenterProps, sessionMessagePresenter } from './sessionMessage';
+import { type SessionWarningPresenterProps, sessionWarningPresenter } from './sessionWarning';
 
 export let sessionEventPresenter = async (
   event: SessionEvent & {
@@ -14,6 +15,7 @@ export let sessionEventPresenter = async (
     message: SessionMessagePresenterProps | null;
     connection: SessionConnectionPresenterProps | null;
     error: SessionErrorPresenterProps | null;
+    warning: SessionWarningPresenterProps | null;
   }
 ) => {
   return {
@@ -49,6 +51,13 @@ export let sessionEventPresenter = async (
     error: event.error
       ? await sessionErrorPresenter({
           ...event.error,
+          session: event.session
+        })
+      : null,
+
+    warning: event.warning
+      ? await sessionWarningPresenter({
+          ...event.warning,
           session: event.session
         })
       : null,

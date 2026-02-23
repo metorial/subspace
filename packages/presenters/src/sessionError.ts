@@ -31,7 +31,7 @@ export let sessionErrorPresenter = async (error: SessionErrorPresenterProps) => 
   }
 
   return {
-    object: 'session.provider',
+    object: 'session.error',
 
     id: error.id,
 

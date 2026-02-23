@@ -9,6 +9,8 @@ import {
   type ProviderConfig,
   type ProviderConfigVersion,
   type ProviderDeployment,
+  ProviderDeploymentConfigPairDiscovery,
+  ProviderDeploymentConfigPairProviderVersion,
   type ProviderDeploymentVersion,
   type ProviderVersion,
   withTransaction
@@ -39,13 +41,22 @@ class providerDeploymentConfigPairInternalServiceImpl {
       let existing = await db.providerDeploymentConfigPair.findUnique({
         where: { identifier: getPairIdentifier(d) },
         include: {
-          versions: d.version ? { where: { versionOid: d.version.oid } } : false
+          versions: d.version
+            ? {
+                where: { versionOid: d.version.oid },
+                include: { latestDiscoveryRecord: true }
+              }
+            : false
         }
       });
       if (existing) {
         return {
           pair: existing,
-          version: existing.versions?.[0],
+          version: existing.versions?.[0] as
+            | undefined
+            | (ProviderDeploymentConfigPairProviderVersion & {
+                latestDiscoveryRecord: ProviderDeploymentConfigPairDiscovery | null;
+              }),
           created: false
         };
       }
@@ -83,7 +94,8 @@ class providerDeploymentConfigPairInternalServiceImpl {
             where: {
               pairOid: pair.oid,
               versionOid: d.version.oid
-            }
+            },
+            include: { latestDiscoveryRecord: true }
           })
         : null;
 
@@ -127,7 +139,8 @@ class providerDeploymentConfigPairInternalServiceImpl {
           versionOid: d.version.oid,
           specificationDiscoveryStatus: 'discovering'
         },
-        update: {}
+        update: {},
+        include: { latestDiscoveryRecord: true }
       });
 
       if (version.id === newId.id) {
@@ -157,7 +170,8 @@ class providerDeploymentConfigPairInternalServiceImpl {
       for (let i = 1; i < 75; i++) {
         await delay(Math.min(100, 25 * i));
         res.version = await db.providerDeploymentConfigPairProviderVersion.findFirstOrThrow({
-          where: { oid: res.version.oid }
+          where: { oid: res.version.oid },
+          include: { latestDiscoveryRecord: true }
         });
         if (res.version.specificationDiscoveryStatus !== 'discovering') break;
       }

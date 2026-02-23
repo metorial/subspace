@@ -139,6 +139,14 @@ export class ProviderCapabilities extends IProviderCapabilities {
       serverVersionId: shuttleServerVersion.id
     });
 
+    if (discovery.status == 'failed') {
+      return {
+        status: 'failure',
+        warnings: discovery.warnings,
+        error: discovery.error
+      };
+    }
+
     return this.mapDiscovery(server, version, discovery);
   }
 
@@ -148,7 +156,11 @@ export class ProviderCapabilities extends IProviderCapabilities {
     discovery?: Awaited<ReturnType<typeof shuttle.serverDiscovery.create>>
   ): Promise<ProviderSpecificationGetRes> {
     return {
+      status: 'success',
+
       type: discovery ? 'full' : 'preliminary',
+
+      warnings: discovery?.warnings,
 
       features: {
         supportsAuthMethod: !!server.oauthConfig,

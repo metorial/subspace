@@ -10,8 +10,8 @@ import {
 import { createErrorQueue } from '../queues/error/createError';
 
 export interface CreateErrorProps {
-  connection: SessionConnection | null;
   session: Session;
+  connection: SessionConnection | null | undefined;
   providerRun?: ProviderRun;
 
   type: SessionErrorType;

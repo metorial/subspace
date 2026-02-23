@@ -42,6 +42,7 @@ export let ID = createIdGenerator({
   providerVersionSpecificationChange: idType.sorted('pvsc'),
   providerSpecificationChangeNotification: idType.sorted('pscn'),
   providerDeploymentConfigPairSpecificationChange: idType.sorted('pdcpsc'),
+  providerDeploymentConfigPairDiscovery: idType.sorted('pdcpd'),
 
   providerTag: idType.sorted('kpt'),
 
@@ -89,6 +90,7 @@ export let ID = createIdGenerator({
   sessionConnection_token: idType.unsorted('scon_tok', 30),
   sessionError: idType.sorted('serr'),
   sessionErrorGroup: idType.sorted('serg'),
+  sessionWarning: idType.sorted('swarn'),
 
   providerRun: idType.sorted('prun'),
 

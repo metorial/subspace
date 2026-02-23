@@ -49,6 +49,7 @@ model Session {
   sessionErrors            SessionError[]
   sessionProviderInstances SessionProviderInstance[]
   toolCalls                ToolCall[]
+  sessionWarnings          SessionWarning[]
 
   @@index([lastActiveAt])
   @@index([connectionState])

@@ -7,7 +7,7 @@ export let sessionErrorGroupPresenter = async (
   }
 ) => {
   return {
-    object: 'session.provider',
+    object: 'session.error_group',
 
     id: error.id,
 

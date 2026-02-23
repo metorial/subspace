@@ -71,6 +71,7 @@ model Tenant {
   codeBuckets                              CodeBucket[]
   scmRepos                                 ScmRepo[]
   scmRepoPushes                            ScmRepoPush[]
+  sessionWarnings                          SessionWarning[]
 }
 
 enum EnvironmentType {
@@ -122,6 +123,7 @@ model Environment {
   customProviderEnvironmentVersions        CustomProviderEnvironmentVersion[]
   providerEnvironmentVersions              ProviderEnvironmentVersion[]
   upcomingCustomProviders                  UpcomingCustomProvider[]
+  sessionWarnings                          SessionWarning[]
 }
 
 enum ActorType {

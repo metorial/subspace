@@ -15,9 +15,11 @@ export let providerDeploymentConfigPairSetSpecificationQueue = createQueue<{
     | {
         status: 'success';
         specificationOid: bigint;
+        discoveryRecordOid?: bigint;
       }
     | {
         status: 'failure';
+        discoveryRecordOid?: bigint;
       };
 }>({
   name: 'sub/pint/pdep/spec/set',
@@ -94,11 +96,13 @@ export let providerDeploymentConfigPairSetSpecificationQueueProcessor =
           ...getId('providerDeploymentConfigPairProviderVersion'),
           ...filter,
           ...result,
-          previousPairVersionOid: previousPairVersion?.oid
+          previousPairVersionOid: previousPairVersion?.oid,
+          latestDiscoveryRecordOid: data.result.discoveryRecordOid ?? null
         },
         update: {
           ...result,
-          previousPairVersionOid: previousPairVersion?.oid
+          previousPairVersionOid: previousPairVersion?.oid,
+          latestDiscoveryRecordOid: data.result.discoveryRecordOid ?? null
         },
         include: {
           specification: true

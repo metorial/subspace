@@ -48,7 +48,7 @@
       "devDependencies": {
         "@lowerdeck/slugify": "^1.0.4",
         "@lowerdeck/testing-tools": "^1.0.1",
-        "@metorial-services/shuttle-client": "^1.0.8",
+        "@metorial-services/shuttle-client": "^1.0.9",
         "@metorial-subspace/connection-utils": "^1.0.0",
         "@metorial-subspace/module-provider-internal": "^1.0.0",
         "@metorial-subspace/provider": "^1.0.0",
@@ -126,7 +126,7 @@
     },
     "clients/typescript": {
       "name": "@metorial-services/subspace-client",
-      "version": "1.0.14",
+      "version": "1.0.18",
       "dependencies": {
         "@lowerdeck/rpc-client": "^1.0.3",
         "@lowerdeck/validation": "^1.0.4",
@@ -523,7 +523,7 @@
         "@lowerdeck/queue": "^1.0.4",
         "@lowerdeck/slugify": "^1.0.4",
         "@lowerdeck/validation": "^1.0.4",
-        "@metorial-services/shuttle-client": "1.0.8",
+        "@metorial-services/shuttle-client": "1.0.9",
         "@metorial-subspace/connection-utils": "^1.0.0",
         "@metorial-subspace/db": "^1.0.0",
         "@metorial-subspace/module-provider-internal": "^1.0.0",
@@ -901,7 +901,7 @@
 
     "@metorial-services/registry-client": ["@metorial-services/registry-client@1.0.0", "", { "dependencies": { "@lowerdeck/rpc-client": "^1.0.3", "@lowerdeck/rpc-server": "^1.0.6", "@lowerdeck/validation": "^1.0.4" } }, "sha512-6A3tb7rtxex7GlygF6W832p8zoW5I1tkEzEpGzlhjA7wWIwPKVIlYF2XxKhua3z2+kXRKUW6WKjKwc+P81TIdw=="],
 
-    "@metorial-services/shuttle-client": ["@metorial-services/shuttle-client@1.0.8", "", { "dependencies": { "@lowerdeck/rpc-client": "^1.0.2", "@metorial/util-websocket": "^1.0.0", "@types/bun": "^1.3.7" } }, "sha512-eLcubpOZY7uIgvPXPeZbw0QD3lwGVh5LZ+yhmNMmlwPLMBfyfZqqIbqcAh7yqTeI0pudY9diZL4fRVbMuvpGXQ=="],
+    "@metorial-services/shuttle-client": ["@metorial-services/shuttle-client@1.0.9", "", { "dependencies": { "@lowerdeck/rpc-client": "^1.1.0", "@metorial/util-websocket": "^1.0.0", "@types/bun": "^1.3.7" } }, "sha512-1SPPO5fxYaheGua7/8h8uX9EL83Om5DZpNztdqo6e3OoJ3nxu46ICCE50+Q059gkkYk5sQ2Jvsf/lBS/LysqAg=="],
 
     "@metorial-services/slates-hub-client": ["@metorial-services/slates-hub-client@1.0.17", "", { "dependencies": { "@lowerdeck/rpc-client": "^1.0.2" } }, "sha512-syTC35lrA4e0H+XZ/iJ6igyKsTZtw8mNF93qp/FLs9XLgSPfivRUrj5GVIx5CkjzfgjXOoTiQ/HyaTeYcaiNsQ=="],
 
@@ -2313,7 +2313,7 @@
 
     "@lowerdeck/rpc-server/cookie": ["cookie@1.1.1", "", {}, "sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ=="],
 
-    "@metorial-services/shuttle-client/@types/bun": ["@types/bun@1.3.8", "", { "dependencies": { "bun-types": "1.3.8" } }, "sha512-3LvWJ2q5GerAXYxO2mffLTqOzEu5qnhEAlh48Vnu8WQfnmSwbgagjGZV6BoHKJztENYEDn6QmVd949W4uESRJA=="],
+    "@metorial-services/shuttle-client/@lowerdeck/rpc-client": ["@lowerdeck/rpc-client@1.1.0", "", { "dependencies": { "@lowerdeck/canonicalize": "^1.0.4", "@lowerdeck/error": "^1.1.0", "@lowerdeck/id": "^1.0.6", "@lowerdeck/memo": "^1.0.4", "@lowerdeck/proxy": "^1.0.4", "@lowerdeck/serialize": "^1.0.4" } }, "sha512-I8gMwFCAoPJvcfmk1HZ9r0kZUXN/646w7e86H52Eshh11IEuKh6XqgJWtqnn4Dut65Egrsq3ADqHKBvIQwqXZg=="],
 
     "@metorial-services/subspace-client/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
@@ -2387,7 +2387,7 @@
 
     "@lowerdeck/lock/@types/bun/bun-types": ["bun-types@1.3.8", "", { "dependencies": { "@types/node": "*" } }, "sha512-fL99nxdOWvV4LqjmC+8Q9kW3M4QTtTR1eePs94v5ctGqU8OeceWrSUaRw3JYb7tU3FkMIAjkueehrHPPPGKi5Q=="],
 
-    "@metorial-services/shuttle-client/@types/bun/bun-types": ["bun-types@1.3.8", "", { "dependencies": { "@types/node": "*" } }, "sha512-fL99nxdOWvV4LqjmC+8Q9kW3M4QTtTR1eePs94v5ctGqU8OeceWrSUaRw3JYb7tU3FkMIAjkueehrHPPPGKi5Q=="],
+    "@metorial-services/shuttle-client/@lowerdeck/rpc-client/@lowerdeck/error": ["@lowerdeck/error@1.1.0", "", { "dependencies": { "@lowerdeck/case": "^1.0.9", "@lowerdeck/validation": "^1.0.4" } }, "sha512-RMqiA4bZUw/KDmvanDRvC0Ijm5uTBOeoCa2ix3y/gtYYu78jCe6X+m4NAueWZ9Uqaj/Ibddo+m9RQiEd3/NDjg=="],
 
     "@metorial-subspace/app-controller/vitest/@vitest/expect": ["@vitest/expect@4.0.17", "", { "dependencies": { "@standard-schema/spec": "^1.0.0", "@types/chai": "^5.2.2", "@vitest/spy": "4.0.17", "@vitest/utils": "4.0.17", "chai": "^6.2.1", "tinyrainbow": "^3.0.3" } }, "sha512-mEoqP3RqhKlbmUmntNDDCJeTDavDR+fVYkSOw8qRwJFaW/0/5zA9zFeTrHqNtcmwh6j26yMmwx2PqUDPzt5ZAQ=="],
 

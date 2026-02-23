@@ -3,11 +3,11 @@ import {
   goneError,
   internalServerError,
   notFoundError,
+  preconditionFailedError,
   ServiceError
 } from '@lowerdeck/error';
 import { createLock } from '@lowerdeck/lock';
 import { getSentry } from '@lowerdeck/sentry';
-import { serialize } from '@lowerdeck/serialize';
 import type { ConduitInput, ConduitResult } from '@metorial-subspace/connection-utils';
 import { checkToolAccess } from '@metorial-subspace/connection-utils';
 import {
@@ -39,7 +39,9 @@ import { env } from '../env';
 import { conduit } from '../lib/conduit';
 import { topics } from '../lib/topic';
 import { completeMessage } from '../shared/completeMessage';
+import { createError } from '../shared/createError';
 import { createMessage, type CreateMessageProps } from '../shared/createMessage';
+import { createWarning } from '../shared/createWarning';
 import { upsertParticipant } from '../shared/upsertParticipant';
 
 let Sentry = getSentry();
@@ -194,7 +196,18 @@ export class SenderManager {
       },
       include: { pairVersion: true }
     });
-    if (currentInstance) return currentInstance;
+    if (currentInstance) {
+      return {
+        status: 'ok' as const,
+        instance: await db.sessionProviderInstance.update({
+          where: { oid: currentInstance.oid },
+          data: {
+            expiresAt: addMinutes(new Date(), SESSION_PROVIDER_INSTANCE_EXPIRATION_INCREMENT)
+          },
+          include: { pairVersion: true }
+        })
+      };
+    }
 
     return instanceLock.usingLock(provider.id, async () => {
       let currentInstance = await db.sessionProviderInstance.findFirst({
@@ -204,7 +217,12 @@ export class SenderManager {
         },
         include: { pairVersion: true }
       });
-      if (currentInstance) return currentInstance;
+      if (currentInstance) {
+        return {
+          status: 'ok' as const,
+          instance: currentInstance
+        };
+      }
 
       let fullProvider = await db.sessionProvider.findFirstOrThrow({
         where: { oid: provider.oid },
@@ -245,42 +263,116 @@ export class SenderManager {
         version
       });
 
-      return await db.sessionProviderInstance.create({
-        data: {
-          ...getId('sessionProviderInstance'),
-          sessionProviderOid: provider.oid,
-          sessionOid: provider.sessionOid,
-          pairOid: pair.pair.oid,
-          pairVersionOid: pair.version.oid,
-          expiresAt: addMinutes(new Date(), SESSION_PROVIDER_INSTANCE_EXPIRATION_INCREMENT)
-        },
-        include: { pairVersion: true }
-      });
+      let rec = pair.version.latestDiscoveryRecord;
+      console.log('ensureProviderInstance: got pair', rec);
+
+      if (rec) {
+        for (let warning of rec.warnings) {
+          await createWarning({
+            session: this.session,
+            connection: this.connection,
+            warning: {
+              code: warning.code,
+              message: warning.message,
+              payload: warning.data
+            }
+          });
+        }
+      }
+
+      if (pair.version.specificationDiscoveryStatus == 'failed') {
+        await createError({
+          session: this.session,
+          connection: this.connection,
+
+          type: 'provider_discovery_failed',
+          output: rec?.error
+            ? {
+                type: 'error',
+                data:
+                  rec.error.type == 'timeout_error'
+                    ? {
+                        code: 'discovery_timeout',
+                        message:
+                          rec.error.message ?? 'Provider specification discovery timed out'
+                      }
+                    : {
+                        code: rec.error.error.code,
+                        message:
+                          rec.error.error.message ??
+                          `Unable to discover provider capabilities: ${rec.error.error.code}`
+                      }
+              }
+            : {
+                type: 'error',
+                data: {
+                  code: 'discovery_failed',
+                  message: 'Failed to discover provider specification'
+                }
+              }
+        });
+
+        return {
+          status: 'discovery_failed' as const,
+          mcpError:
+            rec?.error?.type == 'mcp_error'
+              ? rec.error.error
+              : {
+                  code: -32603,
+                  message: 'Failed to discover provider specification'
+                }
+        };
+      }
+
+      return {
+        status: 'ok' as const,
+        instance: await db.sessionProviderInstance.create({
+          data: {
+            ...getId('sessionProviderInstance'),
+            sessionProviderOid: provider.oid,
+            sessionOid: provider.sessionOid,
+            pairOid: pair.pair.oid,
+            pairVersionOid: pair.version.oid,
+            expiresAt: addMinutes(new Date(), SESSION_PROVIDER_INSTANCE_EXPIRATION_INCREMENT)
+          },
+          include: { pairVersion: true }
+        })
+      };
     });
   }
 
   private async listToolsForProvider(provider: SessionProvider) {
-    let instance = await this.ensureProviderInstance(provider);
-    if (!instance) return [];
+    let res = await this.ensureProviderInstance(provider);
+    if (!res) {
+      return {
+        status: 'ok' as const,
+        tools: []
+      };
+    }
+
+    if (res.status === 'discovery_failed') return res;
 
     let tools = await db.providerTool.findMany({
       where: {
         specification: {
           providerVersions: {
             some: {
-              oid: instance.pairVersion.versionOid
+              oid: res.instance.pairVersion.versionOid
             }
           }
         }
       }
     });
 
-    return tools.map(t => ({
-      ...t,
-      key: `${t.key}_${provider.tag}`,
-      sessionProvider: provider,
-      sessionProviderInstance: instance
-    }));
+    return {
+      status: 'ok' as const,
+      tools: tools.map(t => ({
+        ...t,
+        key: `${t.key}_${provider.tag}`,
+        sessionProvider: provider,
+        sessionProviderInstance: res.instance
+      }))
+    };
   }
 
   async listProviders() {
@@ -292,27 +384,54 @@ export class SenderManager {
 
   async listToolsIncludingInternalAndNonAllowed() {
     let providers = await this.listProviders();
-    return await Promise.all(
+
+    let discoveryRes = await Promise.all(
       providers.map(provider => this.listToolsForProvider(provider))
-    ).then(results => results.flat().sort((a, b) => a.id.localeCompare(b.id)));
+    );
+
+    for (let res of discoveryRes) {
+      if (res.status === 'discovery_failed') {
+        return {
+          status: 'discovery_failed' as const,
+          mcpError: res.mcpError
+        };
+      }
+    }
+
+    let tools = discoveryRes
+      .map(r => (r.status == 'ok' ? r.tools : []))
+      .flat()
+      .sort((a, b) => a.id.localeCompare(b.id));
+
+    return {
+      status: 'ok' as const,
+      tools
+    };
   }
 
   async listToolsIncludingInternal() {
-    let allTools = await this.listToolsIncludingInternalAndNonAllowed();
+    let allToolsRes = await this.listToolsIncludingInternalAndNonAllowed();
+    if (allToolsRes.status === 'discovery_failed') return allToolsRes;
 
-    return allTools.filter(
-      tool => checkToolAccess(tool, tool.sessionProvider, 'list').allowed
-    );
+    return {
+      status: 'ok' as const,
+      tools: allToolsRes.tools.filter(
+        tool => checkToolAccess(tool, tool.sessionProvider, 'list').allowed
+      )
+    };
   }
 
   async listTools() {
     let allTools = await this.listToolsIncludingInternal();
-    console.log('listTools: allTools', serialize.encode(allTools));
+    if (allTools.status === 'discovery_failed') return allTools;
 
-    return allTools.filter(tool => {
-      let mcpType = tool.value.mcpToolType.type;
-      return mcpType !== 'mcp.logging_setLevel' && mcpType !== 'mcp.completion_complete';
-    });
+    return {
+      status: 'ok' as const,
+      tools: allTools.tools.filter(tool => {
+        let mcpType = tool.value.mcpToolType.type;
+        return mcpType !== 'mcp.logging_setLevel' && mcpType !== 'mcp.completion_complete';
+      })
+    };
   }
 
   private async getProviderByTag(d: { tag: string }) {
@@ -340,10 +459,19 @@ export class SenderManager {
     let provider = await this.getProviderByTag({ tag: providerTag! });
 
     // Get the current instance for the provider
-    let instance = await this.ensureProviderInstance(provider);
-    if (!instance) throw new ServiceError(notFoundError('provider.instance'));
+    let instanceRes = await this.ensureProviderInstance(provider);
+    if (!instanceRes) throw new ServiceError(notFoundError('provider.instance'));
 
-    if (!instance.pairVersion.specificationOid) {
+    if (instanceRes.status === 'discovery_failed') {
+      throw new ServiceError(
+        preconditionFailedError({
+          message: 'Failed to discover provider specification',
+          _mcpError: instanceRes.mcpError
+        })
+      );
+    }
+
+    if (!instanceRes.instance.pairVersion.specificationOid) {
       throw new ServiceError(
         badRequestError({ message: 'Tool not callable (not discovered yet)' })
       );
@@ -353,7 +481,7 @@ export class SenderManager {
     let tool = await db.providerTool.findFirst({
       where: {
         key: toolKey,
-        specificationOid: instance.pairVersion.specificationOid
+        specificationOid: instanceRes.instance.pairVersion.specificationOid
       }
     });
     if (!tool) throw new ServiceError(notFoundError('tool', d.toolId));
@@ -365,12 +493,12 @@ export class SenderManager {
 
     return {
       provider,
-      instance,
+      instance: instanceRes.instance,
       tool: {
         ...tool,
         key: `${tool.key}_${provider.tag}`,
         sessionProvider: provider,
-        sessionProviderInstance: instance
+        sessionProviderInstance: instanceRes
       }
     };
   }
@@ -384,8 +512,6 @@ export class SenderManager {
   }
 
   async callTool(d: CallToolProps) {
-    console.log('callTool', serialize.encode({ input: d, connection: this.connection }));
-
     let connection = this.connection;
     if (!connection) {
       throw new ServiceError(

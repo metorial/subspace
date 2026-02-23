@@ -136,5 +136,33 @@ declare global {
           }
         | { status: 'disabled'; read?: undefined };
     };
+
+    type ProviderDeploymentConfigPairDiscoveryError =
+      | {
+          type: 'mcp_error';
+          error: {
+            code: number;
+            message: string;
+            data?: any;
+          };
+        }
+      | {
+          type: 'connection_error';
+          error: {
+            code: string;
+            message?: string;
+          };
+        }
+      | {
+          type: 'timeout_error';
+          message?: string;
+        }
+      | null;
+
+    type ProviderDeploymentConfigPairDiscoveryWarning = {
+      code: string;
+      message: string;
+      data?: any;
+    };
   }
 }

@@ -10,6 +10,7 @@ enum SessionEventType {
   connection_disconnected
   connection_disabled
   error_occurred
+  warning_occurred
 }
 
 model SessionEvent {
@@ -33,6 +34,9 @@ model SessionEvent {
 
   errorOid BigInt?
   error    SessionError? @relation(fields: [errorOid], references: [oid])
+
+  warningOid BigInt?
+  warning    SessionWarning? @relation(fields: [warningOid], references: [oid])
 
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])
