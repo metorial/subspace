@@ -38,7 +38,17 @@ export let startReceiver = () => {
     let state = await ConnectionState.create(topic, () => {
       ctx.close();
     });
-    console.log('RECEIVER.state', serialize.encode(state));
+    console.log(
+      'RECEIVER.state',
+      serialize.encode({
+        exists: !!state,
+        sessionId: state?.session.id,
+        connectionId: state?.connection.id,
+        providerId: state?.provider.id,
+        providerRunId: state?.providerRun.id,
+        backendType: state?.backend.type
+      })
+    );
     if (!state) {
       ctx.close();
       return;
