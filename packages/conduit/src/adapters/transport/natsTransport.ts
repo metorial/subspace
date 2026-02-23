@@ -11,6 +11,7 @@ export class NatsTransport implements ITransportAdapter {
   private nextSubId = 0;
 
   constructor(private config: NatsConfig) {
+    console.log(`CONDUIT.nats.constructor servers=${config.servers.join(',')} user=${config.user ?? 'none'} hasToken=${!!config.token} hasPass=${!!config.pass}`);
     this.nc = connect({
       servers: this.config.servers,
       token: this.config.token,
@@ -19,17 +20,40 @@ export class NatsTransport implements ITransportAdapter {
 
       waitOnFirstConnect: true
     });
+
+    this.nc.then(nc => {
+      console.log(`CONDUIT.nats.connected servers=${config.servers.join(',')}`);
+
+      nc.closed().then(err => {
+        if (err) {
+          console.log(`CONDUIT.nats.closed_with_error error=${err.message}`);
+        } else {
+          console.log(`CONDUIT.nats.closed`);
+        }
+      });
+
+      (async () => {
+        for await (let status of nc.status()) {
+          console.log(`CONDUIT.nats.status type=${status.type} data=${String(status.data ?? '')}`);
+        }
+      })();
+    }).catch(err => {
+      console.log(`CONDUIT.nats.connect_error servers=${config.servers.join(',')} error=${err.message}`);
+    });
   }
 
   async publish(subject: string, data: Uint8Array): Promise<void> {
+    console.log(`CONDUIT.nats.publish subject=${subject} dataSize=${data.length}`);
     let nc = await this.nc;
     nc.publish(subject, data);
   }
 
   async request(subject: string, data: Uint8Array, timeout: number): Promise<Uint8Array> {
+    console.log(`CONDUIT.nats.request subject=${subject} dataSize=${data.length} timeout=${timeout}`);
     let nc = await this.nc;
 
     let response = await nc.request(subject, data, { timeout });
+    console.log(`CONDUIT.nats.request.response subject=${subject} responseSize=${response.data.length}`);
     return response.data;
   }
 
@@ -38,6 +62,7 @@ export class NatsTransport implements ITransportAdapter {
 
     let id = `sub-${this.nextSubId++}`;
     let sub = nc.subscribe(subject);
+    console.log(`CONDUIT.nats.subscribe id=${id} subject=${subject}`);
 
     // Store subscription
     this.subscriptions.set(id, sub);
@@ -47,17 +72,16 @@ export class NatsTransport implements ITransportAdapter {
       try {
         for await (let msg of sub) {
           try {
+            console.log(`CONDUIT.nats.message_received subscriptionId=${id} subject=${subject} msgSubject=${msg.subject} dataSize=${msg.data.length} hasReply=${!!msg.reply}`);
             await handler(msg.data);
-
-            // If message has a reply subject, it's a request that expects a response
-            // The handler should have already published a response
           } catch (err) {
-            console.error(`Error handling message on ${subject}:`, err);
+            console.error(`CONDUIT.nats.message_handler_error subscriptionId=${id} subject=${subject} error=${err instanceof Error ? err.message : String(err)}`, err);
           }
         }
+        console.log(`CONDUIT.nats.subscription_drained subscriptionId=${id} subject=${subject}`);
       } catch (err) {
         Sentry.captureException(err);
-        console.error(`Subscription error on ${subject}:`, err);
+        console.error(`CONDUIT.nats.subscription_error subscriptionId=${id} subject=${subject} error=${err instanceof Error ? err.message : String(err)}`, err);
       }
     })();
 
@@ -67,22 +91,28 @@ export class NatsTransport implements ITransportAdapter {
   async unsubscribe(subscriptionId: string): Promise<void> {
     let sub = this.subscriptions.get(subscriptionId);
     if (sub) {
+      console.log(`CONDUIT.nats.unsubscribe subscriptionId=${subscriptionId}`);
       sub.unsubscribe();
       this.subscriptions.delete(subscriptionId);
+    } else {
+      console.log(`CONDUIT.nats.unsubscribe.not_found subscriptionId=${subscriptionId}`);
     }
   }
 
   async close(): Promise<void> {
+    console.log(`CONDUIT.nats.close subscriptionCount=${this.subscriptions.size}`);
     let nc = await this.nc;
 
     // Unsubscribe all
-    for (let sub of this.subscriptions.values()) {
+    for (let [id, sub] of this.subscriptions.entries()) {
+      console.log(`CONDUIT.nats.close.unsubscribe subscriptionId=${id}`);
       sub.unsubscribe();
     }
     this.subscriptions.clear();
 
     // Close connection
     await nc.close();
+    console.log(`CONDUIT.nats.close.done`);
     this.nc = null as any;
   }
 }

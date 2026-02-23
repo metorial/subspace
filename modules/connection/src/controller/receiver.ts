@@ -28,6 +28,7 @@ export let startReceiver = () => {
     ctx.extendTtl(1000 * 60);
 
     let topic = topics.instance.decode(ctx.topic);
+    console.log('RECEIVER.start', serialize.encode({ topic, rawTopic: ctx.topic }));
     if (!topic) {
       console.warn(`Received message on invalid topic: ${ctx.topic}`);
       ctx.close();
@@ -37,6 +38,7 @@ export let startReceiver = () => {
     let state = await ConnectionState.create(topic, () => {
       ctx.close();
     });
+    console.log('RECEIVER.state', serialize.encode(state));
     if (!state) {
       ctx.close();
       return;
@@ -250,7 +252,11 @@ export let startReceiver = () => {
     let processMcpResponse = async (
       data: ConduitInput & { type: 'mcp.message_from_client' }
     ) => {
+      console.log('RECEIVER.processMcpResponse.start', serialize.encode(data));
+
       let res = await sendToProvider(data);
+
+      console.log('RECEIVER.processMcpResponse.res', serialize.encode(res));
 
       await completeMessage(
         { messageId: data.sessionMessageId },
@@ -267,6 +273,8 @@ export let startReceiver = () => {
     };
 
     ctx.onMessage(async (data: ConduitInput) => {
+      console.log('RECEIVER.onMessage', serialize.encode(data));
+
       ctx.extendTtl(state.messageTTLExtensionMs);
 
       if (data.type === 'tool_call') return processToolCall(data);
@@ -274,6 +282,8 @@ export let startReceiver = () => {
     });
 
     backend.onClose(async () => {
+      console.log('RECEIVER.backend.onClose', serialize.encode({}));
+
       try {
         await ctx.close();
       } catch (err) {
@@ -290,6 +300,8 @@ export let startReceiver = () => {
     });
 
     ctx.onClose(async () => {
+      console.log('RECEIVER.ctx.onClose', serialize.encode({}));
+
       try {
         await state.dispose();
       } catch (err) {
