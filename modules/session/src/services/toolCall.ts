@@ -4,6 +4,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  ToolCall,
   type Environment,
   type Session,
   type SessionMessageStatus,
@@ -23,7 +24,7 @@ import {
 } from '@metorial-subspace/list-utils';
 import { SenderManager } from '@metorial-subspace/module-connection';
 import { env } from '../env';
-import { sessionMessageInclude } from './sessionMessage';
+import { sessionMessageInclude, sessionMessageService } from './sessionMessage';
 
 let include = {
   tool: {
@@ -31,8 +32,7 @@ let include = {
       provider: true,
       specification: true
     }
-  },
-  message: { include: sessionMessageInclude }
+  }
 };
 
 let connectionInitLock = createLock({
@@ -41,6 +41,22 @@ let connectionInitLock = createLock({
 });
 
 class toolCallServiceImpl {
+  async enrichToolCalls<T extends ToolCall>(toolCalls: T[]) {
+    let messageOids = toolCalls.map(tc => tc.messageOid).filter(Boolean);
+    let messages = await sessionMessageService.enrichMessages(
+      await db.sessionMessage.findMany({
+        where: { oid: { in: messageOids } },
+        include: sessionMessageInclude
+      })
+    );
+    let messageMap = new Map(messages.map(m => [m.oid, m]));
+
+    return toolCalls.map(tc => ({
+      ...tc,
+      message: messageMap.get(tc.messageOid)!
+    }));
+  }
+
   async listToolCalls(d: {
     tenant: Tenant;
     solution: Solution;
@@ -67,58 +83,59 @@ class toolCallServiceImpl {
     let tools = await resolveProviderTools(d.toolIds);
 
     return Paginator.create(({ prisma }) =>
-      prisma(
-        async opts =>
-          await db.toolCall.findMany({
-            ...opts,
-            where: {
-              tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid,
-              environmentOid: d.environment.oid,
+      prisma(async opts => {
+        let res = await db.toolCall.findMany({
+          ...opts,
+          where: {
+            tenantOid: d.tenant.oid,
+            solutionOid: d.solution.oid,
+            environmentOid: d.environment.oid,
 
-              message: normalizeStatusForList(d).onlyParent,
+            message: normalizeStatusForList(d).onlyParent,
 
-              AND: [
-                d.ids ? { id: { in: d.ids } } : undefined!,
+            AND: [
+              d.ids ? { id: { in: d.ids } } : undefined!,
 
-                tools
-                  ? {
-                      OR: [{ tool: { oid: tools.in } }, { toolKey: { in: d.toolIds ?? [] } }]
+              tools
+                ? {
+                    OR: [{ tool: { oid: tools.in } }, { toolKey: { in: d.toolIds ?? [] } }]
+                  }
+                : undefined!,
+
+              sessionTemplates
+                ? {
+                    session: {
+                      providers: { some: { fromTemplateOid: sessionTemplates.in } }
                     }
-                  : undefined!,
+                  }
+                : undefined!,
 
-                sessionTemplates
-                  ? {
-                      session: {
-                        providers: { some: { fromTemplateOid: sessionTemplates.in } }
-                      }
-                    }
-                  : undefined!,
+              sessionProviders
+                ? { session: { providers: { some: { oid: sessionProviders.in } } } }
+                : undefined!,
 
-                sessionProviders
-                  ? { session: { providers: { some: { oid: sessionProviders.in } } } }
-                  : undefined!,
+              providers
+                ? { session: { providers: { some: { providerOid: providers.in } } } }
+                : undefined!,
 
-                providers
-                  ? { session: { providers: { some: { providerOid: providers.in } } } }
-                  : undefined!,
+              deployments
+                ? { session: { providers: { some: { deploymentOid: deployments.in } } } }
+                : undefined!,
 
-                deployments
-                  ? { session: { providers: { some: { deploymentOid: deployments.in } } } }
-                  : undefined!,
+              configs
+                ? { session: { providers: { some: { configOid: configs.in } } } }
+                : undefined!,
 
-                configs
-                  ? { session: { providers: { some: { configOid: configs.in } } } }
-                  : undefined!,
+              authConfigs
+                ? { session: { providers: { some: { authConfigOid: authConfigs.in } } } }
+                : undefined!
+            ].filter(Boolean)
+          },
+          include
+        });
 
-                authConfigs
-                  ? { session: { providers: { some: { authConfigOid: authConfigs.in } } } }
-                  : undefined!
-              ].filter(Boolean)
-            },
-            include
-          })
-      )
+        return await this.enrichToolCalls(res);
+      })
     );
   }
 
@@ -142,7 +159,8 @@ class toolCallServiceImpl {
     });
     if (!toolCall) throw new ServiceError(notFoundError('tool_call', d.toolCallId));
 
-    return toolCall;
+    let [enriched] = await this.enrichToolCalls([toolCall]);
+    return enriched!;
   }
 
   async createToolCall(d: {
@@ -216,7 +234,8 @@ class toolCallServiceImpl {
     });
     if (!toolCall) throw new Error('WTF - no message for tool call response');
 
-    return toolCall;
+    let [enriched] = await this.enrichToolCalls([toolCall]);
+    return enriched!;
   }
 }
 
