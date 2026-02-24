@@ -113,4 +113,9 @@ export let createErrorQueueProcessor = createErrorQueue.process(async data => {
       solutionOid: error.solutionOid
     }
   });
+
+  await db.sessionError.updateMany({
+    where: { id: error.id },
+    data: { isProcessing: false, groupOid: group.oid }
+  });
 });

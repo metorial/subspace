@@ -18,7 +18,7 @@ export type SessionErrorPresenterProps = SessionError & {
 export let sessionErrorPresenter = async (error: SessionErrorPresenterProps) => {
   let i = 0;
   while (!error.isProcessing || !error.group) {
-    if (i++ >= 50) break;
+    if (i++ >= 10) break;
 
     await delay(250);
 
@@ -35,16 +35,18 @@ export let sessionErrorPresenter = async (error: SessionErrorPresenterProps) => 
 
     id: error.id,
 
+    status: error.isProcessing ? ('processing' as const) : ('processed' as const),
+
     code: error.code,
     message: error.message,
 
     data: error.payload,
 
     sessionId: error.session.id,
-    providerRunId: error.providerRun?.id || null,
-    connectionId: error.connection?.id || null,
+    providerRunId: error.providerRun?.id ?? null,
+    connectionId: error.connection?.id ?? null,
 
-    groupId: error.group?.id!,
+    groupId: error.group?.id ?? null,
     similarErrorCount: error.group?.occurrenceCount ?? 0,
 
     createdAt: error.createdAt
