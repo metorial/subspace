@@ -166,10 +166,35 @@ class providerConfigServiceImpl {
       });
     }
 
+    let providerOid =
+      d.provider?.oid ?? d.providerDeployment?.providerOid ?? d.providerVersion?.providerOid;
+    if (!providerOid) {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Provider information is required to determine config schema'
+        })
+      );
+    }
+
+    let provider =
+      d.provider ??
+      (await db.provider.findFirstOrThrow({
+        where: { oid: providerOid },
+        include: { defaultVariant: true }
+      }));
+
     let versionOid =
       d.providerVersion?.oid ??
       d.providerDeployment?.currentVersion?.lockedVersionOid ??
-      d.provider?.defaultVariant?.currentVersionOid;
+      provider.defaultVariant?.currentVersionOid;
+
+    console.log('Determining provider version for config schema with', {
+      versionOid,
+      providerVersion: d.providerVersion,
+      providerDeploymentVersion: d.providerDeployment,
+      providerVariantVersion: d.provider,
+      defaultVariantVersion: d.provider?.defaultVariant
+    });
 
     if (!versionOid) {
       throw new ServiceError(
