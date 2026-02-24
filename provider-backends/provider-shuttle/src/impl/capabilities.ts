@@ -1,3 +1,4 @@
+import { delay } from '@lowerdeck/delay';
 import { slugify } from '@lowerdeck/slugify';
 import { db } from '@metorial-subspace/db';
 import {
@@ -136,8 +137,19 @@ export class ProviderCapabilities extends IProviderCapabilities {
       tenantId: tenant.id,
       serverConfigId: config.id,
       serverAuthConfigId: authConfig?.id,
-      serverVersionId: shuttleServerVersion.id
+      serverVersionId: shuttleServerVersion.id,
+      waitForCompletion: false
     });
+
+    let i = 0;
+    while (discovery.status == 'pending') {
+      discovery = await shuttle.serverDiscovery.get({
+        serverDiscoveryId: discovery.id,
+        tenantId: tenant.id
+      });
+
+      await delay(i++ < 15 ? 1000 : 5000);
+    }
 
     if (discovery.status == 'failed') {
       return {

@@ -188,14 +188,6 @@ class providerConfigServiceImpl {
       d.providerDeployment?.currentVersion?.lockedVersionOid ??
       provider.defaultVariant?.currentVersionOid;
 
-    console.log('Determining provider version for config schema with', {
-      versionOid,
-      providerVersion: d.providerVersion,
-      providerDeploymentVersion: d.providerDeployment,
-      providerVariantVersion: d.provider,
-      defaultVariantVersion: d.provider?.defaultVariant
-    });
-
     if (!versionOid) {
       throw new ServiceError(
         badRequestError({

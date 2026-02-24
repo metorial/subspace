@@ -1,9 +1,6 @@
 import { setSentry } from '@lowerdeck/sentry';
 import * as Sentry from '@sentry/bun';
-import {
-  shouldIgnoreSentryHttpError,
-  shuttleUnreachableErrorPattern
-} from '@metorial-subspace/app-controller/src/sentryFilters';
+import { shouldIgnoreSentryHttpError, shuttleUnreachableErrorPattern } from './sentryFilters';
 
 declare global {
   // eslint-disable-next-line no-var
