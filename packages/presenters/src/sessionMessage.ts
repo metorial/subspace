@@ -108,12 +108,12 @@ export let sessionMessagePresenter = async (message: SessionMessagePresenterProp
         })
       : null,
 
-    senderParticipant: sessionParticipantPresenter(message.senderParticipant),
+    senderParticipant: await sessionParticipantPresenter(message.senderParticipant),
     responderParticipant: message.responderParticipant
-      ? sessionParticipantPresenter(message.responderParticipant)
+      ? await sessionParticipantPresenter(message.responderParticipant)
       : null,
 
-    error: message.error ? sessionErrorPresenter(message.error) : null,
+    error: message.error ? await sessionErrorPresenter(message.error) : null,
 
     createdAt: message.createdAt
   };
