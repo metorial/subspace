@@ -28,7 +28,7 @@ class environmentServiceImpl {
       });
     } catch (error: any) {
       if (error.code === 'P2002') {
-        return await db.environment.findFirst({
+        return await db.environment.findFirstOrThrow({
           where: {
             tenantOid: d.tenant.oid,
             identifier: d.input.identifier

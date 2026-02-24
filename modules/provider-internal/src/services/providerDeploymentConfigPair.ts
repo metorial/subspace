@@ -9,8 +9,8 @@ import {
   type ProviderConfig,
   type ProviderConfigVersion,
   type ProviderDeployment,
-  ProviderDeploymentConfigPairDiscovery,
-  ProviderDeploymentConfigPairProviderVersion,
+  type ProviderDeploymentConfigPairDiscovery,
+  type ProviderDeploymentConfigPairProviderVersion,
   type ProviderDeploymentVersion,
   type ProviderVersion,
   withTransaction

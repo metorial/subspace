@@ -1,3 +1,4 @@
+import { preconditionFailedError, ServiceError } from '@lowerdeck/error';
 import { createHono } from '@lowerdeck/hono';
 import { messageOutputToToolCall } from '@metorial-subspace/db';
 import {
@@ -75,9 +76,18 @@ export let metorialIntegrationProtocolRouter = createHono()
       transport: 'tool_call'
     });
 
-    let tools = await manager.listTools();
+    let toolRes = await manager.listTools();
 
-    return c.json(tools.map(t => providerToolPresenter(t)));
+    if (toolRes.status == 'discovery_failed') {
+      throw new ServiceError(
+        preconditionFailedError({
+          message:
+            'Tool discovery failed for this connection. Please ensure that the provider supports tool discovery and that the connection is properly configured.'
+        })
+      );
+    }
+
+    return c.json(toolRes.tools.map(t => providerToolPresenter(t)));
   })
   .get(`/tool.get`, useValidation('query', z.object({ toolId: z.string() })), async c => {
     let manager = await SenderManager.create({

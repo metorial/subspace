@@ -55,7 +55,7 @@ class tenantServiceImpl {
       });
     } catch (error: any) {
       if (error.code === 'P2002') {
-        return await db.tenant.findFirst({
+        return await db.tenant.findFirstOrThrow({
           where: { identifier: d.input.identifier },
           include
         });
