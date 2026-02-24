@@ -109,7 +109,6 @@ export class ConduitReceiver {
   }
 
   private async handleOwnershipLoss(topic: string): Promise<void> {
-    console.log(`ConduitReceiver: ownership lost for topic ${topic}`);
     // Close the topic, which will trigger onClose handlers
     await this.closeTopic(topic);
   }
@@ -298,7 +297,6 @@ export class ConduitReceiver {
 
       // Check if the logical TTL has expired
       if (state.ttlExpiresAt <= now) {
-        console.log(`ConduitReceiver: TTL expired for topic ${topic}, closing voluntarily`);
         await this.closeTopic(topic);
       }
     }
@@ -307,15 +305,9 @@ export class ConduitReceiver {
   private async closeTopic(topic: string): Promise<void> {
     let state = this.topicStates.get(topic);
     if (!state || state.closed) {
-      console.log(
-        `[ConduitReceiver] closeTopic called for ${topic} but state is ${!state ? 'missing' : 'already closed'}`
-      );
       return;
     }
 
-    console.log(
-      `[ConduitReceiver] Closing topic ${topic}, has ${state.closeHandlers.length} close handlers`
-    );
     state.closed = true;
 
     // Reject all pending messages
@@ -327,9 +319,7 @@ export class ConduitReceiver {
     // Call all close handlers
     for (let handler of state.closeHandlers) {
       try {
-        console.log(`[ConduitReceiver] Calling close handler for ${topic}`);
         await handler();
-        console.log(`[ConduitReceiver] Close handler completed for ${topic}`);
       } catch (err) {
         console.error(`Error in close handler for topic ${topic}:`, err);
       }

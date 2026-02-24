@@ -8,7 +8,6 @@ import {
 } from '@lowerdeck/error';
 import { createLock } from '@lowerdeck/lock';
 import { getSentry } from '@lowerdeck/sentry';
-import { serialize } from '@lowerdeck/serialize';
 import type { ConduitInput, ConduitResult } from '@metorial-subspace/connection-utils';
 import { checkToolAccess } from '@metorial-subspace/connection-utils';
 import {
@@ -512,11 +511,6 @@ export class SenderManager {
   }
 
   async callTool(d: CallToolProps) {
-    console.log(
-      'SENDER_MANAGER.callTool.1',
-      serialize.encode({ input: d, connection: this.connection })
-    );
-
     let connection = this.connection;
     if (!connection) {
       throw new ServiceError(
@@ -532,14 +526,8 @@ export class SenderManager {
 
     let { provider, tool, instance } = await this.getToolById({ toolId: d.toolId });
 
-    console.log(
-      'SENDER_MANAGER.callTool.2',
-      serialize.encode({ provider: provider.id, tool: tool.id, instance: instance.id })
-    );
-
     let { allowed } = checkToolAccess(tool, provider, 'call');
 
-    console.log('SENDER_MANAGER.callTool.3', serialize.encode({ allowed }));
     if (!allowed) {
       throw new ServiceError(badRequestError({ message: 'Tool access not allowed' }));
     }
@@ -558,12 +546,8 @@ export class SenderManager {
       parentMessage: d.parentMessage
     });
 
-    console.log('SENDER_MANAGER.callTool.4', serialize.encode({ message }));
-
     let processingPromise = (async () => {
       try {
-        console.log('SENDER_MANAGER.callTool.5', serialize.encode({}));
-
         let res = await sender.send(topics.instance.encode({ instance, connection }), {
           type: 'tool_call',
           sessionInstanceId: instance.id,
@@ -576,15 +560,11 @@ export class SenderManager {
           input: d.input
         } satisfies ConduitInput);
 
-        console.log('SENDER_MANAGER.callTool.6', serialize.encode({ res }));
-
         if (!res.success) {
           let system = await upsertParticipant({
             session: this.session,
             from: { type: 'system' }
           });
-
-          console.log('SENDER_MANAGER.callTool.7', serialize.encode({ system }));
 
           await completeMessage(
             { messageId: message.id },

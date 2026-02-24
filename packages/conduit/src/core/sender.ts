@@ -60,7 +60,6 @@ export class Sender {
   async send(topic: string, payload: unknown, timeout?: number): Promise<ConduitResponse> {
     // Check max in-flight limit
     if (this.inFlightMessages.size >= this.config.maxInFlightMessages) {
-      console.log(`CONDUIT.sender.send max_in_flight_reached senderId=${this.senderId} topic=${topic} inFlight=${this.inFlightMessages.size} max=${this.config.maxInFlightMessages}`);
       throw new ConduitSendError(
         `Max in-flight messages limit reached (${this.config.maxInFlightMessages}). Cannot send new message.`,
         'N/A',
@@ -72,11 +71,7 @@ export class Sender {
     let actualTimeout = timeout ?? this.config.defaultTimeout;
     let messageId = this.generateMessageId();
 
-    console.log(`CONDUIT.sender.send senderId=${this.senderId} messageId=${messageId} topic=${topic} timeout=${actualTimeout} inFlight=${this.inFlightMessages.size} payload=${serialize.encode(payload)}`);
-
     return this.retryManager.withRetry(async attemptNumber => {
-      console.log(`CONDUIT.sender.send.attempt senderId=${this.senderId} messageId=${messageId} topic=${topic} attempt=${attemptNumber}`);
-
       let message: ConduitMessage = {
         messageId,
         topic,
@@ -94,21 +89,17 @@ export class Sender {
   async subscribeTopic(topic: string, listener: TopicListener): Promise<TopicSubscription> {
     // Check if already subscribed
     if (this.topicSubscriptions.has(topic)) {
-      console.log(`CONDUIT.sender.subscribeTopic already_subscribed senderId=${this.senderId} topic=${topic}`);
       throw new Error(`Already subscribed to topic: ${topic}`);
     }
 
     // Subscribe to topic response channel
     let subject = `conduit.${this.conduitId}.topic.responses.${topic}`;
-    console.log(`CONDUIT.sender.subscribeTopic senderId=${this.senderId} topic=${topic} subject=${subject}`);
 
     let subscriptionId = await this.transport.subscribe(subject, async (data: Uint8Array) => {
       try {
         let decoder = new TextDecoder();
         let broadcastStr = decoder.decode(data);
         let broadcast: TopicResponseBroadcast = serialize.decode(broadcastStr);
-
-        console.log(`CONDUIT.sender.subscribeTopic.broadcast_received senderId=${this.senderId} topic=${topic} broadcast=${serialize.encode(broadcast)}`);
 
         // Call listener (don't await to avoid blocking)
         Promise.resolve(listener(broadcast)).catch(err => {
@@ -120,7 +111,6 @@ export class Sender {
       }
     });
 
-    console.log(`CONDUIT.sender.subscribeTopic.subscribed senderId=${this.senderId} topic=${topic} subscriptionId=${subscriptionId}`);
     this.topicSubscriptions.set(topic, subscriptionId);
 
     return {
@@ -134,11 +124,9 @@ export class Sender {
   async unsubscribeTopic(topic: string): Promise<void> {
     let subscriptionId = this.topicSubscriptions.get(topic);
     if (!subscriptionId) {
-      console.log(`CONDUIT.sender.unsubscribeTopic no_subscription senderId=${this.senderId} topic=${topic}`);
       return;
     }
 
-    console.log(`CONDUIT.sender.unsubscribeTopic senderId=${this.senderId} topic=${topic} subscriptionId=${subscriptionId}`);
     await this.transport.unsubscribe(subscriptionId);
     this.topicSubscriptions.delete(topic);
   }
@@ -148,7 +136,9 @@ export class Sender {
   }
 
   async close(): Promise<void> {
-    console.log(`CONDUIT.sender.close senderId=${this.senderId} inFlight=${this.inFlightMessages.size} topicSubscriptions=${this.topicSubscriptions.size} failedUnsubscribes=${this.failedUnsubscribes.size}`);
+    console.log(
+      `CONDUIT.sender.close senderId=${this.senderId} inFlight=${this.inFlightMessages.size} topicSubscriptions=${this.topicSubscriptions.size} failedUnsubscribes=${this.failedUnsubscribes.size}`
+    );
 
     // Stop cleanup interval
     if (this.cleanupInterval) {
@@ -158,7 +148,9 @@ export class Sender {
 
     // Cancel all in-flight messages
     for (let [messageId, inFlight] of this.inFlightMessages.entries()) {
-      console.log(`CONDUIT.sender.close.cancel_in_flight senderId=${this.senderId} messageId=${messageId}`);
+      console.log(
+        `CONDUIT.sender.close.cancel_in_flight senderId=${this.senderId} messageId=${messageId}`
+      );
       clearTimeout(inFlight.timeout);
       inFlight.reject(new Error('Sender closed'));
       this.inFlightMessages.delete(messageId);
@@ -211,10 +203,8 @@ export class Sender {
     timeout: number
   ): Promise<ConduitResponse> {
     // Resolve topic owner
-    console.log(`CONDUIT.sender.sendMessage.resolving_owner senderId=${this.senderId} messageId=${message.messageId} topic=${message.topic}`);
     let receiverId = await this.resolveOwner(message.topic);
     if (!receiverId) {
-      console.log(`CONDUIT.sender.sendMessage.no_receiver senderId=${this.senderId} messageId=${message.messageId} topic=${message.topic}`);
       throw new ConduitSendError(
         `No receiver available for topic ${message.topic}`,
         message.messageId,
@@ -225,14 +215,12 @@ export class Sender {
 
     // Publish to receiver-specific subject
     let subject = `conduit.${this.conduitId}.receiver.${receiverId}.${message.topic}`;
-    console.log(`CONDUIT.sender.sendMessage senderId=${this.senderId} messageId=${message.messageId} topic=${message.topic} receiverId=${receiverId} subject=${subject} timeout=${timeout}`);
 
     return new Promise<ConduitResponse>((resolve, reject) => {
       let currentTimeout = timeout;
 
       // Set up timeout
       let timeoutHandle = setTimeout(() => {
-        console.log(`CONDUIT.sender.sendMessage.timeout senderId=${this.senderId} messageId=${message.messageId} topic=${message.topic} timeout=${currentTimeout}ms`);
         let inFlight = this.inFlightMessages.get(message.messageId);
         this.inFlightMessages.delete(message.messageId);
         // Clean up subscription
@@ -252,7 +240,6 @@ export class Sender {
       // Store in-flight message (will be updated with subscriptionId later)
       this.inFlightMessages.set(message.messageId, {
         resolve: (response: ConduitResponse) => {
-          console.log(`CONDUIT.sender.sendMessage.resolved senderId=${this.senderId} messageId=${message.messageId} topic=${message.topic} success=${response.success} response=${serialize.encode(response)}`);
           clearTimeout(timeoutHandle);
           let inFlight = this.inFlightMessages.get(message.messageId);
           this.inFlightMessages.delete(message.messageId);
@@ -263,7 +250,6 @@ export class Sender {
           resolve(response);
         },
         reject: (error: Error) => {
-          console.log(`CONDUIT.sender.sendMessage.rejected senderId=${this.senderId} messageId=${message.messageId} topic=${message.topic} error=${error.message}`);
           clearTimeout(timeoutHandle);
           let inFlight = this.inFlightMessages.get(message.messageId);
           this.inFlightMessages.delete(message.messageId);
@@ -280,7 +266,6 @@ export class Sender {
 
       // Generate a unique reply subject and subscribe to it
       let replySubject = `_INBOX.${crypto.randomUUID()}`;
-      console.log(`CONDUIT.sender.sendMessage.subscribing_reply senderId=${this.senderId} messageId=${message.messageId} replySubject=${replySubject}`);
 
       // Set up response handler by subscribing to reply subject
       let subscriptionPromise = this.transport.subscribe(
@@ -289,12 +274,10 @@ export class Sender {
           try {
             let decoder = new TextDecoder();
             let responseStr = decoder.decode(responseData);
-            console.log(`CONDUIT.sender.sendMessage.response_received senderId=${this.senderId} messageId=${message.messageId} replySubject=${replySubject} raw=${responseStr}`);
             let response = serialize.decode(responseStr) as ConduitResponse | TimeoutExtension;
 
             // Check if it's a timeout extension
             if (isTimeoutExtension(response)) {
-              console.log(`CONDUIT.sender.sendMessage.timeout_extension senderId=${this.senderId} messageId=${message.messageId} extensionMs=${response.extensionMs}`);
               this.handleTimeoutExtension(response);
               return; // Continue waiting for actual response
             }
@@ -304,10 +287,8 @@ export class Sender {
             if (inFlight) {
               inFlight.resolve(response as ConduitResponse);
             } else {
-              console.log(`CONDUIT.sender.sendMessage.response_orphaned senderId=${this.senderId} messageId=${message.messageId} (no in-flight entry found)`);
             }
           } catch (err) {
-            console.log(`CONDUIT.sender.sendMessage.response_parse_error senderId=${this.senderId} messageId=${message.messageId} error=${err instanceof Error ? err.message : String(err)}`);
             let inFlight = this.inFlightMessages.get(message.messageId);
             if (inFlight) {
               inFlight.reject(
@@ -327,13 +308,10 @@ export class Sender {
       // After subscription is set up, send the message
       subscriptionPromise
         .then(subscriptionId => {
-          console.log(`CONDUIT.sender.sendMessage.reply_subscribed senderId=${this.senderId} messageId=${message.messageId} subscriptionId=${subscriptionId}`);
           // Store subscription ID for cleanup
           let inFlight = this.inFlightMessages.get(message.messageId);
           if (inFlight) {
             inFlight.subscriptionId = subscriptionId;
-          } else {
-            console.log(`CONDUIT.sender.sendMessage.reply_subscribed_but_no_inflight senderId=${this.senderId} messageId=${message.messageId} (message already resolved/rejected)`);
           }
 
           // Add reply subject to message
@@ -343,9 +321,7 @@ export class Sender {
           let encoder = new TextEncoder();
           let data = encoder.encode(serialize.encode(messageWithReply));
 
-          console.log(`CONDUIT.sender.sendMessage.publishing senderId=${this.senderId} messageId=${message.messageId} subject=${subject} dataSize=${data.length}`);
           return this.transport.publish(subject, data).catch(err => {
-            console.log(`CONDUIT.sender.sendMessage.publish_error senderId=${this.senderId} messageId=${message.messageId} error=${err.message}`);
             // Clean up subscription
             this.safeUnsubscribe(subscriptionId).catch(() => {});
 
@@ -364,7 +340,6 @@ export class Sender {
           });
         })
         .catch(err => {
-          console.log(`CONDUIT.sender.sendMessage.subscription_error senderId=${this.senderId} messageId=${message.messageId} error=${err.message}`);
           let inFlight = this.inFlightMessages.get(message.messageId);
           if (inFlight) {
             inFlight.reject(
@@ -385,15 +360,12 @@ export class Sender {
     // Check if topic has an owner
     let owner = await this.coordination.getTopicOwner(topic);
     if (owner) {
-      console.log(`CONDUIT.sender.resolveOwner.existing senderId=${this.senderId} topic=${topic} owner=${owner}`);
       return owner;
     }
 
     // No owner, need to assign one
     let receivers = await this.coordination.getActiveReceivers();
-    console.log(`CONDUIT.sender.resolveOwner.no_owner senderId=${this.senderId} topic=${topic} activeReceivers=${serialize.encode(receivers)}`);
     if (receivers.length === 0) {
-      console.log(`CONDUIT.sender.resolveOwner.no_receivers senderId=${this.senderId} topic=${topic}`);
       return null;
     }
 
@@ -404,7 +376,6 @@ export class Sender {
     }
 
     // Try to claim ownership
-    console.log(`CONDUIT.sender.resolveOwner.claiming senderId=${this.senderId} topic=${topic} targetReceiver=${randomReceiver}`);
     let claimed = await this.coordination.claimTopicOwnership(
       topic,
       randomReceiver,
@@ -412,24 +383,19 @@ export class Sender {
     );
 
     if (claimed) {
-      console.log(`CONDUIT.sender.resolveOwner.claimed senderId=${this.senderId} topic=${topic} receiver=${randomReceiver}`);
       return randomReceiver;
     }
 
     // Someone else claimed it, get the winner
     owner = await this.coordination.getTopicOwner(topic);
-    console.log(`CONDUIT.sender.resolveOwner.claimed_by_other senderId=${this.senderId} topic=${topic} winner=${owner}`);
     return owner;
   }
 
   private handleTimeoutExtension(extension: TimeoutExtension): void {
     let inFlight = this.inFlightMessages.get(extension.messageId);
     if (!inFlight) {
-      console.log(`CONDUIT.sender.handleTimeoutExtension.orphaned senderId=${this.senderId} messageId=${extension.messageId} extensionMs=${extension.extensionMs} (no in-flight entry)`);
       return;
     }
-
-    console.log(`CONDUIT.sender.handleTimeoutExtension senderId=${this.senderId} messageId=${extension.messageId} previousTimeout=${inFlight.currentTimeout} newTimeout=${extension.extensionMs}`);
 
     // Clear old timeout
     clearTimeout(inFlight.timeout);
@@ -438,7 +404,6 @@ export class Sender {
     let newTimeout = extension.extensionMs;
     inFlight.currentTimeout = newTimeout;
     inFlight.timeout = setTimeout(() => {
-      console.log(`CONDUIT.sender.handleTimeoutExtension.expired senderId=${this.senderId} messageId=${extension.messageId} timeout=${newTimeout}ms`);
       this.inFlightMessages.delete(extension.messageId);
       inFlight.reject(
         new ConduitSendError(
