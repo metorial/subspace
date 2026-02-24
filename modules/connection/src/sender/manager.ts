@@ -1,3 +1,4 @@
+import { delay } from '@lowerdeck/delay';
 import {
   badRequestError,
   goneError,
@@ -470,10 +471,17 @@ export class SenderManager {
       );
     }
 
-    if (!instanceRes.instance.pairVersion.specificationOid) {
-      throw new ServiceError(
-        badRequestError({ message: 'Tool not callable (not discovered yet)' })
-      );
+    let i = 0;
+    while (!instanceRes?.instance?.pairVersion.specificationOid) {
+      if (i++ >= 5) {
+        throw new ServiceError(
+          badRequestError({ message: 'Tool not callable (not discovered yet)' })
+        );
+      }
+
+      await delay(2000);
+
+      instanceRes = (await this.ensureProviderInstance(provider))! as any;
     }
 
     // Find the tool by key in the specification of the current instance

@@ -56,7 +56,7 @@ export let providerDeploymentConfigPairSyncSpecificationQueueProcessor =
         authConfigVersion: pair.providerAuthConfigVersion
       };
 
-      if (version.specificationOid) {
+      if (version.specificationOid && process.env.NODE_ENV === 'production') {
         // If we have the full spec, we can skip discovery
         let alreadyHasFullSpec = version.specification?.type === 'full';
 
