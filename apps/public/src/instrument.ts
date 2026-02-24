@@ -3,7 +3,7 @@ import * as Sentry from '@sentry/bun';
 import {
   shouldIgnoreSentryHttpError,
   shuttleUnreachableErrorPattern
-} from '@metorial-subspace/connection-utils/src/sentryFilters';
+} from '@metorial-subspace/app-controller/src/sentryFilters';
 
 declare global {
   // eslint-disable-next-line no-var
