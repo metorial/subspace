@@ -1,7 +1,12 @@
-import { type Session, type SessionWarning } from '@metorial-subspace/db';
+import {
+  type Session,
+  type SessionConnection,
+  type SessionWarning
+} from '@metorial-subspace/db';
 
 export type SessionWarningPresenterProps = SessionWarning & {
   session: Session;
+  connection: SessionConnection | null;
 };
 
 export let sessionWarningPresenter = (error: SessionWarningPresenterProps) => ({
@@ -15,6 +20,7 @@ export let sessionWarningPresenter = (error: SessionWarningPresenterProps) => ({
   data: error.payload,
 
   sessionId: error.session.id,
+  connectionId: error.connection?.id ?? null,
 
   createdAt: error.createdAt
 });
