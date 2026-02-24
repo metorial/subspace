@@ -22,7 +22,7 @@ import {
 import { providerRunInclude } from './providerRun';
 import { sessionConnectionInclude } from './sessionConnection';
 import { sessionErrorInclude } from './sessionError';
-import { sessionMessageInclude } from './sessionMessage';
+import { sessionMessageInclude, sessionMessageService } from './sessionMessage';
 
 let include = {
   session: true
@@ -47,12 +47,14 @@ class sessionEventServiceImpl {
       },
       include: sessionConnectionInclude
     });
-    let messages = await db.sessionMessage.findMany({
-      where: {
-        oid: { in: events.map(e => e.messageOid!).filter(Boolean) }
-      },
-      include: sessionMessageInclude
-    });
+    let messages = await sessionMessageService.enrichMessages(
+      await db.sessionMessage.findMany({
+        where: {
+          oid: { in: events.map(e => e.messageOid!).filter(Boolean) }
+        },
+        include: sessionMessageInclude
+      })
+    );
     let errors = await db.sessionError.findMany({
       where: {
         oid: { in: events.map(e => e.errorOid!).filter(Boolean) }
