@@ -3,6 +3,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  SessionEvent,
   type Environment,
   type SessionEventType,
   type Solution,
@@ -24,15 +25,63 @@ import { sessionErrorInclude } from './sessionError';
 import { sessionMessageInclude } from './sessionMessage';
 
 let include = {
-  session: true,
-  providerRun: { include: providerRunInclude },
-  message: { include: sessionMessageInclude },
-  connection: { include: sessionConnectionInclude },
-  error: { include: sessionErrorInclude },
-  warning: { include: { session: true } }
+  session: true
+  // providerRun: { include: providerRunInclude },
+  // message: { include: sessionMessageInclude },
+  // connection: { include: sessionConnectionInclude },
+  // error: { include: sessionErrorInclude },
+  // warning: { include: { session: true } }
 };
 
 class sessionEventServiceImpl {
+  private async enrichEvents<T extends SessionEvent>(events: T[]) {
+    let providerRuns = await db.providerRun.findMany({
+      where: {
+        oid: { in: events.map(e => e.providerRunOid!).filter(Boolean) }
+      },
+      include: providerRunInclude
+    });
+    let connections = await db.sessionConnection.findMany({
+      where: {
+        oid: { in: events.map(e => e.connectionOid!).filter(Boolean) }
+      },
+      include: sessionConnectionInclude
+    });
+    let messages = await db.sessionMessage.findMany({
+      where: {
+        oid: { in: events.map(e => e.messageOid!).filter(Boolean) }
+      },
+      include: sessionMessageInclude
+    });
+    let errors = await db.sessionError.findMany({
+      where: {
+        oid: { in: events.map(e => e.errorOid!).filter(Boolean) }
+      },
+      include: sessionErrorInclude
+    });
+    let warnings = await db.sessionWarning.findMany({
+      where: {
+        oid: { in: events.map(e => e.warningOid!).filter(Boolean) }
+      },
+      include: { session: true }
+    });
+
+    let connectionMap = new Map(connections.map(c => [c.oid, c]));
+    let providerRunMap = new Map(providerRuns.map(p => [p.oid, p]));
+    let messageMap = new Map(messages.map(m => [m.oid, m]));
+    let errorMap = new Map(errors.map(e => [e.oid, e]));
+    let warningMap = new Map(warnings.map(w => [w.oid, w]));
+
+    return events.map(e => ({
+      ...e,
+      connection: e.connectionOid ? connectionMap.get(e.connectionOid)! : null,
+      providerRun: e.providerRunOid ? providerRunMap.get(e.providerRunOid)! : null,
+      message: e.messageOid ? messageMap.get(e.messageOid)! : null,
+      error: e.errorOid ? errorMap.get(e.errorOid)! : null,
+      warning: e.warningOid ? warningMap.get(e.warningOid)! : null
+    }));
+  }
+
   async listSessionEvents(d: {
     tenant: Tenant;
     solution: Solution;
@@ -57,34 +106,35 @@ class sessionEventServiceImpl {
     let errors = await resolveSessionErrors(d, d.sessionErrorIds);
 
     return Paginator.create(({ prisma }) =>
-      prisma(
-        async opts =>
-          await db.sessionEvent.findMany({
-            ...opts,
-            where: {
-              tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid,
-              environmentOid: d.environment.oid,
+      prisma(async opts => {
+        let events = await db.sessionEvent.findMany({
+          ...opts,
+          where: {
+            tenantOid: d.tenant.oid,
+            solutionOid: d.solution.oid,
+            environmentOid: d.environment.oid,
 
-              ...normalizeStatusForList(d).onlyParent,
+            ...normalizeStatusForList(d).onlyParent,
 
-              AND: [
-                d.ids ? { id: { in: d.ids } } : undefined!,
-                d.types ? { type: { in: d.types } } : undefined!,
+            AND: [
+              d.ids ? { id: { in: d.ids } } : undefined!,
+              d.types ? { type: { in: d.types } } : undefined!,
 
-                sessions ? { sessionOid: sessions.in } : undefined!,
-                sessionProviders
-                  ? { providerRun: { sessionProviderOid: sessionProviders.in } }
-                  : undefined!,
-                connections ? { connectionOid: connections.in } : undefined!,
-                providerRuns ? { providerRunOid: providerRuns.in } : undefined!,
-                messages ? { messageOid: messages.in } : undefined!,
-                errors ? { errorOid: errors.in } : undefined!
-              ].filter(Boolean)
-            },
-            include
-          })
-      )
+              sessions ? { sessionOid: sessions.in } : undefined!,
+              sessionProviders
+                ? { providerRun: { sessionProviderOid: sessionProviders.in } }
+                : undefined!,
+              connections ? { connectionOid: connections.in } : undefined!,
+              providerRuns ? { providerRunOid: providerRuns.in } : undefined!,
+              messages ? { messageOid: messages.in } : undefined!,
+              errors ? { errorOid: errors.in } : undefined!
+            ].filter(Boolean)
+          },
+          include: { session: true }
+        });
+
+        return this.enrichEvents(events);
+      })
     );
   }
 
@@ -108,7 +158,8 @@ class sessionEventServiceImpl {
     if (!sessionEvent)
       throw new ServiceError(notFoundError('session.event', d.sessionEventId));
 
-    return sessionEvent;
+    let [enrichedEvent] = await this.enrichEvents([sessionEvent]);
+    return enrichedEvent!;
   }
 }
 
