@@ -1,3 +1,4 @@
+import { createLock } from '@lowerdeck/lock';
 import { createQueue } from '@lowerdeck/queue';
 import { snowflake, withTransaction } from '@metorial-subspace/db';
 import { syncVersionToCustomProvider } from '@metorial-subspace/module-custom-provider';
@@ -19,6 +20,11 @@ export let syncShuttleVersionQueue = createQueue<{
       duration: 1000
     }
   }
+});
+
+let shuttleServerVersionUpsertLock = createLock({
+  name: 'sub/shut/serverVersion/upsert/lock',
+  redisUrl: env.service.REDIS_URL
 });
 
 export let syncShuttleVersionQueueProcessor = syncShuttleVersionQueue.process(async data => {
@@ -51,17 +57,21 @@ export let syncShuttleVersionQueueProcessor = syncShuttleVersionQueue.process(as
     });
 
     let newShuttleServerVersionRecord = snowflake.nextId();
-    let shuttleServerVersionRecord = await db.shuttleServerVersion.upsert({
-      where: { id: version.id },
-      create: {
-        oid: newShuttleServerVersionRecord,
-        id: version.id,
-        version: version.id,
-        identifier: `${server.id}::${version.id}`,
-        serverOid: shuttleServerRecord.oid
-      },
-      update: {}
-    });
+    let shuttleServerVersionRecord = await shuttleServerVersionUpsertLock.usingLock(
+      version.id,
+      async () =>
+        db.shuttleServerVersion.upsert({
+          where: { id: version.id },
+          create: {
+            oid: newShuttleServerVersionRecord,
+            id: version.id,
+            version: version.id,
+            identifier: `${server.id}::${version.id}`,
+            serverOid: shuttleServerRecord.oid
+          },
+          update: {}
+        })
+    );
 
     // Avoid race conditions with custom servers,
     // i.e., servers owned by another tenant

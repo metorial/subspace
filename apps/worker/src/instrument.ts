@@ -1,10 +1,16 @@
 import { setSentry } from '@lowerdeck/sentry';
 import * as Sentry from '@sentry/bun';
+import {
+  shouldIgnoreSentryHttpError,
+  shuttleUnreachableErrorPattern
+} from '@metorial-subspace/app-controller/src/sentryFilters';
 
 declare global {
   // eslint-disable-next-line no-var
   var sentryInitialized: boolean | undefined;
 }
+
+const isStaging = process.env.METORIAL_ENV === 'staging';
 
 if (
   process.env.METORIAL_ENV !== 'development' &&
@@ -20,14 +26,21 @@ if (
 
     environment: process.env.METORIAL_ENV,
 
-    beforeSend(event) {
+    beforeSend(event, hint) {
+      if (shouldIgnoreSentryHttpError(hint)) {
+        return null;
+      }
+
       // Optional: add allocation ID to all events here as fallback
       if (!event.tags) event.tags = {};
       event.tags.allocationId = process.env.NOMAD_ALLOC_ID || 'unknown';
       return event;
     },
 
-    ignoreErrors: ['The client is closed']
+    ignoreErrors: [
+      'The client is closed',
+      ...(isStaging ? [shuttleUnreachableErrorPattern] : [])
+    ]
   });
 
   setSentry(Sentry as any);
