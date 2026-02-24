@@ -54,7 +54,7 @@ export let providerVersionSyncSpecificationQueueProcessor =
       }
 
       // Some backends might need a config to be able to discover specifications
-      if (!capabilities) {
+      if (!capabilities || capabilities.status == 'failure') {
         await providerVersionSetSpecificationQueue.add({
           versionOid: version.oid,
           result: { status: 'not_discoverable' }
