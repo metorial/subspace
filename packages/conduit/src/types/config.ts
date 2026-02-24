@@ -45,8 +45,12 @@ export type CoordinationConfig = { type: 'redis'; redis: RedisConfig } | { type:
 export interface RedisConfig {
   host: string;
   port: number;
+  username?: string;
   password?: string;
   db?: number;
+  tls?: {
+    rejectUnauthorized?: boolean;
+  };
 }
 
 export type TransportConfig = { type: 'nats'; nats: NatsConfig } | { type: 'memory' };
