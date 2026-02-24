@@ -65,7 +65,7 @@ class sessionEventServiceImpl {
       where: {
         oid: { in: events.map(e => e.warningOid!).filter(Boolean) }
       },
-      include: { session: true }
+      include: { session: true, connection: true }
     });
 
     let connectionMap = new Map(connections.map(c => [c.oid, c]));
