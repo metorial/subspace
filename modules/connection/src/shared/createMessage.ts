@@ -87,8 +87,8 @@ export let createMessage = async (data: CreateMessagePropsFull) => {
   let message = await db.sessionMessage.create({
     data: {
       ...getId('sessionMessage'),
-      status: data.status,
       type: 'tool_call',
+      status: data.status,
       source: data.source,
       transport: data.transport,
 
