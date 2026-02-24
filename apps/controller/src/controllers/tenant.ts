@@ -63,7 +63,7 @@ export let tenantController = app.controller({
         input: {
           name: ctx.input.name,
           identifier: ctx.input.identifier,
-          environments: ctx.input.environments
+          environments: ctx.input.environments as any
         }
       });
       return tenantPresenter(tenant);
