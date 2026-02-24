@@ -1,9 +1,9 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { randomUUID } from 'node:crypto';
 import cors from 'cors';
 import express, { type Express, type Request, type Response } from 'express';
+import { randomUUID } from 'node:crypto';
 
 type ServerFactory = () => McpServer;
 type SseSession = {
@@ -124,8 +124,12 @@ export async function setupTransports(
       console.log(`SSE connection closed at ${ssePath} for session ${sessionId}`);
       sseSessions.delete(sessionId);
 
-      closeWithLog(`Error closing SSE server for session ${sessionId}:`, () => sseServer.close());
-      closeWithLog(`Error closing SSE transport for session ${sessionId}:`, () => transport.close());
+      closeWithLog(`Error closing SSE server for session ${sessionId}:`, () =>
+        sseServer.close()
+      );
+      closeWithLog(`Error closing SSE transport for session ${sessionId}:`, () =>
+        transport.close()
+      );
     });
   });
 
@@ -194,8 +198,9 @@ export async function setupTransports(
         if (initializedSessionId) {
           closeStreamableSession(initializedSessionId, 'request handling failure');
         } else {
-          closeWithLog('Error closing streamable HTTP server after failed initialize request:', () =>
-            session.server.close()
+          closeWithLog(
+            'Error closing streamable HTTP server after failed initialize request:',
+            () => session.server.close()
           );
         }
       }

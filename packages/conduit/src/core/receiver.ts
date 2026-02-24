@@ -56,11 +56,15 @@ export class Receiver {
     }
 
     this.running = true;
-    console.log(`CONDUIT.receiver.start receiverId=${this.receiverId} conduitId=${this.conduitId}`);
+    console.log(
+      `CONDUIT.receiver.start receiverId=${this.receiverId} conduitId=${this.conduitId}`
+    );
 
     // Register receiver
     await this.coordination.registerReceiver(this.receiverId, this.config.heartbeatTtl);
-    console.log(`CONDUIT.receiver.start.registered receiverId=${this.receiverId} heartbeatTtl=${this.config.heartbeatTtl}`);
+    console.log(
+      `CONDUIT.receiver.start.registered receiverId=${this.receiverId} heartbeatTtl=${this.config.heartbeatTtl}`
+    );
 
     // Start heartbeat
     this.startHeartbeat();
@@ -82,7 +86,9 @@ export class Receiver {
       return;
     }
 
-    console.log(`CONDUIT.receiver.stop receiverId=${this.receiverId} processingMessages=${this.processingMessages.size}`);
+    console.log(
+      `CONDUIT.receiver.stop receiverId=${this.receiverId} processingMessages=${this.processingMessages.size}`
+    );
     this.running = false;
 
     // Stop heartbeat
@@ -117,12 +123,10 @@ export class Receiver {
   private async subscribe(): Promise<void> {
     // Subscribe to conduit.{conduitId}.receiver.{receiverId}.>
     let subject = `conduit.${this.conduitId}.receiver.${this.receiverId}.>`;
-    console.log(`CONDUIT.receiver.subscribe receiverId=${this.receiverId} subject=${subject}`);
 
     this.subscriptionId = await this.transport.subscribe(subject, async (data: Uint8Array) => {
       await this.handleMessage(data);
     });
-    console.log(`CONDUIT.receiver.subscribe.done receiverId=${this.receiverId} subscriptionId=${this.subscriptionId}`);
   }
 
   private async handleMessage(data: Uint8Array): Promise<void> {
@@ -130,15 +134,11 @@ export class Receiver {
       // Decode message
       let decoder = new TextDecoder();
       let messageStr = decoder.decode(data);
-      console.log(`CONDUIT.receiver.handleMessage.raw receiverId=${this.receiverId} dataSize=${data.length} raw=${messageStr}`);
       let message: ConduitMessage = serialize.decode(messageStr);
-
-      console.log(`CONDUIT.receiver.handleMessage receiverId=${this.receiverId} messageId=${message.messageId} topic=${message.topic} replySubject=${message.replySubject} timeout=${message.timeout} retryCount=${message.retryCount}`);
 
       // Check if we've seen this message before
       let cachedResponse = this.messageCache.get(message.messageId);
       if (cachedResponse) {
-        console.log(`CONDUIT.receiver.handleMessage.cached receiverId=${this.receiverId} messageId=${message.messageId} topic=${message.topic}`);
         // Return cached response
         await this.sendResponse(message, cachedResponse);
         return;
@@ -173,13 +173,10 @@ export class Receiver {
         currentDeadline: now + message.timeout
       });
 
-      console.log(`CONDUIT.receiver.processMessage.start receiverId=${this.receiverId} messageId=${message.messageId} topic=${message.topic} payload=${serialize.encode(message.payload)}`);
-
       // Call user handler
       let result = await this.handler(message.topic, message.payload);
 
       let elapsed = Date.now() - now;
-      console.log(`CONDUIT.receiver.processMessage.done receiverId=${this.receiverId} messageId=${message.messageId} topic=${message.topic} elapsed=${elapsed}ms result=${serialize.encode(result)}`);
 
       // Remove from tracking
       this.processingMessages.delete(message.messageId);
@@ -272,7 +269,6 @@ export class Receiver {
     message: ConduitMessage,
     extension: TimeoutExtension
   ): Promise<void> {
-    console.log(`CONDUIT.receiver.sendExtension receiverId=${this.receiverId} messageId=${message.messageId} extensionMs=${extension.extensionMs} replySubject=${message.replySubject}`);
     let encoder = new TextEncoder();
     let data = encoder.encode(serialize.encode(extension));
 
@@ -289,21 +285,16 @@ export class Receiver {
     message: ConduitMessage,
     response: ConduitResponse
   ): Promise<void> {
-    console.log(`CONDUIT.receiver.sendResponse receiverId=${this.receiverId} messageId=${message.messageId} topic=${message.topic} replySubject=${message.replySubject} success=${response.success} response=${serialize.encode(response)}`);
     let encoder = new TextEncoder();
     let data = encoder.encode(serialize.encode(response));
 
     // Send direct reply to sender
     if (this.isMemoryTransport()) {
-      console.log(`CONDUIT.receiver.sendResponse.memory receiverId=${this.receiverId} messageId=${message.messageId} replySubject=${message.replySubject}`);
       await (this.transport as MemoryTransport).reply(message.replySubject, data);
     } else {
       // For NATS, publish to reply subject
-      console.log(`CONDUIT.receiver.sendResponse.nats receiverId=${this.receiverId} messageId=${message.messageId} replySubject=${message.replySubject} dataSize=${data.length}`);
       await this.transport.publish(message.replySubject, data);
     }
-
-    console.log(`CONDUIT.receiver.sendResponse.done receiverId=${this.receiverId} messageId=${message.messageId}`);
 
     // Broadcast response to topic listeners
     // await this.broadcastTopicResponse(message, response);
