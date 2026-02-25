@@ -1,20 +1,21 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { renderWithLoader, useMutation } from '@metorial-io/data-hooks';
-import { Button, Flex, Error, Spinner, Text } from '@metorial-io/ui';
+import { Button, Error, Flex, Spinner, Text } from '@metorial-io/ui';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { JsonSchema } from '../../lib/jsonSchema';
 import { client } from '../../state/client';
 import { authConfigSchemaState, configSchemaState } from '../../state/setupSession';
-import { MetorialElementsLayout } from './layouts/MetorialElementsLayout';
 import { DashboardEmbeddableLayout } from './layouts/DashboardEmbeddableLayout';
+import { MetorialElementsLayout } from './layouts/MetorialElementsLayout';
 import { AuthConfigStep } from './steps/AuthConfigStep';
+import { CompletedStep } from './steps/CompletedStep';
 import { ConfigStep } from './steps/ConfigStep';
 import { OAuthRedirectStep } from './steps/OAuthRedirectStep';
-import { CompletedStep } from './steps/CompletedStep';
-import type { JsonSchema } from '../../lib/jsonSchema';
-import type { Session, Brand, OAuthSetup, Step } from './types';
+import type { Brand, OAuthSetup, Provider, Session, Step } from './types';
 
 interface SetupSessionFlowProps {
   session: Session;
   brand: Brand;
+  provider: Provider;
   clientSecret: string;
 }
 
@@ -30,7 +31,12 @@ let extractSchema = (result: unknown): JsonSchema | null => {
   return null;
 };
 
-export let SetupSessionFlow = ({ session, brand, clientSecret }: SetupSessionFlowProps) => {
+export let SetupSessionFlow = ({
+  session,
+  brand,
+  clientSecret,
+  provider
+}: SetupSessionFlowProps) => {
   let needsAuthConfig = session.type !== 'config_only' && !session.authConfig;
   let needsConfig = session.type !== 'auth_only' && !session.config;
   let isOAuth = session.authMethod.type === 'oauth';
@@ -154,7 +160,7 @@ export let SetupSessionFlow = ({ session, brand, clientSecret }: SetupSessionFlo
     return stepLabels.length;
   }, [currentStep, determineStep, stepLabels]);
 
-  let activeLoaders: Record<string, typeof authSchemaLoader> = {};
+  let activeLoaders: Record<string, typeof authSchemaLoader | typeof configSchemaLoader> = {};
   if (needsAuthConfig) activeLoaders.authSchema = authSchemaLoader;
   if (needsConfig) activeLoaders.configSchema = configSchemaLoader;
 
@@ -235,7 +241,7 @@ export let SetupSessionFlow = ({ session, brand, clientSecret }: SetupSessionFlo
     return (
       <MetorialElementsLayout
         brand={brand}
-        providerName={session.authMethod.name}
+        providerName={provider.name}
         hideHeader={isCompleted}
         currentStep={currentStepIndex}
         stepLabels={stepLabels}

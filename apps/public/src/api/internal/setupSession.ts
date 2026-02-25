@@ -4,6 +4,7 @@ import { brandService } from '@metorial-subspace/module-tenant';
 import {
   brandPresenter,
   providerOAuthSetupPresenter,
+  providerPreviewPresenter,
   providerSetupSessionPresenter
 } from '@metorial-subspace/presenters';
 import { app } from './_app';
@@ -43,6 +44,7 @@ export let getFullSession = async (
     session.brand ?? (await brandService.getBrandForTenant({ tenantId: session.tenant.id }));
 
   return {
+    provider: providerPreviewPresenter(session.provider),
     session: providerSetupSessionPresenter(session),
     brand: brandPresenter(brand)
   };
@@ -57,7 +59,16 @@ export let setupSessionController = app.controller({
         clientSecret: v.string()
       })
     )
-    .do(async ctx => await getFullSession(ctx.input as any, ctx.session)),
+    .do(
+      async ctx =>
+        await getFullSession(
+          {
+            sessionId: ctx.input.sessionId,
+            clientSecret: ctx.input.clientSecret
+          },
+          ctx.session
+        )
+    ),
 
   getAuthConfigSchema: sessionApp
     .handler()

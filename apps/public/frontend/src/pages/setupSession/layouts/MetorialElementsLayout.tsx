@@ -1,7 +1,7 @@
+import { Flex, Text, Title, theme } from '@metorial-io/ui';
+import { RiCheckLine } from '@remixicon/react';
 import type { ReactNode } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { RiCheckLine } from '@remixicon/react';
-import { Flex, Text, Title, theme } from '@metorial-io/ui';
 import type { Brand } from '../types';
 
 let METORIAL_LOGO_URL =
@@ -51,7 +51,6 @@ let Header = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  background: linear-gradient(180deg, #fff9f9 0%, #ffffff 100%);
   border-bottom: 1px solid ${theme.colors.gray200};
 
   @media (max-width: 640px) {
@@ -258,7 +257,12 @@ export let MetorialElementsLayout = ({
                       <StepNumber $isCompleted={isCompleted} $isActive={isActive}>
                         {isCompleted ? <RiCheckLine size={12} /> : index + 1}
                       </StepNumber>
-                      <StepLabel size="1" weight="medium" $isCompleted={isCompleted} $isActive={isActive}>
+                      <StepLabel
+                        size="1"
+                        weight="medium"
+                        $isCompleted={isCompleted}
+                        $isActive={isActive}
+                      >
                         {label}
                       </StepLabel>
                     </Flex>

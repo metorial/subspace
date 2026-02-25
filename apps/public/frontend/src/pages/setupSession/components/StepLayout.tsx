@@ -1,5 +1,5 @@
-import styled from 'styled-components';
 import { theme } from '@metorial-io/ui';
+import styled from 'styled-components';
 
 export let StepWrapper = styled.div<{ $isMetorialElement: boolean }>`
   display: flex;
@@ -75,7 +75,11 @@ interface SecuredByFooterProps {
   className?: string;
 }
 
-export let SecuredByFooter = ({ isMetorialElement, logoSize, className }: SecuredByFooterProps) => (
+export let SecuredByFooter = ({
+  isMetorialElement,
+  logoSize,
+  className
+}: SecuredByFooterProps) => (
   <SecuredByWrapper $isMetorialElement={isMetorialElement} className={className}>
     <span>Secured by</span>
     <SecuredByLink href="https://metorial.com" target="_blank" rel="noopener noreferrer">

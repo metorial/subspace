@@ -53,7 +53,7 @@ export let oauthSetupApp = createHono()
 
     let context = useRequestContext(c);
 
-    setup = await providerOAuthSetupInternalService.handleOAuthSetupResponse({
+    let setupRes = await providerOAuthSetupInternalService.handleOAuthSetupResponse({
       providerOAuthSetup: setup,
       context: {
         ip: context.ip,
@@ -61,11 +61,18 @@ export let oauthSetupApp = createHono()
       }
     });
 
-    if (setup.status != 'completed' && setup.status != 'failed') {
-      return c.redirect(`/oauth-setup/${setup.id}?client_secret=${clientSecret}`);
+    if (setupRes.status != 'completed' && setupRes.status != 'failed') {
+      return c.redirect(`/oauth-setup/${setupRes.id}?client_secret=${clientSecret}`);
     }
 
-    if (setup.redirectUrl) return c.redirect(setup.redirectUrl);
+    if (setupRes.redirectUrl || setupRes.session?.redirectUrl)
+      return c.redirect(setupRes.redirectUrl ?? setupRes.session?.redirectUrl!);
+
+    if (setupRes.session) {
+      return c.redirect(
+        `/setup-session/${setupRes.session.id}?client_secret=${setupRes.session.clientSecret}`
+      );
+    }
 
     return c.text('OAuth setup completed successfully');
   });

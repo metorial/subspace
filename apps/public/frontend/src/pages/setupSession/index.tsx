@@ -1,9 +1,9 @@
+import { CenteredSpinner, Group, Title, theme } from '@metorial-io/ui';
 import React from 'react';
 import styled from 'styled-components';
-import { Group, CenteredSpinner, Title, theme } from '@metorial-io/ui';
 import { useSetupSession } from '../../state/setupSession';
 import { SetupSessionFlow } from './SetupSessionFlow';
-import { SuccessIcon, WarningIcon, ErrorIcon } from './components/StatusIcons';
+import { ErrorIcon, SuccessIcon, WarningIcon } from './components/StatusIcons';
 import { SecuredByFooter } from './components/StepLayout';
 
 export let SetupSessionPage = () => {
@@ -23,7 +23,7 @@ export let SetupSessionPage = () => {
     return <LoadingPage />;
   }
 
-  let { session, brand } = setupSession.data;
+  let { session, brand, provider } = setupSession.data;
   let clientSecret = new URLSearchParams(window.location.search).get('client_secret') || '';
 
   if (session.status === 'completed') {
@@ -31,6 +31,7 @@ export let SetupSessionPage = () => {
       window.location.href = session.redirectUrl;
       return <LoadingPage />;
     }
+
     return (
       <StatusPageView
         icon={<SuccessIcon />}
@@ -60,7 +61,14 @@ export let SetupSessionPage = () => {
     );
   }
 
-  return <SetupSessionFlow session={session} brand={brand} clientSecret={clientSecret} />;
+  return (
+    <SetupSessionFlow
+      session={session}
+      brand={brand}
+      provider={provider}
+      clientSecret={clientSecret}
+    />
+  );
 };
 
 let Wrapper = styled.div`

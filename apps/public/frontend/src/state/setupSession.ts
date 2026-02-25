@@ -77,7 +77,7 @@ export let useSetupSession = () => {
 
   if (PRELOAD?.type === 'data' && !data.data && !data.error) data.data = PRELOAD.data;
   if (PRELOAD?.type === 'error' && !data.data && !data.error)
-    data.error = ServiceError.fromResponse(PRELOAD.error);
+    data.error = ServiceError.fromResponse(PRELOAD.error) as any;
 
   return data;
 };
