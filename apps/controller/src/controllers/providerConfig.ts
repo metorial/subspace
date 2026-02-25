@@ -38,6 +38,8 @@ export let providerConfigController = app.controller({
           tenantId: v.string(),
           environmentId: v.string(),
 
+          search: v.optional(v.string()),
+
           status: v.optional(v.array(v.enumOf(['active', 'archived']))),
           allowDeleted: v.optional(v.boolean()),
 
@@ -54,6 +56,8 @@ export let providerConfigController = app.controller({
         tenant: ctx.tenant,
         environment: ctx.environment,
         solution: ctx.solution,
+
+        search: ctx.input.search,
 
         status: ctx.input.status,
         allowDeleted: ctx.input.allowDeleted,
