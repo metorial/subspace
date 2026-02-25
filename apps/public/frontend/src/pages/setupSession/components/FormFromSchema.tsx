@@ -1,7 +1,7 @@
+import { Checkbox, Flex, Input, Select } from '@metorial-io/ui';
 import React from 'react';
-import { Input, Select, Checkbox, Flex } from '@metorial-io/ui';
-import { schemaToFields } from '../../../lib/jsonSchema';
 import type { FieldDefinition, JsonSchema } from '../../../lib/jsonSchema';
+import { schemaToFields } from '../../../lib/jsonSchema';
 
 interface FormFromSchemaProps {
   schema: JsonSchema;

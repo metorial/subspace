@@ -93,3 +93,21 @@ export let providerPresenter = (
     updatedAt: provider.updatedAt
   };
 };
+
+export let providerPreviewPresenter = (provider: Provider) => ({
+  object: 'provider',
+
+  id: provider.id,
+  access: provider.access,
+  status: provider.status,
+
+  tag: provider.tag,
+
+  name: provider.name,
+  description: provider.description,
+  slug: provider.slug,
+  metadata: provider.metadata,
+
+  createdAt: provider.createdAt,
+  updatedAt: provider.updatedAt
+});
