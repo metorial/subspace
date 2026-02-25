@@ -59,7 +59,16 @@ export let setupSessionController = app.controller({
         clientSecret: v.string()
       })
     )
-    .do(async ctx => await getFullSession(ctx.input, ctx.session)),
+    .do(
+      async ctx =>
+        await getFullSession(
+          {
+            sessionId: ctx.input.sessionId,
+            clientSecret: ctx.input.clientSecret
+          },
+          ctx.session
+        )
+    ),
 
   getAuthConfigSchema: sessionApp
     .handler()
