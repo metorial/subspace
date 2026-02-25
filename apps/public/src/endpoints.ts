@@ -21,18 +21,20 @@ let server = Bun.serve({
 
 console.log(`Service running on http://localhost:${server.port}`);
 
-Bun.serve({
-  fetch: async _ => {
-    try {
-      await db.backend.count();
+if (process.env.NODE_ENV === 'production') {
+  Bun.serve({
+    fetch: async _ => {
+      try {
+        await db.backend.count();
 
-      await redis.ping();
+        await redis.ping();
 
-      return new Response('OK');
-    } catch (e) {
-      Sentry.captureException(e);
-      return new Response('Service Unavailable', { status: 503 });
-    }
-  },
-  port: 12121
-});
+        return new Response('OK');
+      } catch (e) {
+        Sentry.captureException(e);
+        return new Response('Service Unavailable', { status: 503 });
+      }
+    },
+    port: 12121
+  });
+}
