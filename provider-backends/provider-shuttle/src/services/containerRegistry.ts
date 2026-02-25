@@ -26,3 +26,7 @@ export let containerRegistryService = Service.create(
   'containerRegistry',
   () => new containerRegistryServiceImpl()
 ).build();
+
+export type ShuttleContainerRegistry = Awaited<
+  ReturnType<typeof shuttle.containerRegistry.get>
+>;

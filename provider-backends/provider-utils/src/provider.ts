@@ -2,6 +2,7 @@ import type {
   IProviderAuth,
   IProviderCapabilities,
   IProviderDeployment,
+  IProviderEnrichments,
   IProviderFeatures,
   IProviderRun
 } from './interfaces';
@@ -13,6 +14,7 @@ export interface ProviderImpl {
   features: new (params: ProviderFunctionalityCtorParams) => IProviderFeatures;
   deployment: new (params: ProviderFunctionalityCtorParams) => IProviderDeployment;
   capabilities: new (params: ProviderFunctionalityCtorParams) => IProviderCapabilities;
+  enrichment: new (params: ProviderFunctionalityCtorParams) => IProviderEnrichments;
 }
 
 export let createProvider = (impl: ProviderImpl) => ({
@@ -22,6 +24,7 @@ export let createProvider = (impl: ProviderImpl) => ({
     deployment: new impl.deployment(params),
     providerRun: new impl.providerRun(params),
     capabilities: new impl.capabilities(params),
+    enrichment: new impl.enrichment(params),
 
     backend: params.backend
   })
