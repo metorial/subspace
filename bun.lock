@@ -83,6 +83,7 @@
         "@metorial-subspace/presenters": "^1.0.0",
         "@sentry/bun": "^10.34.0",
         "@sentry/cli": "^3.2.0",
+        "@types/react-dom": "^19.2.3",
         "@vercel/ncc": "^0.38.3",
         "@vitejs/plugin-react": "^5.1.2",
         "react": "^19.2.3",
@@ -128,7 +129,7 @@
     },
     "clients/typescript": {
       "name": "@metorial-services/subspace-client",
-      "version": "1.0.19",
+      "version": "1.0.22",
       "dependencies": {
         "@lowerdeck/rpc-client": "^1.0.3",
         "@lowerdeck/validation": "^1.0.4",
@@ -1436,6 +1437,8 @@
     "@types/qs": ["@types/qs@6.14.0", "", {}, "sha512-eOunJqu0K1923aExK6y8p6fsihYEn/BYuQ4g0CxAAgFc4b/ZLN4CrsRZ55srTdqoiLzU2B2evC+apEIxprEzkQ=="],
 
     "@types/react": ["@types/react@19.2.13", "", { "dependencies": { "csstype": "^3.2.2" } }, "sha512-KkiJeU6VbYbUOp5ITMIc7kBfqlYkKA5KhEHVrGMmUUMt7NeaZg65ojdPk+FtNrBAOXNVM5QM72jnADjM+XVRAQ=="],
+
+    "@types/react-dom": ["@types/react-dom@19.2.3", "", { "peerDependencies": { "@types/react": "^19.2.0" } }, "sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ=="],
 
     "@types/stylis": ["@types/stylis@4.2.7", "", {}, "sha512-VgDNokpBoKF+wrdvhAAfS55OMQpL6QRglwTwNC3kIgBrzZxA4WsFj+2eLfEA/uMUDzBcEhYmjSbwQakn/i3ajA=="],
 

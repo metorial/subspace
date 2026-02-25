@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { Flex, Spacer, Spinner, Text, Title } from '@metorial-io/ui';
 import { RiCheckLine } from '@remixicon/react';
-import { Flex, Spacer, Text, Title, Spinner } from '@metorial-io/ui';
+import { useEffect } from 'react';
 
 interface CompletedStepProps {
   redirectUrl: string | null;
@@ -44,7 +44,10 @@ export let CompletedStep = ({ redirectUrl }: CompletedStepProps) => {
 
       <Spacer size={12} />
 
-      <Text color="gray600" style={{ textAlign: 'center', lineHeight: 1.5 }}>
+      <Text
+        color="gray600"
+        style={{ textAlign: 'center', lineHeight: 1.5, textWrap: 'balance' }}
+      >
         {description}
       </Text>
 

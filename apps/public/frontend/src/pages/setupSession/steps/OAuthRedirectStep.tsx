@@ -1,5 +1,5 @@
 import { Button, Flex, Spacer, Text, Title } from '@metorial-io/ui';
-import { StepWrapper, StepContentBlock, SecuredByFooter } from '../components/StepLayout';
+import { SecuredByFooter, StepContentBlock, StepWrapper } from '../components/StepLayout';
 import type { OAuthSetup } from '../types';
 
 interface OAuthRedirectStepProps {
@@ -48,7 +48,7 @@ export let OAuthRedirectStep = ({
           </Text>
         </div>
 
-        <Spacer size={50} />
+        <Spacer size={30} />
 
         <Button onClick={handleRedirect} color="black" size="4" fullWidth>
           Connect Account

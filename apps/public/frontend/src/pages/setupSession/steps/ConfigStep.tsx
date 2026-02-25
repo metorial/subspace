@@ -1,9 +1,9 @@
 import { useForm } from '@metorial-io/data-hooks';
 import { Button, Flex } from '@metorial-io/ui';
-import { FormFromSchema } from '../components/FormFromSchema';
-import { StepWrapper, StepContentBlock, SecuredByFooter } from '../components/StepLayout';
-import { schemaToYup, getDefaultValues } from '../../../lib/jsonSchema';
 import type { JsonSchema } from '../../../lib/jsonSchema';
+import { getDefaultValues, schemaToYup } from '../../../lib/jsonSchema';
+import { FormFromSchema } from '../components/FormFromSchema';
+import { SecuredByFooter, StepContentBlock, StepWrapper } from '../components/StepLayout';
 
 interface ConfigStepProps {
   schema: JsonSchema;

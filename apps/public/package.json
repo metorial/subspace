@@ -39,6 +39,9 @@
     "@metorial-subspace/module-tenant": "^1.0.0",
     "@metorial-subspace/presenters": "^1.0.0",
     "@sentry/bun": "^10.34.0",
+    "@sentry/cli": "^3.2.0",
+    "@types/react-dom": "^19.2.3",
+    "@vercel/ncc": "^0.38.3",
     "@vitejs/plugin-react": "^5.1.2",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
@@ -49,8 +52,6 @@
     "unzipper": "^0.12.3",
     "vite": "^5.4.1",
     "yaml": "^2.8.2",
-    "yup": "^1.7.1",
-    "@vercel/ncc": "^0.38.3",
-    "@sentry/cli": "^3.2.0"
+    "yup": "^1.7.1"
   }
 }
