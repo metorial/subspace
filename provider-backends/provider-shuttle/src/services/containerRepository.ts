@@ -26,3 +26,7 @@ export let containerRepositoryService = Service.create(
   'containerRepository',
   () => new containerRepositoryServiceImpl()
 ).build();
+
+export type ShuttleContainerRepository = Awaited<
+  ReturnType<typeof shuttle.containerRepository.get>
+>;

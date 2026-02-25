@@ -4,18 +4,57 @@ import {
   type Backend,
   getId,
   type Provider,
+  ProviderVariant,
   type Publisher,
   type ShuttleServer,
   type Slate,
   type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
+import { getBackend } from '@metorial-subspace/provider';
 import { ensureProviderType } from '@metorial-subspace/provider-utils';
 import { createTag } from '../lib/createTag';
+import { groupBy } from '../lib/groupBy';
 import { listingCreatedQueue, listingUpdatedQueue } from '../queues/lifecycle/listing';
 import { providerCreatedQueue, providerUpdatedQueue } from '../queues/lifecycle/provider';
 
 class providerInternalServiceImpl {
+  async enrichProviders<T extends Provider & { defaultVariant: ProviderVariant | null }>(d: {
+    providers: T[];
+  }) {
+    let providersByBackend = groupBy(
+      d.providers
+        .filter(b => b.defaultVariant?.backendOid)
+        .map(b => ({ ...b, backendOid: b.defaultVariant?.backendOid! })),
+      'backendOid'
+    );
+
+    return (
+      await Promise.all(
+        providersByBackend.entries().map(async ([_, providers]) => {
+          let anyProviderVariant = providers[0]?.defaultVariant;
+          if (!anyProviderVariant) return [];
+
+          let backend = await getBackend({ entity: anyProviderVariant });
+
+          let enriched = await backend.enrichment.enrichProviderVariants({
+            providerVariantIds: providers.map(p => p.defaultVariant!.id)
+          });
+          let enrichedMap = new Map(enriched.providers.map(p => [p.providerVariantId, p]));
+
+          return providers.map(provider => {
+            let enrichment = enrichedMap.get(provider.defaultVariant!.id);
+
+            return {
+              ...provider,
+              ...enrichment
+            };
+          });
+        })
+      )
+    ).flat();
+  }
+
   async upsertProvider(d: {
     publisher: Publisher;
 

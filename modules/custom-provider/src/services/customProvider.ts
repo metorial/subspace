@@ -1,7 +1,12 @@
 import { badRequestError, notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import type { CustomProviderConfig, CustomProviderFrom } from '@metorial-subspace/db';
+import type {
+  CustomProviderConfig,
+  CustomProviderFrom,
+  Provider,
+  ProviderVariant
+} from '@metorial-subspace/db';
 import {
   type Actor,
   addAfterTransactionHook,
@@ -59,6 +64,33 @@ let include = {
 };
 
 class customProviderServiceImpl {
+  async enrichCustomProviders<
+    T extends CustomProvider & {
+      provider: (Provider & { defaultVariant: ProviderVariant | null }) | null;
+    }
+  >(d: { customProviders: T[] }) {
+    let enriched = await providerInternalService.enrichProviders({
+      providers: d.customProviders.map(p => p.provider!).filter(Boolean)
+    });
+    let enrichedMap = new Map(enriched.map(p => [p.id, p]));
+
+    return d.customProviders.map(customProvider => {
+      if (!customProvider.provider) return customProvider;
+      let enrichment = enrichedMap.get(customProvider.provider.id);
+
+      return {
+        containerRegistry: enrichment?.containerRegistry,
+        containerRepository: enrichment?.containerRepository,
+        containerTag: enrichment?.containerTag,
+
+        remoteUrl: enrichment?.remoteUrl,
+        remoteProtocol: enrichment?.remoteProtocol,
+
+        ...customProvider
+      };
+    });
+  }
+
   async listCustomProviders(d: {
     tenant: Tenant;
     solution: Solution;
@@ -87,27 +119,28 @@ class customProviderServiceImpl {
       : null;
 
     return Paginator.create(({ prisma }) =>
-      prisma(
-        async opts =>
-          await db.customProvider.findMany({
-            ...opts,
-            where: {
-              tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid,
+      prisma(async opts => {
+        let res = await db.customProvider.findMany({
+          ...opts,
+          where: {
+            tenantOid: d.tenant.oid,
+            solutionOid: d.solution.oid,
 
-              ...normalizeStatusForList(d).noParent,
+            ...normalizeStatusForList(d).noParent,
 
-              AND: [
-                d.type ? { type: { in: d.type } } : undefined!,
-                d.ids ? { id: { in: d.ids } } : undefined!,
-                search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
-                providers ? { providerOid: providers.in } : undefined!,
-                scmRepos ? { scmRepoOid: scmRepos.in } : undefined!
-              ].filter(Boolean)
-            },
-            include
-          })
-      )
+            AND: [
+              d.type ? { type: { in: d.type } } : undefined!,
+              d.ids ? { id: { in: d.ids } } : undefined!,
+              search ? { id: { in: search.map(r => r.documentId) } } : undefined!,
+              providers ? { providerOid: providers.in } : undefined!,
+              scmRepos ? { scmRepoOid: scmRepos.in } : undefined!
+            ].filter(Boolean)
+          },
+          include
+        });
+
+        return this.enrichCustomProviders({ customProviders: res });
+      })
     );
   }
 
@@ -130,7 +163,8 @@ class customProviderServiceImpl {
     if (!customProvider)
       throw new ServiceError(notFoundError('custom_provider', d.customProviderId));
 
-    return customProvider;
+    let [enriched] = await this.enrichCustomProviders({ customProviders: [customProvider] });
+    return enriched!;
   }
 
   async createCustomProvider(d: {
@@ -161,7 +195,7 @@ class customProviderServiceImpl {
       );
     }
 
-    return withTransaction(async db => {
+    let customProvider = await withTransaction(async db => {
       let repo =
         d.input.from.type === 'function' && d.input.from.repository
           ? await linkRepo({
@@ -241,6 +275,9 @@ class customProviderServiceImpl {
 
       return customProvider;
     });
+
+    let [enriched] = await this.enrichCustomProviders({ customProviders: [customProvider] });
+    return enriched!;
   }
 
   async updateCustomProvider(d: {
@@ -278,7 +315,7 @@ class customProviderServiceImpl {
       );
     }
 
-    return withTransaction(async db => {
+    let customProvider = await withTransaction(async db => {
       let repo = d.input.repository
         ? await linkRepo({
             tenant: d.tenant,
@@ -355,6 +392,9 @@ class customProviderServiceImpl {
         include
       });
     });
+
+    let [enriched] = await this.enrichCustomProviders({ customProviders: [customProvider] });
+    return enriched!;
   }
 }
 

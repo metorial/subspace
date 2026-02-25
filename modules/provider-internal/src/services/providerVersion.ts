@@ -5,15 +5,18 @@ import {
   type Backend,
   getId,
   type ProviderVariant,
+  ProviderVersion,
   type ShuttleServer,
   type ShuttleServerVersion,
   type Slate,
   type SlateVersion,
   withTransaction
 } from '@metorial-subspace/db';
+import { getBackend } from '@metorial-subspace/provider';
 import { ensureProviderType } from '@metorial-subspace/provider-utils';
 import { env } from '../env';
 import { createTag } from '../lib/createTag';
+import { groupBy } from '../lib/groupBy';
 import {
   providerVersionCreatedQueue,
   providerVersionUpdatedQueue
@@ -25,6 +28,35 @@ let versionCreateLock = createLock({
 });
 
 class providerVersionInternalServiceImpl {
+  async enrichProviderVersions<T extends ProviderVersion>(d: { providers: T[] }) {
+    let providersByBackend = groupBy(d.providers, 'backendOid');
+
+    return (
+      await Promise.all(
+        providersByBackend.entries().map(async ([_, providers]) => {
+          let anyProviderVersion = providers[0];
+          if (!anyProviderVersion) return [];
+
+          let backend = await getBackend({ entity: anyProviderVersion });
+
+          let enriched = await backend.enrichment.enrichProviderVersions({
+            providerVersionIds: providers.map(p => p.id)
+          });
+          let enrichedMap = new Map(enriched.providers.map(p => [p.providerVersionId, p]));
+
+          return providers.map(provider => {
+            let enrichment = enrichedMap.get(provider.id);
+
+            return {
+              ...provider,
+              ...enrichment
+            };
+          });
+        })
+      )
+    ).flat();
+  }
+
   async upsertVersion(d: {
     variant: ProviderVariant;
 

@@ -14,6 +14,12 @@ import type {
   ScmRepo,
   ScmRepoPush
 } from '@metorial-subspace/db';
+import type {
+  ShuttleContainerRegistry,
+  ShuttleContainerRepository,
+  ShuttleContainerTag,
+  ShuttleContainerVersion
+} from '@metorial-subspace/provider-shuttle';
 import { actorPresenter } from './actor';
 import { bucketPresenter } from './bucket';
 import { customProviderDeploymentPresenter } from './customProviderDeployment';
@@ -51,6 +57,14 @@ export let customProviderVersionPresenter = (
     })[];
 
     creatorActor: Actor;
+
+    containerTag?: ShuttleContainerTag;
+    containerVersion?: ShuttleContainerVersion;
+    containerRegistry?: ShuttleContainerRegistry;
+    containerRepository?: ShuttleContainerRepository;
+
+    remoteUrl?: string;
+    remoteProtocol?: 'sse' | 'streamable_http';
   }
 ) => {
   let customEnvironments = customProviderVersion.customProviderEnvironmentVersions.map(
@@ -97,6 +111,13 @@ export let customProviderVersionPresenter = (
     providerId: customProviderVersion.customProvider.provider?.id,
 
     actor: actorPresenter(customProviderVersion.creatorActor),
+
+    containerRegistry: customProviderVersion.containerRegistry,
+    containerRepository: customProviderVersion.containerRepository,
+    containerTag: customProviderVersion.containerTag,
+
+    remoteUrl: customProviderVersion.remoteUrl,
+    remoteProtocol: customProviderVersion.remoteProtocol,
 
     createdAt: customProviderVersion.createdAt,
     updatedAt: customProviderVersion.updatedAt
