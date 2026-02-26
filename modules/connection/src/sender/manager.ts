@@ -598,7 +598,9 @@ export class SenderManager {
         }
       } catch (err) {
         Sentry.captureException(err);
-        console.error('Error sending tool call message:', err);
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Error sending tool call message:', err);
+        }
       }
     })();
 
