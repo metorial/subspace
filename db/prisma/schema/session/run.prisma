@@ -57,8 +57,8 @@ model SessionProviderInstance {
   oid BigInt @id
   id  String @unique
 
-  totalProductiveClientMessageCount Int @default(0)
-  totalProductiveServerMessageCount Int @default(0)
+  totalProductiveClientMessageCount   Int @default(0)
+  totalProductiveProviderMessageCount Int @default(0)
 
   sessionOid BigInt
   session    Session @relation(fields: [sessionOid], references: [oid])

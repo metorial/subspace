@@ -6,6 +6,7 @@ import {
   type SessionMessageFailureReason,
   type SessionParticipant
 } from '@metorial-subspace/db';
+import { finalizeMessageQueue } from '../queues/message/finalizeMessage';
 import { createError, messageFailureReasonToErrorType } from './createError';
 
 export interface UpdateMessageData {
@@ -106,6 +107,8 @@ export let completeMessage = async (
         environmentOid: message.environmentOid
       }
     });
+
+    await finalizeMessageQueue.add({ messageId: message.id });
   })().catch(() => {});
 
   return message;

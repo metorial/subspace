@@ -28,7 +28,7 @@ export let sessionConnectionPresenter = (connection: SessionConnectionPresenterP
 
   usage: {
     totalProductiveClientMessageCount: connection.totalProductiveClientMessageCount,
-    totalProductiveServerMessageCount: connection.totalProductiveServerMessageCount
+    totalProductiveProviderMessageCount: connection.totalProductiveProviderMessageCount
   },
 
   mcp:

@@ -94,13 +94,13 @@ let processSingleRankQueueProcessor = processSingleRankQueue.process(async data 
   let providerMessagesCountAgg = await db.sessionProvider.aggregate({
     where: { providerOid: providerListing.providerOid },
     _sum: {
-      totalProductiveServerMessageCount: true,
+      totalProductiveProviderMessageCount: true,
       totalProductiveClientMessageCount: true
     }
   });
 
   providerMessagesCount =
-    (providerMessagesCountAgg._sum.totalProductiveServerMessageCount ?? 0) +
+    (providerMessagesCountAgg._sum.totalProductiveProviderMessageCount ?? 0) +
     (providerMessagesCountAgg._sum.totalProductiveClientMessageCount ?? 0);
 
   // Calculate rank based on various factors
