@@ -3,10 +3,9 @@ import { v } from '@lowerdeck/validation';
 import { sessionUsageRecordService } from '@metorial-subspace/module-session';
 import { sessionUsageRecordPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
-import { solutionApp } from './solution';
 
 export let sessionUsageRecordController = app.controller({
-  list: solutionApp
+  list: app
     .handler()
     .input(Paginator.validate(v.object({})))
     .do(async ctx => {
