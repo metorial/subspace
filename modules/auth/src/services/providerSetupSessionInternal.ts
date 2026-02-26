@@ -185,6 +185,13 @@ class providerSetupSessionInternalServiceImpl {
           }
         });
 
+        if (d.setup.authConfigOid) {
+          await db.providerAuthConfig.update({
+            where: { oid: d.setup.authConfigOid },
+            data: { metadata: d.session.metadata }
+          });
+        }
+
         await db.providerSetupSessionEvent.createMany({
           data: [
             {

@@ -46,7 +46,7 @@ interface CreateParams {
   environment: Environment;
   provider: Provider & { defaultVariant: ProviderVariant | null; type: ProviderType };
   input: {
-    name: string;
+    name?: string;
     description?: string;
     metadata?: Record<string, any>;
     isEphemeral?: boolean;

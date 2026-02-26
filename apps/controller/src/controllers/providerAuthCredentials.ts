@@ -79,7 +79,7 @@ export let providerAuthCredentialsController = app.controller({
       v.object({
         tenantId: v.string(),
         environmentId: v.string(),
-        name: v.string(),
+        name: v.optional(v.string()),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
 
