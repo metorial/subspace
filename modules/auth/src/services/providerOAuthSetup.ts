@@ -258,6 +258,7 @@ class providerOAuthSetupServiceImpl {
           solutionOid: d.solution.oid,
           environmentOid: d.environment.oid,
           providerOid: d.provider.oid,
+          deploymentOid: d.providerDeployment?.oid,
           authCredentialsOid: credentials.oid,
           authMethodOid: authMethod.oid,
 

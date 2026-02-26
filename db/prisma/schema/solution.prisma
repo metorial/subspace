@@ -42,4 +42,6 @@ model Solution {
   scmRepos                                 ScmRepo[]
   scmRepoPushes                            ScmRepoPush[]
   sessionWarnings                          SessionWarning[]
+  sessionUsageRecords                      SessionUsageRecord[]
+  providerRunUsageRecords                  ProviderRunUsageRecord[]
 }

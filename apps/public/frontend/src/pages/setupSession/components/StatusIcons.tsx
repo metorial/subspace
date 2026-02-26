@@ -1,5 +1,5 @@
-import { RiCheckLine, RiAlertLine, RiCloseLine } from '@remixicon/react';
 import { Flex } from '@metorial-io/ui';
+import { RiAlertLine, RiCheckLine, RiCloseLine } from '@remixicon/react';
 
 export let SuccessIcon = () => {
   return (

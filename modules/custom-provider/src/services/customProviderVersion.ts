@@ -1,7 +1,12 @@
 import { badRequestError, notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import type { CustomProviderConfig, CustomProviderFrom } from '@metorial-subspace/db';
+import type {
+  CustomProviderConfig,
+  CustomProviderFrom,
+  CustomProviderVersion,
+  ProviderVersion
+} from '@metorial-subspace/db';
 import {
   addAfterTransactionHook,
   db,
@@ -21,6 +26,7 @@ import {
   resolveCustomProviders,
   resolveProviders
 } from '@metorial-subspace/list-utils';
+import { providerVersionInternalService } from '@metorial-subspace/module-provider-internal';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { prepareVersion } from '../internal/createVersion';
 import { handleUpcomingCustomProviderQueue } from '../queues/upcoming/handle';
@@ -57,6 +63,34 @@ let include = {
 };
 
 class customProviderVersionServiceImpl {
+  async enrichCustomProviders<
+    T extends CustomProviderVersion & {
+      providerVersion: ProviderVersion | null;
+    }
+  >(d: { customProviders: T[] }) {
+    let enriched = await providerVersionInternalService.enrichProviderVersions({
+      providers: d.customProviders.map(p => p.providerVersion!).filter(Boolean)
+    });
+    let enrichedMap = new Map(enriched.map(p => [p.id, p]));
+
+    return d.customProviders.map(customProvider => {
+      if (!customProvider.providerVersion) return customProvider;
+      let enrichment = enrichedMap.get(customProvider.providerVersion.id);
+
+      return {
+        containerRegistry: enrichment?.containerRegistry,
+        containerRepository: enrichment?.containerRepository,
+        containerVersion: enrichment?.containerVersion,
+        containerTag: enrichment?.containerTag,
+
+        remoteUrl: enrichment?.remoteUrl,
+        remoteProtocol: enrichment?.remoteProtocol,
+
+        ...customProvider
+      };
+    });
+  }
+
   async createCustomProviderVersion(d: {
     actor: Actor;
     tenant: Tenant;
@@ -105,7 +139,7 @@ class customProviderVersionServiceImpl {
       );
     }
 
-    return withTransaction(async db => {
+    let customProvider = await withTransaction(async db => {
       await db.customProvider.updateMany({
         where: { oid: d.customProvider.oid },
         data: {
@@ -158,6 +192,9 @@ class customProviderVersionServiceImpl {
         include
       });
     });
+
+    let [enriched] = await this.enrichCustomProviders({ customProviders: [customProvider] });
+    return enriched!;
   }
 
   async listCustomProviderVersions(d: {
@@ -187,38 +224,39 @@ class customProviderVersionServiceImpl {
     );
 
     return Paginator.create(({ prisma }) =>
-      prisma(
-        async opts =>
-          await db.customProviderVersion.findMany({
-            ...opts,
-            where: {
-              tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid,
+      prisma(async opts => {
+        let res = await db.customProviderVersion.findMany({
+          ...opts,
+          where: {
+            tenantOid: d.tenant.oid,
+            solutionOid: d.solution.oid,
 
-              AND: [
-                d.ids ? { id: { in: d.ids } } : undefined!,
+            AND: [
+              d.ids ? { id: { in: d.ids } } : undefined!,
 
-                d.status ? { status: { in: d.status } } : undefined!,
+              d.status ? { status: { in: d.status } } : undefined!,
 
-                providers ? { customProvider: { providerOid: providers.in } } : undefined!,
-                providerVersions ? { providerVersionOid: providerVersions.in } : undefined!,
+              providers ? { customProvider: { providerOid: providers.in } } : undefined!,
+              providerVersions ? { providerVersionOid: providerVersions.in } : undefined!,
 
-                customProviders ? { customProviderOid: customProviders.in } : undefined!,
-                customProviderDeployments
-                  ? { deploymentOid: customProviderDeployments.in }
-                  : undefined!,
-                customProviderEnvironments
-                  ? {
-                      customProviderEnvironmentVersions: {
-                        some: { customProviderEnvironmentOid: customProviderEnvironments.in }
-                      }
+              customProviders ? { customProviderOid: customProviders.in } : undefined!,
+              customProviderDeployments
+                ? { deploymentOid: customProviderDeployments.in }
+                : undefined!,
+              customProviderEnvironments
+                ? {
+                    customProviderEnvironmentVersions: {
+                      some: { customProviderEnvironmentOid: customProviderEnvironments.in }
                     }
-                  : undefined!
-              ].filter(Boolean)
-            },
-            include
-          })
-      )
+                  }
+                : undefined!
+            ].filter(Boolean)
+          },
+          include
+        });
+
+        return await this.enrichCustomProviders({ customProviders: res });
+      })
     );
   }
 
@@ -241,7 +279,10 @@ class customProviderVersionServiceImpl {
         notFoundError('custom_provider.version', d.customProviderVersionId)
       );
 
-    return customProviderVersion;
+    let [enriched] = await this.enrichCustomProviders({
+      customProviders: [customProviderVersion]
+    });
+    return enriched!;
   }
 }
 

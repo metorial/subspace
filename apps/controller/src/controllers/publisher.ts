@@ -24,13 +24,17 @@ export let publisherController = app.controller({
       Paginator.validate(
         v.object({
           tenantId: v.optional(v.string()),
-          environmentId: v.optional(v.string())
+          environmentId: v.optional(v.string()),
+
+          search: v.optional(v.string())
         })
       )
     )
     .do(async ctx => {
       let paginator = await publisherService.listPublishers({
-        tenant: ctx.tenant
+        tenant: ctx.tenant,
+
+        search: ctx.input.search
       });
 
       let list = await paginator.run(ctx.input);

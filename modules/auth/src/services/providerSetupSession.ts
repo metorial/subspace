@@ -326,6 +326,7 @@ class providerSetupSessionServiceImpl {
           solutionOid: d.solution.oid,
           environmentOid: d.environment.oid,
           providerOid: d.provider.oid,
+          deploymentOid: d.providerDeployment?.oid,
           brandOid: d.brand?.oid,
           authCredentialsOid: d.credentials?.oid,
 

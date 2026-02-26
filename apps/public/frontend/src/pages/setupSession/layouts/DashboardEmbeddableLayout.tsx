@@ -1,7 +1,7 @@
+import { Flex, Text } from '@metorial-io/ui';
+import { RiCheckLine } from '@remixicon/react';
 import type { ReactNode } from 'react';
 import styled from 'styled-components';
-import { RiCheckLine } from '@remixicon/react';
-import { Flex, Text } from '@metorial-io/ui';
 
 interface DashboardEmbeddableLayoutProps {
   currentStep: number;

@@ -29,8 +29,8 @@ export let resolveSessionProvider = async (
 
   return {
     deploymentId: deployment?.id,
-    config: config?.id,
-    authConfig: authConfig?.id,
+    configId: config?.id,
+    authConfigId: authConfig?.id,
 
     hasEphemeral: Boolean(
       deployment?.isEphemeral || config?.hasEphemeral || authConfig?.hasEphemeral

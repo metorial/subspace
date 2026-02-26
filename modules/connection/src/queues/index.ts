@@ -3,18 +3,22 @@ import { expireSessionConnectionsQueues } from './connectionCleanup/expireSessio
 import { expireSessionsCron } from './connectionCleanup/expireSessions';
 import { createErrorQueueProcessor } from './error/createError';
 import { createWarningQueueProcessor } from './error/createWarning';
+import { finalizeMessageQueueProcessor } from './message/finalizeMessage';
 import { messageCreatedQueueProcessor } from './message/messageCreated';
+import { messageTimeoutQueueProcessor } from './message/messageTimeout';
 import { offloadQueues } from './message/offloadMessage';
-import { postprocessMessageQueueProcessor } from './message/postprocessMessage';
+import { providerRunStartQueueProcessor } from './provderRun/providerRunStart';
 import { stopProviderRunsCron } from './provderRun/stopProviderRuns';
 
 export let queues = combineQueueProcessors([
   expireSessionConnectionsQueues,
   expireSessionsCron,
-  postprocessMessageQueueProcessor,
+  messageTimeoutQueueProcessor,
+  finalizeMessageQueueProcessor,
   offloadQueues,
   createErrorQueueProcessor,
   createWarningQueueProcessor,
   messageCreatedQueueProcessor,
-  stopProviderRunsCron
+  stopProviderRunsCron,
+  providerRunStartQueueProcessor
 ]);

@@ -4,6 +4,11 @@ enum ShuttleServerType {
   remote
 }
 
+enum ShuttleServerRemoteProtocol {
+  sse
+  streamable_http
+}
+
 model ShuttleServer {
   oid BigInt @id
   id  String @unique

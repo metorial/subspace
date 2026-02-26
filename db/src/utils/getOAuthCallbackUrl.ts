@@ -6,8 +6,5 @@ export let getOAuthCallbackUrl = (
   provider: Provider,
   tenant: Tenant
 ) => {
-  if (providerType.attributes.auth.oauth?.oauthAutoRegistration?.status !== 'supported')
-    return null;
-
   return `${env.service.PUBLIC_SERVICE_URL}/oauth-callback/${tenant.urlKey}-${provider.tag}-${providerType.shortKey}`;
 };

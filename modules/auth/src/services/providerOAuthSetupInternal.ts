@@ -134,7 +134,10 @@ class providerOAuthSetupInternalServiceImpl {
           providerOAuthSetupUpdatedQueue.add({ providerOAuthSetupId: setup.id })
         );
 
-        return setup;
+        return {
+          ...setup,
+          session
+        };
       })
     );
   }

@@ -90,6 +90,8 @@ export let customProviderController = app.controller({
           tenantId: v.string(),
           environmentId: v.string(),
 
+          search: v.optional(v.string()),
+
           status: v.optional(v.array(v.enumOf(['active', 'archived']))),
           type: v.optional(v.array(v.enumOf(['container', 'function', 'remote']))),
           allowDeleted: v.optional(v.boolean()),
@@ -104,6 +106,8 @@ export let customProviderController = app.controller({
         tenant: ctx.tenant,
         environment: ctx.environment,
         solution: ctx.solution,
+
+        search: ctx.input.search,
 
         type: ctx.input.type,
         status: ctx.input.status,
@@ -183,6 +187,7 @@ export let customProviderController = app.controller({
         allowDeleted: v.optional(v.boolean()),
 
         name: v.optional(v.string()),
+        readme: v.optional(v.string()),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any()))
       })
@@ -202,6 +207,7 @@ export let customProviderController = app.controller({
 
         input: {
           name: ctx.input.name,
+          readme: ctx.input.readme,
           description: ctx.input.description,
           metadata: ctx.input.metadata
         }

@@ -1,5 +1,6 @@
 export * from './providerRun';
 export * from './providerRunLogs';
+export * from './providerRunUsageRecord';
 export * from './session';
 export * from './sessionConnection';
 export * from './sessionError';
@@ -11,4 +12,5 @@ export * from './sessionProvider';
 export * from './sessionProviderInput';
 export * from './sessionTemplate';
 export * from './sessionTemplateProvider';
+export * from './sessionUsageRecord';
 export * from './toolCall';

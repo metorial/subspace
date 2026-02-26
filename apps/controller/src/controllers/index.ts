@@ -28,6 +28,7 @@ import { providerListingGroupController } from './providerGroup';
 import { providerListingController } from './providerListing';
 import { providerOAuthSetupController } from './providerOAuthSetup';
 import { providerRunController } from './providerRun';
+import { providerRunUsageRecordController } from './providerRunUsageRecord';
 import { providerSetupSessionController } from './providerSetupSession';
 import { providerSpecificationController } from './providerSpecification';
 import { providerToolController } from './providerTool';
@@ -50,6 +51,7 @@ import { sessionParticipantController } from './sessionParticipant';
 import { sessionProviderController } from './sessionProvider';
 import { sessionTemplateController } from './sessionTemplate';
 import { sessionTemplateProviderController } from './sessionTemplateProvider';
+import { sessionUsageRecordController } from './sessionUsageRecord';
 import { solutionController } from './solution';
 import { tenantController } from './tenant';
 import { toolCallController } from './toolCall';
@@ -115,7 +117,10 @@ export let rootController = app.controller({
   scmProviderSetupSession: scmProviderSetupSessionController,
   scmRepository: scmRepositoryController,
   scmPush: scmPushController,
-  bucket: bucketController
+  bucket: bucketController,
+
+  sessionUsageRecord: sessionUsageRecordController,
+  providerRunUsageRecord: providerRunUsageRecordController
 });
 
 export let subspaceControllerRPC = createServer({})(rootController);

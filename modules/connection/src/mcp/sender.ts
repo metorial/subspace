@@ -130,7 +130,9 @@ export class McpSender {
         mcp: res.mcp
       };
     } catch (e) {
-      console.error('Error handling MCP message:', e);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Error handling MCP message:', e);
+      }
 
       if (!isServiceError(e)) {
         Sentry.captureException(e);
@@ -283,6 +285,7 @@ export class McpSender {
         let resourceTemplateRead = mcpValidate(id, ReadResourceRequestSchema, msg);
         if (!resourceTemplateRead.success)
           return { mcp: resourceTemplateRead.error, store: true };
+
         return this.handleResourceReadMessage(id, {
           ...resourceTemplateRead.data.params,
           waitForResponse: opts.waitForResponse
@@ -672,7 +675,7 @@ export class McpSender {
     }
 
     let result = await this.manager.callTool({
-      toolId: resourceReadTool.id,
+      toolId: resourceReadTool.key,
       input: {
         type: 'mcp',
         data: {
