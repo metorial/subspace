@@ -142,13 +142,18 @@ class providerInternalServiceImpl {
         globalIdentifier: d.info.globalIdentifier
       };
       let existingProvider = await db.provider.findFirst({
-        where: { identifier }
+        where: {
+          OR: [
+            { identifier: providerData.identifier },
+            { globalIdentifier: providerData.globalIdentifier }
+          ]
+        }
       });
 
       let newProviderId = getId('provider');
       let provider = existingProvider
         ? await db.provider.update({
-            where: { identifier },
+            where: { oid: existingProvider.oid },
             data: providerData
           })
         : await db.provider.upsert({
