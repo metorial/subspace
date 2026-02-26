@@ -145,8 +145,10 @@ class providerInternalServiceImpl {
         where: {
           OR: [
             { identifier: providerData.identifier },
-            { globalIdentifier: providerData.globalIdentifier }
-          ]
+            providerData.globalIdentifier
+              ? { globalIdentifier: providerData.globalIdentifier }
+              : undefined!
+          ].filter(Boolean)
         }
       });
 
