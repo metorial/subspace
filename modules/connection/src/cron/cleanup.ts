@@ -17,5 +17,11 @@ export let connectionCleanupCron = createCron(
         createdAt: { lt: twoHoursAgo }
       }
     });
+
+    await db.providerRunUsageRecord.deleteMany({
+      where: {
+        createdAt: { lt: twoHoursAgo }
+      }
+    });
   }
 );

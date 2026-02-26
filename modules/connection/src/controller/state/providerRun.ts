@@ -1,4 +1,5 @@
 import { db, getId } from '@metorial-subspace/db';
+import { providerRunStartQueue } from '../../queues/provderRun/providerRunStart';
 import type { ConnectionBaseState } from './base';
 
 export let createProviderRun = async ({
@@ -22,20 +23,9 @@ export let createProviderRun = async ({
     }
   });
 
-  db.sessionEvent
-    .createMany({
-      data: {
-        ...getId('sessionEvent'),
-        type: 'provider_run_started',
-        sessionOid: session.oid,
-        connectionOid: connection.oid,
-        providerRunOid: providerRun.oid,
-        tenantOid: session.tenantOid,
-        solutionOid: session.solutionOid,
-        environmentOid: session.environmentOid
-      }
-    })
-    .catch(() => {});
+  await providerRunStartQueue.add({
+    providerRunId: providerRun.id
+  });
 
   return providerRun;
 };

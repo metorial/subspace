@@ -11,14 +11,11 @@ export let sessionUsageRecordPresenter = (
   id: sessionUsageRecord.id,
 
   session: {
-    id: sessionUsageRecord.session.id,
-    oid: sessionUsageRecord.session.oid,
-    name: sessionUsageRecord.session.name
+    id: sessionUsageRecord.session.id
   },
 
   tenant: {
-    id: sessionUsageRecord.tenant.id,
-    name: sessionUsageRecord.tenant.name
+    id: sessionUsageRecord.tenant.id
   },
 
   clientMessageIncrement: sessionUsageRecord.clientMessageIncrement,
