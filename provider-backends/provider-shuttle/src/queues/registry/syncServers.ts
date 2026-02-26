@@ -148,7 +148,9 @@ export let syncServersSingleProcessor = syncServersSingle.process(async data => 
       registryServerId: server.id,
       globalIdentifier: slugify(
         `${server.name}-${(await Hash.sha256(JSON.stringify(['shuttle', server.id, data.registryUrl]))).slice(0, 6)}`
-      )
+      ),
+      categories: server.categories.map(c => c.identifier),
+      collections: server.collections.map(c => c.identifier)
     }
   };
 

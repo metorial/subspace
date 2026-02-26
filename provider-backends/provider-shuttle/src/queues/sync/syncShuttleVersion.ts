@@ -104,7 +104,11 @@ export let syncShuttleVersionQueueProcessor = syncShuttleVersionQueue.process(as
         shuttleServerVersion: version,
 
         shuttleServerRecord,
-        shuttleServerVersionRecord
+        shuttleServerVersionRecord,
+
+        info: {
+          categories: (server.metadata as any)?.categories ?? []
+        }
       });
     } else {
       let variant = await db.providerVariant.findFirst({
