@@ -22,6 +22,7 @@ export * from './providerListingCategory';
 export * from './providerListingCollection';
 export * from './providerListingGroup';
 export * from './providerRun';
+export * from './providerRunUsageRecord';
 export * from './providerSpecification';
 export * from './providerTool';
 export * from './providerVariant';

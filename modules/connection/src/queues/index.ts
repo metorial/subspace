@@ -7,6 +7,7 @@ import { finalizeMessageQueueProcessor } from './message/finalizeMessage';
 import { messageCreatedQueueProcessor } from './message/messageCreated';
 import { messageTimeoutQueueProcessor } from './message/messageTimeout';
 import { offloadQueues } from './message/offloadMessage';
+import { providerRunStartQueueProcessor } from './provderRun/providerRunStart';
 import { stopProviderRunsCron } from './provderRun/stopProviderRuns';
 
 export let queues = combineQueueProcessors([
@@ -18,5 +19,6 @@ export let queues = combineQueueProcessors([
   createErrorQueueProcessor,
   createWarningQueueProcessor,
   messageCreatedQueueProcessor,
-  stopProviderRunsCron
+  stopProviderRunsCron,
+  providerRunStartQueueProcessor
 ]);

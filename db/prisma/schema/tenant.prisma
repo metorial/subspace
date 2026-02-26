@@ -73,6 +73,7 @@ model Tenant {
   scmRepoPushes                            ScmRepoPush[]
   sessionWarnings                          SessionWarning[]
   sessionUsageRecords                      SessionUsageRecord[]
+  providerRunUsageRecords                  ProviderRunUsageRecord[]
 }
 
 enum EnvironmentType {
