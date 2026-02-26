@@ -296,6 +296,7 @@ class providerInternalServiceImpl {
     input: {
       name?: string;
       description?: string;
+      readme?: string;
       slug?: string;
       image?: PrismaJson.EntityImage | null;
       skills?: string[];
@@ -312,11 +313,12 @@ class providerInternalServiceImpl {
       });
 
       let listing = await db.providerListing.update({
-        where: { oid: provider.oid, isCustomized: true },
+        where: { providerOid: provider.oid },
         data: {
           slug: provider.slug,
           name: provider.name,
           description: provider.description,
+          readme: d.input.readme,
           skills: d.input.skills,
           image: d.input.image ?? undefined
         }

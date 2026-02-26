@@ -288,6 +288,7 @@ class customProviderServiceImpl {
     customProvider: CustomProvider;
     input: {
       name?: string;
+      readme?: string;
       description?: string;
       metadata?: Record<string, any>;
 
@@ -378,6 +379,7 @@ class customProviderServiceImpl {
           provider: customProvider.provider,
           input: {
             name: customProvider.name,
+            readme: d.input.readme,
             description: customProvider.description ?? undefined
           }
         });
