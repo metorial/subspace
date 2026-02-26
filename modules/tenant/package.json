@@ -10,9 +10,12 @@
   },
   "dependencies": {
     "@lowerdeck/cache": "^1.0.0",
+    "@lowerdeck/env": "^1.0.4",
     "@lowerdeck/error": "^1.0.0",
+    "@lowerdeck/id": "^1.0.6",
     "@lowerdeck/queue": "^1.0.8",
     "@lowerdeck/service": "^1.0.4",
+    "@lowerdeck/validation": "^1.0.4",
     "@metorial-subspace/db": "^1.0.0"
   },
   "devDependencies": {

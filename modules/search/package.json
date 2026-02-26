@@ -13,7 +13,9 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@lowerdeck/delay": "^1.0.4",
     "@lowerdeck/env": "^1.0.4",
+    "@lowerdeck/programmable-promise": "^1.0.6",
     "@lowerdeck/validation": "^1.0.4",
     "@metorial-services/voyager-client": "^1.0.1"
   }
