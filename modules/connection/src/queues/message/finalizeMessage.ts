@@ -1,5 +1,6 @@
 import { createQueue } from '@lowerdeck/queue';
 import { db } from '@metorial-subspace/db';
+import { v7 } from 'uuid';
 import { env } from '../../env';
 
 export let finalizeMessageQueue = createQueue<{ messageId: string }>({
@@ -60,6 +61,8 @@ export let finalizeMessageQueueProcessor = finalizeMessageQueue.process(async da
   ) {
     await db.sessionUsageRecord.create({
       data: {
+        id: v7(),
+
         sessionOid: message.sessionOid,
         tenantOid: message.session.tenantOid,
         solutionOid: message.session.solutionOid,

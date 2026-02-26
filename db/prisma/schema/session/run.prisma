@@ -42,12 +42,13 @@ model ProviderRun {
   completedAt DateTime?
   lastPingAt  DateTime?
 
-  sessionMessages    SessionMessage[]
-  sessionEvents      SessionEvent[]
-  slateSessions      SlateSession[]
-  sessionErrors      SessionError[]
-  toolCalls          ToolCall[]
-  shuttleConnections ShuttleConnection[]
+  sessionMessages         SessionMessage[]
+  sessionEvents           SessionEvent[]
+  slateSessions           SlateSession[]
+  sessionErrors           SessionError[]
+  toolCalls               ToolCall[]
+  shuttleConnections      ShuttleConnection[]
+  providerRunUsageRecords ProviderRunUsageRecord[]
 
   @@index([status])
   @@index([lastPingAt])

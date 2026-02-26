@@ -15,3 +15,18 @@ model SessionUsageRecord {
 
   createdAt DateTime @default(now())
 }
+
+model ProviderRunUsageRecord {
+  id String @id @default(uuid())
+
+  providerRunOid BigInt
+  providerRun    ProviderRun @relation(fields: [providerRunOid], references: [oid])
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid])
+
+  solutionOid Int
+  solution    Solution @relation(fields: [solutionOid], references: [oid])
+
+  createdAt DateTime @default(now())
+}
