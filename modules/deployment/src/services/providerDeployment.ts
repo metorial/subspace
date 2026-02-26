@@ -139,7 +139,7 @@ class providerDeploymentServiceImpl {
     provider: Provider & { defaultVariant: ProviderVariant | null };
     lockedVersion?: ProviderVersion;
     input: {
-      name: string;
+      name?: string;
       description?: string;
       metadata?: Record<string, any>;
       isEphemeral?: boolean;
