@@ -187,6 +187,7 @@ export let customProviderController = app.controller({
         allowDeleted: v.optional(v.boolean()),
 
         name: v.optional(v.string()),
+        readme: v.optional(v.string()),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any()))
       })
@@ -206,6 +207,7 @@ export let customProviderController = app.controller({
 
         input: {
           name: ctx.input.name,
+          readme: ctx.input.readme,
           description: ctx.input.description,
           metadata: ctx.input.metadata
         }
