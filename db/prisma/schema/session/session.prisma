@@ -33,8 +33,8 @@ model Session {
   solutionOid Int
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
-  totalProductiveClientMessageCount Int @default(0)
-  totalProductiveServerMessageCount Int @default(0)
+  totalProductiveClientMessageCount   Int @default(0)
+  totalProductiveProviderMessageCount Int @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -52,6 +52,7 @@ model Session {
   sessionProviderInstances SessionProviderInstance[]
   toolCalls                ToolCall[]
   sessionWarnings          SessionWarning[]
+  sessionUsageRecords      SessionUsageRecord[]
 
   @@index([lastActiveAt])
   @@index([connectionState])

@@ -12,8 +12,8 @@ model SessionProvider {
   isEphemeral     Boolean
   isParentDeleted Boolean               @default(false)
 
-  totalProductiveClientMessageCount Int @default(0)
-  totalProductiveServerMessageCount Int @default(0)
+  totalProductiveClientMessageCount   Int @default(0)
+  totalProductiveProviderMessageCount Int @default(0)
 
   tag String
 
