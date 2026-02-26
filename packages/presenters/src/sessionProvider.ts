@@ -30,7 +30,7 @@ export let sessionProviderPresenter = (
 
   usage: {
     totalProductiveClientMessageCount: provider.totalProductiveClientMessageCount,
-    totalProductiveServerMessageCount: provider.totalProductiveServerMessageCount
+    totalProductiveProviderMessageCount: provider.totalProductiveProviderMessageCount
   },
 
   toolFilter: provider.toolFilter,

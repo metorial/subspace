@@ -1,7 +1,8 @@
 import { createQueue, QueueRetryError } from '@lowerdeck/queue';
 import { db } from '@metorial-subspace/db';
 import { env } from '../../env';
-import { postprocessMessageQueue } from './postprocessMessage';
+import { finalizeMessageQueue } from './finalizeMessage';
+import { messageTimeoutQueue } from './messageTimeout';
 
 export let messageCreatedQueue = createQueue<{ messageId: string }>({
   name: 'sub/con/msg/created',
@@ -15,14 +16,29 @@ export let messageCreatedQueueProcessor = messageCreatedQueue.process(async data
   });
   if (!message) throw new QueueRetryError();
 
+  let incrementClientProductive = message.isProductive && message.source === 'client' ? 1 : 0;
+  let incrementProviderProductive =
+    message.isProductive && message.source === 'provider' ? 1 : 0;
+
+  let incrementData: {
+    totalProductiveClientMessageCount?: { increment: number };
+    totalProductiveProviderMessageCount?: { increment: number };
+  } = {};
+
+  if (incrementClientProductive) {
+    incrementData.totalProductiveClientMessageCount = { increment: 1 };
+  }
+  if (incrementProviderProductive) {
+    incrementData.totalProductiveProviderMessageCount = { increment: 1 };
+  }
+
   if (message.connectionOid) {
     await db.sessionConnection.updateMany({
       where: { oid: message.connectionOid },
       data: {
         lastActiveAt: new Date(),
         lastMessageAt: new Date(),
-        totalProductiveClientMessageCount:
-          message.isProductive && message.source === 'client' ? { increment: 1 } : undefined
+        ...incrementData
       }
     });
   }
@@ -32,8 +48,7 @@ export let messageCreatedQueueProcessor = messageCreatedQueue.process(async data
       where: { oid: message.sessionProviderOid },
       data: {
         lastMessageAt: new Date(),
-        totalProductiveClientMessageCount:
-          message.isProductive && message.source === 'client' ? { increment: 1 } : undefined
+        ...incrementData
       }
     });
   }
@@ -43,10 +58,13 @@ export let messageCreatedQueueProcessor = messageCreatedQueue.process(async data
     data: {
       lastActiveAt: new Date(),
       lastMessageAt: new Date(),
-      totalProductiveClientMessageCount:
-        message.isProductive && message.source === 'client' ? { increment: 1 } : undefined
+      ...incrementData
     }
   });
 
-  await postprocessMessageQueue.add({ messageId: message.id }, { delay: 1000 * 10 });
+  if (message.status == 'waiting_for_response') {
+    await messageTimeoutQueue.add({ messageId: message.id }, { delay: 1000 * 15 });
+  } else {
+    await finalizeMessageQueue.add({ messageId: message.id });
+  }
 });

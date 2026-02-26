@@ -39,6 +39,7 @@ export * from './sessionParticipant';
 export * from './sessionProvider';
 export * from './sessionTemplate';
 export * from './sessionTemplateProvider';
+export * from './sessionUsageRecord';
 export * from './setupSession';
 export * from './solution';
 export * from './tenant';

@@ -11,4 +11,5 @@ export * from './sessionProvider';
 export * from './sessionProviderInput';
 export * from './sessionTemplate';
 export * from './sessionTemplateProvider';
+export * from './sessionUsageRecord';
 export * from './toolCall';
