@@ -28,7 +28,9 @@ export let upsertShuttleServerVersion = ({
   shuttleServerVersion: version,
 
   shuttleServerRecord,
-  shuttleServerVersionRecord
+  shuttleServerVersionRecord,
+
+  info
 }: {
   publisherId?: string;
   globalIdentifier?: string;
@@ -38,6 +40,11 @@ export let upsertShuttleServerVersion = ({
 
   shuttleServerRecord: ShuttleServer;
   shuttleServerVersionRecord: ShuttleServerVersion;
+
+  info?: {
+    categories: string[];
+    readme?: string;
+  };
 }) =>
   withTransaction(async db => {
     let publisher: Publisher | null = null;
@@ -152,7 +159,10 @@ export let upsertShuttleServerVersion = ({
         name: server.name,
         description: server.description ?? undefined,
         slug: slugify(`${server.name}-${generateCode(5)}`),
-        globalIdentifier: tenant ? null : (globalIdentifier ?? null)
+        globalIdentifier: tenant ? null : (globalIdentifier ?? null),
+
+        categories: info?.categories,
+        readme: info?.readme
       },
       type
     });
