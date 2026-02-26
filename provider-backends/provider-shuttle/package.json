@@ -20,7 +20,7 @@
     "@lowerdeck/id": "^1.0.5",
     "@lowerdeck/lock": "^1.0.3",
     "@lowerdeck/programmable-promise": "^1.0.6",
-    "@lowerdeck/queue": "^1.0.4",
+    "@lowerdeck/queue": "^1.0.8",
     "@lowerdeck/slugify": "^1.0.4",
     "@lowerdeck/validation": "^1.0.4",
     "@metorial-services/shuttle-client": "1.0.10",

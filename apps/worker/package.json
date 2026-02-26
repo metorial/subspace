@@ -16,13 +16,14 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@lowerdeck/queue": "^1.0.4",
+    "@lowerdeck/queue": "^1.0.8",
     "@metorial-subspace/app-controller": "workspace:*",
     "@metorial-subspace/module-auth": "^1.0.0",
     "@metorial-subspace/module-catalog": "^1.0.0",
     "@metorial-subspace/module-connection": "^1.0.0",
     "@metorial-subspace/module-deployment": "^1.0.0",
     "@metorial-subspace/module-provider-internal": "^1.0.0",
+    "@lowerdeck/telemetry": "^1.0.1",
     "@metorial-subspace/module-tenant": "^1.0.0",
     "@metorial-subspace/provider-slates": "^1.0.0",
     "@sentry/bun": "^10.34.0",

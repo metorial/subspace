@@ -1,4 +1,5 @@
 import { createRequire } from 'module';
+import { initTelemetry } from '@lowerdeck/telemetry';
 
 // Provide CommonJS `require` in ESM runtime for bundled deps.
 const require = createRequire(import.meta.url);
@@ -7,6 +8,7 @@ const require = createRequire(import.meta.url);
 
 async function main() {
   await import('./init');
+  initTelemetry({ serviceName: 'subspace-worker' });
   await import('./instrument');
   await import('./worker');
   await import('./connection');
