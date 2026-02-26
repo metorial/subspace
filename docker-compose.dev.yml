@@ -392,12 +392,6 @@ services:
     ports:
       - '52070:52070'
       - '52072:52072'
-    command:
-      [
-        'sh',
-        '-c',
-        'cd db && bun prisma db push --accept-data-loss && bun prisma generate && cd ../apps/controller && bun start:dev'
-      ]
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0
@@ -427,7 +421,6 @@ services:
       # Preserve container-installed workspace deps when source is bind-mounted (CI checkout has no node_modules).
       - /app/apps/controller/node_modules
       - ./apps/controller/package.json:/app/apps/controller/package.json:ro
-      - ./scripts:/app/scripts:ro
       - ./modules:/app/modules:ro
       - ./packages:/app/packages:ro
       - ./provider-backends:/app/provider-backends:ro
@@ -558,12 +551,6 @@ services:
     restart: unless-stopped
     ports:
       - '52071:52071'
-    command:
-      [
-        'sh',
-        '-c',
-        'cd /app/apps/public && bun run start:dev'
-      ]
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0
@@ -592,7 +579,6 @@ services:
       - ./apps/public/src:/app/apps/public/src:ro
       - ./apps/public/frontend/src:/app/apps/public/frontend/src:ro
       - ./apps/public/package.json:/app/apps/public/package.json:ro
-      - ./scripts:/app/scripts:ro
       - ./modules:/app/modules:ro
       - ./packages:/app/packages:ro
       - ./provider-backends:/app/provider-backends:ro
@@ -634,12 +620,6 @@ services:
       dockerfile: ./apps/worker/dev.Dockerfile
     container_name: subspace-worker-service
     restart: unless-stopped
-    command:
-      [
-        'sh',
-        '-c',
-        'cd /app/apps/worker && bun start:dev'
-      ]
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/subspace
       REDIS_URL: redis://redis:6379/0
@@ -667,7 +647,6 @@ services:
     volumes:
       - ./apps/worker:/app/apps/worker:ro
       - ./apps/worker/package.json:/app/apps/worker/package.json:ro
-      - ./scripts:/app/scripts:ro
       - ./modules:/app/modules:ro
       - ./packages:/app/packages:ro
       - ./provider-backends:/app/provider-backends:ro

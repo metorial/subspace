@@ -1,4 +1,5 @@
 import { setSentry } from '@lowerdeck/sentry';
+import { initTelemetry } from '@lowerdeck/telemetry';
 import * as Sentry from '@sentry/bun';
 import { shouldIgnoreSentryHttpError, shuttleUnreachableErrorPattern } from './sentryFilters';
 
@@ -8,6 +9,8 @@ declare global {
 }
 
 const isStaging = process.env.METORIAL_ENV === 'staging';
+
+initTelemetry({ serviceName: 'subspace-worker' });
 
 if (
   process.env.METORIAL_ENV !== 'development' &&

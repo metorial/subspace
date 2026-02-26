@@ -1,5 +1,4 @@
 import { setupPrismaTestDb, setupTestGlobals } from '@lowerdeck/testing-tools';
-import { initTelemetry } from '@lowerdeck/telemetry';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@metorial-subspace/db';
 import { sessionMessageBucketRecord } from '@metorial-subspace/connection-utils';
@@ -7,7 +6,6 @@ import { afterAll } from 'vitest';
 import { setupVoyagerStub, resetVoyagerStub } from './helpers/voyagerStub';
 
 setupTestGlobals({ nodeEnv: 'test' });
-initTelemetry({ serviceName: 'subspace-controller-test' });
 setupVoyagerStub();
 
 let db = await setupPrismaTestDb<PrismaClient>({

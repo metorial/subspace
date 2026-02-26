@@ -12,10 +12,10 @@ let testRootController = appWithoutSolution.controller({
 });
 
 let testRpc = rpcMux(
-  { path: '/subspace-controller', allowRootSpan: true },
+  { path: '/subspace-controller' },
   [createServer({})(testRootController)]
 );
-let fullTestRpc = rpcMux({ path: '/subspace-controller', allowRootSpan: true }, [subspaceControllerRPC]);
+let fullTestRpc = rpcMux({ path: '/subspace-controller' }, [subspaceControllerRPC]);
 
 type ClientOptsLike = Parameters<typeof createClient>[0];
 type RouteOwner = 'partial' | 'root';
