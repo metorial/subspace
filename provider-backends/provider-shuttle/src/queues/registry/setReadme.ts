@@ -50,7 +50,7 @@ export let setReadmeForShuttleServerQueueProcessor = setReadmeForShuttleServerQu
       data: { readme: regServer.readme }
     });
 
-    await db.shuttleSyncServer.update({
+    await db.shuttleSyncServer.updateMany({
       where: { id: data.syncRecordId },
       data: { readmePending: false }
     });

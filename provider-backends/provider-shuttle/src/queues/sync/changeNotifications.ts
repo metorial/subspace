@@ -32,7 +32,7 @@ export let syncChangeNotificationsQueueProcessor = syncChangeNotificationsQueue.
       });
       if (!changeNotifications.items.length) return;
 
-      await syncShuttleVersionQueue.addMany(
+      await syncShuttleVersionQueue.addManyWithOps(
         changeNotifications.items
           .map(item => ({
             serverId: item.serverId!,
@@ -40,6 +40,10 @@ export let syncChangeNotificationsQueueProcessor = syncChangeNotificationsQueue.
             tenantId: item.tenantId
           }))
           .filter(item => item.serverId && item.serverVersionId)
+          .map(data => ({
+            data,
+            opts: { id: data.serverVersionId }
+          }))
       );
 
       let lastItem = changeNotifications.items[changeNotifications.items.length - 1];
