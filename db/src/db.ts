@@ -1,4 +1,5 @@
 import type { ErrorData } from '@lowerdeck/error';
+import { withExecutionContextTraceFallback } from '@lowerdeck/telemetry';
 import type {
   Specification,
   SpecificationAuthMethod,
@@ -13,7 +14,17 @@ import type { CustomProviderConfig, CustomProviderFrom } from './types';
 
 let adapter = new PrismaPg({ connectionString: env.service.DATABASE_URL });
 
-export let db = new PrismaClient({ adapter });
+let baseDb = new PrismaClient({ adapter });
+
+export let db = baseDb.$extends({
+  query: {
+    $allModels: {
+      async $allOperations({ args, query }) {
+        return await withExecutionContextTraceFallback(async () => await query(args));
+      }
+    }
+  }
+});
 
 declare global {
   namespace PrismaJson {

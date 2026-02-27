@@ -125,7 +125,9 @@ export let rootController = app.controller({
 
 export let subspaceControllerRPC = createServer({})(rootController);
 export let subspaceControllerApi = apiMux([
-  { endpoint: rpcMux({ path: '/subspace-controller' }, [subspaceControllerRPC]) }
+  {
+    endpoint: rpcMux({ path: '/subspace-controller', allowRootSpan: true }, [subspaceControllerRPC])
+  }
 ]);
 
 export type SubspaceControllerClient = InferClient<typeof rootController>;

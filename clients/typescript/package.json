@@ -31,7 +31,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@lowerdeck/rpc-client": "^1.0.3",
+    "@lowerdeck/rpc-client": "^1.1.1",
     "@lowerdeck/validation": "^1.0.4"
   },
   "devDependencies": {

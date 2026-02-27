@@ -1,4 +1,5 @@
 import { setSentry } from '@lowerdeck/sentry';
+import { initTelemetry } from '@lowerdeck/telemetry';
 import * as Sentry from '@sentry/bun';
 import {
   shouldIgnoreSentryHttpError,
@@ -11,6 +12,11 @@ declare global {
 }
 
 const isStaging = process.env.METORIAL_ENV === 'staging';
+
+initTelemetry({
+  serviceName: 'subspace-controller',
+  allowRootSpans: true
+});
 
 if (
   process.env.METORIAL_ENV !== 'development' &&
