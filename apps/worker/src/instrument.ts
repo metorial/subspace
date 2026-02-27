@@ -10,7 +10,10 @@ declare global {
 
 const isStaging = process.env.METORIAL_ENV === 'staging';
 
-initTelemetry({ serviceName: 'subspace-worker' });
+initTelemetry({
+  serviceName: 'subspace-worker',
+  allowRootSpans: false
+});
 
 if (
   process.env.METORIAL_ENV !== 'development' &&
