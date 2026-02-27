@@ -82,31 +82,31 @@ export let customDeploymentMonitorQueueProcessor = customDeploymentMonitorQueue.
           serverVersionId: shuttleDeployment.serverVersionId
         });
 
-        let shuttleServerVersionRecord = await shuttleServerVersionUpsertLock.usingLock(
-          shuttleVersion.id,
-          async () =>
-            db.shuttleServerVersion.upsert({
-              where: { id: shuttleVersion.id },
-              create: {
-                oid: snowflake.nextId(),
-                id: shuttleVersion.id,
-                version: shuttleVersion.id,
-                identifier: `${shuttleServerRecord.id}::${shuttleVersion.id}`,
-                serverOid: shuttleServerRecord.oid
-              },
-              update: {}
-            })
-        );
+        try {
+          let shuttleServerVersionRecord = await db.shuttleServerVersion.upsert({
+            where: { id: shuttleVersion.id },
+            create: {
+              oid: snowflake.nextId(),
+              id: shuttleVersion.id,
+              version: shuttleVersion.id,
+              identifier: `${shuttleServerRecord.id}::${shuttleVersion.id}`,
+              serverOid: shuttleServerRecord.oid
+            },
+            update: {}
+          });
 
-        await db.customProviderDeployment.updateMany({
-          where: { id: deployment.id },
-          data: { shuttleServerVersionOid: shuttleServerVersionRecord.oid }
-        });
+          await db.customProviderDeployment.updateMany({
+            where: { id: deployment.id },
+            data: { shuttleServerVersionOid: shuttleServerVersionRecord.oid }
+          });
 
-        await customDeploymentSucceededQueue.add({
-          customProviderDeploymentId: deployment.id
-        });
-        return;
+          await customDeploymentSucceededQueue.add({
+            customProviderDeploymentId: deployment.id
+          });
+          return;
+        } catch (err) {
+          throw new QueueRetryError();
+        }
       }
     }
 
