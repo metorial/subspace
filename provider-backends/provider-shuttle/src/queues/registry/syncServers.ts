@@ -174,7 +174,7 @@ export let syncServersSingleProcessor = syncServersSingle.process(async data => 
       ...inner
     });
 
-    await db.shuttleSyncServer.update({
+    await db.shuttleSyncServer.updateMany({
       where: { id: syncRecord.id },
       data: { shuttleServerId: res.server.id }
     });
@@ -199,7 +199,7 @@ export let syncServersSingleProcessor = syncServersSingle.process(async data => 
       ...inner
     });
 
-    await db.shuttleSyncServer.update({
+    await db.shuttleSyncServer.updateMany({
       where: { id: syncRecord.id },
       data: { shuttleServerId: res.server.id }
     });
