@@ -20,7 +20,7 @@
     "@lowerdeck/execution-context": "^1.1.0",
     "@lowerdeck/id": "^1.0.5",
     "@lowerdeck/snowflake": "^1.0.2",
-    "@lowerdeck/telemetry": "^1.1.0",
+    "@lowerdeck/telemetry": "^1.1.1",
     "@lowerdeck/validation": "^1.0.4",
     "@metorial-subspace/provider-utils": "^1.0.0",
     "@metorial-subspace/tsconfig": "^1.0.0",

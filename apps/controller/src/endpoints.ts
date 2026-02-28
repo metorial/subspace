@@ -1,4 +1,4 @@
-import { withExecutionContextTraceFallback } from '@lowerdeck/telemetry';
+import { withTracingSuppressed } from '@lowerdeck/telemetry';
 import { db } from '@metorial-subspace/db';
 import { RedisClient } from 'bun';
 import { subspaceControllerApi } from './controllers';
@@ -17,7 +17,7 @@ console.log(`Service running on http://localhost:${server.port}`);
 if (process.env.NODE_ENV === 'production') {
   Bun.serve({
     fetch: async _ =>
-      await withExecutionContextTraceFallback(async () => {
+      await withTracingSuppressed(async () => {
         try {
           await db.backend.count();
 

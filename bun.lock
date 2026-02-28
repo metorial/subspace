@@ -1,5 +1,6 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "@metorial-subspace/root",
@@ -27,7 +28,7 @@
         "@lowerdeck/rpc-server": "^1.0.8",
         "@lowerdeck/sentry": "^1.0.2",
         "@lowerdeck/serialize": "^1.0.4",
-        "@lowerdeck/telemetry": "^1.1.0",
+        "@lowerdeck/telemetry": "^1.1.1",
         "@lowerdeck/validation": "^1.0.4",
         "@metorial-subspace/db": "^1.0.0",
         "@metorial-subspace/module-auth": "^1.0.0",
@@ -124,7 +125,7 @@
         "@lowerdeck/error": "^1.0.10",
         "@lowerdeck/hono": "^1.0.6",
         "@lowerdeck/rpc-server": "^1.0.8",
-        "@lowerdeck/telemetry": "^1.1.0",
+        "@lowerdeck/telemetry": "^1.1.1",
         "@lowerdeck/validation": "^1.0.4",
         "@metorial-io/data-hooks": "^1.0.1",
         "@metorial-io/pages": "^1.0.0",
@@ -159,7 +160,7 @@
       "name": "@metorial-subspace/app-worker",
       "dependencies": {
         "@lowerdeck/queue": "^1.0.8",
-        "@lowerdeck/telemetry": "^1.1.0",
+        "@lowerdeck/telemetry": "^1.1.1",
         "@metorial-subspace/app-controller": "workspace:*",
         "@metorial-subspace/module-auth": "^1.0.0",
         "@metorial-subspace/module-catalog": "^1.0.0",
@@ -201,7 +202,7 @@
         "@lowerdeck/execution-context": "^1.1.0",
         "@lowerdeck/id": "^1.0.5",
         "@lowerdeck/snowflake": "^1.0.2",
-        "@lowerdeck/telemetry": "^1.1.0",
+        "@lowerdeck/telemetry": "^1.1.1",
         "@lowerdeck/validation": "^1.0.4",
         "@metorial-subspace/provider-utils": "^1.0.0",
         "@metorial-subspace/tsconfig": "^1.0.0",
@@ -957,7 +958,7 @@
 
     "@lowerdeck/snowflake": ["@lowerdeck/snowflake@1.0.2", "", {}, "sha512-Wcv5unEv0ZvPT2146NzaqRAadbPQgpYzL5VeVy8MttLZ5PgfSSr225iTz+cNQoVeP9SxkeOXgTHtm6ISABAdfw=="],
 
-    "@lowerdeck/telemetry": ["@lowerdeck/telemetry@1.1.0", "", { "dependencies": { "@lowerdeck/execution-context": "^1.1.0", "@opentelemetry/api": "^1.9.0", "@opentelemetry/context-async-hooks": "^2.5.0", "@opentelemetry/core": "^2.5.0", "@opentelemetry/exporter-trace-otlp-http": "^0.211.0", "@opentelemetry/instrumentation": "^0.212.0", "@opentelemetry/resources": "^2.5.0", "@opentelemetry/sdk-trace-base": "^2.5.0", "@opentelemetry/sdk-trace-node": "^2.5.0", "@opentelemetry/semantic-conventions": "^1.39.0", "@prisma/instrumentation": "^7.4.1" } }, "sha512-Q0wVoJoLV7BisPKSvEZsXmKmxxt7KASLnGm00V6hojhQZBi65ERngvjDWD2oVj2nz8InwmVjOQPMG9Fn2lIMCQ=="],
+    "@lowerdeck/telemetry": ["@lowerdeck/telemetry@1.1.1", "", { "dependencies": { "@lowerdeck/execution-context": "^1.1.0", "@opentelemetry/api": "^1.9.0", "@opentelemetry/context-async-hooks": "^2.5.0", "@opentelemetry/core": "^2.5.0", "@opentelemetry/exporter-trace-otlp-http": "^0.211.0", "@opentelemetry/instrumentation": "^0.212.0", "@opentelemetry/resources": "^2.5.0", "@opentelemetry/sdk-trace-base": "^2.5.0", "@opentelemetry/sdk-trace-node": "^2.5.0", "@opentelemetry/semantic-conventions": "^1.39.0", "@prisma/instrumentation": "^7.4.1" } }, "sha512-IOcVHadI9VftSn845hFtWPU8k+tk2k0/hey0PrZsddJorY1D485ODapq5x2bdCmL8B46ZBMSduU0NH+d/S5lgg=="],
 
     "@lowerdeck/testing-tools": ["@lowerdeck/testing-tools@1.0.1", "", { "dependencies": { "vite": "^5.4.1" }, "peerDependencies": { "vitest": ">=3.0.0" } }, "sha512-udR6he9ewXBJwwmhGH5RnaWKG9KEY/UXGJsfMJb+6MOBVYq5mlYAvHnGdauDksFAElfs/vDSIy9q6rblUfBTog=="],
 
