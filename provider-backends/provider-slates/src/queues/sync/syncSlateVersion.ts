@@ -1,4 +1,5 @@
 import { createLocallyCachedFunction } from '@lowerdeck/cache';
+import { Cases } from '@lowerdeck/case';
 import { Hash } from '@lowerdeck/hash';
 import { generateCode } from '@lowerdeck/id';
 import { createQueue } from '@lowerdeck/queue';
@@ -170,7 +171,7 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
         backend
       },
       info: {
-        name: slate.name,
+        name: Cases.toTitleCase(slate.name),
         description: slate.description ?? undefined,
         slug: slugify(`${registryRecord.fullIdentifier}-${generateCode(5)}`),
         image: registryRecord.logoUrl ? { type: 'url', url: registryRecord.logoUrl } : null,
