@@ -24,13 +24,16 @@ export let syncSlatesQueueProcessor = syncSlatesQueue.process(async data =>
     });
     if (!slatesList.items.length) return;
 
-    await syncSlateVersionQueue.addMany(
+    await syncSlateVersionQueue.addManyWithOps(
       slatesList.items
         .map(item => ({
-          slateId: item.id,
-          slateVersionId: item.currentVersion?.id!
+          data: {
+            slateId: item.id,
+            slateVersionId: item.currentVersion?.id!
+          },
+          opts: { id: item.currentVersion?.id! }
         }))
-        .filter(item => item.slateVersionId)
+        .filter(item => item.data.slateVersionId)
     );
 
     let lastItem = slatesList.items[slatesList.items.length - 1];
