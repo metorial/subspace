@@ -32,13 +32,18 @@ export let syncChangeNotificationsQueueProcessor = syncChangeNotificationsQueue.
       });
       if (!changeNotifications.items.length) return;
 
-      await syncSlateVersionQueue.addMany(
+      await syncSlateVersionQueue.addManyWithOps(
         changeNotifications.items
           .map(item => ({
-            slateId: item.slateId,
-            slateVersionId: item.slateVersionId!
+            data: {
+              slateId: item.slateId,
+              slateVersionId: item.slateVersionId!
+            },
+            opts: {
+              id: item.slateVersionId!
+            }
           }))
-          .filter(item => item.slateVersionId)
+          .filter(item => item.data.slateVersionId)
       );
 
       let lastItem = changeNotifications.items[changeNotifications.items.length - 1];
