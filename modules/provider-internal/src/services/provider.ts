@@ -231,6 +231,8 @@ class providerInternalServiceImpl {
           description: d.info.description,
           slug: d.info.slug,
 
+          image: d.info.image ?? { type: 'default' as const },
+
           readme: d.info.readme,
 
           skills: d.info.skills || [],
