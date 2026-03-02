@@ -418,7 +418,6 @@ class sessionProviderInputServiceImpl {
           providerSessions.map(async ps => ({
             ...getId('sessionTemplateProvider'),
 
-            tag: generateCode(5),
             status: 'active' as const,
 
             tenantOid: d.tenant.oid,
