@@ -96,7 +96,18 @@ export let sessionProviderController = app.controller({
       let paginator = await sessionProviderService.listSessionProviders({
         tenant: ctx.tenant,
         environment: ctx.environment,
-        solution: ctx.solution
+        solution: ctx.solution,
+
+        ids: ctx.input.ids,
+        sessionIds: ctx.input.sessionIds,
+        sessionTemplateIds: ctx.input.sessionTemplateIds,
+        providerIds: ctx.input.providerIds,
+        providerDeploymentIds: ctx.input.providerDeploymentIds,
+        providerConfigIds: ctx.input.providerConfigIds,
+        providerAuthConfigIds: ctx.input.providerAuthConfigIds,
+
+        allowDeleted: ctx.input.allowDeleted,
+        status: ctx.input.status
       });
 
       let list = await paginator.run(ctx.input);
