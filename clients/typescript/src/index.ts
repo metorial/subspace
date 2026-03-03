@@ -3,4 +3,4 @@ import type { SubspaceControllerClient } from '../../../apps/controller/src/cont
 
 export let createSubspaceControllerClient = (
   o: Parameters<typeof createClient<SubspaceControllerClient>>[0]
-) => createClient<SubspaceControllerClient>(o);
+): SubspaceControllerClient => createClient<SubspaceControllerClient>(o);
