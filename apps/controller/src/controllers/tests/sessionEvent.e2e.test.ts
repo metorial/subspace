@@ -94,7 +94,7 @@ describe('sessionEvent.e2e', () => {
     });
 
     expect(listed).toMatchObject({
-      __typename: 'list',
+      object: 'list',
       items: [
         expect.objectContaining({
           id: sessionEvent.id,

@@ -13,7 +13,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@lowerdeck/error": "^1.0.10",
+    "@lowerdeck/error": "^1.2.2",
     "@metorial-subspace/db": "^1.0.0",
     "date-fns": "^4.1.0"
   }

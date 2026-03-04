@@ -25,21 +25,21 @@ describe('public-provider-resources.e2e', () => {
       limit: 1
     });
     expect(listings).toMatchObject({
-      __typename: 'list'
+      object: 'list'
     });
 
     let categories = await client.providerListingCategory.list({
       limit: 1
     });
     expect(categories).toMatchObject({
-      __typename: 'list'
+      object: 'list'
     });
 
     let collections = await client.providerListingCollection.list({
       limit: 1
     });
     expect(collections).toMatchObject({
-      __typename: 'list'
+      object: 'list'
     });
   });
 });
