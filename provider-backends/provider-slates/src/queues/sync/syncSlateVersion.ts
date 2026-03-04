@@ -96,11 +96,6 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
       update: {}
     });
 
-    // Abort if the version already existed
-    if (slateVersionRecord.oid !== newVersionOid) {
-      return;
-    }
-
     let readmeNames = ['readme.md'];
     let readme = registryVersionRecord.documents.find((d: any) =>
       readmeNames.some(n => d.path.toLocaleLowerCase().endsWith(n))
@@ -187,6 +182,9 @@ export let syncSlateVersionQueueProcessor = syncSlateVersionQueue.process(async 
     if (!provider?.defaultVariant) {
       throw new Error(`No default variant after upserting provider for slate ${slate.id}`);
     }
+
+    // Abort if the version already existed
+    if (slateVersionRecord.oid !== newVersionOid) return;
 
     let providerVersion = await providerVersionInternalService.upsertVersion({
       variant: provider.defaultVariant,
