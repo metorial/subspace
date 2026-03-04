@@ -26,7 +26,8 @@ export let syncVersionManyCronProcessor = syncVersionManyCron.process(async data
       id: data.cursor ? { gt: data.cursor } : undefined
     },
     orderBy: { id: 'asc' },
-    take: 100
+    take: 100,
+    select: { id: true }
   });
   if (!versions.length) return;
 
