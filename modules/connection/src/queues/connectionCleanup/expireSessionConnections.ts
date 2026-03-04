@@ -31,7 +31,8 @@ let expireSessionConnectionsQueueProcessor = expireSessionConnectionsQueue.proce
         id: data.cursor ? { gt: data.cursor } : undefined
       },
       orderBy: { id: 'asc' },
-      take: 100
+      take: 100,
+      select: { id: true }
     });
     if (connections.length === 0) return;
 
