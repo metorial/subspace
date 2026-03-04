@@ -39,6 +39,6 @@ export let syncSlatesQueueProcessor = syncSlatesQueue.process(async data =>
     let lastItem = slatesList.items[slatesList.items.length - 1];
     if (!lastItem) return;
 
-    await syncSlatesQueue.add({ cursor: lastItem.id }, { delay: 20 * 1000 });
+    await syncSlatesQueue.add({ cursor: lastItem.id }, { delay: 60 * 1000 });
   })
 );
