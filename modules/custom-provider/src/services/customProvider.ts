@@ -291,6 +291,7 @@ class customProviderServiceImpl {
       readme?: string;
       description?: string;
       metadata?: Record<string, any>;
+      access?: 'public' | 'tenant';
 
       repository?:
         | {
@@ -380,7 +381,8 @@ class customProviderServiceImpl {
           input: {
             name: customProvider.name,
             readme: d.input.readme,
-            description: customProvider.description ?? undefined
+            description: customProvider.description ?? undefined,
+            access: d.input.access
           }
         });
       }

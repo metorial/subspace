@@ -309,6 +309,7 @@ class providerInternalServiceImpl {
       slug?: string;
       image?: PrismaJson.EntityImage | null;
       skills?: string[];
+      access?: 'public' | 'tenant';
     };
   }) {
     return withTransaction(async db => {
@@ -317,7 +318,8 @@ class providerInternalServiceImpl {
         data: {
           slug: d.input.slug,
           name: d.input.name?.trim() || undefined,
-          description: d.input.description?.trim() || undefined
+          description: d.input.description?.trim() || undefined,
+          access: d.input.access
         }
       });
 
@@ -329,7 +331,8 @@ class providerInternalServiceImpl {
           description: provider.description,
           readme: d.input.readme,
           skills: d.input.skills,
-          image: d.input.image ?? undefined
+          image: d.input.image ?? undefined,
+          isPublic: provider.access === 'public'
         }
       });
 
