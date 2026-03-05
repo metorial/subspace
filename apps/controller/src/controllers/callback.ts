@@ -79,7 +79,19 @@ export let callbackController = app.controller({
         tenant: ctx.tenant,
         solution: ctx.solution,
         environment: ctx.environment,
-        input: ctx.input
+        input: {
+          providerDeploymentId: ctx.input.providerDeploymentId,
+          mode: ctx.input.mode,
+          name: ctx.input.name,
+          description: ctx.input.description,
+          metadata: ctx.input.metadata,
+          pollIntervalSecondsOverride: ctx.input.pollIntervalSecondsOverride,
+          triggers: ctx.input.triggers?.map(trigger => ({
+            triggerId: trigger.triggerId!,
+            eventTypes: trigger.eventTypes
+          })),
+          destinationIds: ctx.input.destinationIds ?? []
+        }
       });
       return callbackPresenter(callback);
     }),
@@ -118,7 +130,10 @@ export let callbackController = app.controller({
           name: ctx.input.name,
           description: ctx.input.description,
           metadata: ctx.input.metadata,
-          triggers: ctx.input.triggers,
+          triggers: ctx.input.triggers?.map(trigger => ({
+            triggerId: trigger.triggerId!,
+            eventTypes: trigger.eventTypes
+          })),
           destinationIds: ctx.input.destinationIds,
           pollIntervalSecondsOverride: ctx.input.pollIntervalSecondsOverride
         }

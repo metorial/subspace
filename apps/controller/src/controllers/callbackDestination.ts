@@ -63,7 +63,13 @@ export let callbackDestinationController = app.controller({
       let callbackDestination = await callbackDestinationService.createCallbackDestination({
         tenant: ctx.tenant,
         solution: ctx.solution,
-        input: ctx.input
+        input: {
+          name: ctx.input.name!,
+          description: ctx.input.description,
+          metadata: ctx.input.metadata,
+          url: ctx.input.url!,
+          method: ctx.input.method
+        }
       });
       return callbackDestinationPresenter(callbackDestination);
     }),
