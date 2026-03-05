@@ -570,7 +570,10 @@ class callbackServiceImpl {
       update: {}
     });
 
-    await callbackRegistrationService.enqueueReconcile({ callbackId: callback.id });
+    await callbackRegistrationService.enqueueReconcile({
+      callbackId: callback.id,
+      providerDeploymentConfigPairId: pairRes.pair.id
+    });
 
     return await this.listAttachments({
       tenant: d.tenant,
@@ -603,7 +606,10 @@ class callbackServiceImpl {
       }
     });
 
-    await callbackRegistrationService.enqueueReconcile({ callbackId: callback.id });
+    await callbackRegistrationService.enqueueReconcile({
+      callbackId: callback.id,
+      providerDeploymentConfigPairId: d.providerDeploymentConfigPairId
+    });
 
     return await this.listAttachments({
       tenant: d.tenant,

@@ -1,6 +1,20 @@
 import { combineQueueProcessors } from '@lowerdeck/queue';
-import { callbackRegistrationReconcileQueueProcessor } from './reconcile';
+import {
+  callbackReconcilePairQueueProcessor,
+  callbackReconcilePairRegistrationsPageQueueProcessor,
+  callbackReconcilePairTriggerQueueProcessor,
+  callbackReconcilePairsPageQueueProcessor,
+  callbackReconcileQueueProcessor,
+  callbackReconcileRegistrationAuditQueueProcessor,
+  callbackReconcileRegistrationsPageQueueProcessor
+} from './reconcile';
 
 export let callbackQueueProcessor = combineQueueProcessors([
-  callbackRegistrationReconcileQueueProcessor
+  callbackReconcileQueueProcessor,
+  callbackReconcilePairQueueProcessor,
+  callbackReconcilePairsPageQueueProcessor,
+  callbackReconcilePairTriggerQueueProcessor,
+  callbackReconcilePairRegistrationsPageQueueProcessor,
+  callbackReconcileRegistrationsPageQueueProcessor,
+  callbackReconcileRegistrationAuditQueueProcessor
 ]);

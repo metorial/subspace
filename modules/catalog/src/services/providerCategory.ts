@@ -21,8 +21,8 @@ class providerListingCategoryServiceImpl {
     providerIds?: string[];
     providerListingIds?: string[];
   }) {
-    let providers = await resolveProviders(d as any, d.providerIds);
-    let providerListings = await resolveProviderListings(d as any, d.providerListingIds);
+    let providers = await resolveProviders(d, d.providerIds);
+    let providerListings = await resolveProviderListings(d, d.providerListingIds);
 
     return Paginator.create(({ prisma }) =>
       prisma(
