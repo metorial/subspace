@@ -8,8 +8,11 @@ import {
   db,
   getId
 } from '@metorial-subspace/db';
+import { callbackRegistrationReconcileQueue as callbackReconcileQueue } from '@metorial-subspace/module-provider-internal/src/queues/lifecycle/deploymentConfigPair';
 import { getTenantForSlates, slates } from '@metorial-subspace/provider-slates/src/client';
 import { env } from '../env';
+
+export { callbackReconcileQueue };
 
 let PAIR_PAGE_SIZE = 100;
 let REGISTRATION_PAGE_SIZE = 100;
@@ -340,17 +343,6 @@ let syncPairTrigger = async (d: {
     });
   }
 };
-
-export let callbackReconcileQueue = createQueue<{
-  callbackId?: string;
-  providerDeploymentConfigPairId?: string;
-}>({
-  name: 'sub/callback/reconcile',
-  redisUrl: env.service.REDIS_URL,
-  workerOpts: {
-    concurrency: 1
-  }
-});
 
 let callbackReconcilePairQueue = createQueue<{
   callbackId: string;
