@@ -35,6 +35,7 @@ COPY modules/custom-provider/package.json ./modules/custom-provider/package.json
 COPY modules/search/package.json ./modules/search/package.json
 COPY modules/session/package.json ./modules/session/package.json
 COPY modules/tenant/package.json ./modules/tenant/package.json
+COPY modules/callback/package.json ./modules/callback/package.json
 
 RUN bun install
 
