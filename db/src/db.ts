@@ -8,15 +8,37 @@ import type {
 } from '@metorial-subspace/provider-utils';
 import type { InitializeRequest, JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { readReplicas } from '@prisma/extension-read-replicas';
 import { PrismaClient } from '../prisma/generated/client';
-import { env } from './env';
 import type { CustomProviderConfig, CustomProviderFrom } from './types';
 
-let adapter = new PrismaPg({ connectionString: env.service.DATABASE_URL });
+let mainAdapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL
+});
 
-let baseDb = new PrismaClient({ adapter });
+let replicaAdapter = process.env.DATABASE_URL_READER
+  ? new PrismaPg({
+      connectionString: process.env.DATABASE_URL_READER
+    })
+  : undefined;
 
-export let db = baseDb.$extends({
+let replicaClient = replicaAdapter ? new PrismaClient({ adapter: replicaAdapter }) : undefined;
+
+let baseClient = new PrismaClient({
+  adapter: mainAdapter,
+  transactionOptions: {
+    maxWait: 10000,
+    timeout: 12000
+  }
+});
+
+if (replicaClient) {
+  baseClient = baseClient.$extends(
+    readReplicas({ replicas: [replicaClient] })
+  ) as any as PrismaClient;
+}
+
+export let db = baseClient.$extends({
   query: {
     $allModels: {
       async $allOperations({ args, query }) {
