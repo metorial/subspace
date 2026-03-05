@@ -94,6 +94,11 @@ export let ID = createIdGenerator({
 
   providerRun: idType.sorted('prun'),
 
+  callbackDestination: idType.sorted('cbd'),
+  callback: idType.sorted('cbk'),
+  callbackTrigger: idType.sorted('cbt'),
+  callbackReceiverRegistration: idType.sorted('cbrr'),
+
   toolCall: idType.sorted('tcl')
 });
 
