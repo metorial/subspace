@@ -26,6 +26,7 @@ export let providerSpecificationPresenter = (
 
   configSchema: providerSpecification.value.specification.configJsonSchema,
   configVisibility: providerSpecification.value.specification.configVisibility,
+  triggers: providerSpecification.value.specification.triggers ?? [],
 
   tools: providerSpecification.providerTools.map(t =>
     providerToolPresenter({
