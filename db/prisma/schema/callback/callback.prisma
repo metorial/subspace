@@ -1,0 +1,166 @@
+enum CallbackDestinationStatus {
+  active
+  archived
+  deleted
+}
+
+model CallbackDestination {
+  oid BigInt @id
+  id  String @unique
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid], onDelete: Cascade)
+
+  solutionOid Int
+  solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
+
+  status CallbackDestinationStatus
+
+  name        String
+  description String?
+  metadata    Json?
+
+  url    String
+  method String
+
+  slateTriggerDestinationId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  callbackDestinationLinks CallbackDestinationLink[]
+
+  @@index([tenantOid, solutionOid, status])
+}
+
+enum CallbackStatus {
+  active
+  archived
+  deleted
+}
+
+enum CallbackMode {
+  auto
+  manual
+}
+
+model Callback {
+  oid BigInt @id
+  id  String @unique
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid], onDelete: Cascade)
+
+  solutionOid Int
+  solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
+
+  environmentOid BigInt
+  environment    Environment @relation(fields: [environmentOid], references: [oid], onDelete: Cascade)
+
+  providerDeploymentOid BigInt
+  providerDeployment    ProviderDeployment @relation(fields: [providerDeploymentOid], references: [oid], onDelete: Cascade)
+
+  status CallbackStatus
+  mode   CallbackMode
+
+  name        String
+  description String?
+  metadata    Json?
+  pollIntervalSecondsOverride Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  callbackTriggers              CallbackTrigger[]
+  callbackDestinationLinks      CallbackDestinationLink[]
+  callbackManualPairLinks       CallbackManualPairLink[]
+  callbackReceiverRegistrations CallbackReceiverRegistration[]
+
+  @@index([tenantOid, environmentOid, solutionOid, status])
+  @@index([providerDeploymentOid, status])
+}
+
+model CallbackTrigger {
+  oid BigInt @id
+  id  String @unique
+
+  callbackOid BigInt
+  callback    Callback @relation(fields: [callbackOid], references: [oid], onDelete: Cascade)
+
+  providerTriggerId   String
+  providerTriggerKey  String
+  providerTriggerName String
+
+  eventTypes String[]
+
+  createdAt DateTime @default(now())
+
+  callbackReceiverRegistrations CallbackReceiverRegistration[]
+
+  @@unique([callbackOid, providerTriggerKey])
+  @@index([callbackOid])
+}
+
+model CallbackDestinationLink {
+  oid BigInt @id
+
+  callbackOid BigInt
+  callback    Callback @relation(fields: [callbackOid], references: [oid], onDelete: Cascade)
+
+  callbackDestinationOid BigInt
+  callbackDestination    CallbackDestination @relation(fields: [callbackDestinationOid], references: [oid], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([callbackOid, callbackDestinationOid])
+}
+
+model CallbackManualPairLink {
+  oid BigInt @id
+
+  callbackOid BigInt
+  callback    Callback @relation(fields: [callbackOid], references: [oid], onDelete: Cascade)
+
+  providerDeploymentConfigPairOid BigInt
+  providerDeploymentConfigPair    ProviderDeploymentConfigPair @relation(fields: [providerDeploymentConfigPairOid], references: [oid], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([callbackOid, providerDeploymentConfigPairOid])
+}
+
+enum CallbackReceiverRegistrationStatus {
+  active
+  detached
+  failed
+}
+
+model CallbackReceiverRegistration {
+  oid BigInt @id
+  id  String @unique
+
+  callbackOid BigInt
+  callback    Callback @relation(fields: [callbackOid], references: [oid], onDelete: Cascade)
+
+  providerDeploymentConfigPairOid BigInt
+  providerDeploymentConfigPair    ProviderDeploymentConfigPair @relation(fields: [providerDeploymentConfigPairOid], references: [oid], onDelete: Cascade)
+
+  callbackTriggerOid BigInt
+  callbackTrigger    CallbackTrigger @relation(fields: [callbackTriggerOid], references: [oid], onDelete: Cascade)
+
+  slateTriggerReceiverId        String
+  slateTriggerReceiverTriggerId String
+
+  status CallbackReceiverRegistrationStatus
+
+  lastErrorCode    String?
+  lastErrorMessage String?
+  lastSyncedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([callbackOid, providerDeploymentConfigPairOid, callbackTriggerOid])
+  @@index([callbackOid, status])
+  @@index([providerDeploymentConfigPairOid, status])
+}

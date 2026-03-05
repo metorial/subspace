@@ -35,6 +35,8 @@ model ProviderDeploymentConfigPair {
   providerSpecificationChangeNotifications ProviderSpecificationChangeNotification[]
   sessionProviderInstances                 SessionProviderInstance[]
   providerDeploymentConfigPairDiscoveries  ProviderDeploymentConfigPairDiscovery[]
+  callbackManualPairLinks                  CallbackManualPairLink[]
+  callbackReceiverRegistrations            CallbackReceiverRegistration[]
 }
 
 model ProviderDeploymentConfigPairProviderVersion {
