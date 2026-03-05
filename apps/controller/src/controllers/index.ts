@@ -4,6 +4,12 @@ import { app } from './_app';
 import { actorController } from './actor';
 import { brandController } from './brand';
 import { bucketController } from './bucket';
+import { callbackAttachmentController } from './callbackAttachment';
+import { callbackController } from './callback';
+import { callbackDeliveryController } from './callbackDelivery';
+import { callbackDeliveryAttemptController } from './callbackDeliveryAttempt';
+import { callbackDestinationController } from './callbackDestination';
+import { callbackEventController } from './callbackEvent';
 import { containerRegistryController } from './containerRegistry';
 import { containerRepositoryController } from './containerRepository';
 import { customProviderController } from './customProvider';
@@ -63,6 +69,12 @@ export let rootController = app.controller({
   tenant: tenantController,
 
   brand: brandController,
+  callback: callbackController,
+  callbackAttachment: callbackAttachmentController,
+  callbackDestination: callbackDestinationController,
+  callbackEvent: callbackEventController,
+  callbackDelivery: callbackDeliveryController,
+  callbackDeliveryAttempt: callbackDeliveryAttemptController,
 
   publisher: publisherController,
 

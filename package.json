@@ -28,6 +28,7 @@
     "modules/*"
   ],
   "dependencies": {
+    "@metorial-services/slates-hub-client": "^1.0.18",
     "knip": "^5.82.0"
   }
 }
