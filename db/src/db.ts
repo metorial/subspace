@@ -135,8 +135,8 @@ declare global {
     };
 
     type ProviderTypeAttributes = {
-      provider: 'metorial-slates' | 'metorial-shuttle';
-      backend: 'slates' | 'mcp.container' | 'mcp.function' | 'mcp.remote';
+      provider: 'metorial-slates' | 'metorial-shuttle' | 'metorial-native';
+      backend: 'slates' | 'mcp.container' | 'mcp.function' | 'mcp.remote' | 'native';
 
       triggers:
         | {
