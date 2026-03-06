@@ -3,7 +3,7 @@ import { combineQueueProcessors, createQueue } from '@lowerdeck/queue';
 import { db } from '@metorial-subspace/db';
 import { env } from '../../env';
 
-let startRankQueue = createQueue({
+let startRankQueue = createQueue<{ cursor?: string }>({
   name: 'sub/pint/rank/start',
   redisUrl: env.service.REDIS_URL,
   workerOpts: {
@@ -32,29 +32,26 @@ let rankCron = createCron(
   }
 );
 
-let startRankQueueProcessor = startRankQueue.process(async () => {
-  let afterId: string | undefined;
+let startRankQueueProcessor = startRankQueue.process(async data => {
+  let providers = await db.providerListing.findMany({
+    where: {
+      isPublic: true,
+      id: data.cursor ? { gt: data.cursor } : undefined
+    },
+    select: { id: true },
+    take: 100,
+    orderBy: { id: 'asc' }
+  });
+  if (providers.length === 0) return;
 
-  for (let i = 0; i < 10_000; i++) {
-    let providers = await db.providerListing.findMany({
-      where: {
-        id: { gt: afterId }
-      },
-      select: { id: true },
-      take: 100,
-      orderBy: { id: 'asc' }
-    });
-    if (providers.length === 0) break;
+  await processSingleRankQueue.addManyWithOps(
+    providers.map(provider => ({
+      data: { providerListingId: provider.id },
+      opts: { id: provider.id }
+    }))
+  );
 
-    await processSingleRankQueue.addManyWithOps(
-      providers.map(provider => ({
-        data: { providerListingId: provider.id },
-        opts: { id: provider.id }
-      }))
-    );
-
-    afterId = providers[providers.length - 1]!.id as string;
-  }
+  await startRankQueue.add({ cursor: providers[providers.length - 1].id });
 });
 
 let processSingleRankQueueProcessor = processSingleRankQueue.process(async data => {
@@ -64,7 +61,11 @@ let processSingleRankQueueProcessor = processSingleRankQueue.process(async data 
       publisher: true,
       provider: {
         include: {
-          defaultVariant: true
+          defaultVariant: {
+            include: {
+              backend: true
+            }
+          }
         }
       }
     }
@@ -81,6 +82,7 @@ let processSingleRankQueueProcessor = processSingleRankQueue.process(async data 
   let isSlates =
     providerListing.provider.access == 'public' &&
     !!providerListing.provider.defaultVariant?.slateOid;
+  let isNative = providerListing.provider.defaultVariant?.backend.type === 'native';
 
   let isOfficial = providerListing.isOfficial;
 
@@ -108,11 +110,12 @@ let processSingleRankQueueProcessor = processSingleRankQueue.process(async data 
     deploymentsCount * 0.1 + providerSessionsCount * 0.3 + providerMessagesCount * 0.01
   );
 
-  if (isSlates) rank += 10_000;
-
   // Boost rank for official/metorial providers
-  if (isOfficial || isVerified) rank = Math.ceil(rank * 3);
-  if (isMetorial) rank = 10_000 + Math.ceil(rank * 5);
+  if (isMetorial) {
+    if (isSlates) rank += 10_000;
+    if (isNative) rank += 20_000;
+    rank = 10_000 + Math.ceil(rank * 5);
+  } else if (isOfficial || isVerified) rank = Math.ceil(rank * 3);
 
   rank = Math.min(rank, 1_000_000_000);
 
