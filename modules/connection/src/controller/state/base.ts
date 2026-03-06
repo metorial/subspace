@@ -59,12 +59,19 @@ export let getConnectionBaseState = async (d: {
 
   let pairVersion = instance.pairVersion;
   let version = pairVersion.version;
+  if (version.backend.type === 'slates' && (!version.slate || !version.slateVersion)) {
+    console.warn(
+      `Session provider instance ${instance.id} is missing slate or slate version association`
+    );
+    return;
+  }
+
   if (
-    (!version.slate || !version.slateVersion) &&
+    version.backend.type === 'shuttle' &&
     (!version.shuttleServer || !version.shuttleServerVersion)
   ) {
     console.warn(
-      `Session provider instance ${instance.id} is missing slate or slate version association`
+      `Session provider instance ${instance.id} is missing shuttle server or shuttle server version association`
     );
     return;
   }

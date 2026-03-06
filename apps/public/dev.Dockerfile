@@ -23,6 +23,7 @@ COPY packages/generator/package.json ./packages/generator/package.json
 
 COPY provider-backends/provider-slates/package.json ./provider-backends/provider-slates/package.json
 COPY provider-backends/provider-shuttle/package.json ./provider-backends/provider-shuttle/package.json
+COPY provider-backends/provider-native/package.json ./provider-backends/provider-native/package.json
 COPY provider-backends/provider-utils/package.json ./provider-backends/provider-utils/package.json
 COPY provider-backends/provider-manager/package.json ./provider-backends/provider-manager/package.json
 

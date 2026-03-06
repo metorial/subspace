@@ -5,7 +5,7 @@ import {
   type Backend,
   getId,
   type ProviderVariant,
-  ProviderVersion,
+  type ProviderVersion,
   type ShuttleServer,
   type ShuttleServerVersion,
   type Slate,
@@ -42,14 +42,17 @@ class providerVersionInternalServiceImpl {
           let enriched = await backend.enrichment.enrichProviderVersions({
             providerVersionIds: providers.map(p => p.id)
           });
-          let enrichedMap = new Map(enriched.providers.map(p => [p.providerVersionId, p]));
+          let enrichedMap = new Map<
+            string,
+            (typeof enriched.providers)[number]
+          >(enriched.providers.map(p => [p.providerVersionId, p]));
 
           return providers.map(provider => {
             let enrichment = enrichedMap.get(provider.id);
 
             return {
               ...provider,
-              ...enrichment
+              ...(enrichment ?? {})
             };
           });
         })
@@ -74,6 +77,11 @@ class providerVersionInternalServiceImpl {
           shuttleServer: ShuttleServer;
           shuttleServerVersion: ShuttleServerVersion;
           backend: Backend;
+        }
+      | {
+          type: 'native';
+          integrationIdentifier: string;
+          backend: Backend;
         };
 
     info: {
@@ -94,6 +102,8 @@ class providerVersionInternalServiceImpl {
             identifier += `${d.source.slate.oid}::${d.source.slateVersion.oid}`;
           } else if (d.source.type === 'shuttle') {
             identifier += `${d.source.shuttleServer.oid}::${d.source.shuttleServerVersion.oid}`;
+          } else if (d.source.type === 'native') {
+            identifier += `${d.source.integrationIdentifier}::version`;
           } else {
             throw new Error('Unknown provider source type');
           }

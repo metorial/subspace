@@ -7,6 +7,7 @@ import { deploymentQueueProcessor } from '@metorial-subspace/module-deployment';
 import { providerInternalQueueProcessor } from '@metorial-subspace/module-provider-internal';
 import { sessionQueueProcessor } from '@metorial-subspace/module-session';
 import { tenantQueueProcessors } from '@metorial-subspace/module-tenant';
+import { nativeProviderQueues } from '@metorial-subspace/provider-native';
 import { shuttleProviderQueues } from '@metorial-subspace/provider-shuttle';
 import { slatesProviderQueues } from '@metorial-subspace/provider-slates';
 
@@ -18,6 +19,7 @@ runQueueProcessors([
   deploymentQueueProcessor,
   tenantQueueProcessors,
   providerInternalQueueProcessor,
+  nativeProviderQueues,
   slatesProviderQueues,
   shuttleProviderQueues,
   customProviderQueueProcessor

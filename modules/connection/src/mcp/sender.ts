@@ -207,12 +207,12 @@ export class McpSender {
     let method = 'method' in msg ? msg.method : null;
     let id = 'id' in msg ? msg.id : null;
 
-    if (method === 'ping' && id) return this.handlePingRequest(id);
+    if (method === 'ping' && id !== undefined && id !== null) return this.handlePingRequest(id);
     if (typeof id === 'string' && id.startsWith(PING_MESSAGE_ID_PREFIX))
       return this.handlePingResponse(id);
 
     if (!method) {
-      if (!id) return;
+      if (id === undefined || id === null) return;
       // Get message by id and route response accordingly
       let message = await db.sessionMessage.findFirst({
         where: {
@@ -362,7 +362,10 @@ export class McpSender {
               title: presented.title ?? presented.name,
 
               inputSchema: presented.inputJsonSchema as any,
-              outputSchema: presented.outputJsonSchema as any,
+              outputSchema:
+                presented.outputJsonSchema?.type === 'object'
+                  ? (presented.outputJsonSchema as any)
+                  : undefined,
 
               icons: mcp?.icons,
               execution: mcp?.execution,

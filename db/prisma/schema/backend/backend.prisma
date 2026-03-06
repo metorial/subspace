@@ -1,6 +1,7 @@
 enum BackendType {
   slates
   shuttle
+  native
 }
 
 model Backend {
