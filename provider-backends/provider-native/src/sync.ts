@@ -1,6 +1,15 @@
+import { delay } from '@lowerdeck/delay';
+import { getSentry } from '@lowerdeck/sentry';
 import { slugify } from '@lowerdeck/slugify';
+import {
+  providerInternalService,
+  providerVersionInternalService,
+  publisherInternalService
+} from '@metorial-subspace/module-provider-internal';
 import { backend } from './backend';
 import { listNativeIntegrations, setNativeIntegrationResyncHandler } from './registry';
+
+let Sentry = getSentry();
 
 let nativeProviderType = {
   name: 'Native',
@@ -14,13 +23,6 @@ let nativeProviderType = {
 };
 
 export let syncNativeIntegrations = async () => {
-  let [{ publisherInternalService }, { providerInternalService }, { providerVersionInternalService }] =
-    await Promise.all([
-      import('../../../modules/provider-internal/src/services/publisher'),
-      import('../../../modules/provider-internal/src/services/provider'),
-      import('../../../modules/provider-internal/src/services/providerVersion')
-    ]);
-
   let publisher = await publisherInternalService.upsertPublisherForMetorial();
 
   for (let integration of listNativeIntegrations()) {
@@ -79,4 +81,10 @@ let ensureNativeIntegrationSync = async () => {
 
 setNativeIntegrationResyncHandler(ensureNativeIntegrationSync);
 
-export let nativeProviderBootstrapPromise = ensureNativeIntegrationSync();
+(async () => {
+  await delay(5000);
+  await ensureNativeIntegrationSync();
+})().catch(error => {
+  console.error('Error syncing native integrations on startup:', error);
+  Sentry.captureException(error);
+});
