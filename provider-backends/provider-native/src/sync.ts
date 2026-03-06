@@ -1,9 +1,4 @@
 import { slugify } from '@lowerdeck/slugify';
-import {
-  providerInternalService,
-  providerVersionInternalService,
-  publisherInternalService
-} from '@metorial-subspace/module-provider-internal';
 import { backend } from './backend';
 import { listNativeIntegrations, setNativeIntegrationResyncHandler } from './registry';
 
@@ -19,6 +14,13 @@ let nativeProviderType = {
 };
 
 export let syncNativeIntegrations = async () => {
+  let [{ publisherInternalService }, { providerInternalService }, { providerVersionInternalService }] =
+    await Promise.all([
+      import('../../../modules/provider-internal/src/services/publisher'),
+      import('../../../modules/provider-internal/src/services/provider'),
+      import('../../../modules/provider-internal/src/services/providerVersion')
+    ]);
+
   let publisher = await publisherInternalService.upsertPublisherForMetorial();
 
   for (let integration of listNativeIntegrations()) {
