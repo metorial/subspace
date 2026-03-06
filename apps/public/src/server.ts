@@ -6,7 +6,6 @@ const require = createRequire(import.meta.url);
 (globalThis as any).require = require;
 
 async function main() {
-  await import('@metorial-subspace/provider-native');
   await import('./init');
   await import('./instrument');
   await import('./endpoints');
