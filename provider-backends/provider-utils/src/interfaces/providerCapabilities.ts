@@ -28,6 +28,10 @@ export abstract class IProviderCapabilities extends IProviderFunctionality {
   abstract getSpecificationBehavior(
     data: ProviderSpecificationBehaviorParam
   ): Promise<ProviderSpecificationBehaviorRes>;
+
+  abstract shouldDiscoverSpecificationForProviderPair(
+    data: ProviderSpecificationGetForPairParam
+  ): Promise<{ shouldDiscover: boolean }>;
 }
 
 export interface ProviderSpecificationGetForProviderParam {
