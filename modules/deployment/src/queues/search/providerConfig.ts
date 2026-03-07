@@ -11,7 +11,7 @@ export let indexProviderConfigQueue = createQueue<{ providerConfigId: string }>(
 export let indexProviderConfigQueueProcessor = indexProviderConfigQueue.process(async data => {
   let providerConfig = await db.providerConfig.findUnique({
     where: { id: data.providerConfigId },
-    include: { tenant: true, provider: true }
+    include: { tenant: true, provider: true, deployment: true }
   });
   if (!providerConfig) throw new QueueRetryError();
 
@@ -35,7 +35,8 @@ export let indexProviderConfigQueueProcessor = indexProviderConfigQueue.process(
     body: {
       name: providerConfig.name,
       description: providerConfig.description,
-      providerName: providerConfig.provider.name
+      providerName: providerConfig.provider.name,
+      deploymentName: providerConfig.deployment?.name
     }
   });
 });

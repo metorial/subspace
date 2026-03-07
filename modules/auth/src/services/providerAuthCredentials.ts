@@ -153,7 +153,7 @@ class providerAuthCredentialsServiceImpl {
     checkDeletedEdit(d.providerAuthCredentials, 'update');
 
     return withTransaction(async db => {
-      let config = await db.providerAuthCredentials.update({
+      let creds = await db.providerAuthCredentials.update({
         where: {
           oid: d.providerAuthCredentials.oid,
           tenantOid: d.tenant.oid,
@@ -168,10 +168,10 @@ class providerAuthCredentialsServiceImpl {
       });
 
       await addAfterTransactionHook(async () =>
-        providerAuthCredentialsUpdatedQueue.add({ providerAuthCredentialsId: config.id })
+        providerAuthCredentialsUpdatedQueue.add({ providerAuthCredentialsId: creds.id })
       );
 
-      return config;
+      return creds;
     });
   }
 
