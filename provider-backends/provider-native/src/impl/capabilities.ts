@@ -79,6 +79,12 @@ export class ProviderCapabilities extends IProviderCapabilities {
     };
   }
 
+  override async shouldDiscoverSpecificationForProviderPair(
+    data: ProviderSpecificationGetForPairParam
+  ): Promise<{ shouldDiscover: boolean }> {
+    return { shouldDiscover: false };
+  }
+
   override async getSpecificationForProviderVersion(
     data: ProviderSpecificationGetForProviderParam
   ): Promise<ProviderSpecificationGetRes> {

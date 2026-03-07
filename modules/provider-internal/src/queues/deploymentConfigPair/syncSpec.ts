@@ -57,16 +57,26 @@ export let providerDeploymentConfigPairSyncSpecificationQueueProcessor =
       };
 
       if (version.specificationOid && process.env.NODE_ENV === 'production') {
-        // If we have the full spec, we can skip discovery
+        // If we have the full spec, we might be able to skip discovery depending on the backend
         let alreadyHasFullSpec = version.specification?.type === 'full';
 
         if (alreadyHasFullSpec) {
-          await providerDeploymentConfigPairSetSpecificationQueue.add({
-            providerDeploymentConfigPairOid: pair.oid,
-            versionOid: version.oid,
-            result: { status: 'success', specificationOid: version.specificationOid }
-          });
-          return;
+          // Ask the backend if it wants us to discover the spec for this provider pair,
+          // even though we already have a full spec. Some backends might want to do this
+          // if we can't be sure that the spec remains the same across different deployments or configs.
+          let { shouldDiscover } =
+            await backend.capabilities.shouldDiscoverSpecificationForProviderPair(
+              discoverParams
+            );
+
+          if (!shouldDiscover) {
+            await providerDeploymentConfigPairSetSpecificationQueue.add({
+              providerDeploymentConfigPairOid: pair.oid,
+              versionOid: version.oid,
+              result: { status: 'success', specificationOid: version.specificationOid }
+            });
+            return;
+          }
         }
       }
 
