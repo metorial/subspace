@@ -178,7 +178,7 @@ class providerConfigVaultServiceImpl {
       });
 
       await addAfterTransactionHook(async () =>
-        providerConfigVaultCreatedQueue.add({ providerConfigVaultId: config.id })
+        providerConfigVaultCreatedQueue.add({ providerConfigVaultId: vault.id })
       );
 
       return vault;

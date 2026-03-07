@@ -12,7 +12,7 @@ export let indexProviderConfigVaultQueueProcessor = indexProviderConfigVaultQueu
   async data => {
     let providerConfigVault = await db.providerConfigVault.findUnique({
       where: { id: data.providerConfigVaultId },
-      include: { tenant: true, provider: true }
+      include: { tenant: true, provider: true, deployment: true }
     });
     if (!providerConfigVault) throw new QueueRetryError();
 
@@ -39,7 +39,8 @@ export let indexProviderConfigVaultQueueProcessor = indexProviderConfigVaultQueu
       body: {
         name: providerConfigVault.name,
         description: providerConfigVault.description,
-        providerName: providerConfigVault.provider.name
+        providerName: providerConfigVault.provider.name,
+        deploymentName: providerConfigVault.deployment?.name
       }
     });
   }
