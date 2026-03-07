@@ -18,39 +18,33 @@ class tenantServiceImpl {
     };
   }) {
     try {
-      return await db.tenant.upsert({
+      let tenant = await db.tenant.upsert({
         where: { identifier: d.input.identifier },
         update: {
-          name: d.input.name,
-          environments: {
-            upsert: d.input.environments.map(env => ({
-              where: { identifier: env.identifier },
-              update: { name: env.name },
-              create: {
-                ...getId('environment'),
-                name: env.name,
-                identifier: env.identifier,
-                type: env.type
-              }
-            }))
-          }
+          name: d.input.name
         },
         create: {
           ...getId('tenant'),
           name: d.input.name,
           identifier: d.input.identifier,
 
-          urlKey: generatePlainId(10).toLowerCase(),
+          urlKey: generatePlainId(10).toLowerCase()
+        }
+      });
 
-          environments: {
-            create: d.input.environments.map(env => ({
-              ...getId('environment'),
-              name: env.name,
-              identifier: env.identifier,
-              type: env.type
-            }))
-          }
-        },
+      await db.environment.createMany({
+        skipDuplicates: true,
+        data: d.input.environments.map(env => ({
+          ...getId('environment'),
+          tenantOid: tenant.oid,
+          name: env.name,
+          identifier: env.identifier,
+          type: env.type
+        }))
+      });
+
+      return await db.tenant.findFirstOrThrow({
+        where: { identifier: d.input.identifier },
         include
       });
     } catch (error: any) {
