@@ -68,10 +68,10 @@ class callbackDeliveryServiceImpl {
       cursor?: string;
       order?: 'asc' | 'desc';
     };
-  }) {
+  }): Promise<any> {
     let context = await this.resolveContext(d);
 
-    let receiverIds = context.registrations.map(reg => reg.slateTriggerReceiverId).filter(Boolean);
+    let bindingIds = context.registrations.map(reg => reg.slateTriggerBindingId).filter(Boolean);
     let destinationIds = d.input.destinationIds?.length
       ? (
           await db.callbackDestination.findMany({
@@ -89,7 +89,7 @@ class callbackDeliveryServiceImpl {
 
     return await slates.slateTriggerDelivery.list({
       tenantId: context.slatesTenant.id,
-      triggerReceiverIds: receiverIds.length ? receiverIds : ['__none__'],
+      triggerBindingIds: bindingIds.length ? bindingIds : ['__none__'],
       destinationIds,
       status: d.input.status,
       limit: d.input.limit,
@@ -106,7 +106,7 @@ class callbackDeliveryServiceImpl {
     environment: Environment;
     callbackId: string;
     eventDeliveryIntentId: string;
-  }) {
+  }): Promise<any> {
     let context = await this.resolveContext(d);
     let delivery = await slates.slateTriggerDelivery.get({
       tenantId: context.slatesTenant.id,
@@ -134,10 +134,10 @@ class callbackDeliveryServiceImpl {
       cursor?: string;
       order?: 'asc' | 'desc';
     };
-  }) {
+  }): Promise<any> {
     let context = await this.resolveContext(d);
 
-    let receiverIds = context.registrations.map(reg => reg.slateTriggerReceiverId).filter(Boolean);
+    let bindingIds = context.registrations.map(reg => reg.slateTriggerBindingId).filter(Boolean);
     let destinationIds = d.input.destinationIds?.length
       ? (
           await db.callbackDestination.findMany({
@@ -153,7 +153,7 @@ class callbackDeliveryServiceImpl {
 
     return await slates.slateTriggerDelivery.listAttempts({
       tenantId: context.slatesTenant.id,
-      triggerReceiverIds: receiverIds.length ? receiverIds : ['__none__'],
+      triggerBindingIds: bindingIds.length ? bindingIds : ['__none__'],
       destinationIds,
       status: d.input.status,
       limit: d.input.limit,
@@ -170,7 +170,7 @@ class callbackDeliveryServiceImpl {
     environment: Environment;
     callbackId: string;
     eventDeliveryAttemptId: string;
-  }) {
+  }): Promise<any> {
     let context = await this.resolveContext(d);
     let attempt = await slates.slateTriggerDelivery.getAttempt({
       tenantId: context.slatesTenant.id,

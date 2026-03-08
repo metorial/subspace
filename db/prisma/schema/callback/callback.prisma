@@ -67,6 +67,7 @@ model Callback {
   description String?
   metadata    Json?
   pollIntervalSecondsOverride Int?
+  slateSharedTriggerConfigId  String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -90,6 +91,7 @@ model CallbackTrigger {
   providerTriggerId   String
   providerTriggerKey  String
   providerTriggerName String
+  slateSharedTriggerConfigTriggerId String?
 
   eventTypes String[]
 
@@ -148,8 +150,8 @@ model CallbackReceiverRegistration {
   callbackTriggerOid BigInt
   callbackTrigger    CallbackTrigger @relation(fields: [callbackTriggerOid], references: [oid], onDelete: Cascade)
 
-  slateTriggerReceiverId        String
-  slateTriggerReceiverTriggerId String
+  slateTriggerBindingId String
+  externalKey           String?
 
   status CallbackReceiverRegistrationStatus
 

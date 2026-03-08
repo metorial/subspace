@@ -98,6 +98,7 @@ export let ID = createIdGenerator({
   callback: idType.sorted('cbk'),
   callbackTrigger: idType.sorted('cbt'),
   callbackReceiverRegistration: idType.sorted('cbrr'),
+  callbackSharedTriggerConfigSync: idType.sorted('cbscs'),
 
   toolCall: idType.sorted('tcl')
 });

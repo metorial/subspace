@@ -170,7 +170,7 @@ class callbackDestinationServiceImpl {
 
     await Promise.all(
       callbacks.map(link =>
-        callbackRegistrationService.enqueueReconcile({ callbackId: link.callback.id })
+        callbackRegistrationService.enqueueConfigSync({ callbackId: link.callback.id })
       )
     );
 
@@ -202,7 +202,7 @@ class callbackDestinationServiceImpl {
 
     await Promise.all(
       callbacks.map(link =>
-        callbackRegistrationService.enqueueReconcile({ callbackId: link.callback.id })
+        callbackRegistrationService.enqueueConfigSync({ callbackId: link.callback.id })
       )
     );
 

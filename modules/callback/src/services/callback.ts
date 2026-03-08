@@ -433,7 +433,25 @@ class callbackServiceImpl {
       }
     });
 
-    await callbackRegistrationService.enqueueReconcile({ callbackId: callback.id });
+    let needsBindingReconcile =
+      d.input.mode !== undefined ||
+      d.input.triggers !== undefined ||
+      d.input.pollIntervalSecondsOverride !== undefined;
+
+    if (
+      d.input.destinationIds !== undefined ||
+      d.input.name !== undefined ||
+      d.input.description !== undefined ||
+      d.input.metadata !== undefined ||
+      d.input.triggers !== undefined ||
+      d.input.pollIntervalSecondsOverride !== undefined
+    ) {
+      await callbackRegistrationService.enqueueConfigSync({ callbackId: callback.id });
+    }
+
+    if (needsBindingReconcile) {
+      await callbackRegistrationService.enqueueBindingReconcile({ callbackId: callback.id });
+    }
 
     return await this.getCallbackById({
       tenant: d.tenant,
@@ -570,7 +588,7 @@ class callbackServiceImpl {
       update: {}
     });
 
-    await callbackRegistrationService.enqueueReconcile({
+    await callbackRegistrationService.enqueueBindingReconcile({
       callbackId: callback.id,
       providerDeploymentConfigPairId: pairRes.pair.id
     });
@@ -606,7 +624,7 @@ class callbackServiceImpl {
       }
     });
 
-    await callbackRegistrationService.enqueueReconcile({
+    await callbackRegistrationService.enqueueBindingReconcile({
       callbackId: callback.id,
       providerDeploymentConfigPairId: d.providerDeploymentConfigPairId
     });

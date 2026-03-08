@@ -47,6 +47,7 @@ export let providerDeploymentConfigPairVersionCreatedQueueProcessor =
 export let callbackRegistrationReconcileQueue = createQueue<{
   callbackId?: string;
   providerDeploymentConfigPairId?: string;
+  scope?: 'config' | 'bindings' | 'all';
 }>({
   name: 'sub/callback/reconcile',
   redisUrl: env.service.REDIS_URL

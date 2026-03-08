@@ -59,11 +59,11 @@ class callbackEventServiceImpl {
     };
   }) {
     let context = await this.resolveContext(d);
-    let receiverIds = context.registrations.map(reg => reg.slateTriggerReceiverId).filter(Boolean);
+    let bindingIds = context.registrations.map(reg => reg.slateTriggerBindingId).filter(Boolean);
 
     let res = await slates.slateTriggerEvent.list({
       tenantId: context.slatesTenant.id,
-      triggerReceiverIds: receiverIds.length ? receiverIds : undefined,
+      triggerBindingIds: bindingIds.length ? bindingIds : undefined,
       eventTypes: d.input.eventTypes,
       limit: d.input.limit,
       after: d.input.after,
@@ -73,13 +73,13 @@ class callbackEventServiceImpl {
     });
 
     let registrationByReceiverId = new Map(
-      context.registrations.map(reg => [reg.slateTriggerReceiverId, reg] as const)
+      context.registrations.map(reg => [reg.slateTriggerBindingId, reg] as const)
     );
 
     return {
       ...res,
       items: res.items.map(item => {
-        let registration = registrationByReceiverId.get(item.triggerReceiverId);
+        let registration = registrationByReceiverId.get(item.triggerBindingId);
         return {
           ...item,
           callbackId: context.callback.id,
@@ -105,7 +105,7 @@ class callbackEventServiceImpl {
     });
 
     let registration = context.registrations.find(
-      reg => reg.slateTriggerReceiverId === event.triggerReceiverId
+      reg => reg.slateTriggerBindingId === event.triggerBindingId
     );
     if (!registration) {
       throw new ServiceError(notFoundError('callback.event', d.slateTriggerEventId));
