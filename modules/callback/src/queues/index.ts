@@ -6,11 +6,13 @@ import {
   callbackReconcilePairsPageQueueProcessor,
   callbackReconcileQueueProcessor,
   callbackReconcileRegistrationAuditQueueProcessor,
-  callbackReconcileRegistrationsPageQueueProcessor
+  callbackReconcileRegistrationsPageQueueProcessor,
+  callbackSharedTriggerConfigSyncQueueProcessor
 } from './reconcile';
 
 export let callbackQueueProcessor = combineQueueProcessors([
   callbackReconcileQueueProcessor,
+  callbackSharedTriggerConfigSyncQueueProcessor,
   callbackReconcilePairQueueProcessor,
   callbackReconcilePairsPageQueueProcessor,
   callbackReconcilePairTriggerQueueProcessor,
