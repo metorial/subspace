@@ -64,6 +64,7 @@ declare global {
       authMethods: SpecificationAuthMethod[];
       features: SpecificationFeatures;
       tools: SpecificationTool[];
+      triggers?: SpecificationTrigger[];
     };
 
     type ProviderAuthMethodValue = SpecificationAuthMethod;
