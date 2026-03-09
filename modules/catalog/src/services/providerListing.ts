@@ -24,7 +24,13 @@ export type ProviderListingOrderByUse =
   | 'firstAuthConfigAt'
   | 'firstCredentialAt'
   | 'firstSessionAt'
-  | 'firstSessionTemplateAt';
+  | 'firstSessionTemplateAt'
+  | 'lastDeploymentAt'
+  | 'lastConfigAt'
+  | 'lastAuthConfigAt'
+  | 'lastCredentialAt'
+  | 'lastSessionAt'
+  | 'lastSessionTemplateAt';
 
 let getInclude = (tenant: Tenant | undefined, solution: Solution) => ({
   categories: true,
@@ -126,7 +132,8 @@ class ProviderListingService {
           environmentOid: d.environment!.oid
         },
         orderBy: { [orderByUse]: 'desc' },
-        select: { providerOid: true }
+        select: { providerOid: true },
+        take: 500
       });
 
       useOrderMap = new Map(providerUses.map((pu, i) => [pu.providerOid, i]));

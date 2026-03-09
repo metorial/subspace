@@ -37,10 +37,12 @@ export let providerAuthCredentialsCreatedQueueProcessor =
         providerOid: providerAuthCredentials.providerOid,
         credentials: 1,
         firstCredentialAt: new Date(),
+        lastCredentialAt: new Date(),
         lastUseAt: new Date()
       },
       update: {
         credentials: { increment: 1 },
+        lastCredentialAt: new Date(),
         lastUseAt: new Date()
       }
     });
