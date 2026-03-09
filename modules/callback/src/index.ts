@@ -1,2 +1,7 @@
+import { combineQueueProcessors } from '@lowerdeck/queue';
+import { reconcilerQueueProcessor } from './reconciler';
+
+export * from './lib/callbackInstanceEnrichment';
 export * from './services';
-export * from './queues';
+
+export let callbackQueueProcessor = combineQueueProcessors([reconcilerQueueProcessor]);

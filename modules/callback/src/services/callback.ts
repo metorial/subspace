@@ -2,24 +2,28 @@ import { badRequestError, notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
+  type Callback,
+  type Environment,
+  type ProviderDeployment,
+  type Solution,
+  type Tenant,
   CallbackDestinationStatus,
-  CallbackMode,
-  CallbackStatus,
   db,
   getId,
-  snowflake,
-  type ProviderDeployment,
-  type Environment,
-  type Solution,
-  type Tenant
+  Provider,
+  ProviderType,
+  snowflake
 } from '@metorial-subspace/db';
 import {
-  providerDeploymentConfigPairInternalService,
-  providerDeploymentInternalService
-} from '@metorial-subspace/module-provider-internal';
+  normalizeStatusForGet,
+  normalizeStatusForList,
+  resolveProviderDeployments
+} from '@metorial-subspace/list-utils';
+import { providerDeploymentInternalService } from '@metorial-subspace/module-provider-internal';
 import { callbackRegistrationService } from './callbackRegistration';
 
 const MAX_DESTINATIONS_PER_CALLBACK = 100;
+const MAX_TRIGGERS_PER_CALLBACK = 100;
 
 let callbackInclude = {
   providerDeployment: {
@@ -32,15 +36,9 @@ let callbackInclude = {
       currentVersion: true
     }
   },
-  callbackTriggers: true,
-  callbackDestinationLinks: {
+  callbackProviderTriggers: {
     include: {
-      callbackDestination: true
-    }
-  },
-  callbackManualPairLinks: {
-    include: {
-      providerDeploymentConfigPair: true
+      providerTrigger: true
     }
   }
 };
@@ -64,8 +62,13 @@ class callbackServiceImpl {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
+    status?: ('active' | 'archived' | 'deleted')[];
+    allowDeleted?: boolean;
+    ids?: string[];
     providerDeploymentIds?: string[];
   }) {
+    let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
+
     return Paginator.create(({ prisma }) =>
       prisma(async opts =>
         db.callback.findMany({
@@ -74,16 +77,11 @@ class callbackServiceImpl {
             tenantOid: d.tenant.oid,
             solutionOid: d.solution.oid,
             environmentOid: d.environment.oid,
-            status: { notIn: [CallbackStatus.deleted] },
-            ...(d.providerDeploymentIds?.length
-              ? {
-                  providerDeployment: {
-                    id: {
-                      in: d.providerDeploymentIds
-                    }
-                  }
-                }
-              : {})
+            ...normalizeStatusForList(d).noParent,
+            AND: [
+              d.ids ? { id: { in: d.ids } } : undefined!,
+              deployments ? { providerDeploymentOid: deployments.in } : undefined!
+            ].filter(Boolean)
           },
           include: callbackInclude
         })
@@ -96,6 +94,7 @@ class callbackServiceImpl {
     solution: Solution;
     environment: Environment;
     callbackId: string;
+    allowDeleted?: boolean;
   }) {
     let callback = await db.callback.findFirst({
       where: {
@@ -103,7 +102,7 @@ class callbackServiceImpl {
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
         environmentOid: d.environment.oid,
-        status: { notIn: [CallbackStatus.deleted] }
+        ...normalizeStatusForGet(d).noParent
       },
       include: callbackInclude
     });
@@ -118,11 +117,13 @@ class callbackServiceImpl {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
-    providerDeploymentId: string;
+    providerDeployment: {
+      id: string;
+    };
   }) {
     let providerDeployment = await db.providerDeployment.findFirst({
       where: {
-        id: d.providerDeploymentId,
+        id: d.providerDeployment.id,
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
         environmentOid: d.environment.oid
@@ -142,7 +143,7 @@ class callbackServiceImpl {
       }
     });
     if (!providerDeployment) {
-      throw new ServiceError(notFoundError('provider.deployment', d.providerDeploymentId));
+      throw new ServiceError(notFoundError('provider.deployment', d.providerDeployment.id));
     }
 
     if (
@@ -199,13 +200,12 @@ class callbackServiceImpl {
       );
     }
 
-    let specification = await db.providerSpecification.findFirstOrThrow({
-      where: { oid: version.specificationOid }
+    let providerTriggers = await db.providerTrigger.findMany({
+      where: { specificationOid: version.specificationOid }
     });
 
-    let triggers = specification.value.specification.triggers ?? [];
-    let byMatcher = new Map<string, (typeof triggers)[number]>();
-    for (let trigger of triggers) {
+    let byMatcher = new Map<string, (typeof providerTriggers)[number]>();
+    for (let trigger of providerTriggers) {
       byMatcher.set(trigger.key, trigger);
       byMatcher.set(trigger.specId, trigger);
       byMatcher.set(trigger.callableId, trigger);
@@ -226,9 +226,7 @@ class callbackServiceImpl {
       }
 
       return {
-        providerTriggerId: trigger.specId,
-        providerTriggerKey: trigger.key,
-        providerTriggerName: trigger.name,
+        providerTriggerOid: trigger.oid,
         eventTypes: item.eventTypes?.length ? item.eventTypes : []
       };
     });
@@ -238,9 +236,10 @@ class callbackServiceImpl {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
+    providerDeployment: {
+      id: string;
+    };
     input: {
-      providerDeploymentId: string;
-      mode: CallbackMode;
       name: string;
       description?: string;
       metadata?: Record<string, any>;
@@ -253,10 +252,19 @@ class callbackServiceImpl {
       tenant: d.tenant,
       solution: d.solution,
       environment: d.environment,
-      providerDeploymentId: d.input.providerDeploymentId
+      providerDeployment: d.providerDeployment
     });
 
-    let callbackTriggers = await this.resolveTriggerDefs({
+    if (d.input.triggers.length > MAX_TRIGGERS_PER_CALLBACK) {
+      throw new ServiceError(
+        badRequestError({
+          code: 'callback_trigger_limit_exceeded',
+          message: `A callback can reference at most ${MAX_TRIGGERS_PER_CALLBACK} triggers.`
+        })
+      );
+    }
+
+    let providerTriggers = await this.resolveTriggerDefs({
       environment: d.environment,
       deployment: providerDeployment,
       inputTriggers: d.input.triggers
@@ -295,18 +303,16 @@ class callbackServiceImpl {
         solutionOid: d.solution.oid,
         environmentOid: d.environment.oid,
         providerDeploymentOid: providerDeployment.oid,
-        status: CallbackStatus.active,
-        mode: d.input.mode,
+        status: 'active',
+        mode: 'manual',
         name: d.input.name,
         description: d.input.description,
         metadata: d.input.metadata,
         pollIntervalSecondsOverride,
-        callbackTriggers: {
-          create: callbackTriggers.map(trigger => ({
-            ...getId('callbackTrigger'),
-            providerTriggerId: trigger.providerTriggerId,
-            providerTriggerKey: trigger.providerTriggerKey,
-            providerTriggerName: trigger.providerTriggerName,
+        callbackProviderTriggers: {
+          create: providerTriggers.map(trigger => ({
+            ...getId('callbackProviderTrigger'),
+            providerTriggerOid: trigger.providerTriggerOid,
             eventTypes: trigger.eventTypes
           }))
         },
@@ -333,9 +339,15 @@ class callbackServiceImpl {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
-    callbackId: string;
+    callback: Callback & {
+      providerDeployment: ProviderDeployment & {
+        provider: Provider & {
+          type: ProviderType;
+        };
+        currentVersion: unknown;
+      };
+    };
     input: {
-      mode?: CallbackMode;
       name?: string;
       description?: string;
       metadata?: Record<string, any>;
@@ -344,12 +356,6 @@ class callbackServiceImpl {
       destinationIds?: string[];
     };
   }) {
-    let callback = await this.getCallbackById({
-      tenant: d.tenant,
-      solution: d.solution,
-      environment: d.environment,
-      callbackId: d.callbackId
-    });
     let pollIntervalSecondsOverride =
       d.input.pollIntervalSecondsOverride !== undefined
         ? this.normalizePollInterval(d.input.pollIntervalSecondsOverride)
@@ -382,20 +388,29 @@ class callbackServiceImpl {
       destinationOids = destinations.map(dest => dest.oid);
     }
 
+    if (d.input.triggers && d.input.triggers.length > MAX_TRIGGERS_PER_CALLBACK) {
+      throw new ServiceError(
+        badRequestError({
+          code: 'callback_trigger_limit_exceeded',
+          message: `A callback can reference at most ${MAX_TRIGGERS_PER_CALLBACK} triggers.`
+        })
+      );
+    }
+
     let triggerDefs =
       d.input.triggers !== undefined
         ? await this.resolveTriggerDefs({
             environment: d.environment,
-            deployment: callback.providerDeployment,
+            deployment: d.callback.providerDeployment,
             inputTriggers: d.input.triggers
           })
         : undefined;
 
     await db.$transaction(async tx => {
       await tx.callback.update({
-        where: { oid: callback.oid },
+        where: { oid: d.callback.oid },
         data: {
-          mode: d.input.mode ?? undefined,
+          mode: 'manual',
           name: d.input.name ?? undefined,
           description: d.input.description ?? undefined,
           metadata: d.input.metadata ?? undefined,
@@ -404,12 +419,14 @@ class callbackServiceImpl {
       });
 
       if (destinationOids) {
-        await tx.callbackDestinationLink.deleteMany({ where: { callbackOid: callback.oid } });
+        await tx.callbackDestinationLink.deleteMany({
+          where: { callbackOid: d.callback.oid }
+        });
         if (destinationOids.length) {
           await tx.callbackDestinationLink.createMany({
             data: destinationOids.map(destinationOid => ({
               oid: snowflake.nextId(),
-              callbackOid: callback.oid,
+              callbackOid: d.callback.oid,
               callbackDestinationOid: destinationOid
             }))
           });
@@ -417,15 +434,15 @@ class callbackServiceImpl {
       }
 
       if (triggerDefs) {
-        await tx.callbackTrigger.deleteMany({ where: { callbackOid: callback.oid } });
+        await tx.callbackProviderTrigger.deleteMany({
+          where: { callbackOid: d.callback.oid }
+        });
         if (triggerDefs.length) {
-          await tx.callbackTrigger.createMany({
+          await tx.callbackProviderTrigger.createMany({
             data: triggerDefs.map(trigger => ({
-              ...getId('callbackTrigger'),
-              callbackOid: callback.oid,
-              providerTriggerId: trigger.providerTriggerId,
-              providerTriggerKey: trigger.providerTriggerKey,
-              providerTriggerName: trigger.providerTriggerName,
+              ...getId('callbackProviderTrigger'),
+              callbackOid: d.callback.oid,
+              providerTriggerOid: trigger.providerTriggerOid,
               eventTypes: trigger.eventTypes
             }))
           });
@@ -433,13 +450,13 @@ class callbackServiceImpl {
       }
     });
 
-    await callbackRegistrationService.enqueueReconcile({ callbackId: callback.id });
+    await callbackRegistrationService.enqueueReconcile({ callbackId: d.callback.id });
 
     return await this.getCallbackById({
       tenant: d.tenant,
       solution: d.solution,
       environment: d.environment,
-      callbackId: callback.id
+      callbackId: d.callback.id
     });
   }
 
@@ -447,176 +464,22 @@ class callbackServiceImpl {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
-    callbackId: string;
+    callback: Callback;
   }) {
-    let callback = await this.getCallbackById({
-      tenant: d.tenant,
-      solution: d.solution,
-      environment: d.environment,
-      callbackId: d.callbackId
+    let archived = await db.callback.update({
+      where: { oid: d.callback.oid },
+      data: { status: 'archived' },
+      include: callbackInclude
     });
 
-    let archived = await db.callback.update({
-      where: { oid: callback.oid },
-      data: { status: CallbackStatus.archived },
-      include: callbackInclude
+    await db.callbackInstance.updateMany({
+      where: { callbackOid: d.callback.oid },
+      data: { isParentDeleted: true }
     });
 
     await callbackRegistrationService.enqueueReconcile({ callbackId: archived.id });
 
     return archived;
-  }
-
-  async listAttachments(d: {
-    tenant: Tenant;
-    solution: Solution;
-    environment: Environment;
-    callbackId: string;
-  }) {
-    let callback = await this.getCallbackById({
-      tenant: d.tenant,
-      solution: d.solution,
-      environment: d.environment,
-      callbackId: d.callbackId
-    });
-
-    return await db.callbackManualPairLink.findMany({
-      where: { callbackOid: callback.oid },
-      include: {
-        providerDeploymentConfigPair: {
-          include: {
-            providerConfigVersion: {
-              include: {
-                config: true
-              }
-            },
-            providerAuthConfigVersion: {
-              include: {
-                authConfig: true
-              }
-            }
-          }
-        }
-      }
-    });
-  }
-
-  async attachPair(d: {
-    tenant: Tenant;
-    solution: Solution;
-    environment: Environment;
-    callbackId: string;
-    configId: string;
-    authConfigId?: string;
-  }) {
-    let callback = await this.getCallbackById({
-      tenant: d.tenant,
-      solution: d.solution,
-      environment: d.environment,
-      callbackId: d.callbackId
-    });
-
-    let config = await db.providerConfig.findFirst({
-      where: {
-        id: d.configId,
-        tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid,
-        environmentOid: d.environment.oid,
-        deploymentOid: callback.providerDeploymentOid
-      },
-      include: { currentVersion: true }
-    });
-    if (!config?.currentVersion) {
-      throw new ServiceError(notFoundError('provider.config', d.configId));
-    }
-
-    let authConfig = d.authConfigId
-      ? await db.providerAuthConfig.findFirst({
-          where: {
-            id: d.authConfigId,
-            tenantOid: d.tenant.oid,
-            solutionOid: d.solution.oid,
-            environmentOid: d.environment.oid,
-            deploymentOid: callback.providerDeploymentOid
-          },
-          include: { currentVersion: true }
-        })
-      : null;
-
-    if (d.authConfigId && !authConfig?.currentVersion) {
-      throw new ServiceError(notFoundError('provider.auth_config', d.authConfigId));
-    }
-
-    let pairRes = await providerDeploymentConfigPairInternalService.upsertDeploymentConfigPair(
-      {
-        deployment: callback.providerDeployment,
-        config,
-        authConfig
-      }
-    );
-
-    await db.callbackManualPairLink.upsert({
-      where: {
-        callbackOid_providerDeploymentConfigPairOid: {
-          callbackOid: callback.oid,
-          providerDeploymentConfigPairOid: pairRes.pair.oid
-        }
-      },
-      create: {
-        oid: snowflake.nextId(),
-        callbackOid: callback.oid,
-        providerDeploymentConfigPairOid: pairRes.pair.oid
-      },
-      update: {}
-    });
-
-    await callbackRegistrationService.enqueueReconcile({
-      callbackId: callback.id,
-      providerDeploymentConfigPairId: pairRes.pair.id
-    });
-
-    return await this.listAttachments({
-      tenant: d.tenant,
-      solution: d.solution,
-      environment: d.environment,
-      callbackId: d.callbackId
-    });
-  }
-
-  async detachPair(d: {
-    tenant: Tenant;
-    solution: Solution;
-    environment: Environment;
-    callbackId: string;
-    providerDeploymentConfigPairId: string;
-  }) {
-    let callback = await this.getCallbackById({
-      tenant: d.tenant,
-      solution: d.solution,
-      environment: d.environment,
-      callbackId: d.callbackId
-    });
-
-    await db.callbackManualPairLink.deleteMany({
-      where: {
-        callbackOid: callback.oid,
-        providerDeploymentConfigPair: {
-          id: d.providerDeploymentConfigPairId
-        }
-      }
-    });
-
-    await callbackRegistrationService.enqueueReconcile({
-      callbackId: callback.id,
-      providerDeploymentConfigPairId: d.providerDeploymentConfigPairId
-    });
-
-    return await this.listAttachments({
-      tenant: d.tenant,
-      solution: d.solution,
-      environment: d.environment,
-      callbackId: d.callbackId
-    });
   }
 }
 

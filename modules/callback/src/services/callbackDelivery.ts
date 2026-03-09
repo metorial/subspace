@@ -1,13 +1,6 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
-import {
-  CallbackDestinationStatus,
-  CallbackStatus,
-  db,
-  type Environment,
-  type Solution,
-  type Tenant
-} from '@metorial-subspace/db';
+import { db, type Environment, type Solution, type Tenant } from '@metorial-subspace/db';
 import { getTenantForSlates, slates } from '@metorial-subspace/provider-slates/src/client';
 
 class callbackDeliveryServiceImpl {
@@ -23,7 +16,7 @@ class callbackDeliveryServiceImpl {
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
         environmentOid: d.environment.oid,
-        status: { notIn: [CallbackStatus.deleted] }
+        status: { notIn: ['deleted'] }
       },
       include: {
         callbackDestinationLinks: {
@@ -37,7 +30,8 @@ class callbackDeliveryServiceImpl {
 
     let registrations = await db.callbackReceiverRegistration.findMany({
       where: {
-        callbackOid: callback.oid
+        callbackOid: callback.oid,
+        status: 'active'
       }
     });
 
@@ -48,7 +42,7 @@ class callbackDeliveryServiceImpl {
       registrations,
       slatesTenant,
       slatesDestinationIds: callback.callbackDestinationLinks
-        .filter(link => link.callbackDestination.status === CallbackDestinationStatus.active)
+        .filter(link => link.callbackDestination.status === 'active')
         .map(link => link.callbackDestination.slateTriggerDestinationId)
         .filter(Boolean)
     };
@@ -71,7 +65,9 @@ class callbackDeliveryServiceImpl {
   }) {
     let context = await this.resolveContext(d);
 
-    let receiverIds = context.registrations.map(reg => reg.slateTriggerReceiverId).filter(Boolean);
+    let receiverIds = context.registrations
+      .map(reg => reg.slateTriggerReceiverId)
+      .filter(Boolean);
     let destinationIds = d.input.destinationIds?.length
       ? (
           await db.callbackDestination.findMany({
@@ -137,7 +133,9 @@ class callbackDeliveryServiceImpl {
   }) {
     let context = await this.resolveContext(d);
 
-    let receiverIds = context.registrations.map(reg => reg.slateTriggerReceiverId).filter(Boolean);
+    let receiverIds = context.registrations
+      .map(reg => reg.slateTriggerReceiverId)
+      .filter(Boolean);
     let destinationIds = d.input.destinationIds?.length
       ? (
           await db.callbackDestination.findMany({
@@ -178,11 +176,16 @@ class callbackDeliveryServiceImpl {
     });
 
     if (!context.slatesDestinationIds.includes(attempt.intent.destination.id)) {
-      throw new ServiceError(notFoundError('callback.delivery_attempt', d.eventDeliveryAttemptId));
+      throw new ServiceError(
+        notFoundError('callback.delivery_attempt', d.eventDeliveryAttemptId)
+      );
     }
 
     return attempt;
   }
 }
 
-export let callbackDeliveryService = Service.create('callbackDeliveryService', () => new callbackDeliveryServiceImpl()).build();
+export let callbackDeliveryService = Service.create(
+  'callbackDeliveryService',
+  () => new callbackDeliveryServiceImpl()
+).build();
