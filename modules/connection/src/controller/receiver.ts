@@ -1,4 +1,4 @@
-import { internalServerError } from '@lowerdeck/error';
+import { internalServerError, isServiceError } from '@lowerdeck/error';
 import { getSentry } from '@lowerdeck/sentry';
 import { serialize } from '@lowerdeck/serialize';
 import type {
@@ -59,7 +59,7 @@ export let startReceiver = () => {
       let method = 'method' in mcpMessage ? mcpMessage.method : undefined;
 
       let providerMcpId: string | undefined;
-      if (id) {
+      if (id !== undefined && id !== null) {
         providerMcpId = await ID.generateId('sessionMessage_mcp');
         clientMcpIdTranslation.set(providerMcpId, id);
 
@@ -68,7 +68,7 @@ export let startReceiver = () => {
       }
 
       let message = await createMessage({
-        status: id ? 'waiting_for_response' : 'succeeded',
+        status: id !== undefined && id !== null ? 'waiting_for_response' : 'succeeded',
         type: 'mcp_message',
         session: state.session,
         connection: state.connection,
@@ -125,7 +125,7 @@ export let startReceiver = () => {
       let mcpMessage = data.mcpMessage;
 
       let id: any = 'id' in mcpMessage ? mcpMessage.id : undefined;
-      if (id) {
+      if (id !== undefined && id !== null) {
         // We can only process a reply from the client if we
         // have seen the original message and have a mapping for the ID
         if (!clientMcpIdTranslation.has(id)) return {};
@@ -192,9 +192,11 @@ export let startReceiver = () => {
 
         console.error('Error processing tool invocation:', err);
 
-        let error = internalServerError({
-          message: 'Failed to process tool call'
-        }).toResponse();
+        let error = isServiceError(err)
+          ? err.toResponse()
+          : internalServerError({
+              message: 'Failed to process tool call'
+            }).toResponse();
 
         return {
           isSystemError: true,

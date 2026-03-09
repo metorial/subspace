@@ -66,6 +66,29 @@ export let sessionTemplateProviderController = app.controller({
       return Paginator.presentLight(list, sessionTemplateProviderPresenter);
     }),
 
+  getMany: tenantApp
+    .handler()
+    .input(
+      v.object({
+        tenantId: v.string(),
+        environmentId: v.string(),
+        sessionTemplateIds: v.array(v.string()),
+        allowDeleted: v.optional(v.boolean())
+      })
+    )
+    .do(async ctx => {
+      let sessionTemplateProviders =
+        await sessionTemplateProviderService.getManySessionTemplateProvidersBySessionTemplateIds({
+          tenant: ctx.tenant,
+          environment: ctx.environment,
+          solution: ctx.solution,
+          sessionTemplateIds: ctx.input.sessionTemplateIds,
+          allowDeleted: ctx.input.allowDeleted
+        });
+
+      return sessionTemplateProviders.map(sessionTemplateProviderPresenter);
+    }),
+
   get: sessionTemplateProviderApp
     .handler()
     .input(

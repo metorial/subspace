@@ -81,6 +81,8 @@ export let customProviderPresenter = (
     remoteProtocol: customProvider.remoteProtocol
   },
 
+  access: customProvider.provider?.access ?? 'tenant',
+
   createdAt: customProvider.createdAt,
   updatedAt: customProvider.updatedAt
 });

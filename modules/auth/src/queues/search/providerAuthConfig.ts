@@ -12,7 +12,7 @@ export let indexProviderAuthConfigQueueProcessor = indexProviderAuthConfigQueue.
   async data => {
     let providerAuthConfig = await db.providerAuthConfig.findUnique({
       where: { id: data.providerAuthConfigId },
-      include: { tenant: true, provider: true }
+      include: { tenant: true, provider: true, deployment: true }
     });
     if (!providerAuthConfig) throw new QueueRetryError();
 
@@ -36,7 +36,8 @@ export let indexProviderAuthConfigQueueProcessor = indexProviderAuthConfigQueue.
       body: {
         name: providerAuthConfig.name,
         description: providerAuthConfig.description,
-        providerName: providerAuthConfig.provider.name
+        providerName: providerAuthConfig.provider.name,
+        deploymentName: providerAuthConfig.deployment?.name
       }
     });
   }

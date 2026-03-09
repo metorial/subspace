@@ -4,7 +4,7 @@ import {
   type Backend,
   getId,
   type Provider,
-  ProviderVariant,
+  type ProviderVariant,
   type Publisher,
   type ShuttleServer,
   type Slate,
@@ -40,14 +40,17 @@ class providerInternalServiceImpl {
           let enriched = await backend.enrichment.enrichProviderVariants({
             providerVariantIds: providers.map(p => p.defaultVariant!.id)
           });
-          let enrichedMap = new Map(enriched.providers.map(p => [p.providerVariantId, p]));
+          let enrichedMap = new Map<
+            string,
+            (typeof enriched.providers)[number]
+          >(enriched.providers.map(p => [p.providerVariantId, p]));
 
           return providers.map(provider => {
             let enrichment = enrichedMap.get(provider.defaultVariant!.id);
 
             return {
               ...provider,
-              ...enrichment
+              ...(enrichment ?? {})
             };
           });
         })
@@ -69,6 +72,11 @@ class providerInternalServiceImpl {
       | {
           type: 'shuttle';
           shuttleServer: ShuttleServer;
+          backend: Backend;
+        }
+      | {
+          type: 'native';
+          integrationIdentifier: string;
           backend: Backend;
         };
 
@@ -95,6 +103,8 @@ class providerInternalServiceImpl {
         identifier += `${d.source.slate.oid}`;
       } else if (d.source.type === 'shuttle') {
         identifier += `${d.source.shuttleServer.oid}`;
+      } else if (d.source.type === 'native') {
+        identifier += d.source.integrationIdentifier;
       } else {
         throw new Error('Unknown provider source type');
       }
@@ -309,6 +319,7 @@ class providerInternalServiceImpl {
       slug?: string;
       image?: PrismaJson.EntityImage | null;
       skills?: string[];
+      access?: 'public' | 'tenant';
     };
   }) {
     return withTransaction(async db => {
@@ -317,7 +328,8 @@ class providerInternalServiceImpl {
         data: {
           slug: d.input.slug,
           name: d.input.name?.trim() || undefined,
-          description: d.input.description?.trim() || undefined
+          description: d.input.description?.trim() || undefined,
+          access: d.input.access
         }
       });
 
@@ -329,7 +341,8 @@ class providerInternalServiceImpl {
           description: provider.description,
           readme: d.input.readme,
           skills: d.input.skills,
-          image: d.input.image ?? undefined
+          image: d.input.image ?? undefined,
+          isPublic: provider.access === 'public'
         }
       });
 

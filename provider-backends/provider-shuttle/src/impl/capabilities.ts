@@ -67,6 +67,20 @@ export class ProviderCapabilities extends IProviderCapabilities {
     };
   }
 
+  override async shouldDiscoverSpecificationForProviderPair(
+    data: ProviderSpecificationGetForPairParam
+  ): Promise<{ shouldDiscover: boolean }> {
+    if (!data.providerVersion.shuttleServerOid) {
+      throw new Error('Provider version does not have a server associated with it');
+    }
+
+    let shuttle = await db.shuttleServer.findUnique({
+      where: { oid: data.providerVersion.shuttleServerOid }
+    });
+
+    return { shouldDiscover: shuttle?.type != 'container' };
+  }
+
   override async getSpecificationForProviderVersion(
     data: ProviderSpecificationGetForProviderParam
   ): Promise<ProviderSpecificationGetRes> {

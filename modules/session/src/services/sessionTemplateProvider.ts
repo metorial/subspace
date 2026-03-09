@@ -111,6 +111,30 @@ class sessionTemplateProviderServiceImpl {
     return sessionProvider;
   }
 
+  async getManySessionTemplateProvidersBySessionTemplateIds(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    sessionTemplateIds: string[];
+    status?: SessionTemplateProviderStatus[];
+    allowDeleted?: boolean;
+  }) {
+    let sessionTemplates = await resolveSessionTemplates(d, d.sessionTemplateIds);
+
+    return await db.sessionTemplateProvider.findMany({
+      where: {
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid,
+        ...normalizeStatusForList(d).noParent,
+        AND: [
+          sessionTemplates ? { sessionTemplateOid: sessionTemplates.in } : undefined!
+        ].filter(Boolean)
+      },
+      include
+    });
+  }
+
   async createSessionTemplateProvider(d: {
     tenant: Tenant;
     solution: Solution;

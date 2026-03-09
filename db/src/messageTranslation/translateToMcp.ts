@@ -196,7 +196,7 @@ export let messageOutputToMcpBasic = async (
     };
   }
 
-  if (!message?.clientMcpId) return null;
+  if (message?.clientMcpId === null || message?.clientMcpId === undefined) return null;
 
   if (output.type === 'tool.result') {
     return {

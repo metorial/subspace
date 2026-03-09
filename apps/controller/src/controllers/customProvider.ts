@@ -189,7 +189,9 @@ export let customProviderController = app.controller({
         name: v.optional(v.string()),
         readme: v.optional(v.string()),
         description: v.optional(v.string()),
-        metadata: v.optional(v.record(v.any()))
+        metadata: v.optional(v.record(v.any())),
+
+        access: v.optional(v.enumOf(['public', 'tenant']))
       })
     )
     .do(async ctx => {
@@ -209,7 +211,8 @@ export let customProviderController = app.controller({
           name: ctx.input.name,
           readme: ctx.input.readme,
           description: ctx.input.description,
-          metadata: ctx.input.metadata
+          metadata: ctx.input.metadata,
+          access: ctx.input.access
         }
       });
 
