@@ -220,6 +220,8 @@ export class ProviderCapabilities extends IProviderCapabilities {
             mcp: null
           },
 
+      triggers: [],
+
       authMethods: server.oauthConfig
         ? [
             {

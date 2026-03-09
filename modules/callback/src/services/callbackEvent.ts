@@ -1,6 +1,7 @@
 import { notFoundError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
 import {
+  CallbackReceiverRegistrationStatus,
   CallbackStatus,
   db,
   type Environment,
@@ -31,11 +32,12 @@ class callbackEventServiceImpl {
 
     let registrations = await db.callbackReceiverRegistration.findMany({
       where: {
-        callbackOid: callback.oid
+        callbackOid: callback.oid,
+        status: CallbackReceiverRegistrationStatus.active
       },
       include: {
         providerDeploymentConfigPair: true,
-        callbackTrigger: true
+        callbackInstance: true
       }
     });
 
@@ -59,7 +61,9 @@ class callbackEventServiceImpl {
     };
   }) {
     let context = await this.resolveContext(d);
-    let receiverIds = context.registrations.map(reg => reg.slateTriggerReceiverId).filter(Boolean);
+    let receiverIds = context.registrations
+      .map(reg => reg.slateTriggerReceiverId)
+      .filter(Boolean);
 
     let res = await slates.slateTriggerEvent.list({
       tenantId: context.slatesTenant.id,
@@ -83,8 +87,9 @@ class callbackEventServiceImpl {
         return {
           ...item,
           callbackId: context.callback.id,
-          providerDeploymentConfigPairId: registration?.providerDeploymentConfigPair.id ?? null,
-          callbackTriggerKey: registration?.callbackTrigger.providerTriggerKey ?? null
+          providerDeploymentConfigPairId:
+            registration?.providerDeploymentConfigPair.id ?? null,
+          callbackInstanceId: registration?.callbackInstance.id ?? null
         };
       })
     };
@@ -115,9 +120,12 @@ class callbackEventServiceImpl {
       ...event,
       callbackId: context.callback.id,
       providerDeploymentConfigPairId: registration.providerDeploymentConfigPair.id,
-      callbackTriggerKey: registration.callbackTrigger.providerTriggerKey
+      callbackInstanceId: registration.callbackInstance.id
     };
   }
 }
 
-export let callbackEventService = Service.create('callbackEventService', () => new callbackEventServiceImpl()).build();
+export let callbackEventService = Service.create(
+  'callbackEventService',
+  () => new callbackEventServiceImpl()
+).build();

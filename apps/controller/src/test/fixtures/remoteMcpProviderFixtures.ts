@@ -427,7 +427,8 @@ const discoverSpecification = async (d: {
         specification: capabilities.specification,
         authMethods: capabilities.authMethods,
         features: capabilities.features,
-        tools: capabilities.tools
+        tools: capabilities.tools,
+        triggers: capabilities.triggers
       });
     }
   });

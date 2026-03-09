@@ -1,8 +1,8 @@
 import { Service } from '@lowerdeck/service';
-import { callbackReconcileQueue } from '../queues/reconcile';
+import { callbackReconcileQueue } from '../reconciler';
 
 class callbackRegistrationServiceImpl {
-  async enqueueReconcile(d: { callbackId?: string; providerDeploymentConfigPairId?: string }) {
+  async enqueueReconcile(d: { callbackId: string } | { callbackInstanceId: string }) {
     await callbackReconcileQueue.add(d);
   }
 }

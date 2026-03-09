@@ -55,8 +55,7 @@ export let callbackDestinationController = app.controller({
         name: v.string(),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
-        url: v.string(),
-        method: v.optional(v.enumOf(['POST', 'PUT', 'PATCH']))
+        url: v.string()
       })
     )
     .do(async ctx => {
@@ -67,8 +66,7 @@ export let callbackDestinationController = app.controller({
           name: ctx.input.name!,
           description: ctx.input.description,
           metadata: ctx.input.metadata,
-          url: ctx.input.url!,
-          method: ctx.input.method
+          url: ctx.input.url!
         }
       });
       return callbackDestinationPresenter(callbackDestination);
@@ -83,21 +81,19 @@ export let callbackDestinationController = app.controller({
         name: v.optional(v.string()),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
-        url: v.optional(v.string()),
-        method: v.optional(v.enumOf(['POST', 'PUT', 'PATCH']))
+        url: v.optional(v.string())
       })
     )
     .do(async ctx => {
       let callbackDestination = await callbackDestinationService.updateCallbackDestination({
         tenant: ctx.tenant,
         solution: ctx.solution,
-        callbackDestinationId: ctx.input.callbackDestinationId,
+        callbackDestination: ctx.callbackDestination,
         input: {
           name: ctx.input.name,
           description: ctx.input.description,
           metadata: ctx.input.metadata,
-          url: ctx.input.url,
-          method: ctx.input.method
+          url: ctx.input.url
         }
       });
       return callbackDestinationPresenter(callbackDestination);
@@ -115,7 +111,7 @@ export let callbackDestinationController = app.controller({
       let callbackDestination = await callbackDestinationService.archiveCallbackDestination({
         tenant: ctx.tenant,
         solution: ctx.solution,
-        callbackDestinationId: ctx.input.callbackDestinationId
+        callbackDestination: ctx.callbackDestination
       });
       return callbackDestinationPresenter(callbackDestination);
     })

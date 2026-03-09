@@ -65,7 +65,8 @@ class providerSpecificationServiceImpl {
             include: {
               provider: true,
               providerTools: true,
-              providerAuthMethods: true
+              providerAuthMethods: true,
+              providerTriggers: true
             }
           })
       )
@@ -87,7 +88,8 @@ class providerSpecificationServiceImpl {
       include: {
         provider: true,
         providerTools: true,
-        providerAuthMethods: true
+        providerAuthMethods: true,
+        providerTriggers: true
       }
     });
     if (!providerSpecification) {

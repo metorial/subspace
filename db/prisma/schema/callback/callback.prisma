@@ -40,7 +40,6 @@ enum CallbackStatus {
 }
 
 enum CallbackMode {
-  auto
   manual
 }
 
@@ -71,33 +70,30 @@ model Callback {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  callbackTriggers              CallbackTrigger[]
+  callbackProviderTriggers      CallbackProviderTrigger[]
   callbackDestinationLinks      CallbackDestinationLink[]
-  callbackManualPairLinks       CallbackManualPairLink[]
+  callbackInstances             CallbackInstance[]
   callbackReceiverRegistrations CallbackReceiverRegistration[]
 
   @@index([tenantOid, environmentOid, solutionOid, status])
   @@index([providerDeploymentOid, status])
 }
 
-model CallbackTrigger {
+model CallbackProviderTrigger {
   oid BigInt @id
   id  String @unique
 
   callbackOid BigInt
   callback    Callback @relation(fields: [callbackOid], references: [oid], onDelete: Cascade)
 
-  providerTriggerId   String
-  providerTriggerKey  String
-  providerTriggerName String
+  providerTriggerOid BigInt
+  providerTrigger    ProviderTrigger @relation(fields: [providerTriggerOid], references: [oid])
 
   eventTypes String[]
 
   createdAt DateTime @default(now())
 
-  callbackReceiverRegistrations CallbackReceiverRegistration[]
-
-  @@unique([callbackOid, providerTriggerKey])
+  @@unique([callbackOid, providerTriggerOid])
   @@index([callbackOid])
 }
 
@@ -115,18 +111,41 @@ model CallbackDestinationLink {
   @@unique([callbackOid, callbackDestinationOid])
 }
 
-model CallbackManualPairLink {
+enum CallbackInstanceStatus {
+  attached
+  detached
+}
+
+enum CallbackInstanceRegistrationStatus {
+  pending
+  registered
+}
+
+model CallbackInstance {
   oid BigInt @id
+  id  String @unique
 
   callbackOid BigInt
   callback    Callback @relation(fields: [callbackOid], references: [oid], onDelete: Cascade)
 
+  isParentDeleted Boolean @default(false)
+
   providerDeploymentConfigPairOid BigInt
   providerDeploymentConfigPair    ProviderDeploymentConfigPair @relation(fields: [providerDeploymentConfigPairOid], references: [oid], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
+  status CallbackInstanceStatus
+  registrationStatus CallbackInstanceRegistrationStatus
 
-  @@unique([callbackOid, providerDeploymentConfigPairOid])
+  activeRegistrationOid BigInt? @unique
+  activeRegistration    CallbackReceiverRegistration? @relation("ActiveCallbackInstanceRegistration", fields: [activeRegistrationOid], references: [oid], onDelete: SetNull)
+
+  callbackReceiverRegistrations CallbackReceiverRegistration[] @relation("CallbackInstanceRegistrations")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([callbackOid, status])
+  @@index([providerDeploymentConfigPairOid, status])
 }
 
 enum CallbackReceiverRegistrationStatus {
@@ -145,11 +164,10 @@ model CallbackReceiverRegistration {
   providerDeploymentConfigPairOid BigInt
   providerDeploymentConfigPair    ProviderDeploymentConfigPair @relation(fields: [providerDeploymentConfigPairOid], references: [oid], onDelete: Cascade)
 
-  callbackTriggerOid BigInt
-  callbackTrigger    CallbackTrigger @relation(fields: [callbackTriggerOid], references: [oid], onDelete: Cascade)
+  callbackInstanceOid BigInt
+  callbackInstance    CallbackInstance @relation("CallbackInstanceRegistrations", fields: [callbackInstanceOid], references: [oid], onDelete: Cascade)
 
-  slateTriggerReceiverId        String
-  slateTriggerReceiverTriggerId String
+  slateTriggerReceiverId String
 
   status CallbackReceiverRegistrationStatus
 
@@ -160,7 +178,9 @@ model CallbackReceiverRegistration {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  @@unique([callbackOid, providerDeploymentConfigPairOid, callbackTriggerOid])
+  activeForCallbackInstance CallbackInstance? @relation("ActiveCallbackInstanceRegistration")
+
   @@index([callbackOid, status])
   @@index([providerDeploymentConfigPairOid, status])
+  @@index([callbackInstanceOid, status])
 }

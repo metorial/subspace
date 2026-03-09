@@ -51,6 +51,8 @@ export let ID = createIdGenerator({
   providerToolGlobal: idType.sorted('ptog'),
   providerAuthMethod: idType.sorted('pam'),
   providerAuthMethodGlobal: idType.sorted('pamg'),
+  providerTrigger: idType.sorted('ptr'),
+  providerTriggerGlobal: idType.sorted('ptrg'),
 
   providerAuthCredentials: idType.sorted('par'),
   providerAuthConfig: idType.sorted('pac'),
@@ -96,7 +98,8 @@ export let ID = createIdGenerator({
 
   callbackDestination: idType.sorted('cbd'),
   callback: idType.sorted('cbk'),
-  callbackTrigger: idType.sorted('cbt'),
+  callbackInstance: idType.sorted('cbi'),
+  callbackProviderTrigger: idType.sorted('cbpt'),
   callbackReceiverRegistration: idType.sorted('cbrr'),
 
   toolCall: idType.sorted('tcl')

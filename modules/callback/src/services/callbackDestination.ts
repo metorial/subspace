@@ -2,6 +2,7 @@ import { badRequestError, notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
+  type CallbackDestination,
   CallbackDestinationStatus,
   db,
   getId,
@@ -83,12 +84,11 @@ class callbackDestinationServiceImpl {
       description?: string;
       metadata?: Record<string, any>;
       url: string;
-      method?: 'POST' | 'PUT' | 'PATCH';
     };
   }) {
     let endpoint = this.normalizeAndValidateEndpoint({
       url: d.input.url,
-      method: d.input.method
+      method: 'POST'
     });
 
     let slatesTenant = await getTenantForSlates(d.tenant);
@@ -119,28 +119,22 @@ class callbackDestinationServiceImpl {
   async updateCallbackDestination(d: {
     tenant: Tenant;
     solution: Solution;
-    callbackDestinationId: string;
+    callbackDestination: CallbackDestination;
     input: {
       name?: string;
       description?: string;
       metadata?: Record<string, any>;
       url?: string;
-      method?: 'POST' | 'PUT' | 'PATCH';
     };
   }) {
-    let destination = await this.getCallbackDestinationById({
-      tenant: d.tenant,
-      solution: d.solution,
-      callbackDestinationId: d.callbackDestinationId
-    });
+    let destination = d.callbackDestination;
 
-    let endpoint =
-      d.input.url || d.input.method
-        ? this.normalizeAndValidateEndpoint({
-            url: d.input.url ?? destination.url,
-            method: d.input.method ?? (destination.method as 'POST' | 'PUT' | 'PATCH')
-          })
-        : null;
+    let endpoint = d.input.url
+      ? this.normalizeAndValidateEndpoint({
+          url: d.input.url ?? destination.url,
+          method: destination.method as 'POST' | 'PUT' | 'PATCH'
+        })
+      : null;
 
     let slatesTenant = await getTenantForSlates(d.tenant);
     await slates.slateTriggerDestination.update({
@@ -180,13 +174,9 @@ class callbackDestinationServiceImpl {
   async archiveCallbackDestination(d: {
     tenant: Tenant;
     solution: Solution;
-    callbackDestinationId: string;
+    callbackDestination: CallbackDestination;
   }) {
-    let destination = await this.getCallbackDestinationById({
-      tenant: d.tenant,
-      solution: d.solution,
-      callbackDestinationId: d.callbackDestinationId
-    });
+    let destination = d.callbackDestination;
 
     let archived = await db.callbackDestination.update({
       where: { oid: destination.oid },
@@ -210,4 +200,7 @@ class callbackDestinationServiceImpl {
   }
 }
 
-export let callbackDestinationService = Service.create('callbackDestinationService', () => new callbackDestinationServiceImpl()).build();
+export let callbackDestinationService = Service.create(
+  'callbackDestinationService',
+  () => new callbackDestinationServiceImpl()
+).build();
