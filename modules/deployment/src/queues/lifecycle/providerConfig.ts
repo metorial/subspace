@@ -33,10 +33,12 @@ export let providerConfigCreatedQueueProcessor = providerConfigCreatedQueue.proc
         providerOid: providerConfig.providerOid,
         configs: 1,
         firstConfigAt: new Date(),
+        lastConfigAt: new Date(),
         lastUseAt: new Date()
       },
       update: {
         configs: { increment: 1 },
+        lastConfigAt: new Date(),
         lastUseAt: new Date()
       }
     });

@@ -30,10 +30,12 @@ export let sessionProviderCreatedQueueProcessor = sessionProviderCreatedQueue.pr
         providerOid: sessionProvider.providerOid,
         sessions: 1,
         firstSessionAt: new Date(),
+        lastSessionAt: new Date(),
         lastUseAt: new Date()
       },
       update: {
         sessions: { increment: 1 },
+        lastSessionAt: new Date(),
         lastUseAt: new Date()
       }
     });

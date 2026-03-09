@@ -28,6 +28,13 @@ model ProviderUse {
   firstSessionAt         DateTime?
   firstSessionTemplateAt DateTime?
 
+  lastDeploymentAt      DateTime?
+  lastConfigAt          DateTime?
+  lastAuthConfigAt      DateTime?
+  lastCredentialAt      DateTime?
+  lastSessionAt         DateTime?
+  lastSessionTemplateAt DateTime?
+
   lastUseAt DateTime?
 
   createdAt DateTime @default(now())

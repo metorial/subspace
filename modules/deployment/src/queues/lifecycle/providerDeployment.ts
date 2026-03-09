@@ -35,10 +35,12 @@ export let providerDeploymentCreatedQueueProcessor = providerDeploymentCreatedQu
         providerOid: providerDeployment.providerOid,
         deployments: 1,
         firstDeploymentAt: new Date(),
+        lastDeploymentAt: new Date(),
         lastUseAt: new Date()
       },
       update: {
         deployments: { increment: 1 },
+        lastDeploymentAt: new Date(),
         lastUseAt: new Date()
       }
     });

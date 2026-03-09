@@ -32,10 +32,12 @@ export let sessionTemplateProviderCreatedQueueProcessor =
         providerOid: sessionTemplateProvider.providerOid,
         sessionTemplates: 1,
         firstSessionTemplateAt: new Date(),
+        lastSessionTemplateAt: new Date(),
         lastUseAt: new Date()
       },
       update: {
         sessionTemplates: { increment: 1 },
+        lastSessionTemplateAt: new Date(),
         lastUseAt: new Date()
       }
     });

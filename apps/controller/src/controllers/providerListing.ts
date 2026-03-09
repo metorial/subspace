@@ -60,7 +60,13 @@ export let providerListingController = app.controller({
               'firstAuthConfigAt',
               'firstCredentialAt',
               'firstSessionAt',
-              'firstSessionTemplateAt'
+              'firstSessionTemplateAt',
+              'lastDeploymentAt',
+              'lastConfigAt',
+              'lastAuthConfigAt',
+              'lastCredentialAt',
+              'lastSessionAt',
+              'lastSessionTemplateAt'
             ])
           )
         })
