@@ -4,7 +4,8 @@ import type {
   Specification,
   SpecificationAuthMethod,
   SpecificationFeatures,
-  SpecificationTool
+  SpecificationTool,
+  SpecificationTrigger
 } from '@metorial-subspace/provider-utils';
 import type { InitializeRequest, JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -70,11 +71,14 @@ declare global {
       authMethods: SpecificationAuthMethod[];
       features: SpecificationFeatures;
       tools: SpecificationTool[];
+      triggers?: SpecificationTrigger[];
     };
 
     type ProviderAuthMethodValue = SpecificationAuthMethod;
 
     type ProviderToolValue = SpecificationTool;
+
+    type ProviderTriggerValue = SpecificationTrigger;
 
     type ToolFilter =
       | {

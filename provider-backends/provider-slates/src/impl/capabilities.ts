@@ -82,8 +82,68 @@ export class ProviderCapabilities extends IProviderCapabilities {
         metadata: specRecord.providerInfo.metadata ?? {},
         configJsonSchema: specRecord.configSchema,
         configVisibility: 'plain',
+        triggers: specRecord.triggers
+          .map(t => {
+            let invocation = t.invocation;
+            if (!invocation) return null;
+
+            return {
+              specId: t.id,
+              specUniqueIdentifier: t.identifier,
+              callableId: t.key,
+              key: t.key,
+              name: t.name,
+              description: t.description,
+              inputJsonSchema: t.inputSchema,
+              outputJsonSchema: t.outputSchema,
+              invocation:
+                invocation.type === 'polling'
+                  ? {
+                      type: 'polling' as const,
+                      intervalSeconds: invocation.intervalSeconds
+                    }
+                  : {
+                      type: 'webhook' as const,
+                      autoRegistration: invocation.autoRegistration,
+                      autoUnregistration: invocation.autoUnregistration
+                    },
+              capabilities: t.capabilities ?? {},
+              metadata: t.metadata ?? {}
+            };
+          })
+          .filter((t): t is NonNullable<typeof t> => t !== null),
         mcp: null
       },
+      triggers: specRecord.triggers
+        .map(t => {
+          let invocation = t.invocation;
+          if (!invocation) return null;
+
+          return {
+            specId: t.id,
+            specUniqueIdentifier: t.identifier,
+            callableId: t.key,
+            key: t.key,
+            name: t.name,
+            description: t.description,
+            inputJsonSchema: t.inputSchema,
+            outputJsonSchema: t.outputSchema,
+            capabilities: t.capabilities ?? {},
+            metadata: t.metadata ?? {},
+            invocation:
+              invocation.type === 'polling'
+                ? {
+                    type: 'polling' as const,
+                    intervalSeconds: invocation.intervalSeconds
+                  }
+                : {
+                    type: 'webhook' as const,
+                    autoRegistration: invocation.autoRegistration,
+                    autoUnregistration: invocation.autoUnregistration
+                  }
+          };
+        })
+        .filter((t): t is NonNullable<typeof t> => t !== null),
       authMethods: specRecord.authMethods.map(am => ({
         specId: am.id,
         specUniqueIdentifier: am.identifier,

@@ -1,5 +1,6 @@
 import { runQueueProcessors } from '@lowerdeck/queue';
 import { authQueueProcessor } from '@metorial-subspace/module-auth';
+import { callbackQueueProcessor } from '@metorial-subspace/module-callback';
 import { catalogQueueProcessor } from '@metorial-subspace/module-catalog';
 import { connectionQueueProcessor } from '@metorial-subspace/module-connection';
 import { customProviderQueueProcessor } from '@metorial-subspace/module-custom-provider';
@@ -22,5 +23,6 @@ runQueueProcessors([
   nativeProviderQueues,
   slatesProviderQueues,
   shuttleProviderQueues,
-  customProviderQueueProcessor
+  customProviderQueueProcessor,
+  callbackQueueProcessor
 ]);

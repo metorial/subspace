@@ -201,6 +201,7 @@ export class ProviderCapabilities extends IProviderCapabilities {
             metadata: {},
             configJsonSchema: version.configSchema || emptyConfigSchema,
             configVisibility: 'encrypted',
+            triggers: [],
 
             mcp: {
               serverInfo: discovery.info,
@@ -215,8 +216,11 @@ export class ProviderCapabilities extends IProviderCapabilities {
             metadata: {},
             configJsonSchema: version.configSchema || emptyConfigSchema,
             configVisibility: 'encrypted',
+            triggers: [],
             mcp: null
           },
+
+      triggers: [],
 
       authMethods: server.oauthConfig
         ? [

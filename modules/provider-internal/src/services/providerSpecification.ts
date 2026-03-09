@@ -13,7 +13,8 @@ import type {
   Specification,
   SpecificationAuthMethod,
   SpecificationFeatures,
-  SpecificationTool
+  SpecificationTool,
+  SpecificationTrigger
 } from '@metorial-subspace/provider-utils';
 import { env } from '../env';
 import { specificationCreatedQueue } from '../queues/lifecycle/specification';
@@ -34,6 +35,7 @@ class providerSpecificationInternalServiceImpl {
     authMethods: SpecificationAuthMethod[];
     features: SpecificationFeatures;
     tools: SpecificationTool[];
+    triggers: SpecificationTrigger[];
   }) {
     let specHash = await Hash.sha256(
       canonicalize({
@@ -42,7 +44,8 @@ class providerSpecificationInternalServiceImpl {
         specification: d.specification,
         authMethods: d.authMethods,
         features: d.features,
-        tools: d.tools
+        tools: d.tools,
+        triggers: d.triggers
       })
     );
 
@@ -80,6 +83,14 @@ class providerSpecificationInternalServiceImpl {
               providerOid: d.provider.oid
             }))
           });
+          await db.providerTriggerGlobal.createMany({
+            skipDuplicates: true,
+            data: d.triggers.map(t => ({
+              ...getId('providerTriggerGlobal'),
+              key: t.key,
+              providerOid: d.provider.oid
+            }))
+          });
 
           let globalTools = await db.providerToolGlobal.findMany({
             where: { providerOid: d.provider.oid },
@@ -89,9 +100,14 @@ class providerSpecificationInternalServiceImpl {
             where: { providerOid: d.provider.oid },
             select: { oid: true, key: true }
           });
+          let globalTriggers = await db.providerTriggerGlobal.findMany({
+            where: { providerOid: d.provider.oid },
+            select: { oid: true, key: true }
+          });
 
           let globalToolsMap = new Map(globalTools.map(t => [t.key, t]));
           let globalAuthMethodsMap = new Map(globalAuthMethods.map(am => [am.key, am]));
+          let globalTriggersMap = new Map(globalTriggers.map(t => [t.key, t]));
 
           let spec = await db.providerSpecification.create({
             data: {
@@ -114,7 +130,8 @@ class providerSpecificationInternalServiceImpl {
                 specification: d.specification,
                 authMethods: d.authMethods,
                 features: d.features,
-                tools: d.tools
+                tools: d.tools,
+                triggers: d.triggers
               },
 
               supportsAuthMethod: d.features.supportsAuthMethod,
@@ -163,11 +180,33 @@ class providerSpecificationInternalServiceImpl {
                     hash: await Hash.sha256(canonicalize([d.provider.id, t]))
                   }))
                 )
+              },
+
+              providerTriggers: {
+                create: await Promise.all(
+                  d.triggers.map(async t => ({
+                    ...getId('providerTrigger'),
+                    specId: t.specId,
+                    specUniqueIdentifier: t.specUniqueIdentifier ?? t.specId,
+                    callableId: t.callableId,
+                    key: t.key,
+
+                    name: t.name,
+                    description: t.description,
+
+                    value: t,
+
+                    providerOid: d.provider.oid,
+                    globalOid: globalTriggersMap.get(t.key)!.oid,
+                    hash: await Hash.sha256(canonicalize([d.provider.id, t]))
+                  }))
+                )
               }
             },
             include: {
               providerAuthMethods: true,
-              providerTools: true
+              providerTools: true,
+              providerTriggers: true
             }
           });
 

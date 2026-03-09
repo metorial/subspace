@@ -74,6 +74,8 @@ model Tenant {
   sessionWarnings                          SessionWarning[]
   sessionUsageRecords                      SessionUsageRecord[]
   providerRunUsageRecords                  ProviderRunUsageRecord[]
+  callbackDestinations                     CallbackDestination[]
+  callbacks                                Callback[]
 }
 
 enum EnvironmentType {
@@ -126,6 +128,7 @@ model Environment {
   providerEnvironmentVersions              ProviderEnvironmentVersion[]
   upcomingCustomProviders                  UpcomingCustomProvider[]
   sessionWarnings                          SessionWarning[]
+  callbacks                                Callback[]
 }
 
 enum ActorType {

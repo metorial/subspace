@@ -2,16 +2,19 @@ import type {
   Provider,
   ProviderAuthMethod,
   ProviderSpecification,
-  ProviderTool
+  ProviderTool,
+  ProviderTrigger
 } from '@metorial-subspace/db';
 import { providerAuthMethodPresenter } from './providerAuthMethod';
 import { providerToolPresenter } from './providerTool';
+import { providerTriggerPresenter } from './providerTrigger';
 
 export let providerSpecificationPresenter = (
   providerSpecification: ProviderSpecification & {
     provider: Provider;
     providerTools: ProviderTool[];
     providerAuthMethods: ProviderAuthMethod[];
+    providerTriggers: ProviderTrigger[];
   }
 ) => ({
   object: 'provider.capabilities.specification',
@@ -29,6 +32,14 @@ export let providerSpecificationPresenter = (
 
   tools: providerSpecification.providerTools.map(t =>
     providerToolPresenter({
+      ...t,
+      specification: providerSpecification,
+      provider: providerSpecification.provider
+    })
+  ),
+
+  triggers: providerSpecification.providerTriggers.map(t =>
+    providerTriggerPresenter({
       ...t,
       specification: providerSpecification,
       provider: providerSpecification.provider

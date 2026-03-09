@@ -11,7 +11,17 @@ export let providerDeploymentConfigPairCreatedQueue = createQueue<{
 });
 
 export let providerDeploymentConfigPairCreatedQueueProcessor =
-  providerDeploymentConfigPairCreatedQueue.process(async data => {});
+  providerDeploymentConfigPairCreatedQueue.process(async data => {
+    let pair = await db.providerDeploymentConfigPair.findFirst({
+      where: { id: data.providerDeploymentConfigPairId },
+      select: { id: true }
+    });
+    if (!pair) throw new QueueRetryError();
+
+    await callbackRegistrationReconcileQueue.add({
+      providerDeploymentConfigPairId: pair.id
+    });
+  });
 
 export let providerDeploymentConfigPairVersionCreatedQueue = createQueue<{
   providerDeploymentConfigPairVersionId: string;
@@ -33,3 +43,12 @@ export let providerDeploymentConfigPairVersionCreatedQueueProcessor =
       versionId: version.version.id
     });
   });
+
+export let callbackRegistrationReconcileQueue = createQueue<{
+  callbackId?: string;
+  callbackInstanceId?: string;
+  providerDeploymentConfigPairId?: string;
+}>({
+  name: 'sub/callback/reconcile',
+  redisUrl: env.service.REDIS_URL
+});

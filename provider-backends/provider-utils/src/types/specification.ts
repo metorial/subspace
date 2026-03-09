@@ -108,6 +108,37 @@ export interface SpecificationAuthMethod {
   metadata: Record<string, any>;
 }
 
+export interface SpecificationTrigger {
+  specId: string;
+  specUniqueIdentifier?: string;
+  callableId: string;
+
+  key: string;
+
+  name: string;
+  description?: string;
+
+  inputJsonSchema: Record<string, any>;
+  outputJsonSchema?: Record<string, any>;
+
+  invocation:
+    | {
+        type: 'polling';
+        intervalSeconds: number;
+      }
+    | {
+        type: 'webhook';
+        autoRegistration: boolean;
+        autoUnregistration: boolean;
+      };
+
+  capabilities: {
+    [key: string]: any;
+  };
+
+  metadata: Record<string, any>;
+}
+
 export interface Specification {
   specId: string;
   specUniqueIdentifier?: string;
@@ -121,6 +152,7 @@ export interface Specification {
   configVisibility: 'encrypted' | 'plain';
 
   metadata: Record<string, any>;
+  triggers?: SpecificationTrigger[];
 
   mcp: {
     serverInfo: InitializeResult['serverInfo'];

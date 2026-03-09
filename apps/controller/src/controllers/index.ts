@@ -4,6 +4,12 @@ import { app } from './_app';
 import { actorController } from './actor';
 import { brandController } from './brand';
 import { bucketController } from './bucket';
+import { callbackController } from './callback';
+import { callbackDeliveryController } from './callbackDelivery';
+import { callbackDeliveryAttemptController } from './callbackDeliveryAttempt';
+import { callbackDestinationController } from './callbackDestination';
+import { callbackEventController } from './callbackEvent';
+import { callbackInstanceController } from './callbackInstance';
 import { containerRegistryController } from './containerRegistry';
 import { containerRepositoryController } from './containerRepository';
 import { customProviderController } from './customProvider';
@@ -32,6 +38,7 @@ import { providerRunUsageRecordController } from './providerRunUsageRecord';
 import { providerSetupSessionController } from './providerSetupSession';
 import { providerSpecificationController } from './providerSpecification';
 import { providerToolController } from './providerTool';
+import { providerTriggerController } from './providerTrigger';
 import { providerVariantController } from './providerVariant';
 import { providerVersionController } from './providerVersion';
 import { publisherController } from './publisher';
@@ -63,6 +70,12 @@ export let rootController = app.controller({
   tenant: tenantController,
 
   brand: brandController,
+  callback: callbackController,
+  callbackDestination: callbackDestinationController,
+  callbackEvent: callbackEventController,
+  callbackInstance: callbackInstanceController,
+  callbackDelivery: callbackDeliveryController,
+  callbackDeliveryAttempt: callbackDeliveryAttemptController,
 
   publisher: publisherController,
 
@@ -85,6 +98,7 @@ export let rootController = app.controller({
   providerOAuthSetup: providerOAuthSetupController,
   providerSpecification: providerSpecificationController,
   providerTool: providerToolController,
+  providerTrigger: providerTriggerController,
   providerVariant: providerVariantController,
   providerVersion: providerVersionController,
 
