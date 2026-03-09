@@ -1,6 +1,10 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
 import { callbackEventService } from '@metorial-subspace/module-callback';
+import {
+  callbackEventListPresenter,
+  callbackEventPresenter
+} from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
 
@@ -18,20 +22,22 @@ export let callbackEventController = app.controller({
       )
     )
     .do(async ctx =>
-      callbackEventService.listCallbackEvents({
-        tenant: ctx.tenant,
-        solution: ctx.solution,
-        environment: ctx.environment,
-        callbackId: ctx.input.callbackId,
-        input: {
-          eventTypes: ctx.input.eventTypes,
-          limit: ctx.input.limit,
-          after: ctx.input.after,
-          before: ctx.input.before,
-          cursor: ctx.input.cursor,
-          order: ctx.input.order
-        }
-      })
+      callbackEventListPresenter(
+        await callbackEventService.listCallbackEvents({
+          tenant: ctx.tenant,
+          solution: ctx.solution,
+          environment: ctx.environment,
+          callbackId: ctx.input.callbackId,
+          input: {
+            eventTypes: ctx.input.eventTypes,
+            limit: ctx.input.limit,
+            after: ctx.input.after,
+            before: ctx.input.before,
+            cursor: ctx.input.cursor,
+            order: ctx.input.order
+          }
+        })
+      )
     ),
 
   get: tenantApp
@@ -45,12 +51,14 @@ export let callbackEventController = app.controller({
       })
     )
     .do(async ctx =>
-      callbackEventService.getCallbackEvent({
-        tenant: ctx.tenant,
-        solution: ctx.solution,
-        environment: ctx.environment,
-        callbackId: ctx.input.callbackId,
-        slateTriggerEventId: ctx.input.slateTriggerEventId
-      })
+      callbackEventPresenter(
+        await callbackEventService.getCallbackEvent({
+          tenant: ctx.tenant,
+          solution: ctx.solution,
+          environment: ctx.environment,
+          callbackId: ctx.input.callbackId,
+          slateTriggerEventId: ctx.input.slateTriggerEventId
+        })
+      )
     )
 });

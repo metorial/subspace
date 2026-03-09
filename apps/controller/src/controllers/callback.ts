@@ -1,6 +1,7 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
 import { callbackService } from '@metorial-subspace/module-callback';
+import { providerDeploymentService } from '@metorial-subspace/module-deployment';
 import { callbackPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantApp } from './tenant';
@@ -27,6 +28,9 @@ export let callbackController = app.controller({
         v.object({
           tenantId: v.string(),
           environmentId: v.string(),
+          ids: v.optional(v.array(v.string())),
+          status: v.optional(v.array(v.enumOf(['active', 'archived', 'deleted']))),
+          allowDeleted: v.optional(v.boolean()),
           providerDeploymentIds: v.optional(v.array(v.string()))
         })
       )
@@ -36,22 +40,38 @@ export let callbackController = app.controller({
         tenant: ctx.tenant,
         solution: ctx.solution,
         environment: ctx.environment,
+        ids: ctx.input.ids,
+        status: ctx.input.status,
+        allowDeleted: ctx.input.allowDeleted,
         providerDeploymentIds: ctx.input.providerDeploymentIds
       });
+
       let list = await paginator.run(ctx.input);
+
       return Paginator.presentLight(list, callbackPresenter);
     }),
 
-  get: callbackApp
+  get: tenantApp
     .handler()
     .input(
       v.object({
         tenantId: v.string(),
         environmentId: v.string(),
-        callbackId: v.string()
+        callbackId: v.string(),
+        allowDeleted: v.optional(v.boolean())
       })
     )
-    .do(async ctx => callbackPresenter(ctx.callback)),
+    .do(async ctx => {
+      let res = await callbackService.getCallbackById({
+        tenant: ctx.tenant,
+        solution: ctx.solution,
+        environment: ctx.environment,
+        callbackId: ctx.input.callbackId,
+        allowDeleted: ctx.input.allowDeleted
+      });
+
+      return callbackPresenter(res);
+    }),
 
   create: tenantApp
     .handler()
@@ -60,7 +80,6 @@ export let callbackController = app.controller({
         tenantId: v.string(),
         environmentId: v.string(),
         providerDeploymentId: v.string(),
-        mode: v.enumOf(['auto', 'manual']),
         name: v.string(),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
@@ -75,13 +94,19 @@ export let callbackController = app.controller({
       })
     )
     .do(async ctx => {
+      let providerDeployment = await providerDeploymentService.getProviderDeploymentById({
+        tenant: ctx.tenant,
+        solution: ctx.solution,
+        environment: ctx.environment,
+        providerDeploymentId: ctx.input.providerDeploymentId
+      });
+
       let callback = await callbackService.createCallback({
         tenant: ctx.tenant,
         solution: ctx.solution,
         environment: ctx.environment,
+        providerDeployment,
         input: {
-          providerDeploymentId: ctx.input.providerDeploymentId,
-          mode: ctx.input.mode,
           name: ctx.input.name,
           description: ctx.input.description,
           metadata: ctx.input.metadata,
@@ -93,6 +118,7 @@ export let callbackController = app.controller({
           destinationIds: ctx.input.destinationIds ?? []
         }
       });
+
       return callbackPresenter(callback);
     }),
 
@@ -103,7 +129,6 @@ export let callbackController = app.controller({
         tenantId: v.string(),
         environmentId: v.string(),
         callbackId: v.string(),
-        mode: v.optional(v.enumOf(['auto', 'manual'])),
         name: v.optional(v.string()),
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
@@ -124,9 +149,8 @@ export let callbackController = app.controller({
         tenant: ctx.tenant,
         solution: ctx.solution,
         environment: ctx.environment,
-        callbackId: ctx.input.callbackId,
+        callback: ctx.callback,
         input: {
-          mode: ctx.input.mode,
           name: ctx.input.name,
           description: ctx.input.description,
           metadata: ctx.input.metadata,
@@ -155,7 +179,7 @@ export let callbackController = app.controller({
         tenant: ctx.tenant,
         solution: ctx.solution,
         environment: ctx.environment,
-        callbackId: ctx.input.callbackId
+        callback: ctx.callback
       });
       return callbackPresenter(callback);
     })
