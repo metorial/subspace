@@ -69,6 +69,8 @@ class sessionTemplateServiceImpl {
               solutionOid: d.solution.oid,
               environmentOid: d.environment.oid,
 
+              isInternal: false,
+
               ...normalizeStatusForList(d).noParent,
 
               AND: [
@@ -130,7 +132,7 @@ class sessionTemplateServiceImpl {
       name?: string;
       description?: string;
       metadata?: Record<string, any>;
-
+      isInternal?: boolean;
       providers: SessionProviderInput[];
     };
   }) {
@@ -143,6 +145,8 @@ class sessionTemplateServiceImpl {
           name: d.input.name?.trim() || undefined,
           description: d.input.description?.trim() || undefined,
           metadata: d.input.metadata,
+
+          isInternal: !!d.input.isInternal,
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,

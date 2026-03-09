@@ -8,7 +8,8 @@ model SessionTemplate {
   oid BigInt @id
   id  String @unique
 
-  status SessionTemplateStatus
+  status     SessionTemplateStatus
+  isInternal Boolean               @default(false)
 
   name        String?
   description String?

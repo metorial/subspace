@@ -88,6 +88,8 @@ export let sessionTemplateController = app.controller({
         description: v.optional(v.string()),
         metadata: v.optional(v.record(v.any())),
 
+        isInternal: v.optional(v.boolean()),
+
         providers: v.array(
           v.object({
             providerDeploymentId: v.optional(v.string()),
@@ -108,6 +110,8 @@ export let sessionTemplateController = app.controller({
           name: ctx.input.name,
           description: ctx.input.description,
           metadata: ctx.input.metadata,
+
+          isInternal: !!ctx.input.isInternal,
 
           providers: ctx.input.providers.map(p => ({
             deploymentId: p.providerDeploymentId,
