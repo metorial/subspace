@@ -159,6 +159,7 @@ model ProviderSpecification {
   providerVersions                                     ProviderVersion[]
   providerTools                                        ProviderTool[]
   providerAuthMethods                                  ProviderAuthMethod[]
+  providerTriggers                                     ProviderTrigger[]
   providerDeploymentConfigPairProviderVersions         ProviderDeploymentConfigPairProviderVersion[]
   providerDeploymentConfigPairSpecificationChangesFrom ProviderDeploymentConfigPairSpecificationChange[] @relation("SpecChangeFrom")
   providerDeploymentConfigPairSpecificationChangesTo   ProviderDeploymentConfigPairSpecificationChange[] @relation("SpecChangeTo")
@@ -167,4 +168,60 @@ model ProviderSpecification {
   providerConfigs                                      ProviderConfig[]
 
   @@unique([providerOid, hash])
+}
+
+model ProviderTriggerGlobal {
+  oid BigInt @id
+  id  String @unique
+
+  key String
+
+  providerOid BigInt
+  provider    Provider @relation(fields: [providerOid], references: [oid])
+
+  currentInstanceOid BigInt?
+  currentInstance    ProviderTrigger? @relation(fields: [currentInstanceOid], references: [oid], name: "currentTriggerInstance")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  providerTriggers ProviderTrigger[]
+
+  @@unique([providerOid, key])
+}
+
+model ProviderTrigger {
+  oid BigInt @id
+  id  String @unique
+
+  specId               String
+  specUniqueIdentifier String
+  callableId           String
+  key                  String
+
+  name        String
+  description String?
+
+  /// [ProviderTriggerValue]
+  value Json
+
+  hash String
+
+  providerOid BigInt
+  provider    Provider @relation(fields: [providerOid], references: [oid])
+
+  specificationOid BigInt
+  specification    ProviderSpecification @relation(fields: [specificationOid], references: [oid])
+
+  globalOid BigInt
+  global    ProviderTriggerGlobal @relation(fields: [globalOid], references: [oid])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  currentInGlobal          ProviderTriggerGlobal[]    @relation("currentTriggerInstance")
+  callbackProviderTriggers CallbackProviderTrigger[]
+
+  @@unique([providerOid, specificationOid, hash])
+  @@unique([specificationOid, key])
 }
