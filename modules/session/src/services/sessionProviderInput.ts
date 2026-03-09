@@ -2,6 +2,7 @@ import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { generateCode } from '@lowerdeck/id';
 import { Service } from '@lowerdeck/service';
 import {
+  addAfterTransactionHook,
   type Environment,
   getId,
   type Provider,
@@ -20,6 +21,8 @@ import {
 } from '@metorial-subspace/module-deployment';
 import { providerDeploymentInternalService } from '@metorial-subspace/module-provider-internal';
 import { normalizeJsonSchema } from '@metorial-subspace/provider-utils';
+import { sessionProviderCreatedQueue } from '../queues/lifecycle/sessionProvider';
+import { sessionTemplateProviderCreatedQueue } from '../queues/lifecycle/sessionTemplateProvider';
 import { sessionProviderInclude } from './sessionProvider';
 import { sessionTemplateProviderInclude } from './sessionTemplateProvider';
 
@@ -353,7 +356,7 @@ class sessionProviderInputServiceImpl {
         );
       }
 
-      return db.sessionProvider.createManyAndReturn({
+      let sessionProviders = await db.sessionProvider.createManyAndReturn({
         data: await Promise.all(
           providerSessions.map(async ps => ({
             ...getId('sessionProvider'),
@@ -380,6 +383,14 @@ class sessionProviderInputServiceImpl {
         ),
         include: sessionProviderInclude
       });
+
+      for (let sp of sessionProviders) {
+        await addAfterTransactionHook(async () =>
+          sessionProviderCreatedQueue.add({ sessionProviderId: sp.id })
+        );
+      }
+
+      return sessionProviders;
     });
   }
 
@@ -413,7 +424,7 @@ class sessionProviderInputServiceImpl {
         );
       }
 
-      return db.sessionTemplateProvider.createManyAndReturn({
+      let sessionTemplateProviders = await db.sessionTemplateProvider.createManyAndReturn({
         data: await Promise.all(
           providerSessions.map(async ps => ({
             ...getId('sessionTemplateProvider'),
@@ -435,6 +446,14 @@ class sessionProviderInputServiceImpl {
         ),
         include: sessionTemplateProviderInclude
       });
+
+      for (let stp of sessionTemplateProviders) {
+        await addAfterTransactionHook(async () =>
+          sessionTemplateProviderCreatedQueue.add({ sessionTemplateProviderId: stp.id })
+        );
+      }
+
+      return sessionTemplateProviders;
     });
   }
 }

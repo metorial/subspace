@@ -11,6 +11,21 @@ import {
 import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { getProviderTenantFilter, providerInclude } from './provider';
 
+export type ProviderListingOrderByUse =
+  | 'deployments'
+  | 'configs'
+  | 'authConfigs'
+  | 'credentials'
+  | 'sessions'
+  | 'sessionTemplates'
+  | 'lastUseAt'
+  | 'firstDeploymentAt'
+  | 'firstConfigAt'
+  | 'firstAuthConfigAt'
+  | 'firstCredentialAt'
+  | 'firstSessionAt'
+  | 'firstSessionTemplateAt';
+
 let getInclude = (tenant: Tenant | undefined, solution: Solution) => ({
   categories: true,
   collections: true,
@@ -86,6 +101,7 @@ class ProviderListingService {
     environment?: Environment;
 
     orderByRank?: boolean;
+    orderByUse?: ProviderListingOrderByUse;
   }) {
     let collections = await resolveProviderCollections(d.providerCollectionIds);
     let categories = await resolveProviderCategories(d.providerCategoryIds);
@@ -99,6 +115,23 @@ class ProviderListingService {
     d.search = d.search?.trim();
     if (!d.search?.length) d.search = undefined;
 
+    let orderByUse = d.orderByUse && d.tenant && d.environment ? d.orderByUse : undefined;
+
+    let useOrderMap: Map<bigint, number> | undefined;
+    if (orderByUse) {
+      let providerUses = await db.providerUse.findMany({
+        where: {
+          tenantOid: d.tenant!.oid,
+          solutionOid: d.solution.oid,
+          environmentOid: d.environment!.oid
+        },
+        orderBy: { [orderByUse]: 'desc' },
+        select: { providerOid: true }
+      });
+
+      useOrderMap = new Map(providerUses.map((pu, i) => [pu.providerOid, i]));
+    }
+
     return Paginator.create(({ prisma }) =>
       prisma(async opts => {
         let search = d.search
@@ -110,10 +143,13 @@ class ProviderListingService {
             })
           : null;
 
-        return await db.providerListing.findMany({
+        let listings = await db.providerListing.findMany({
           ...opts,
 
-          orderBy: d.orderByRank ? { rank: 'desc' } : opts.orderBy,
+          orderBy: [
+            d.orderByRank || useOrderMap ? { rank: 'desc' as const } : undefined!,
+            ...opts.orderBy
+          ].filter(Boolean),
 
           where: {
             status: 'active',
@@ -150,6 +186,25 @@ class ProviderListingService {
             readme: true
           }
         });
+
+        if (useOrderMap) {
+          listings.sort((a, b) => {
+            let aHasUse = useOrderMap.has(a.providerOid);
+            let bHasUse = useOrderMap.has(b.providerOid);
+
+            if (aHasUse && !bHasUse) return -1;
+            if (!aHasUse && bHasUse) return 1;
+
+            if (aHasUse && bHasUse) {
+              return useOrderMap.get(a.providerOid)! - useOrderMap.get(b.providerOid)!;
+            }
+
+            // Both without use — preserve rank desc order from DB
+            return 0;
+          });
+        }
+
+        return listings;
       })
     );
   }

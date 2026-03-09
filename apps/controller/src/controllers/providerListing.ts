@@ -1,6 +1,9 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
-import { providerListingService } from '@metorial-subspace/module-catalog';
+import {
+  type ProviderListingOrderByUse,
+  providerListingService
+} from '@metorial-subspace/module-catalog';
 import { providerListingPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { tenantOptionalApp } from './tenant';
@@ -42,7 +45,24 @@ export let providerListingController = app.controller({
           isOfficial: v.optional(v.boolean()),
           isMetorial: v.optional(v.boolean()),
 
-          orderByRank: v.optional(v.boolean())
+          orderByRank: v.optional(v.boolean()),
+          orderByUse: v.optional(
+            v.enumOf([
+              'deployments',
+              'configs',
+              'authConfigs',
+              'credentials',
+              'sessions',
+              'sessionTemplates',
+              'lastUseAt',
+              'firstDeploymentAt',
+              'firstConfigAt',
+              'firstAuthConfigAt',
+              'firstCredentialAt',
+              'firstSessionAt',
+              'firstSessionTemplateAt'
+            ])
+          )
         })
       )
     )
@@ -66,7 +86,8 @@ export let providerListingController = app.controller({
         isOfficial: ctx.input.isOfficial,
         isMetorial: ctx.input.isMetorial,
 
-        orderByRank: ctx.input.orderByRank
+        orderByRank: ctx.input.orderByRank,
+        orderByUse: ctx.input.orderByUse as ProviderListingOrderByUse | undefined
       });
 
       let list = await paginator.run(ctx.input);
