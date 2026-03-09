@@ -35,10 +35,13 @@ export let providerAuthCredentialsCreatedQueueProcessor =
         solutionOid: providerAuthCredentials.solutionOid,
         environmentOid: providerAuthCredentials.environmentOid,
         providerOid: providerAuthCredentials.providerOid,
-        credentials: 1
+        credentials: 1,
+        firstCredentialAt: new Date(),
+        lastUseAt: new Date()
       },
       update: {
-        credentials: { increment: 1 }
+        credentials: { increment: 1 },
+        lastUseAt: new Date()
       }
     });
   });

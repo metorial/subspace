@@ -31,10 +31,13 @@ export let providerConfigCreatedQueueProcessor = providerConfigCreatedQueue.proc
         solutionOid: providerConfig.solutionOid,
         environmentOid: providerConfig.environmentOid,
         providerOid: providerConfig.providerOid,
-        configs: 1
+        configs: 1,
+        firstConfigAt: new Date(),
+        lastUseAt: new Date()
       },
       update: {
-        configs: { increment: 1 }
+        configs: { increment: 1 },
+        lastUseAt: new Date()
       }
     });
   }

@@ -28,10 +28,13 @@ export let sessionProviderCreatedQueueProcessor = sessionProviderCreatedQueue.pr
         solutionOid: sessionProvider.solutionOid,
         environmentOid: sessionProvider.environmentOid,
         providerOid: sessionProvider.providerOid,
-        sessions: 1
+        sessions: 1,
+        firstSessionAt: new Date(),
+        lastUseAt: new Date()
       },
       update: {
-        sessions: { increment: 1 }
+        sessions: { increment: 1 },
+        lastUseAt: new Date()
       }
     });
   }

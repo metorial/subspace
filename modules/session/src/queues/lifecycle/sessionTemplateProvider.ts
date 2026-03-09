@@ -30,10 +30,13 @@ export let sessionTemplateProviderCreatedQueueProcessor =
         solutionOid: sessionTemplateProvider.solutionOid,
         environmentOid: sessionTemplateProvider.environmentOid,
         providerOid: sessionTemplateProvider.providerOid,
-        sessionTemplates: 1
+        sessionTemplates: 1,
+        firstSessionTemplateAt: new Date(),
+        lastUseAt: new Date()
       },
       update: {
-        sessionTemplates: { increment: 1 }
+        sessionTemplates: { increment: 1 },
+        lastUseAt: new Date()
       }
     });
   });

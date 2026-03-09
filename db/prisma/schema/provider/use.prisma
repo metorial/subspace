@@ -21,6 +21,15 @@ model ProviderUse {
   sessions         Int @default(0)
   sessionTemplates Int @default(0)
 
+  firstDeploymentAt      DateTime?
+  firstConfigAt          DateTime?
+  firstAuthConfigAt      DateTime?
+  firstCredentialAt      DateTime?
+  firstSessionAt         DateTime?
+  firstSessionTemplateAt DateTime?
+
+  lastUseAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 

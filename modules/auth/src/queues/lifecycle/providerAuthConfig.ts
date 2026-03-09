@@ -35,10 +35,13 @@ export let providerAuthConfigCreatedQueueProcessor = providerAuthConfigCreatedQu
         solutionOid: providerAuthConfig.solutionOid,
         environmentOid: providerAuthConfig.environmentOid,
         providerOid: providerAuthConfig.providerOid,
-        authConfigs: 1
+        authConfigs: 1,
+        firstAuthConfigAt: new Date(),
+        lastUseAt: new Date()
       },
       update: {
-        authConfigs: { increment: 1 }
+        authConfigs: { increment: 1 },
+        lastUseAt: new Date()
       }
     });
   }
