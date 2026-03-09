@@ -92,6 +92,7 @@ model Provider {
   environmentProviders      EnvironmentProvider[]
   customProvider            CustomProvider?
   providerEnvironments      ProviderEnvironment[]
+  providerUses              ProviderUse[]
 
   @@index([status])
   @@index([access])

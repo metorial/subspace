@@ -1,4 +1,5 @@
 import { createQueue } from '@lowerdeck/queue';
+import { db, getId } from '@metorial-subspace/db';
 import { env } from '../../env';
 import { indexProviderConfigQueue } from '../search/providerConfig';
 
@@ -9,7 +10,33 @@ export let providerConfigCreatedQueue = createQueue<{ providerConfigId: string }
 
 export let providerConfigCreatedQueueProcessor = providerConfigCreatedQueue.process(
   async data => {
+    let providerConfig = await db.providerConfig.findUniqueOrThrow({
+      where: { id: data.providerConfigId }
+    });
+
     await indexProviderConfigQueue.add({ providerConfigId: data.providerConfigId });
+
+    await db.providerUse.upsert({
+      where: {
+        tenantOid_solutionOid_environmentOid_providerOid: {
+          tenantOid: providerConfig.tenantOid,
+          solutionOid: providerConfig.solutionOid,
+          environmentOid: providerConfig.environmentOid,
+          providerOid: providerConfig.providerOid
+        }
+      },
+      create: {
+        ...getId('providerUse'),
+        tenantOid: providerConfig.tenantOid,
+        solutionOid: providerConfig.solutionOid,
+        environmentOid: providerConfig.environmentOid,
+        providerOid: providerConfig.providerOid,
+        configs: 1
+      },
+      update: {
+        configs: { increment: 1 }
+      }
+    });
   }
 );
 

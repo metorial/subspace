@@ -44,6 +44,7 @@ export let ID = createIdGenerator({
   providerDeploymentConfigPairSpecificationChange: idType.sorted('pdcpsc'),
   providerDeploymentConfigPairDiscovery: idType.sorted('pdcpd'),
 
+  providerUse: idType.sorted('pus'),
   providerTag: idType.sorted('kpt'),
 
   providerSpecification: idType.sorted('psp'),
