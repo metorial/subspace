@@ -1,8 +1,8 @@
 import type { Brand } from '@metorial-subspace/db';
 
 let getImageUrl = (image: Brand['image']): string | null => {
-  if (!image || typeof image !== 'object') return null;
-  if ('url' in image) return image.url;
+  if (image?.type === 'file') return image.fileUrl ?? image.url ?? null;
+  if (image?.type === 'url') return image.url ?? null;
   return null;
 };
 

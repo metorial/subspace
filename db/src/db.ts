@@ -51,7 +51,14 @@ export let db = baseClient.$extends({
 declare global {
   namespace PrismaJson {
     type EntityImage =
-      | { type: 'file'; fileId: string; fileLinkId: string; url: string }
+      | {
+          type: 'file';
+          fileId: string;
+          fileLinkId: string;
+          fileReferenceId?: string;
+          fileUrl?: string;
+          url?: string;
+        }
       | { type: 'enterprise_file'; fileId: string }
       | { type: 'url'; url: string }
       | { type: 'default' };
