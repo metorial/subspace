@@ -76,7 +76,7 @@ class sessionErrorServiceImpl {
                   : undefined!,
                 connections ? { connectionOid: connections.in } : undefined!,
                 providerRuns ? { providerRunOid: providerRuns.in } : undefined!,
-                groups ? { errorGroupOid: groups.in } : undefined!,
+                groups ? { groupOid: groups.in } : undefined!,
                 messages ? { sessionMessages: { some: { oid: messages.in } } } : undefined!,
                 providers ? { providerRun: { providerOid: providers.in } } : undefined!
               ].filter(Boolean)
