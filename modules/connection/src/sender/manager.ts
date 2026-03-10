@@ -765,6 +765,8 @@ export class SenderManager {
       });
     }
 
+    this.connection = Object.assign(this.connection ?? {}, connection);
+
     if (d.isManualConnection && !connection.isForManualToolCalls) {
       throw new ServiceError(
         internalServerError({ message: 'Connection cannot be used for manual tool calls' })
