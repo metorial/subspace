@@ -60,7 +60,7 @@ export let syncNativeIntegrations = async () => {
         backend
       },
       info: {
-        name: 'native'
+        name: 'Current'
       },
       type: nativeProviderType
     });
