@@ -16,18 +16,22 @@ export type SessionErrorPresenterProps = SessionError & {
 };
 
 export let sessionErrorPresenter = async (error: SessionErrorPresenterProps) => {
-  let i = 0;
-  while (!error.isProcessing || !error.group) {
-    if (i++ >= 10) break;
+  try {
+    let i = 0;
+    while (error.isProcessing || !error.group) {
+      if (i++ >= 10) break;
 
-    await delay(250);
+      await delay(250);
 
-    let refreshedError = await db.sessionError.findUniqueOrThrow({
-      where: { oid: error.oid },
-      include: { group: true }
-    });
+      let refreshedError = await db.sessionError.findUniqueOrThrow({
+        where: { oid: error.oid },
+        include: { group: true }
+      });
 
-    error = Object.assign(error, refreshedError);
+      error = Object.assign(error, refreshedError);
+    }
+  } catch (err) {
+    console.error('Error refreshing session error for presenter', err);
   }
 
   return {
