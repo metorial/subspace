@@ -16,9 +16,11 @@ import { providerPresenter } from './provider';
 import { providerListingCategoryPresenter } from './providerListingCategory';
 import { providerListingCollectionPresenter } from './providerListingCollection';
 import { providerListingGroupPresenter } from './providerListingGroup';
+import { publisherPresenter } from './publisher';
 
 export let providerListingPresenter = (
   providerListing: Omit<ProviderListing, 'readme'> & {
+    publisher: Publisher;
     provider: Provider & {
       entry: ProviderEntry;
       publisher: Publisher;
@@ -70,6 +72,8 @@ export let providerListingPresenter = (
   deploymentsCount: providerListing.deploymentsCount,
   providerSessionsCount: providerListing.providerSessionsCount,
   providerMessagesCount: providerListing.providerMessagesCount,
+
+  publisher: publisherPresenter(providerListing.publisher),
 
   provider: providerPresenter(providerListing.provider, d),
 
