@@ -7,8 +7,8 @@ model DelegatedIdentityCredential {
   oid BigInt @id
   id  String @unique
 
-  role   IdentityDelegationRole
-  status DelegatedIdentityCredentialStatus
+  permissions IdentityDelegationPermissions[]
+  status      DelegatedIdentityCredentialStatus
 
   credentialOid BigInt
   credential    IdentityCredential @relation(fields: [credentialOid], references: [oid], onDelete: Cascade)
@@ -33,8 +33,8 @@ model DelegatedIdentityCredentialUpdate {
   statusBefore DelegatedIdentityCredentialStatus
   statusAfter  DelegatedIdentityCredentialStatus
 
-  roleBefore IdentityDelegationRole
-  roleAfter  IdentityDelegationRole
+  permissionsBefore IdentityDelegationPermissions[]
+  permissionsAfter  IdentityDelegationPermissions[]
 
   createdAt DateTime @default(now())
 }

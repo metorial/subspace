@@ -39,4 +39,6 @@ model IdentityActor {
   identityDelegationParties   IdentityDelegationParty[]
   delegatedIdentityCredential DelegatedIdentityCredential[]
   identityDelegationRequests  IdentityDelegationRequest[]
+
+  @@index([status])
 }
