@@ -1,7 +1,6 @@
 import { badRequestError, ServiceError } from '@lowerdeck/error';
 import { generatePlainId } from '@lowerdeck/id';
 import {
-  type Actor,
   addAfterTransactionHook,
   type CustomProvider,
   type CustomProviderDeployment,
@@ -18,6 +17,7 @@ import {
   type ShuttleServer,
   type Solution,
   type Tenant,
+  type TenantActor,
   withTransaction
 } from '@metorial-subspace/db';
 import { actorService } from '@metorial-subspace/module-tenant';
@@ -26,7 +26,7 @@ import { ensureEnvironments } from './ensureEnvironments';
 import { linkNewShuttleVersionToCustomProvider } from './linkVersion';
 
 export let prepareVersion = (d: {
-  actor: Actor;
+  actor: TenantActor;
   tenant: Tenant;
   solution: Solution;
   environment: Environment;
@@ -84,7 +84,7 @@ export let prepareVersion = (d: {
   });
 
 export let createVersion = (d: {
-  actor: Actor;
+  actor: TenantActor;
   tenant: Tenant;
   solution: Solution;
   environment: Environment;

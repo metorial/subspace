@@ -1,6 +1,6 @@
 import type { PaginatorInput } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
-import type { Actor, Tenant } from '@metorial-subspace/db';
+import type { Tenant, TenantActor } from '@metorial-subspace/db';
 import { getTenantForOrigin, origin } from '../origin';
 
 class scmConnectionServiceImpl {
@@ -12,7 +12,7 @@ class scmConnectionServiceImpl {
     });
   }
 
-  async listScmConnections(d: { tenant: Tenant; actor: Actor } & PaginatorInput) {
+  async listScmConnections(d: { tenant: Tenant; actor: TenantActor } & PaginatorInput) {
     let tenant = await getTenantForOrigin(d.tenant);
     let actor = await origin.actor.upsert({
       identifier: d.actor.identifier,

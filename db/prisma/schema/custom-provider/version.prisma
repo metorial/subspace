@@ -15,7 +15,7 @@ model CustomProviderVersion {
   versionIdentifier String
 
   creatorActorOid BigInt
-  creatorActor    Actor  @relation(fields: [creatorActorOid], references: [oid])
+  creatorActor    TenantActor @relation(fields: [creatorActorOid], references: [oid])
 
   customProviderOid BigInt
   customProvider    CustomProvider @relation(fields: [customProviderOid], references: [oid])

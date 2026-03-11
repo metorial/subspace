@@ -1,5 +1,4 @@
 import {
-  type Actor,
   type CustomProvider,
   type CustomProviderDeployment,
   type CustomProviderFrom,
@@ -8,7 +7,8 @@ import {
   type Environment,
   snowflake,
   type Solution,
-  type Tenant
+  type Tenant,
+  type TenantActor
 } from '@metorial-subspace/db';
 import { getTenantForOrigin, origin } from '../origin';
 import { linkRepo } from './linkRepo';
@@ -22,7 +22,7 @@ let getImmutableBucketForRepoVersion = async (d: {
   tenant: Tenant;
   solution: Solution;
   environment: Environment;
-  actor: Actor;
+  actor: TenantActor;
 }) => {
   let provider = await db.customProvider.findUniqueOrThrow({
     where: { oid: d.version.customProviderOid },
@@ -176,7 +176,7 @@ let getImmutableBucketForFiles = async (d: {
   tenant: Tenant;
   solution: Solution;
   environment: Environment;
-  actor: Actor;
+  actor: TenantActor;
 }) => {
   let provider = await db.customProvider.findUniqueOrThrow({
     where: { oid: d.version.customProviderOid },
@@ -295,7 +295,7 @@ export let getImmutableBucketForCustomProviderVersion = async (d: {
   tenant: Tenant;
   solution: Solution;
   environment: Environment;
-  actor: Actor;
+  actor: TenantActor;
 }) => {
   if (d.from.type === 'function') {
     if (d.from.repository) {
