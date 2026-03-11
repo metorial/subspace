@@ -1,5 +1,7 @@
 import { createQueue } from '@lowerdeck/queue';
+import { db } from '@metorial-subspace/db';
 import { env } from '../../env';
+import { reconcileQueue } from '../reconciler/reconcile';
 import { lcOpts } from './_opts';
 
 export let identityCredentialCreatedQueue = createQueue<{ identityCredentialId: string }>({
@@ -10,7 +12,13 @@ export let identityCredentialCreatedQueue = createQueue<{ identityCredentialId: 
 
 export let identityCredentialCreatedQueueProcessor = identityCredentialCreatedQueue.process(
   async data => {
-    // TODO: reconcile
+    let credential = await db.identityCredential.findUnique({
+      where: { id: data.identityCredentialId },
+      include: { identity: true }
+    });
+    if (!credential) return;
+
+    await reconcileQueue.add({ identityId: credential.identity.id });
   }
 );
 
@@ -22,7 +30,13 @@ export let identityCredentialUpdatedQueue = createQueue<{ identityCredentialId: 
 
 export let identityCredentialUpdatedQueueProcessor = identityCredentialUpdatedQueue.process(
   async data => {
-    // TODO: reconcile
+    let credential = await db.identityCredential.findUnique({
+      where: { id: data.identityCredentialId },
+      include: { identity: true }
+    });
+    if (!credential) return;
+
+    await reconcileQueue.add({ identityId: credential.identity.id });
   }
 );
 
@@ -34,6 +48,12 @@ export let identityCredentialDeletedQueue = createQueue<{ identityCredentialId: 
 
 export let identityCredentialDeletedQueueProcessor = identityCredentialDeletedQueue.process(
   async data => {
-    // TODO: reconcile
+    let credential = await db.identityCredential.findUnique({
+      where: { id: data.identityCredentialId },
+      include: { identity: true }
+    });
+    if (!credential) return;
+
+    await reconcileQueue.add({ identityId: credential.identity.id });
   }
 );

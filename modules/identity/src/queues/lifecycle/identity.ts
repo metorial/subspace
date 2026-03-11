@@ -1,6 +1,7 @@
 import { createQueue } from '@lowerdeck/queue';
 import { db } from '@metorial-subspace/db';
 import { env } from '../../env';
+import { reconcileQueue } from '../reconciler/reconcile';
 import { indexIdentityQueue } from '../search/identity';
 import { lcOpts } from './_opts';
 
@@ -13,7 +14,7 @@ export let identityCreatedQueue = createQueue<{ identityId: string }>({
 export let identityCreatedQueueProcessor = identityCreatedQueue.process(async data => {
   await indexIdentityQueue.add({ identityId: data.identityId });
 
-  // TODO: reconcile
+  await reconcileQueue.add({ identityId: data.identityId });
 });
 
 export let identityUpdatedQueue = createQueue<{ identityId: string }>({
@@ -24,8 +25,6 @@ export let identityUpdatedQueue = createQueue<{ identityId: string }>({
 
 export let identityUpdatedQueueProcessor = identityUpdatedQueue.process(async data => {
   await indexIdentityQueue.add({ identityId: data.identityId });
-
-  // TODO: reconcile
 });
 
 export let identityDeletedQueue = createQueue<{ identityId: string }>({
@@ -47,5 +46,5 @@ export let identityDeletedQueueProcessor = identityDeletedQueue.process(async da
     data: { status: 'archived', archivedAt: identity.archivedAt ?? new Date() }
   });
 
-  // TODO: reconcile
+  await reconcileQueue.add({ identityId: data.identityId });
 });

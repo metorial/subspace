@@ -144,6 +144,8 @@ class identityServiceImpl {
 
           status: 'active',
 
+          needsReconciliation: true,
+
           actorOid: d.actor.oid,
 
           name: d.input.name?.trim() || undefined,
@@ -234,7 +236,8 @@ class identityServiceImpl {
         },
         data: {
           status: 'archived',
-          archivedAt: new Date()
+          archivedAt: new Date(),
+          needsReconciliation: true
         },
         include
       });

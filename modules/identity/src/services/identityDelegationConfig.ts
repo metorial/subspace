@@ -161,7 +161,7 @@ class identityDelegationConfigServiceImpl {
         }
       });
 
-      await db.identityDelegationConfig.update({
+      await db.identityDelegationConfig.updateMany({
         where: { oid: identityDelegationConfig.oid },
         data: { currentVersionOid: currentVersion.oid }
       });

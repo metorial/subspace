@@ -34,7 +34,8 @@ import {
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import {
   identityCredentialCreatedQueue,
-  identityCredentialDeletedQueue
+  identityCredentialDeletedQueue,
+  identityCredentialUpdatedQueue
 } from '../queues/lifecycle/identityCredential';
 
 export type IdentityCredentialInput = ProviderCombinationInput & {
@@ -221,6 +222,11 @@ class identityCredentialServiceImpl {
         inputs: [d.input]
       });
 
+      await db.identity.updateMany({
+        where: { oid: d.identity.oid },
+        data: { needsReconciliation: true }
+      });
+
       await addAfterTransactionHook(async () =>
         identityCredentialCreatedQueue.add({ identityCredentialId: identityCredential.id })
       );
@@ -254,8 +260,13 @@ class identityCredentialServiceImpl {
         include
       });
 
+      await db.identity.updateMany({
+        where: { oid: d.identityCredential.identity.oid },
+        data: { needsReconciliation: true }
+      });
+
       await addAfterTransactionHook(async () =>
-        identityCredentialDeletedQueue.add({ identityCredentialId: identityCredential.id })
+        identityCredentialUpdatedQueue.add({ identityCredentialId: identityCredential.id })
       );
 
       return identityCredential;
@@ -282,6 +293,11 @@ class identityCredentialServiceImpl {
           archivedAt: new Date()
         },
         include
+      });
+
+      await db.identity.updateMany({
+        where: { oid: d.identityCredential.identity.oid },
+        data: { needsReconciliation: true }
       });
 
       await addAfterTransactionHook(async () =>
