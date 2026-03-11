@@ -34,7 +34,11 @@ model Identity {
   updatedAt  DateTime  @default(now()) @updatedAt
   archivedAt DateTime?
 
-  credentials IdentityCredential[]
+  credentials                IdentityCredential[]
+  identityDelegations        IdentityDelegation[]
+  identityDelegationRequests IdentityDelegationRequest[]
+
+  @@index([status])
 }
 
 enum IdentityCredentialStatus {
@@ -73,4 +77,6 @@ model IdentityCredential {
 
   identityDelegationCredentialOverrides IdentityDelegationCredentialOverride[]
   delegatedIdentityCredential           DelegatedIdentityCredential[]
+
+  @@index([status])
 }

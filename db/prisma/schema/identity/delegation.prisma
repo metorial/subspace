@@ -1,7 +1,6 @@
-enum IdentityDelegationRole {
-  connect
-  read
-  none
+enum IdentityDelegationPermissions {
+  provider_call
+  provider_read
 }
 
 enum IdentityDelegationStatus {
@@ -16,10 +15,13 @@ model IdentityDelegation {
   oid BigInt @id
   id  String @unique
 
-  status IdentityDelegationStatus
-  role   IdentityDelegationRole
+  status      IdentityDelegationStatus
+  permissions IdentityDelegationPermissions[]
 
   note String?
+
+  identityOid BigInt
+  identity    Identity @relation(fields: [identityOid], references: [oid], onDelete: Cascade)
 
   parentDelegationOid BigInt?
   parentDelegation    IdentityDelegation? @relation(fields: [parentDelegationOid], references: [oid], onDelete: Cascade, name: "parentDelegation")
@@ -52,17 +54,19 @@ model IdentityDelegation {
 
   requests                           IdentityDelegationRequest[]
   credentials                        IdentityDelegationCredentialOverride[]
-  identityDelegationParties          IdentityDelegationParty[]
+  parties                            IdentityDelegationParty[]
   delegatedIdentityCredentialUpdates DelegatedIdentityCredentialUpdate[]
   childDelegations                   IdentityDelegation[]                   @relation("parentDelegation")
   rootChildDelegations               IdentityDelegation[]                   @relation("rootParentDelegation")
+
+  @@index([status])
 }
 
 model IdentityDelegationCredentialOverride {
   oid BigInt @id
   id  String @unique
 
-  role IdentityDelegationRole
+  permissions IdentityDelegationPermissions[]
 
   delegationOid BigInt
   delegation    IdentityDelegation @relation(fields: [delegationOid], references: [oid], onDelete: Cascade)
@@ -93,6 +97,8 @@ model IdentityDelegationParty {
   roles IdentityDelegationPartyRole[]
 
   createdAt DateTime @default(now())
+
+  @@index([roles])
 }
 
 enum IdentityDelegationAttestationType {

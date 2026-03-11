@@ -18,7 +18,8 @@ import {
   checkDeletedRelation,
   normalizeStatusForGet,
   normalizeStatusForList,
-  resolveProviders
+  resolveAgents,
+  resolveIdentityActors
 } from '@metorial-subspace/list-utils';
 import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { checkTenant } from '@metorial-subspace/module-tenant';
@@ -58,8 +59,8 @@ class identityServiceImpl {
     agentIds?: string[];
     actorIds?: string[];
   }) {
-    let agents = await resolveProviders(d, d.agentIds);
-    let actors = await resolveProviders(d, d.actorIds);
+    let agents = await resolveAgents(d, d.agentIds);
+    let actors = await resolveIdentityActors(d, d.actorIds);
 
     let search = d.search
       ? await voyager.record.search({

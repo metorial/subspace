@@ -37,6 +37,8 @@ model IdentityDelegationConfig {
   identities          Identity[]
   identityDelegations IdentityDelegation[]
   identityCredentials IdentityCredential[]
+
+  @@index([status])
 }
 
 enum IdentityDelegationConfigSubDelegationBehavior {

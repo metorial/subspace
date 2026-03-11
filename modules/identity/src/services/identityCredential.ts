@@ -19,6 +19,9 @@ import {
   checkDeletedRelation,
   normalizeStatusForGet,
   normalizeStatusForList,
+  resolveAgents,
+  resolveIdentities,
+  resolveIdentityActors,
   resolveProviderAuthConfigs,
   resolveProviderConfigs,
   resolveProviderDeployments,
@@ -55,13 +58,15 @@ class identityCredentialServiceImpl {
     ids?: string[];
     agentIds?: string[];
     actorIds?: string[];
+    identityIds?: string[];
     providerIds?: string[];
     providerDeploymentIds?: string[];
     providerConfigIds?: string[];
     providerAuthConfigIds?: string[];
   }) {
-    let agents = await resolveProviders(d, d.agentIds);
-    let actors = await resolveProviders(d, d.actorIds);
+    let agents = await resolveAgents(d, d.agentIds);
+    let actors = await resolveIdentityActors(d, d.actorIds);
+    let identities = await resolveIdentities(d, d.identityIds);
     let providers = await resolveProviders(d, d.providerIds);
     let deployments = await resolveProviderDeployments(d, d.providerDeploymentIds);
     let configs = await resolveProviderConfigs(d, d.providerConfigIds);
@@ -89,14 +94,12 @@ class identityCredentialServiceImpl {
                 agents ? { identity: { actor: { agent: agents.oidIn } } } : undefined!,
                 actors ? { identity: { actor: actors.oidIn } } : undefined!,
 
-                providers ? { currentVersion: { providerOid: providers.in } } : undefined!,
-                deployments
-                  ? { currentVersion: { deploymentOid: deployments.in } }
-                  : undefined!,
-                configs ? { currentVersion: { configOid: configs.in } } : undefined!,
-                authConfigs
-                  ? { currentVersion: { authConfigOid: authConfigs.in } }
-                  : undefined!
+                identities ? { identityOid: { in: identities.oids } } : undefined!,
+
+                providers ? { providerOid: providers.in } : undefined!,
+                deployments ? { deploymentOid: deployments.in } : undefined!,
+                configs ? { configOid: configs.in } : undefined!,
+                authConfigs ? { authConfigOid: authConfigs.in } : undefined!
               ].filter(Boolean)
             },
             include
