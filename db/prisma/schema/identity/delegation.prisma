@@ -102,8 +102,10 @@ model IdentityDelegationParty {
 }
 
 enum IdentityDelegationAttestationType {
-  actor_api
-  system
+  api_actor
+  api_manual
+
+  covered_by_previously_approved_delegation
 }
 
 model IdentityDelegationAttestation {

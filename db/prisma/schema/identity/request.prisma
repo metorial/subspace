@@ -10,6 +10,8 @@ model IdentityDelegationRequest {
 
   status IdentityDelegationRequestStatus
 
+  minDurationSeconds Int?
+
   delegationOid BigInt
   delegation    IdentityDelegation @relation(fields: [delegationOid], references: [oid], onDelete: Cascade)
 
