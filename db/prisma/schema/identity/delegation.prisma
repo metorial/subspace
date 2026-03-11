@@ -8,6 +8,7 @@ enum IdentityDelegationStatus {
   waiting_for_consent
   denied
   active
+  revoked
   expired
 }
 
@@ -47,6 +48,7 @@ model IdentityDelegation {
 
   createdAt DateTime  @default(now())
   expiresAt DateTime?
+  revokedAt DateTime?
 
   requests                           IdentityDelegationRequest[]
   credentials                        IdentityDelegationCredentialOverride[]

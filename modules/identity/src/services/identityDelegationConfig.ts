@@ -293,7 +293,8 @@ class identityDelegationConfigServiceImpl {
           environmentOid: d.environment.oid
         },
         data: {
-          status: 'archived'
+          status: 'archived',
+          archivedAt: new Date()
         },
         include
       });
