@@ -10,6 +10,11 @@ import {
   identityCredentialDeletedQueueProcessor,
   identityCredentialUpdatedQueueProcessor
 } from './identityCredential';
+import {
+  identityDelegationConfigCreatedQueueProcessor,
+  identityDelegationConfigDeletedQueueProcessor,
+  identityDelegationConfigUpdatedQueueProcessor
+} from './identityDelegationConfig';
 
 export let lifecycleQueues = combineQueueProcessors([
   agentCreatedQueueProcessor,
@@ -20,5 +25,8 @@ export let lifecycleQueues = combineQueueProcessors([
   identityActorUpdatedQueueProcessor,
   identityCredentialCreatedQueueProcessor,
   identityCredentialUpdatedQueueProcessor,
-  identityCredentialDeletedQueueProcessor
+  identityCredentialDeletedQueueProcessor,
+  identityDelegationConfigCreatedQueueProcessor,
+  identityDelegationConfigUpdatedQueueProcessor,
+  identityDelegationConfigDeletedQueueProcessor
 ]);

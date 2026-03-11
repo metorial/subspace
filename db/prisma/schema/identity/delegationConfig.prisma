@@ -13,8 +13,8 @@ model IdentityDelegationConfig {
   status          IdentityDelegationConfigStatus
   isParentDeleted Boolean                        @default(false)
 
-  name        String
-  description String
+  name        String?
+  description String?
   metadata    Json?
 
   tenantOid BigInt
