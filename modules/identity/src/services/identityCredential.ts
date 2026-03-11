@@ -264,12 +264,6 @@ class identityCredentialServiceImpl {
     solution: Solution;
     environment: Environment;
     identityCredential: IdentityCredential & { identity: Identity };
-
-    input: {
-      name?: string;
-      description?: string;
-      metadata?: Record<string, any>;
-    };
   }) {
     checkTenant(d, d.identityCredential.identity);
     checkDeletedEdit(d.identityCredential, 'archive');

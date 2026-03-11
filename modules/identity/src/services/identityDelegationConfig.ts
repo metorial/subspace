@@ -24,6 +24,7 @@ import { checkTenant } from '@metorial-subspace/module-tenant';
 import { env } from '../env';
 import {
   identityDelegationConfigCreatedQueue,
+  identityDelegationConfigDeletedQueue,
   identityDelegationConfigUpdatedQueue
 } from '../queues/lifecycle/identityDelegationConfig';
 
@@ -266,6 +267,39 @@ class identityDelegationConfigServiceImpl {
 
       await addAfterTransactionHook(async () =>
         identityDelegationConfigUpdatedQueue.add({
+          identityDelegationConfigId: identityDelegationConfig.id
+        })
+      );
+
+      return identityDelegationConfig;
+    });
+  }
+
+  async archiveIdentityDelegationConfig(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    identityDelegationConfig: IdentityDelegationConfig;
+  }) {
+    checkTenant(d, d.identityDelegationConfig);
+    checkDeletedEdit(d.identityDelegationConfig, 'archive');
+
+    return withTransaction(async db => {
+      let identityDelegationConfig = await db.identityDelegationConfig.update({
+        where: {
+          oid: d.identityDelegationConfig.oid,
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid
+        },
+        data: {
+          status: 'archived'
+        },
+        include
+      });
+
+      await addAfterTransactionHook(async () =>
+        identityDelegationConfigDeletedQueue.add({
           identityDelegationConfigId: identityDelegationConfig.id
         })
       );
