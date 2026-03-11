@@ -22,8 +22,21 @@ import {
 import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { identityCreatedQueue, identityUpdatedQueue } from '../queues/lifecycle/identity';
+import { IdentityCredentialInput, identityCredentialService } from './identityCredential';
 
-let include = {};
+let include = {
+  actor: {
+    include: {
+      agent: true
+    }
+  },
+  delegationConfig: true,
+  credentials: {
+    include: {
+      delegationConfig: true
+    }
+  }
+};
 
 class identityServiceImpl {
   async listIdentities(d: {
@@ -95,7 +108,7 @@ class identityServiceImpl {
       },
       include
     });
-    if (!identity) throw new ServiceError(notFoundError('identity.actor', d.identityId));
+    if (!identity) throw new ServiceError(notFoundError('identity', d.identityId));
 
     return identity;
   }
@@ -111,6 +124,8 @@ class identityServiceImpl {
       name?: string;
       description?: string;
       metadata?: Record<string, any>;
+
+      inputs: IdentityCredentialInput[];
     };
   }) {
     return withTransaction(async db => {
@@ -132,11 +147,23 @@ class identityServiceImpl {
         }
       });
 
+      await identityCredentialService.internalCreateIdentityCredentials({
+        tenant: d.tenant,
+        solution: d.solution,
+        environment: d.environment,
+
+        identity,
+        inputs: d.input.inputs
+      });
+
       await addAfterTransactionHook(async () =>
         identityCreatedQueue.add({ identityId: identity.id })
       );
 
-      return identity;
+      return await db.identity.findFirstOrThrow({
+        where: { oid: identity.oid },
+        include
+      });
     });
   }
 

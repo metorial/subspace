@@ -9,6 +9,8 @@ export let identityCreatedQueue = createQueue<{ identityId: string }>({
 
 export let identityCreatedQueueProcessor = identityCreatedQueue.process(async data => {
   await indexIdentityQueue.add({ identityId: data.identityId });
+
+  // TODO: reconcile
 });
 
 export let identityUpdatedQueue = createQueue<{ identityId: string }>({
@@ -18,4 +20,6 @@ export let identityUpdatedQueue = createQueue<{ identityId: string }>({
 
 export let identityUpdatedQueueProcessor = identityUpdatedQueue.process(async data => {
   await indexIdentityQueue.add({ identityId: data.identityId });
+
+  // TODO: reconcile
 });
