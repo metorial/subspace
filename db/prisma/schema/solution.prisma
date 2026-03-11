@@ -45,4 +45,6 @@ model Solution {
   sessionUsageRecords                      SessionUsageRecord[]
   providerRunUsageRecords                  ProviderRunUsageRecord[]
   providerUses                             ProviderUse[]
+  identityActors                           IdentityActor[]
+  agents                                   Agent[]
 }

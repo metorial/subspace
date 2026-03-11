@@ -30,7 +30,7 @@ model CustomProviderCommit {
   errorMessage String?
 
   creatorActorOid BigInt
-  creatorActor    Actor  @relation(fields: [creatorActorOid], references: [oid])
+  creatorActor    TenantActor @relation(fields: [creatorActorOid], references: [oid])
 
   fromEnvironmentOid BigInt?
   fromEnvironment    CustomProviderEnvironment? @relation(fields: [fromEnvironmentOid], references: [oid], name: "CustomProviderCommitFromEnvironment")

@@ -7,7 +7,7 @@ export let ID = createIdGenerator({
   environment: idType.sorted('ken'),
   backend: idType.sorted('kbe'),
   brand: idType.sorted('kbr'),
-  actor: idType.sorted('pact'),
+  tenantActor: idType.sorted('pact'),
 
   publisher: idType.sorted('pub'),
 

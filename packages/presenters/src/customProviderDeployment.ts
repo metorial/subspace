@@ -1,5 +1,4 @@
 import type {
-  Actor,
   CodeBucket,
   CustomProvider,
   CustomProviderCommit,
@@ -7,7 +6,8 @@ import type {
   CustomProviderVersion,
   Provider,
   ScmRepo,
-  ScmRepoPush
+  ScmRepoPush,
+  TenantActor
 } from '@metorial-subspace/db';
 import { actorPresenter } from './actor';
 import { bucketPresenter } from './bucket';
@@ -22,7 +22,7 @@ export let customProviderDeploymentPresenter = (
     customProviderVersion: CustomProviderVersion | null;
     commit: CustomProviderCommit | null;
 
-    creatorActor: Actor;
+    creatorActor: TenantActor;
 
     immutableCodeBucket: (CodeBucket & { scmRepo: ScmRepo | null }) | null;
 

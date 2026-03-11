@@ -2,17 +2,17 @@ import { badRequestError, notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
-  type CustomProviderCommitTrigger,
-  db,
-  getId,
-  type ScmRepoPush,
-  type Actor,
   type CustomProviderCommit,
+  type CustomProviderCommitTrigger,
   type CustomProviderEnvironment,
   type CustomProviderVersion,
+  db,
   type Environment,
+  getId,
+  type ScmRepoPush,
   type Solution,
-  type Tenant
+  type Tenant,
+  type TenantActor
 } from '@metorial-subspace/db';
 import {
   resolveCustomProviderEnvironments,
@@ -78,7 +78,7 @@ let include = {
 
 class customProviderCommitServiceImpl {
   async createCustomProviderCommit(d: {
-    actor: Actor;
+    actor: TenantActor;
     tenant: Tenant;
     solution: Solution;
     environment: Environment;

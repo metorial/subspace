@@ -8,7 +8,6 @@ import type {
   ProviderVariant
 } from '@metorial-subspace/db';
 import {
-  type Actor,
   addAfterTransactionHook,
   type CustomProvider,
   type CustomProviderStatus,
@@ -19,6 +18,7 @@ import {
   snowflake,
   type Solution,
   type Tenant,
+  type TenantActor,
   withTransaction
 } from '@metorial-subspace/db';
 import {
@@ -168,7 +168,7 @@ class customProviderServiceImpl {
   }
 
   async createCustomProvider(d: {
-    actor: Actor;
+    actor: TenantActor;
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
@@ -284,7 +284,7 @@ class customProviderServiceImpl {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
-    actor: Actor;
+    actor: TenantActor;
     customProvider: CustomProvider;
     input: {
       name?: string;

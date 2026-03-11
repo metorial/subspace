@@ -1,6 +1,5 @@
 import { createQueue, QueueRetryError } from '@lowerdeck/queue';
 import {
-  type Actor,
   addAfterTransactionHook,
   type CustomProvider,
   type CustomProviderDeployment,
@@ -10,6 +9,7 @@ import {
   type Environment,
   type Solution,
   type Tenant,
+  type TenantActor,
   withTransaction
 } from '@metorial-subspace/db';
 import { backend, type CustomProviderFromInternal } from '../../_shuttle/backend';
@@ -39,7 +39,7 @@ let mapFrom = async (d: {
   tenant: Tenant;
   solution: Solution;
   environment: Environment;
-  actor: Actor;
+  actor: TenantActor;
 }): Promise<CustomProviderFromInternal> => {
   if (d.from.type === 'container') {
     return {

@@ -1,5 +1,4 @@
 import type {
-  Actor,
   CodeBucket,
   CustomProvider,
   CustomProviderCommit,
@@ -12,7 +11,8 @@ import type {
   ProviderEnvironment,
   ProviderVersion,
   ScmRepo,
-  ScmRepoPush
+  ScmRepoPush,
+  TenantActor
 } from '@metorial-subspace/db';
 import type {
   ShuttleContainerRegistry,
@@ -56,7 +56,7 @@ export let customProviderVersionPresenter = (
       };
     })[];
 
-    creatorActor: Actor;
+    creatorActor: TenantActor;
 
     containerTag?: ShuttleContainerTag;
     containerVersion?: ShuttleContainerVersion;
