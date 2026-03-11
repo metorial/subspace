@@ -55,6 +55,7 @@ model ProviderDeployment {
   sessionProviders           SessionProvider[]
   sessionTemplateProviders   SessionTemplateProvider[]
   providerDeploymentVersions ProviderDeploymentVersion[]
+  identityCredentialVersions IdentityCredentialVersion[]
 
   @@index([isEphemeral])
   @@index([isDefault])

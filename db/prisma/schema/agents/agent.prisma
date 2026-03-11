@@ -7,7 +7,7 @@ model Agent {
   slug        String
   metadata    Json?
 
-  actorOid BigInt
+  actorOid BigInt        @unique
   actor    IdentityActor @relation(fields: [actorOid], references: [oid], onDelete: Cascade)
 
   tenantOid BigInt

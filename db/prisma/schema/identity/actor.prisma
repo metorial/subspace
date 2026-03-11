@@ -9,8 +9,8 @@ model IdentityActor {
 
   type IdentityActorType
 
-  name        String
-  description String
+  name        String?
+  description String?
   metadata    Json?
 
   tenantOid BigInt
@@ -25,5 +25,8 @@ model IdentityActor {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  agents Agent[]
+  agent                       Agent?
+  identities                  Identity[]
+  identityDelegationParties   IdentityDelegationParty[]
+  delegatedIdentityCredential DelegatedIdentityCredential[]
 }

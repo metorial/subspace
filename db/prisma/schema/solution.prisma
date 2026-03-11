@@ -47,4 +47,7 @@ model Solution {
   providerUses                             ProviderUse[]
   identityActors                           IdentityActor[]
   agents                                   Agent[]
+  identities                               Identity[]
+  identityDelegationConfigs                IdentityDelegationConfig[]
+  identityDelegations                      IdentityDelegation[]
 }

@@ -1,0 +1,112 @@
+enum IdentityDelegationRole {
+  connect
+  read
+  none
+}
+
+enum IdentityDelegationStatus {
+  waiting_for_consent
+  denied
+  active
+  expired
+}
+
+model IdentityDelegation {
+  oid BigInt @id
+  id  String @unique
+
+  status IdentityDelegationStatus
+  role   IdentityDelegationRole
+
+  note String?
+
+  // parent
+  // rootParent
+
+  parentDelegationOid BigInt?
+  parentDelegation    IdentityDelegation? @relation(fields: [parentDelegationOid], references: [oid], onDelete: Cascade, name: "parentDelegation")
+
+  rootParentDelegationOid BigInt?
+  rootParentDelegation    IdentityDelegation? @relation(fields: [rootParentDelegationOid], references: [oid], onDelete: Cascade, name: "rootParentDelegation")
+
+  delegationConfigOid BigInt?
+  delegationConfig    IdentityDelegationConfig? @relation(fields: [delegationConfigOid], references: [oid], onDelete: Cascade)
+
+  attestationOid BigInt?
+  attestation    IdentityDelegationAttestation? @relation(fields: [attestationOid], references: [oid], onDelete: Cascade)
+
+  tenantOid BigInt
+  tenant    Tenant @relation(fields: [tenantOid], references: [oid], onDelete: Cascade)
+
+  environmentOid BigInt
+  environment    Environment @relation(fields: [environmentOid], references: [oid], onDelete: Cascade)
+
+  solutionOid Int
+  solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+
+  requests                           IdentityDelegationRequest[]
+  credentials                        IdentityDelegationCredentialOverride[]
+  identityDelegationParties          IdentityDelegationParty[]
+  delegatedIdentityCredentialUpdates DelegatedIdentityCredentialUpdate[]
+  childDelegations                   IdentityDelegation[]                   @relation("parentDelegation")
+  rootChildDelegations               IdentityDelegation[]                   @relation("rootParentDelegation")
+}
+
+model IdentityDelegationCredentialOverride {
+  oid BigInt @id
+  id  String @unique
+
+  role IdentityDelegationRole
+
+  delegationOid BigInt
+  delegation    IdentityDelegation @relation(fields: [delegationOid], references: [oid], onDelete: Cascade)
+
+  credentialOid BigInt
+  credential    IdentityCredential @relation(fields: [credentialOid], references: [oid], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+}
+
+enum IdentityDelegationPartyRole {
+  owner
+  delegator
+  delegatee
+}
+
+model IdentityDelegationParty {
+  oid BigInt @id
+  id  String @unique
+
+  delegationOid BigInt
+  delegation    IdentityDelegation @relation(fields: [delegationOid], references: [oid], onDelete: Cascade)
+
+  actorOid BigInt
+  actor    IdentityActor @relation(fields: [actorOid], references: [oid], onDelete: Cascade)
+
+  roles IdentityDelegationPartyRole[]
+
+  createdAt DateTime @default(now())
+}
+
+enum IdentityDelegationAttestationType {
+  actor_api
+  system
+}
+
+model IdentityDelegationAttestation {
+  oid BigInt @id
+  id  String @unique
+
+  //TODO: @herber add chat based attestations
+
+  type IdentityDelegationAttestationType
+
+  createdAt DateTime @default(now())
+
+  delegations IdentityDelegation[]
+  requests    IdentityDelegationRequest[]
+}

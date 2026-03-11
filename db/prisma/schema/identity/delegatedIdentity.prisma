@@ -1,0 +1,40 @@
+enum DelegatedIdentityCredentialStatus {
+  active
+  revoked
+}
+
+model DelegatedIdentityCredential {
+  oid BigInt @id
+  id  String @unique
+
+  role   IdentityDelegationRole
+  status DelegatedIdentityCredentialStatus
+
+  credentialOid BigInt
+  credential    IdentityCredential @relation(fields: [credentialOid], references: [oid], onDelete: Cascade)
+
+  actorOid BigInt
+  actor    IdentityActor @relation(fields: [actorOid], references: [oid], onDelete: Cascade)
+
+  createdAt                           DateTime                            @default(now())
+  delegatedIdentityCredentialsUpdates DelegatedIdentityCredentialUpdate[]
+}
+
+model DelegatedIdentityCredentialUpdate {
+  oid BigInt @id
+  id  String @unique
+
+  delegatedCredentialsOid BigInt
+  delegatedCredentials    DelegatedIdentityCredential @relation(fields: [delegatedCredentialsOid], references: [oid], onDelete: Cascade)
+
+  responsibleDelegationOid BigInt
+  responsibleDelegation    IdentityDelegation @relation(fields: [responsibleDelegationOid], references: [oid], onDelete: Cascade)
+
+  statusBefore DelegatedIdentityCredentialStatus
+  statusAfter  DelegatedIdentityCredentialStatus
+
+  roleBefore IdentityDelegationRole
+  roleAfter  IdentityDelegationRole
+
+  createdAt DateTime @default(now())
+}

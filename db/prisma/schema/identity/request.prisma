@@ -1,0 +1,20 @@
+enum IdentityDelegationRequestStatus {
+  pending
+  approved
+  denied
+}
+
+model IdentityDelegationRequest {
+  oid BigInt @id
+  id  String @unique
+
+  status IdentityDelegationRequestStatus
+
+  delegationOid BigInt
+  delegation    IdentityDelegation @relation(fields: [delegationOid], references: [oid], onDelete: Cascade)
+
+  attestationOid BigInt?
+  attestation    IdentityDelegationAttestation? @relation(fields: [attestationOid], references: [oid], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
