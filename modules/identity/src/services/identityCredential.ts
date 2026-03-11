@@ -275,7 +275,8 @@ class identityCredentialServiceImpl {
           oid: d.identityCredential.oid
         },
         data: {
-          status: 'archived'
+          status: 'archived',
+          archivedAt: new Date()
         },
         include
       });

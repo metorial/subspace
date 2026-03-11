@@ -30,8 +30,9 @@ model Identity {
   delegationConfigOid BigInt?
   delegationConfig    IdentityDelegationConfig? @relation(fields: [delegationConfigOid], references: [oid], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now()) @updatedAt
+  archivedAt DateTime?
 
   credentials IdentityCredential[]
 }
@@ -66,8 +67,9 @@ model IdentityCredential {
   delegationConfigOid BigInt?
   delegationConfig    IdentityDelegationConfig? @relation(fields: [delegationConfigOid], references: [oid], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now()) @updatedAt
+  archivedAt DateTime?
 
   identityDelegationCredentialOverrides IdentityDelegationCredentialOverride[]
   delegatedIdentityCredential           DelegatedIdentityCredential[]

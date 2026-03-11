@@ -29,8 +29,9 @@ model IdentityDelegationConfig {
   currentVersionOid BigInt?
   currentVersion    IdentityDelegationConfigVersion? @relation(fields: [currentVersionOid], references: [oid], name: "currentVersion")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now()) @updatedAt
+  archivedAt DateTime?
 
   versions            IdentityDelegationConfigVersion[]
   identities          Identity[]

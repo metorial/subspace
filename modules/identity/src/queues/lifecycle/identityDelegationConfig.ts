@@ -1,12 +1,14 @@
 import { createQueue } from '@lowerdeck/queue';
 import { env } from '../../env';
 import { indexIdentityDelegationConfigQueue } from '../search/identityDelegationConfig';
+import { lcOpts } from './_opts';
 
 export let identityDelegationConfigCreatedQueue = createQueue<{
   identityDelegationConfigId: string;
 }>({
   name: 'sub/idn/lc/identityDelegationConfig/created',
-  redisUrl: env.service.REDIS_URL
+  redisUrl: env.service.REDIS_URL,
+  ...lcOpts
 });
 
 export let identityDelegationConfigCreatedQueueProcessor =
@@ -20,7 +22,8 @@ export let identityDelegationConfigUpdatedQueue = createQueue<{
   identityDelegationConfigId: string;
 }>({
   name: 'sub/idn/lc/identityDelegationConfig/updated',
-  redisUrl: env.service.REDIS_URL
+  redisUrl: env.service.REDIS_URL,
+  ...lcOpts
 });
 
 export let identityDelegationConfigUpdatedQueueProcessor =
@@ -34,7 +37,8 @@ export let identityDelegationConfigDeletedQueue = createQueue<{
   identityDelegationConfigId: string;
 }>({
   name: 'sub/idn/lc/identityDelegationConfig/deleted',
-  redisUrl: env.service.REDIS_URL
+  redisUrl: env.service.REDIS_URL,
+  ...lcOpts
 });
 
 export let identityDelegationConfigDeletedQueueProcessor =

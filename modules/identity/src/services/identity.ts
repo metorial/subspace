@@ -22,7 +22,11 @@ import {
 } from '@metorial-subspace/list-utils';
 import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
 import { checkTenant } from '@metorial-subspace/module-tenant';
-import { identityCreatedQueue, identityUpdatedQueue } from '../queues/lifecycle/identity';
+import {
+  identityCreatedQueue,
+  identityDeletedQueue,
+  identityUpdatedQueue
+} from '../queues/lifecycle/identity';
 import { IdentityCredentialInput, identityCredentialService } from './identityCredential';
 
 let include = {
@@ -204,6 +208,38 @@ class identityServiceImpl {
 
       await addAfterTransactionHook(async () =>
         identityUpdatedQueue.add({ identityId: identity.id })
+      );
+
+      return identity;
+    });
+  }
+
+  async archiveIdentity(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    identity: Identity;
+  }) {
+    checkTenant(d, d.identity);
+    checkDeletedEdit(d.identity, 'archive');
+
+    return withTransaction(async db => {
+      let identity = await db.identity.update({
+        where: {
+          oid: d.identity.oid,
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid
+        },
+        data: {
+          status: 'archived',
+          archivedAt: new Date()
+        },
+        include
+      });
+
+      await addAfterTransactionHook(async () =>
+        identityDeletedQueue.add({ identityId: identity.id })
       );
 
       return identity;

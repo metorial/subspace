@@ -25,9 +25,14 @@ import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import {
   identityActorCreatedQueue,
+  identityActorDeletedQueue,
   identityActorUpdatedQueue
 } from '../queues/lifecycle/actor';
-import { agentCreatedQueue, agentUpdatedQueue } from '../queues/lifecycle/agent';
+import {
+  agentCreatedQueue,
+  agentDeletedQueue,
+  agentUpdatedQueue
+} from '../queues/lifecycle/agent';
 
 let include = {
   agent: true
@@ -235,6 +240,52 @@ class identityActorServiceImpl {
 
       await addAfterTransactionHook(async () =>
         identityActorUpdatedQueue.add({ identityActorId: identityActor.id })
+      );
+
+      return identityActor;
+    });
+  }
+
+  async archiveIdentityActor(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    identityActor: IdentityActor;
+  }) {
+    checkTenant(d, d.identityActor);
+    checkDeletedEdit(d.identityActor, 'archive');
+
+    return withTransaction(async db => {
+      let identityActor = await db.identityActor.update({
+        where: {
+          oid: d.identityActor.oid,
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid
+        },
+        data: {
+          status: 'archived',
+          archivedAt: new Date()
+        },
+        include
+      });
+
+      if (identityActor.agent) {
+        let agent = await db.agent.update({
+          where: { oid: identityActor.agent.oid },
+          data: {
+            status: 'archived',
+            archivedAt: identityActor.archivedAt
+          }
+        });
+
+        await addAfterTransactionHook(async () =>
+          agentDeletedQueue.add({ agentId: agent.id })
+        );
+      }
+
+      await addAfterTransactionHook(async () =>
+        identityActorDeletedQueue.add({ identityActorId: identityActor.id })
       );
 
       return identityActor;
