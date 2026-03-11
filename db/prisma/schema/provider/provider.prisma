@@ -93,6 +93,7 @@ model Provider {
   customProvider            CustomProvider?
   providerEnvironments      ProviderEnvironment[]
   providerUses              ProviderUse[]
+  identityCredentials       IdentityCredential[]
 
   @@index([status])
   @@index([access])

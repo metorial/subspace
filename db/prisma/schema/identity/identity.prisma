@@ -36,30 +36,20 @@ model Identity {
   credentials IdentityCredential[]
 }
 
+enum IdentityCredentialStatus {
+  active
+  archived
+  deleted
+}
+
 model IdentityCredential {
   oid BigInt @id
   id  String @unique
 
+  status IdentityStatus
+
   identityOid BigInt
   identity    Identity @relation(fields: [identityOid], references: [oid], onDelete: Cascade)
-
-  currentVersionOid BigInt?
-  currentVersion    IdentityCredentialVersion? @relation(fields: [currentVersionOid], references: [oid], name: "currentVersion")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-
-  versions                              IdentityCredentialVersion[]
-  identityDelegationCredentialOverrides IdentityDelegationCredentialOverride[]
-  delegatedIdentityCredential           DelegatedIdentityCredential[]
-}
-
-model IdentityCredentialVersion {
-  oid BigInt @id
-  id  String @unique
-
-  credentialsOid BigInt
-  credentials    IdentityCredential @relation(fields: [credentialsOid], references: [oid], onDelete: Cascade)
 
   deploymentOid BigInt?
   deployment    ProviderDeployment? @relation(fields: [deploymentOid], references: [oid], onDelete: Cascade)
@@ -70,10 +60,15 @@ model IdentityCredentialVersion {
   authConfigOid BigInt?
   authConfig    ProviderAuthConfig? @relation(fields: [authConfigOid], references: [oid], onDelete: Cascade)
 
+  providerOid BigInt
+  provider    Provider @relation(fields: [providerOid], references: [oid], onDelete: Cascade)
+
   delegationConfigOid BigInt?
   delegationConfig    IdentityDelegationConfig? @relation(fields: [delegationConfigOid], references: [oid], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
-  currentVersionFor IdentityCredential[] @relation("currentVersion")
+  identityDelegationCredentialOverrides IdentityDelegationCredentialOverride[]
+  delegatedIdentityCredential           DelegatedIdentityCredential[]
 }

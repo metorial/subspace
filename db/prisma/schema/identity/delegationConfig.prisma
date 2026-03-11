@@ -32,10 +32,10 @@ model IdentityDelegationConfig {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  versions                   IdentityDelegationConfigVersion[]
-  identities                 Identity[]
-  identityCredentialVersions IdentityCredentialVersion[]
-  identityDelegations        IdentityDelegation[]
+  versions            IdentityDelegationConfigVersion[]
+  identities          Identity[]
+  identityDelegations IdentityDelegation[]
+  identityCredentials IdentityCredential[]
 }
 
 enum IdentityDelegationConfigSubDelegationBehavior {
