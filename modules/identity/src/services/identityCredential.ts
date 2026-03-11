@@ -16,6 +16,7 @@ import {
 } from '@metorial-subspace/db';
 import {
   checkDeletedEdit,
+  checkDeletedRelation,
   normalizeStatusForGet,
   normalizeStatusForList,
   resolveProviderAuthConfigs,
@@ -141,13 +142,6 @@ class identityCredentialServiceImpl {
     inputs: IdentityCredentialInput[];
   }) {
     return withTransaction(async db => {
-      let combination = await providerCombinationService.getCombinations({
-        tenant: d.tenant,
-        solution: d.solution,
-        environment: d.environment,
-        providers: d.inputs
-      });
-
       let delegationConfigIds = d.inputs.map(i => i.delegationConfigId!).filter(Boolean);
 
       let delegationConfigs = delegationConfigIds.length
@@ -160,7 +154,20 @@ class identityCredentialServiceImpl {
             }
           })
         : [];
+
+      for (let delegationConfig of delegationConfigs) {
+        checkTenant(d, delegationConfig);
+        checkDeletedRelation(delegationConfig);
+      }
+
       let delegationConfigMap = new Map(delegationConfigs.map(c => [c.id, c]));
+
+      let combination = await providerCombinationService.getCombinations({
+        tenant: d.tenant,
+        solution: d.solution,
+        environment: d.environment,
+        providers: d.inputs
+      });
 
       return await db.identityCredential.createManyAndReturn({
         data: combination.map((c, i) => {
@@ -199,6 +206,9 @@ class identityCredentialServiceImpl {
 
     input: IdentityCredentialInput;
   }) {
+    checkTenant(d, d.identity);
+    checkDeletedRelation(d.identity);
+
     return withTransaction(async db => {
       let [identityCredential] = await this.internalCreateIdentityCredentials({
         tenant: d.tenant,

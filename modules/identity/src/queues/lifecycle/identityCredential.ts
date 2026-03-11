@@ -2,7 +2,7 @@ import { createQueue } from '@lowerdeck/queue';
 import { env } from '../../env';
 
 export let identityCredentialCreatedQueue = createQueue<{ identityCredentialId: string }>({
-  name: 'sub/dep/lc/identityCredential/created',
+  name: 'sub/idn/lc/identityCredential/created',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -13,7 +13,7 @@ export let identityCredentialCreatedQueueProcessor = identityCredentialCreatedQu
 );
 
 export let identityCredentialUpdatedQueue = createQueue<{ identityCredentialId: string }>({
-  name: 'sub/dep/lc/identityCredential/updated',
+  name: 'sub/idn/lc/identityCredential/updated',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -24,7 +24,7 @@ export let identityCredentialUpdatedQueueProcessor = identityCredentialUpdatedQu
 );
 
 export let identityCredentialDeletedQueue = createQueue<{ identityCredentialId: string }>({
-  name: 'sub/dep/lc/identityCredential/deleted',
+  name: 'sub/idn/lc/identityCredential/deleted',
   redisUrl: env.service.REDIS_URL
 });
 

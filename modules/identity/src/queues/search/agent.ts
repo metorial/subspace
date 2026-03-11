@@ -4,7 +4,7 @@ import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-
 import { env } from '../../../../agent/src/env';
 
 export let indexAgentQueue = createQueue<{ agentId: string }>({
-  name: 'sub/dep/sidx/agent',
+  name: 'sub/idn/sidx/agent',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -15,7 +15,7 @@ export let indexAgentQueueProcessor = indexAgentQueue.process(async data => {
   });
   if (!agent) throw new QueueRetryError();
 
-  if (!agent.name && !agent.description) {
+  if ((!agent.name && !agent.description) || agent.status != 'active') {
     await voyager.record.delete({
       sourceId: (await voyagerSource).id,
       indexId: voyagerIndex.agent.id,

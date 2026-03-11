@@ -15,6 +15,7 @@ import {
 } from '@metorial-subspace/db';
 import {
   checkDeletedEdit,
+  checkDeletedRelation,
   normalizeStatusForGet,
   normalizeStatusForList,
   resolveProviders
@@ -128,6 +129,9 @@ class identityServiceImpl {
       inputs: IdentityCredentialInput[];
     };
   }) {
+    checkTenant(d, d.actor);
+    checkDeletedRelation(d.actor);
+
     return withTransaction(async db => {
       let identity = await db.identity.create({
         data: {

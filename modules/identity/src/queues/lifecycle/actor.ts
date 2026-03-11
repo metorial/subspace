@@ -3,7 +3,7 @@ import { env } from '../../env';
 import { indexIdentityActorQueue } from '../search/actor';
 
 export let identityActorCreatedQueue = createQueue<{ identityActorId: string }>({
-  name: 'sub/dep/lc/identityActor/created',
+  name: 'sub/idn/lc/identityActor/created',
   redisUrl: env.service.REDIS_URL
 });
 
@@ -14,7 +14,7 @@ export let identityActorCreatedQueueProcessor = identityActorCreatedQueue.proces
 );
 
 export let identityActorUpdatedQueue = createQueue<{ identityActorId: string }>({
-  name: 'sub/dep/lc/identityActor/updated',
+  name: 'sub/idn/lc/identityActor/updated',
   redisUrl: env.service.REDIS_URL
 });
 
