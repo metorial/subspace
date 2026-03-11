@@ -20,9 +20,6 @@ model IdentityDelegation {
 
   note String?
 
-  // parent
-  // rootParent
-
   parentDelegationOid BigInt?
   parentDelegation    IdentityDelegation? @relation(fields: [parentDelegationOid], references: [oid], onDelete: Cascade, name: "parentDelegation")
 
@@ -31,6 +28,10 @@ model IdentityDelegation {
 
   delegationConfigOid BigInt?
   delegationConfig    IdentityDelegationConfig? @relation(fields: [delegationConfigOid], references: [oid], onDelete: Cascade)
+
+  // The version used to perform this delegation.
+  selectedDelegationConfigVersionOid BigInt?
+  selectedDelegationConfigVersion    IdentityDelegationConfigVersion? @relation(fields: [selectedDelegationConfigVersionOid], references: [oid], onDelete: Cascade)
 
   attestationOid BigInt?
   attestation    IdentityDelegationAttestation? @relation(fields: [attestationOid], references: [oid], onDelete: Cascade)

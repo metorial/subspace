@@ -1,9 +1,18 @@
+enum AgentStatus {
+  active
+  archived
+  deleted
+}
+
 model Agent {
   oid BigInt @id
   id  String @unique
 
+  status          AgentStatus
+  isParentDeleted Boolean     @default(false)
+
   name        String
-  description String
+  description String?
   slug        String
   metadata    Json?
 
@@ -21,4 +30,6 @@ model Agent {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([environmentOid, slug])
 }

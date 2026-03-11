@@ -1,6 +1,15 @@
+enum IdentityStatus {
+  active
+  archived
+  deleted
+}
+
 model Identity {
   oid BigInt @id
   id  String @unique
+
+  status          IdentityStatus
+  isParentDeleted Boolean        @default(false)
 
   name        String?
   description String?

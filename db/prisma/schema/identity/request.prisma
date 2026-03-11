@@ -16,5 +16,8 @@ model IdentityDelegationRequest {
   attestationOid BigInt?
   attestation    IdentityDelegationAttestation? @relation(fields: [attestationOid], references: [oid], onDelete: Cascade)
 
+  requesterOid BigInt
+  requester    IdentityActor @relation(fields: [requesterOid], references: [oid], onDelete: Cascade)
+
   createdAt DateTime @default(now())
 }

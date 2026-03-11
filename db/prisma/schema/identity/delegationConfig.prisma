@@ -1,8 +1,17 @@
+enum IdentityDelegationConfigStatus {
+  active
+  archived
+  deleted
+}
+
 model IdentityDelegationConfig {
   oid BigInt @id
   id  String @unique
 
   isDefault Boolean
+
+  status          IdentityDelegationConfigStatus
+  isParentDeleted Boolean                        @default(false)
 
   name        String
   description String
@@ -47,5 +56,6 @@ model IdentityDelegationConfigVersion {
 
   createdAt DateTime @default(now())
 
-  currentVersionFor IdentityDelegationConfig[] @relation("currentVersion")
+  currentVersionFor   IdentityDelegationConfig[] @relation("currentVersion")
+  identityDelegations IdentityDelegation[]
 }

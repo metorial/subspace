@@ -95,7 +95,17 @@ export let ID = createIdGenerator({
 
   providerRun: idType.sorted('prun'),
 
-  toolCall: idType.sorted('tcl')
+  toolCall: idType.sorted('tcl'),
+
+  identityActor: idType.sorted('iac'),
+  identity: idType.sorted('idn'),
+  identityCredential: idType.sorted('icr'),
+  identityCredentialVersion: idType.sorted('icrv'),
+  identityDelegation: idType.sorted('ide'),
+  identityDelegationRequest: idType.sorted('idr'),
+  identityDelegationConfig: idType.sorted('idc'),
+  identityDelegationConfigVersion: idType.sorted('idcv'),
+  agent: idType.sorted('agt')
 });
 
 let workerIdBits = 12;
