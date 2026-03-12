@@ -52,12 +52,11 @@ model IdentityDelegation {
   expiresAt DateTime?
   revokedAt DateTime?
 
-  requests                           IdentityDelegationRequest[]
-  credentials                        IdentityDelegationCredentialOverride[]
-  parties                            IdentityDelegationParty[]
-  delegatedIdentityCredentialUpdates DelegatedIdentityCredentialUpdate[]
-  childDelegations                   IdentityDelegation[]                   @relation("parentDelegation")
-  rootChildDelegations               IdentityDelegation[]                   @relation("rootParentDelegation")
+  requests             IdentityDelegationRequest[]
+  credentials          IdentityDelegationCredentialOverride[]
+  parties              IdentityDelegationParty[]
+  childDelegations     IdentityDelegation[]                   @relation("parentDelegation")
+  rootChildDelegations IdentityDelegation[]                   @relation("rootParentDelegation")
 
   @@index([status])
 }

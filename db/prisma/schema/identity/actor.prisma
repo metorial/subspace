@@ -34,11 +34,11 @@ model IdentityActor {
   updatedAt  DateTime  @default(now()) @updatedAt
   archivedAt DateTime?
 
-  agent                       Agent?
-  identities                  Identity[]
-  identityDelegationParties   IdentityDelegationParty[]
-  delegatedIdentityCredential DelegatedIdentityCredential[]
-  identityDelegationRequests  IdentityDelegationRequest[]
+  agent                      Agent?
+  identities                 Identity[]
+  identityDelegationParties  IdentityDelegationParty[]
+  identityDelegationRequests IdentityDelegationRequest[]
+  delegatedIdentities        DelegatedIdentity[]
 
   @@index([status])
 }
