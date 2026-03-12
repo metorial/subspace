@@ -112,73 +112,6 @@ class identityDelegationConfigServiceImpl {
     return identityDelegationConfig;
   }
 
-  private async _createIdentityDelegationConfig(d: {
-    tenant: Tenant;
-    solution: Solution;
-    environment: Environment;
-
-    input: {
-      name?: string;
-      description?: string;
-      metadata?: Record<string, any>;
-
-      subDelegationDepth?: number;
-      subDelegationBehavior: IdentityDelegationConfigSubDelegationBehavior;
-    };
-
-    _isDefault?: boolean;
-
-    db: typeof db;
-  }) {
-    let identityDelegationConfig = await db.identityDelegationConfig.create({
-      data: {
-        ...getId('identityDelegationConfig'),
-
-        status: 'active',
-
-        isDefault: d._isDefault || false,
-
-        name: d.input.name?.trim() || undefined,
-        description: d.input.description?.trim() || undefined,
-        metadata: d.input.metadata,
-
-        tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid,
-        environmentOid: d.environment.oid
-      }
-    });
-
-    let currentVersion = await db.identityDelegationConfigVersion.create({
-      data: {
-        ...getId('identityDelegationConfigVersion'),
-
-        delegationConfigOid: identityDelegationConfig.oid,
-
-        subDelegationBehavior: d.input.subDelegationBehavior,
-        subDelegationDepth:
-          d.input.subDelegationBehavior == 'deny'
-            ? 0
-            : Math.max(1, d.input.subDelegationDepth ?? 1)
-      }
-    });
-
-    await db.identityDelegationConfig.updateMany({
-      where: { oid: identityDelegationConfig.oid },
-      data: { currentVersionOid: currentVersion.oid }
-    });
-
-    await addAfterTransactionHook(async () =>
-      identityDelegationConfigCreatedQueue.add({
-        identityDelegationConfigId: identityDelegationConfig.id
-      })
-    );
-
-    return await db.identityDelegationConfig.findFirstOrThrow({
-      where: { oid: identityDelegationConfig.oid },
-      include
-    });
-  }
-
   async createIdentityDelegationConfig(d: {
     tenant: Tenant;
     solution: Solution;
@@ -317,6 +250,73 @@ class identityDelegationConfigServiceImpl {
       );
 
       return identityDelegationConfig;
+    });
+  }
+
+  private async _createIdentityDelegationConfig(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+
+    input: {
+      name?: string;
+      description?: string;
+      metadata?: Record<string, any>;
+
+      subDelegationDepth?: number;
+      subDelegationBehavior: IdentityDelegationConfigSubDelegationBehavior;
+    };
+
+    _isDefault?: boolean;
+
+    db: typeof db;
+  }) {
+    let identityDelegationConfig = await db.identityDelegationConfig.create({
+      data: {
+        ...getId('identityDelegationConfig'),
+
+        status: 'active',
+
+        isDefault: d._isDefault || false,
+
+        name: d.input.name?.trim() || undefined,
+        description: d.input.description?.trim() || undefined,
+        metadata: d.input.metadata,
+
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid
+      }
+    });
+
+    let currentVersion = await db.identityDelegationConfigVersion.create({
+      data: {
+        ...getId('identityDelegationConfigVersion'),
+
+        delegationConfigOid: identityDelegationConfig.oid,
+
+        subDelegationBehavior: d.input.subDelegationBehavior,
+        subDelegationDepth:
+          d.input.subDelegationBehavior == 'deny'
+            ? 0
+            : Math.max(1, d.input.subDelegationDepth ?? 1)
+      }
+    });
+
+    await db.identityDelegationConfig.updateMany({
+      where: { oid: identityDelegationConfig.oid },
+      data: { currentVersionOid: currentVersion.oid }
+    });
+
+    await addAfterTransactionHook(async () =>
+      identityDelegationConfigCreatedQueue.add({
+        identityDelegationConfigId: identityDelegationConfig.id
+      })
+    );
+
+    return await db.identityDelegationConfig.findFirstOrThrow({
+      where: { oid: identityDelegationConfig.oid },
+      include
     });
   }
 }

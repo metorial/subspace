@@ -1,4 +1,4 @@
-import { notFoundError, ServiceError } from '@lowerdeck/error';
+import { badRequestError, notFoundError, ServiceError } from '@lowerdeck/error';
 import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
@@ -214,6 +214,20 @@ class identityCredentialServiceImpl {
     checkDeletedRelation(d.identity);
 
     return withTransaction(async db => {
+      let existingCredentials = await db.identityCredential.findMany({
+        where: {
+          identityOid: d.identity.oid,
+          status: 'active'
+        }
+      });
+      if (existingCredentials.length >= 100) {
+        throw new ServiceError(
+          badRequestError({
+            message: 'An identity cannot have more than 100 active credentials'
+          })
+        );
+      }
+
       let [identityCredential] = await this.internalCreateIdentityCredentials({
         tenant: d.tenant,
         solution: d.solution,

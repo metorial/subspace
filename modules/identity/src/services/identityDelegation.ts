@@ -146,7 +146,7 @@ class identityDelegationServiceImpl {
     return identityDelegation;
   }
 
-  async CreateDelegation(d: {
+  async createIdentityDelegation(d: {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
