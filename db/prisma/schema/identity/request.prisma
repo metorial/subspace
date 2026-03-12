@@ -2,6 +2,7 @@ enum IdentityDelegationRequestStatus {
   pending
   approved
   denied
+  canceled
 }
 
 model IdentityDelegationRequest {
@@ -10,9 +11,9 @@ model IdentityDelegationRequest {
 
   status IdentityDelegationRequestStatus
 
-  minDurationSeconds Int?
+  expiresAt DateTime
 
-  delegationOid BigInt
+  delegationOid BigInt             @unique
   delegation    IdentityDelegation @relation(fields: [delegationOid], references: [oid], onDelete: Cascade)
 
   attestationOid BigInt?

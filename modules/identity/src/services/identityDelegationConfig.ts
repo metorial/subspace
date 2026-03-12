@@ -106,7 +106,7 @@ class identityDelegationConfigServiceImpl {
     });
     if (!identityDelegationConfig)
       throw new ServiceError(
-        notFoundError('identityDelegationConfig', d.identityDelegationConfigId)
+        notFoundError('identity.delegation_config', d.identityDelegationConfigId)
       );
 
     return identityDelegationConfig;
@@ -127,55 +127,55 @@ class identityDelegationConfigServiceImpl {
     };
 
     _isDefault?: boolean;
+
+    db: typeof db;
   }) {
-    return withTransaction(async db => {
-      let identityDelegationConfig = await db.identityDelegationConfig.create({
-        data: {
-          ...getId('identityDelegationConfig'),
+    let identityDelegationConfig = await db.identityDelegationConfig.create({
+      data: {
+        ...getId('identityDelegationConfig'),
 
-          status: 'active',
+        status: 'active',
 
-          isDefault: d._isDefault || false,
+        isDefault: d._isDefault || false,
 
-          name: d.input.name?.trim() || undefined,
-          description: d.input.description?.trim() || undefined,
-          metadata: d.input.metadata,
+        name: d.input.name?.trim() || undefined,
+        description: d.input.description?.trim() || undefined,
+        metadata: d.input.metadata,
 
-          tenantOid: d.tenant.oid,
-          solutionOid: d.solution.oid,
-          environmentOid: d.environment.oid
-        }
-      });
+        tenantOid: d.tenant.oid,
+        solutionOid: d.solution.oid,
+        environmentOid: d.environment.oid
+      }
+    });
 
-      let currentVersion = await db.identityDelegationConfigVersion.create({
-        data: {
-          ...getId('identityDelegationConfigVersion'),
+    let currentVersion = await db.identityDelegationConfigVersion.create({
+      data: {
+        ...getId('identityDelegationConfigVersion'),
 
-          delegationConfigOid: identityDelegationConfig.oid,
+        delegationConfigOid: identityDelegationConfig.oid,
 
-          subDelegationBehavior: d.input.subDelegationBehavior,
-          subDelegationDepth:
-            d.input.subDelegationBehavior == 'deny'
-              ? 0
-              : Math.max(1, d.input.subDelegationDepth ?? 1)
-        }
-      });
+        subDelegationBehavior: d.input.subDelegationBehavior,
+        subDelegationDepth:
+          d.input.subDelegationBehavior == 'deny'
+            ? 0
+            : Math.max(1, d.input.subDelegationDepth ?? 1)
+      }
+    });
 
-      await db.identityDelegationConfig.updateMany({
-        where: { oid: identityDelegationConfig.oid },
-        data: { currentVersionOid: currentVersion.oid }
-      });
+    await db.identityDelegationConfig.updateMany({
+      where: { oid: identityDelegationConfig.oid },
+      data: { currentVersionOid: currentVersion.oid }
+    });
 
-      await addAfterTransactionHook(async () =>
-        identityDelegationConfigCreatedQueue.add({
-          identityDelegationConfigId: identityDelegationConfig.id
-        })
-      );
+    await addAfterTransactionHook(async () =>
+      identityDelegationConfigCreatedQueue.add({
+        identityDelegationConfigId: identityDelegationConfig.id
+      })
+    );
 
-      return await db.identityDelegationConfig.findFirstOrThrow({
-        where: { oid: identityDelegationConfig.oid },
-        include
-      });
+    return await db.identityDelegationConfig.findFirstOrThrow({
+      where: { oid: identityDelegationConfig.oid },
+      include
     });
   }
 
@@ -193,7 +193,12 @@ class identityDelegationConfigServiceImpl {
       subDelegationBehavior: IdentityDelegationConfigSubDelegationBehavior;
     };
   }) {
-    return this._createIdentityDelegationConfig(d);
+    return withTransaction(async (db: any) => {
+      return this._createIdentityDelegationConfig({
+        ...d,
+        db
+      });
+    });
   }
 
   async ensureDefaultIdentityDelegationConfig(d: {
@@ -220,16 +225,22 @@ class identityDelegationConfigServiceImpl {
       });
       if (existingDefault) return existingDefault;
 
-      return await this._createIdentityDelegationConfig({
-        tenant: d.tenant,
-        solution: d.solution,
-        environment: d.environment,
-        input: {
-          name: 'Default Delegation Config',
-          description: 'Automatically created by Metorial',
-          subDelegationBehavior: 'deny'
-        },
-        _isDefault: true
+      // We are not using withTransaction here since we don't want to this
+      // to be rolled back if a parent transaction rolls back. This is
+      // a global default that should never be dependent on any other transaction.
+      return await db.$transaction(async (db: any) => {
+        return await this._createIdentityDelegationConfig({
+          tenant: d.tenant,
+          solution: d.solution,
+          environment: d.environment,
+          input: {
+            name: 'Default Delegation Config',
+            description: 'Automatically created by Metorial',
+            subDelegationBehavior: 'deny'
+          },
+          _isDefault: true,
+          db
+        });
       });
     });
   }

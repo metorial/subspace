@@ -19,13 +19,19 @@ model DelegatedIdentity {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  delegatedIdentityCredentials DelegatedIdentityCredential[]
-  delegatedIdentityUpdates     DelegatedIdentityUpdate[]
+  expiresAt DateTime?
+
+  credentials              DelegatedIdentityCredential[]
+  delegatedIdentityUpdates DelegatedIdentityUpdate[]
+
+  @@unique([identityOid, actorOid])
 }
 
 model DelegatedIdentityCredential {
   oid BigInt @id
   id  String @unique
+
+  isActive Boolean
 
   permissions IdentityDelegationPermissions[]
   status      DelegatedIdentityStatus
@@ -39,7 +45,11 @@ model DelegatedIdentityCredential {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
+  expiresAt DateTime?
+
   delegatedIdentityCredentialUpdates DelegatedIdentityCredentialUpdate[]
+
+  @@unique([delegatedIdentityOid, credentialOid])
 }
 
 model DelegatedIdentityUpdate {
@@ -54,6 +64,9 @@ model DelegatedIdentityUpdate {
 
   permissionsBefore IdentityDelegationPermissions[]
   permissionsAfter  IdentityDelegationPermissions[]
+
+  expiresAtBefore DateTime?
+  expiresAtAfter  DateTime?
 
   createdAt                          DateTime                            @default(now())
   delegatedIdentityCredentialUpdates DelegatedIdentityCredentialUpdate[]
@@ -71,6 +84,9 @@ model DelegatedIdentityCredentialUpdate {
 
   statusBefore DelegatedIdentityStatus
   statusAfter  DelegatedIdentityStatus
+
+  expiresAtBefore DateTime?
+  expiresAtAfter  DateTime?
 
   permissionsBefore IdentityDelegationPermissions[]
   permissionsAfter  IdentityDelegationPermissions[]

@@ -9,15 +9,12 @@ import {
   type Tenant
 } from '@metorial-subspace/db';
 import { resolveIdentities, resolveIdentityActors } from '@metorial-subspace/list-utils';
+import { delegationInclude } from './identityDelegation';
 
 let include = {
-  parentDelegation: true,
-  rootParentDelegation: true,
-  delegationConfig: true,
-  attestation: true,
-  requests: {},
-  parties: {},
-  credentials: {}
+  delegation: { include: delegationInclude },
+  requester: true,
+  identity: true
 };
 
 class identityDelegationRequestServiceImpl {

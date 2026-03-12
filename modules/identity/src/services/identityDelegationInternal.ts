@@ -1,8 +1,6 @@
 import { badRequestError, notFoundError, ServiceError } from '@lowerdeck/error';
-import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
-  db,
   type Environment,
   getId,
   Identity,
@@ -10,152 +8,20 @@ import {
   IdentityDelegation,
   IdentityDelegationPartyRole,
   IdentityDelegationPermissions,
-  type IdentityDelegationStatus,
+  IdentityDelegationRequest,
   type Solution,
   type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
-import {
-  checkDeletedRelation,
-  resolveIdentities,
-  resolveIdentityActors
-} from '@metorial-subspace/list-utils';
+import { checkDeletedRelation } from '@metorial-subspace/list-utils';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import { DelegationChecker } from '../lib/delegationChecker';
 import { FoldedMap } from '../lib/foldedMap';
 import { isInPastOptional } from '../lib/isInPast';
+import { delegationInclude } from './identityDelegation';
 import { identityDelegationConfigService } from './identityDelegationConfig';
 
-let include = {
-  parentDelegation: true,
-  rootParentDelegation: true,
-  delegationConfig: true,
-  attestation: true,
-  request: {
-    include: {
-      requester: true,
-      identity: true
-    }
-  },
-  parties: {
-    include: {
-      actor: {
-        include: {
-          agent: true
-        }
-      }
-    }
-  },
-  credentials: {
-    include: {
-      credential: true
-    }
-  }
-};
-export let delegationInclude = include;
-
-class identityDelegationServiceImpl {
-  async listIdentityDelegations(d: {
-    tenant: Tenant;
-    solution: Solution;
-    environment: Environment;
-
-    status?: IdentityDelegationStatus[];
-    permissions?: IdentityDelegationPermissions[];
-
-    ids?: string[];
-    ownerActorIds?: string[];
-    delegatorActorIds?: string[];
-    delegateeActorIds?: string[];
-    identityIds?: string[];
-  }) {
-    let owners = await resolveIdentityActors(d, d.ownerActorIds);
-    let delegators = await resolveIdentityActors(d, d.delegatorActorIds);
-    let delegatees = await resolveIdentityActors(d, d.delegateeActorIds);
-    let identities = await resolveIdentities(d, d.identityIds);
-
-    return Paginator.create(({ prisma }) =>
-      prisma(
-        async opts =>
-          await db.identityDelegation.findMany({
-            ...opts,
-
-            where: {
-              tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid,
-              environmentOid: d.environment.oid,
-
-              AND: [
-                d.ids ? { id: { in: d.ids } } : undefined!,
-
-                d.status ? { status: { in: d.status } } : undefined!,
-                d.permissions ? { permissions: { hasSome: d.permissions } } : undefined!,
-
-                identities ? { identityOid: { in: identities.oids } } : undefined!,
-
-                owners
-                  ? {
-                      parties: {
-                        some: {
-                          actorOid: owners.in,
-                          roles: { has: 'owner' as const }
-                        }
-                      }
-                    }
-                  : undefined!,
-
-                delegators
-                  ? {
-                      parties: {
-                        some: {
-                          actorOid: delegators.in,
-                          roles: { has: 'delegator' as const }
-                        }
-                      }
-                    }
-                  : undefined!,
-
-                delegatees
-                  ? {
-                      parties: {
-                        some: {
-                          actorOid: delegatees.in,
-                          roles: { has: 'delegatee' as const }
-                        }
-                      }
-                    }
-                  : undefined!
-              ].filter(Boolean)
-            },
-            include
-          })
-      )
-    );
-  }
-
-  async getIdentityDelegationById(d: {
-    tenant: Tenant;
-    solution: Solution;
-    environment: Environment;
-    identityDelegationId: string;
-    allowDeleted?: boolean;
-  }) {
-    let identityDelegation = await db.identityDelegation.findFirst({
-      where: {
-        id: d.identityDelegationId,
-
-        tenantOid: d.tenant.oid,
-        solutionOid: d.solution.oid,
-        environmentOid: d.environment.oid
-      },
-      include
-    });
-    if (!identityDelegation)
-      throw new ServiceError(notFoundError('identity.delegation', d.identityDelegationId));
-
-    return identityDelegation;
-  }
-
+class identityDelegationInternalServiceImpl {
   async internalCreateDelegation(d: {
     tenant: Tenant;
     solution: Solution;
@@ -389,7 +255,7 @@ class identityDelegationServiceImpl {
 
       return await db.identityDelegation.findUnique({
         where: { oid: delegation.oid },
-        include
+        include: delegationInclude
       });
     });
   }
@@ -426,6 +292,46 @@ class identityDelegationServiceImpl {
           data: { status: 'canceled' }
         });
       }
+
+      return await db.identityDelegation.findUnique({
+        where: { oid: delegation.oid },
+        include: delegationInclude
+      });
+    });
+  }
+
+  async alterIdentityDelegationRequest(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    delegationRequest: IdentityDelegationRequest;
+    desiredStatus: 'approved' | 'denied';
+  }) {
+    checkTenant(d, d.delegationRequest);
+
+    if (d.delegationRequest.status !== 'pending') {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Only pending delegation requests can be approved'
+        })
+      );
+    }
+
+    return await withTransaction(async db => {
+      await db.identityDelegation.updateMany({
+        where: { oid: d.delegationRequest.delegationOid },
+        data: { status: d.desiredStatus === 'approved' ? 'active' : 'denied' }
+      });
+
+      await db.identityDelegationRequest.updateMany({
+        where: { oid: d.delegationRequest.oid },
+        data: { status: d.desiredStatus }
+      });
+
+      return await db.identityDelegation.findUnique({
+        where: { oid: d.delegationRequest.delegationOid },
+        include: delegationInclude
+      });
     });
   }
 
@@ -512,7 +418,7 @@ class identityDelegationServiceImpl {
   }
 }
 
-export let identityDelegationService = Service.create(
-  'identityDelegation',
-  () => new identityDelegationServiceImpl()
+export let identityDelegationInternalService = Service.create(
+  'identityDelegationInternal',
+  () => new identityDelegationInternalServiceImpl()
 ).build();
