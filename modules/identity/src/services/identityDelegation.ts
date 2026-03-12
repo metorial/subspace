@@ -4,7 +4,7 @@ import { Service } from '@lowerdeck/service';
 import {
   db,
   type Environment,
-  IdentityDelegation,
+  type IdentityDelegation,
   IdentityDelegationPermissions,
   type IdentityDelegationStatus,
   type Solution,
@@ -12,18 +12,21 @@ import {
 } from '@metorial-subspace/db';
 import { resolveIdentities, resolveIdentityActors } from '@metorial-subspace/list-utils';
 import {
-  CreateDelegationInput,
-  identityDelegationInternalService
+  identityDelegationInternalService,
+  type CreateDelegationInput
 } from './identityDelegationInternal';
 
 let include = {
-  parentDelegation: true,
-  rootParentDelegation: true,
+  identity: true,
   delegationConfig: true,
   attestation: true,
   request: {
     include: {
-      requester: true,
+      requester: {
+        include: {
+          agent: true
+        }
+      },
       identity: true
     }
   },

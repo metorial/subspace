@@ -148,13 +148,15 @@ class identityDelegationConfigServiceImpl {
     };
 
     let existingDefault = await db.identityDelegationConfig.findFirst({
-      where: defaultFilter
+      where: defaultFilter,
+      include
     });
     if (existingDefault) return existingDefault;
 
     return await ensureDefaultLock.usingLock([d.tenant.id, d.environment.id], async () => {
       let existingDefault = await db.identityDelegationConfig.findFirst({
-        where: defaultFilter
+        where: defaultFilter,
+        include
       });
       if (existingDefault) return existingDefault;
 

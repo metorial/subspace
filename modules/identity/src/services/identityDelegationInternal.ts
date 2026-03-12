@@ -269,7 +269,7 @@ class identityDelegationInternalServiceImpl {
         identityDelegationCreatedQueue.add({ identityDelegationId: delegation.id })
       );
 
-      return await db.identityDelegation.findUnique({
+      return await db.identityDelegation.findUniqueOrThrow({
         where: { oid: delegation.oid },
         include: delegationInclude
       });
@@ -318,7 +318,7 @@ class identityDelegationInternalServiceImpl {
         identityDelegationUpdatedQueue.add({ identityDelegationId: delegation.id })
       );
 
-      return await db.identityDelegation.findUnique({
+      return await db.identityDelegation.findUniqueOrThrow({
         where: { oid: delegation.oid },
         include: delegationInclude
       });
@@ -372,7 +372,7 @@ class identityDelegationInternalServiceImpl {
         })
       );
 
-      return await db.identityDelegation.findUnique({
+      return await db.identityDelegation.findUniqueOrThrow({
         where: { oid: d.delegationRequest.delegationOid },
         include: delegationInclude
       });

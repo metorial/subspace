@@ -7,7 +7,7 @@ import {
   type Environment,
   getId,
   type Identity,
-  IdentityActor,
+  type IdentityActor,
   type IdentityStatus,
   type Solution,
   type Tenant,
@@ -28,7 +28,7 @@ import {
   identityDeletedQueue,
   identityUpdatedQueue
 } from '../queues/lifecycle/identity';
-import { IdentityCredentialInput, identityCredentialService } from './identityCredential';
+import { identityCredentialService, type IdentityCredentialInput } from './identityCredential';
 
 let include = {
   actor: {
@@ -39,6 +39,10 @@ let include = {
   delegationConfig: true,
   credentials: {
     include: {
+      provider: true,
+      deployment: true,
+      config: true,
+      authConfig: true,
       delegationConfig: true
     }
   }
