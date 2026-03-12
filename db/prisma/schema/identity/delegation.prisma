@@ -18,7 +18,8 @@ model IdentityDelegation {
   status      IdentityDelegationStatus
   permissions IdentityDelegationPermissions[]
 
-  note String?
+  note     String?
+  metadata Json?
 
   identityOid BigInt
   identity    Identity @relation(fields: [identityOid], references: [oid], onDelete: Cascade)

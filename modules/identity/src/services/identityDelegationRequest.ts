@@ -3,6 +3,7 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  IdentityActor,
   type Environment,
   type IdentityDelegationRequestStatus,
   type Solution,
@@ -10,6 +11,10 @@ import {
 } from '@metorial-subspace/db';
 import { resolveIdentities, resolveIdentityActors } from '@metorial-subspace/list-utils';
 import { delegationInclude } from './identityDelegation';
+import {
+  CreateDelegationInput,
+  identityDelegationInternalService
+} from './identityDelegationInternal';
 
 let include = {
   delegation: { include: delegationInclude },
@@ -81,6 +86,38 @@ class identityDelegationRequestServiceImpl {
 
     return identityDelegationRequest;
   }
+
+  async createIdentityDelegationRequest(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    input: Omit<CreateDelegationInput, 'expiresAt' | 'delegator' | 'delegatee'> & {
+      expiresAt: Date;
+      requester: IdentityActor;
+    };
+  }) {
+    let delegation = await identityDelegationInternalService.createDelegation({
+      tenant: d.tenant,
+      solution: d.solution,
+      environment: d.environment,
+      input: {
+        ...d.input,
+        delegatee: d.input.requester
+      },
+      _internal: {
+        type: 'request',
+        requester: d.input.requester,
+        expiresAt: d.input.expiresAt
+      }
+    });
+
+    return {
+      ...delegation?.request!,
+      delegation: delegation
+    };
+  }
+
+  async;
 }
 
 export let identityDelegationRequestService = Service.create(

@@ -21,8 +21,28 @@ import { isInPastOptional } from '../lib/isInPast';
 import { delegationInclude } from './identityDelegation';
 import { identityDelegationConfigService } from './identityDelegationConfig';
 
+export interface CreateDelegationInput {
+  identity: Identity;
+  delegator?: IdentityActor;
+  delegatee: IdentityActor;
+
+  permissions?: IdentityDelegationPermissions[];
+  expiresAt?: Date;
+
+  delegationConfigId?: string;
+
+  credentialOverrides?: {
+    credentialId: string;
+    permissions?: IdentityDelegationPermissions[];
+    expiresAt?: Date;
+  }[];
+
+  note?: string;
+  metadata?: Record<string, any>;
+}
+
 class identityDelegationInternalServiceImpl {
-  async internalCreateDelegation(d: {
+  async createDelegation(d: {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
@@ -31,24 +51,7 @@ class identityDelegationInternalServiceImpl {
       | { type: 'create_and_approve' }
       | { type: 'request'; requester: IdentityActor; expiresAt: Date };
 
-    input: {
-      identity: Identity;
-      delegator?: IdentityActor;
-      delegatee: IdentityActor;
-
-      permissions?: IdentityDelegationPermissions[];
-      expiresAt?: Date;
-
-      delegationConfigId?: string;
-
-      credentialOverrides?: {
-        credentialId: string;
-        permissions?: IdentityDelegationPermissions[];
-        expiresAt?: Date;
-      }[];
-
-      note?: string;
-    };
+    input: CreateDelegationInput;
   }) {
     checkTenant(d, d.input.identity);
     checkTenant(d, d.input.delegator);
