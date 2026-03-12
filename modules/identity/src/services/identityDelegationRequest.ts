@@ -3,9 +3,9 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
-  IdentityActor,
-  IdentityDelegation,
-  IdentityDelegationRequest,
+  type IdentityActor,
+  type IdentityDelegation,
+  type IdentityDelegationRequest,
   type Environment,
   type IdentityDelegationRequestStatus,
   type Solution,
@@ -14,13 +14,17 @@ import {
 import { resolveIdentities, resolveIdentityActors } from '@metorial-subspace/list-utils';
 import { delegationInclude } from './identityDelegation';
 import {
-  CreateDelegationInput,
-  identityDelegationInternalService
+  identityDelegationInternalService,
+  type CreateDelegationInput
 } from './identityDelegationInternal';
 
 let include = {
   delegation: { include: delegationInclude },
-  requester: true,
+  requester: {
+    include: {
+      agent: true
+    }
+  },
   identity: true
 };
 
@@ -68,12 +72,12 @@ class identityDelegationRequestServiceImpl {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
-    identityDelegationId: string;
+    identityDelegationRequestId: string;
     allowDeleted?: boolean;
   }) {
     let identityDelegationRequest = await db.identityDelegationRequest.findFirst({
       where: {
-        id: d.identityDelegationId,
+        id: d.identityDelegationRequestId,
 
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
@@ -83,7 +87,7 @@ class identityDelegationRequestServiceImpl {
     });
     if (!identityDelegationRequest)
       throw new ServiceError(
-        notFoundError('identity.delegation_request', d.identityDelegationId)
+        notFoundError('identity.delegation_request', d.identityDelegationRequestId)
       );
 
     return identityDelegationRequest;
@@ -93,7 +97,7 @@ class identityDelegationRequestServiceImpl {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
-    input: Omit<CreateDelegationInput, 'expiresAt' | 'delegator' | 'delegatee'> & {
+    input: Omit<CreateDelegationInput, 'expiresAt' | 'delegatee'> & {
       expiresAt: Date;
       requester: IdentityActor;
     };
