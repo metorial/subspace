@@ -29,13 +29,13 @@ export class FoldedMap<K, I> {
     return result;
   };
 
-  fold = (): ReadonlyMap<K, readonly I[]> => {
-    let snapshot = new Map<K, readonly I[]>();
+  fold = (): [K, I[]][] => {
+    let result: [K, I[]][] = [];
 
-    for (let [key, items] of this.#store.entries()) {
-      snapshot.set(key, [...items]);
+    for (let [k, items] of this.#store) {
+      result.push([k, items]);
     }
 
-    return snapshot;
+    return result;
   };
 }

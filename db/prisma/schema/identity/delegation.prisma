@@ -18,6 +18,9 @@ model IdentityDelegation {
   status      IdentityDelegationStatus
   permissions IdentityDelegationPermissions[]
 
+  // Should not be considered when reconciling active delegations, but still needs to exist for audit purposes
+  wasCoveredByPreviousDelegationAndAutoApproved Boolean
+
   note     String?
   metadata Json?
 
@@ -25,7 +28,10 @@ model IdentityDelegation {
   identity    Identity @relation(fields: [identityOid], references: [oid], onDelete: Cascade)
 
   subDelegatedFromOid BigInt?
-  subDelegatedFrom    IdentityActor? @relation(fields: [subDelegatedFromOid], references: [oid], onDelete: Cascade)
+  subDelegatedFrom    IdentityActor? @relation(fields: [subDelegatedFromOid], references: [oid], onDelete: Cascade, name: "subDelegatedTo")
+
+  delegateeOid BigInt
+  delegatee    IdentityActor @relation(fields: [delegateeOid], references: [oid], onDelete: Cascade, name: "delegations")
 
   delegationConfigOid BigInt?
   delegationConfig    IdentityDelegationConfig? @relation(fields: [delegationConfigOid], references: [oid], onDelete: Cascade)
@@ -56,11 +62,20 @@ model IdentityDelegation {
   identityDelegationOid BigInt?
 
   @@index([status])
+  @@index([expiresAt])
+}
+
+enum IdentityDelegationCredentialOverrideStatus {
+  active
+  expired
+  // revoked -> future individual revocation of a credential without revoking the entire delegation
 }
 
 model IdentityDelegationCredentialOverride {
   oid BigInt @id
   id  String @unique
+
+  status IdentityDelegationCredentialOverrideStatus
 
   permissions IdentityDelegationPermissions[]
 
@@ -72,6 +87,8 @@ model IdentityDelegationCredentialOverride {
 
   createdAt DateTime  @default(now())
   expiresAt DateTime?
+
+  @@index([expiresAt])
 }
 
 enum IdentityDelegationPartyRole {

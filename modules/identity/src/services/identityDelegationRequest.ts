@@ -4,6 +4,8 @@ import { Service } from '@lowerdeck/service';
 import {
   db,
   IdentityActor,
+  IdentityDelegation,
+  IdentityDelegationRequest,
   type Environment,
   type IdentityDelegationRequestStatus,
   type Solution,
@@ -117,7 +119,45 @@ class identityDelegationRequestServiceImpl {
     };
   }
 
-  async;
+  async approveIdentityDelegationRequest(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    delegationRequest: IdentityDelegationRequest & { delegation: IdentityDelegation };
+  }) {
+    let delegation = await identityDelegationInternalService.alterIdentityDelegationRequest({
+      tenant: d.tenant,
+      solution: d.solution,
+      environment: d.environment,
+      delegationRequest: d.delegationRequest,
+      desiredStatus: 'approved'
+    });
+
+    return {
+      ...delegation?.request!,
+      delegation: delegation
+    };
+  }
+
+  async denyIdentityDelegationRequest(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    delegationRequest: IdentityDelegationRequest & { delegation: IdentityDelegation };
+  }) {
+    let delegation = await identityDelegationInternalService.alterIdentityDelegationRequest({
+      tenant: d.tenant,
+      solution: d.solution,
+      environment: d.environment,
+      delegationRequest: d.delegationRequest,
+      desiredStatus: 'denied'
+    });
+
+    return {
+      ...delegation?.request!,
+      delegation: delegation
+    };
+  }
 }
 
 export let identityDelegationRequestService = Service.create(
