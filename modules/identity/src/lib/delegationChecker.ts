@@ -1,3 +1,5 @@
+import { delay } from '@lowerdeck/delay';
+import { badRequestError, ServiceError } from '@lowerdeck/error';
 import {
   db,
   DelegatedIdentity,
@@ -38,10 +40,30 @@ export class DelegationChecker {
   }) {
     checkTenant(d, d.identity);
 
+    let identity = d.identity;
+    let i = 0;
+    while (identity.needsReconciliation) {
+      if (i++ > 50) {
+        throw new ServiceError(
+          badRequestError({
+            message: 'Identity failed to reach a consistent state in time.'
+          })
+        );
+      }
+      identity = await db.identity.findUniqueOrThrow({
+        where: { oid: identity.oid }
+      });
+      await delay(i > 10 ? 1000 : 100);
+    }
+
+    if (identity.status !== 'active') {
+      return new DelegationChecker(d.identity, null);
+    }
+
     let delegated = await db.delegatedIdentity.findUnique({
       where: {
         identityOid_actorOid: {
-          identityOid: d.identity.oid,
+          identityOid: identity.oid,
           actorOid: d.actor.oid
         }
       },
@@ -105,14 +127,14 @@ export class DelegationChecker {
     entity: DelegatedIdentity | DelegatedIdentityCredential
   ) {
     // If the entity doesn't have an expiration -> it can be used forever
-    if (requirements.expiresAt && !entity.expiresAt) return true;
+    if (requirements.expiresAt && !entity.atLeastHoldsUntil) return true;
 
     // If the entity has an expiration, but the requirements don't -> the entity can't be used
-    if (!requirements.expiresAt && entity.expiresAt) return false;
+    if (!requirements.expiresAt && entity.atLeastHoldsUntil) return false;
 
     // If both have an expiration, check if the entity's expiration is after the requirements' expiration
-    if (requirements.expiresAt && entity.expiresAt) {
-      return entity.expiresAt >= requirements.expiresAt;
+    if (requirements.expiresAt && entity.atLeastHoldsUntil) {
+      return entity.atLeastHoldsUntil >= requirements.expiresAt;
     }
 
     // If neither have an expiration -> they are valid

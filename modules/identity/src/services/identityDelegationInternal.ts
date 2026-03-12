@@ -1,6 +1,7 @@
 import { badRequestError, notFoundError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
 import {
+  addAfterTransactionHook,
   type Environment,
   getId,
   Identity,
@@ -18,6 +19,10 @@ import { checkTenant } from '@metorial-subspace/module-tenant';
 import { DelegationChecker } from '../lib/delegationChecker';
 import { FoldedMap } from '../lib/foldedMap';
 import { isInPastOptional } from '../lib/isInPast';
+import {
+  identityDelegationCreatedQueue,
+  identityDelegationUpdatedQueue
+} from '../queues/lifecycle/delegation';
 import { delegationInclude } from './identityDelegation';
 import { identityDelegationConfigService } from './identityDelegationConfig';
 
@@ -160,6 +165,7 @@ class identityDelegationInternalServiceImpl {
         data: {
           ...getId('identityDelegation'),
           status: d._internal.type == 'request' ? 'waiting_for_consent' : 'active',
+          wasCoveredByPreviousDelegationAndAutoApproved: false,
 
           tenantOid: d.tenant.oid,
           solutionOid: d.solution.oid,
@@ -171,6 +177,7 @@ class identityDelegationInternalServiceImpl {
           note: d.input.note,
 
           identityOid: d.input.identity.oid,
+          delegateeOid: d.input.delegatee.oid,
           subDelegatedFromOid: subDelegator?.oid,
 
           selectedDelegationConfigVersionOid: actualDelegationConfig.currentVersionOid!,
@@ -190,6 +197,8 @@ class identityDelegationInternalServiceImpl {
         }))
       });
 
+      // Check if we can auto-approve this request based on an existing
+      // delegation that has the same or a superset of permissions and credential overrides
       if (delegation.status !== 'active') {
         let checker = await DelegationChecker.create({
           ...d,
@@ -202,7 +211,6 @@ class identityDelegationInternalServiceImpl {
             expiresAt: d.input.expiresAt ?? null,
             permissions: d.input.permissions ?? []
           },
-
           credentials:
             d.input.credentialOverrides?.map(o => ({
               credential: credentialMap.get(o.credentialId)!,
@@ -225,7 +233,8 @@ class identityDelegationInternalServiceImpl {
             where: { oid: delegation.oid },
             data: {
               status: 'active',
-              attestationOid: attestation.oid
+              attestationOid: attestation.oid,
+              wasCoveredByPreviousDelegationAndAutoApproved: true
             }
           });
         }
@@ -255,6 +264,10 @@ class identityDelegationInternalServiceImpl {
         where: { oid: d.input.identity.oid },
         data: { needsReconciliation: true }
       });
+
+      await addAfterTransactionHook(() =>
+        identityDelegationCreatedQueue.add({ identityDelegationId: delegation.id })
+      );
 
       return await db.identityDelegation.findUnique({
         where: { oid: delegation.oid },
@@ -296,6 +309,15 @@ class identityDelegationInternalServiceImpl {
         });
       }
 
+      await db.identity.updateMany({
+        where: { oid: delegation.identityOid },
+        data: { needsReconciliation: true }
+      });
+
+      await addAfterTransactionHook(() =>
+        identityDelegationUpdatedQueue.add({ identityDelegationId: delegation.id })
+      );
+
       return await db.identityDelegation.findUnique({
         where: { oid: delegation.oid },
         include: delegationInclude
@@ -307,7 +329,7 @@ class identityDelegationInternalServiceImpl {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
-    delegationRequest: IdentityDelegationRequest;
+    delegationRequest: IdentityDelegationRequest & { delegation: IdentityDelegation };
     desiredStatus: 'approved' | 'denied';
   }) {
     checkTenant(d, d.delegationRequest);
@@ -316,6 +338,14 @@ class identityDelegationInternalServiceImpl {
       throw new ServiceError(
         badRequestError({
           message: 'Only pending delegation requests can be approved'
+        })
+      );
+    }
+
+    if (d.delegationRequest.delegation.status !== 'waiting_for_consent') {
+      throw new ServiceError(
+        badRequestError({
+          message: 'Associated delegation is not in a state that can be modified'
         })
       );
     }
@@ -330,6 +360,17 @@ class identityDelegationInternalServiceImpl {
         where: { oid: d.delegationRequest.oid },
         data: { status: d.desiredStatus }
       });
+
+      await db.identity.updateMany({
+        where: { oid: d.delegationRequest.identityOid },
+        data: { needsReconciliation: true }
+      });
+
+      await addAfterTransactionHook(() =>
+        identityDelegationUpdatedQueue.add({
+          identityDelegationId: d.delegationRequest.delegation.id
+        })
+      );
 
       return await db.identityDelegation.findUnique({
         where: { oid: d.delegationRequest.delegationOid },

@@ -1,14 +1,9 @@
-enum DelegatedIdentityStatus {
-  active
-  revoked
-}
-
 model DelegatedIdentity {
   oid BigInt @id
   id  String @unique
 
   permissions IdentityDelegationPermissions[]
-  status      DelegatedIdentityStatus
+  isActive    Boolean
 
   identityOid BigInt
   identity    Identity @relation(fields: [identityOid], references: [oid], onDelete: Cascade)
@@ -19,7 +14,7 @@ model DelegatedIdentity {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  expiresAt DateTime?
+  atLeastHoldsUntil DateTime? // Used for delegation checker
 
   credentials              DelegatedIdentityCredential[]
   delegatedIdentityUpdates DelegatedIdentityUpdate[]
@@ -31,10 +26,8 @@ model DelegatedIdentityCredential {
   oid BigInt @id
   id  String @unique
 
-  isActive Boolean
-
   permissions IdentityDelegationPermissions[]
-  status      DelegatedIdentityStatus
+  isActive    Boolean
 
   delegatedIdentityOid BigInt
   delegatedIdentity    DelegatedIdentity @relation(fields: [delegatedIdentityOid], references: [oid], onDelete: Cascade)
@@ -45,7 +38,7 @@ model DelegatedIdentityCredential {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  expiresAt DateTime?
+  atLeastHoldsUntil DateTime? // Used for delegation checker
 
   delegatedIdentityCredentialUpdates DelegatedIdentityCredentialUpdate[]
 
@@ -59,14 +52,11 @@ model DelegatedIdentityUpdate {
   delegatedIdentityOid BigInt
   delegatedIdentity    DelegatedIdentity @relation(fields: [delegatedIdentityOid], references: [oid], onDelete: Cascade)
 
-  statusBefore DelegatedIdentityStatus
-  statusAfter  DelegatedIdentityStatus
+  isActiveBefore Boolean
+  isActiveAfter  Boolean
 
   permissionsBefore IdentityDelegationPermissions[]
   permissionsAfter  IdentityDelegationPermissions[]
-
-  expiresAtBefore DateTime?
-  expiresAtAfter  DateTime?
 
   createdAt                          DateTime                            @default(now())
   delegatedIdentityCredentialUpdates DelegatedIdentityCredentialUpdate[]
@@ -82,11 +72,8 @@ model DelegatedIdentityCredentialUpdate {
   delegatedCredentialOid BigInt
   delegatedCredential    DelegatedIdentityCredential @relation(fields: [delegatedCredentialOid], references: [oid], onDelete: Cascade)
 
-  statusBefore DelegatedIdentityStatus
-  statusAfter  DelegatedIdentityStatus
-
-  expiresAtBefore DateTime?
-  expiresAtAfter  DateTime?
+  isActiveBefore Boolean
+  isActiveAfter  Boolean
 
   permissionsBefore IdentityDelegationPermissions[]
   permissionsAfter  IdentityDelegationPermissions[]

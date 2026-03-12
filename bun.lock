@@ -400,6 +400,7 @@
       "version": "1.0.0",
       "dependencies": {
         "@lowerdeck/cron": "^1.1.0",
+        "@lowerdeck/delay": "^1.0.4",
         "@lowerdeck/env": "^1.0.5",
         "@lowerdeck/error": "^1.2.2",
         "@lowerdeck/id": "^1.0.8",

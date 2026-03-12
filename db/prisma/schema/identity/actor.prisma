@@ -39,7 +39,8 @@ model IdentityActor {
   identityDelegationParties  IdentityDelegationParty[]
   identityDelegationRequests IdentityDelegationRequest[]
   delegatedIdentities        DelegatedIdentity[]
-  identityDelegations        IdentityDelegation[]
+  identityDelegations        IdentityDelegation[]        @relation("delegations")
+  subDelegations             IdentityDelegation[]        @relation("subDelegatedTo")
 
   @@index([status])
 }

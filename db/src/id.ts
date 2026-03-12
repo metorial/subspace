@@ -107,6 +107,10 @@ export let ID = createIdGenerator({
   identityDelegationConfigVersion: idType.sorted('idcv'),
   identityDelegationParty: idType.sorted('idp'),
   identityDelegationAttestation: idType.sorted('ida'),
+  delegatedIdentity: idType.sorted('did'),
+  delegatedIdentityCredential: idType.sorted('dcr'),
+  delegatedIdentityUpdate: idType.sorted('diu'),
+  delegatedIdentityUpdateCredential: idType.sorted('diuc'),
   agent: idType.sorted('agt')
 });
 
