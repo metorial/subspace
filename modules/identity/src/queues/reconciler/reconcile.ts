@@ -74,7 +74,12 @@ export let reconcileQueueProcessor = reconcileQueue.process(data =>
             identityOid: identity.oid,
             delegateeOid,
             status: 'active',
+
+            // If the delegation was auto-approved because it was covered by
+            // a previous delegation, we don't want to consider it for the reconciliation,
+            // because it doesn't have a real delegation consent behind it
             wasCoveredByPreviousDelegationAndAutoApproved: false,
+
             OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }]
           },
           include: {
