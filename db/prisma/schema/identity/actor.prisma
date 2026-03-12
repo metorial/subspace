@@ -30,12 +30,17 @@ model IdentityActor {
   solutionOid Int
   solution    Solution @relation(fields: [solutionOid], references: [oid], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now()) @updatedAt
+  archivedAt DateTime?
 
-  agent                       Agent?
-  identities                  Identity[]
-  identityDelegationParties   IdentityDelegationParty[]
-  delegatedIdentityCredential DelegatedIdentityCredential[]
-  identityDelegationRequests  IdentityDelegationRequest[]
+  agent                      Agent?
+  identities                 Identity[]
+  identityDelegationParties  IdentityDelegationParty[]
+  identityDelegationRequests IdentityDelegationRequest[]
+  delegatedIdentities        DelegatedIdentity[]
+  identityDelegations        IdentityDelegation[]        @relation("delegations")
+  subDelegations             IdentityDelegation[]        @relation("subDelegatedTo")
+
+  @@index([status])
 }

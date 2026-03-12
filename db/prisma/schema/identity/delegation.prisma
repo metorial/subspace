@@ -1,13 +1,13 @@
-enum IdentityDelegationRole {
-  connect
-  read
-  none
+enum IdentityDelegationPermissions {
+  provider_call
+  provider_read
 }
 
 enum IdentityDelegationStatus {
   waiting_for_consent
   denied
   active
+  revoked
   expired
 }
 
@@ -15,23 +15,30 @@ model IdentityDelegation {
   oid BigInt @id
   id  String @unique
 
-  status IdentityDelegationStatus
-  role   IdentityDelegationRole
+  status      IdentityDelegationStatus
+  permissions IdentityDelegationPermissions[]
 
-  note String?
+  // Should not be considered when reconciling active delegations, but still needs to exist for audit purposes
+  wasCoveredByPreviousDelegationAndAutoApproved Boolean
 
-  parentDelegationOid BigInt?
-  parentDelegation    IdentityDelegation? @relation(fields: [parentDelegationOid], references: [oid], onDelete: Cascade, name: "parentDelegation")
+  note     String?
+  metadata Json?
 
-  rootParentDelegationOid BigInt?
-  rootParentDelegation    IdentityDelegation? @relation(fields: [rootParentDelegationOid], references: [oid], onDelete: Cascade, name: "rootParentDelegation")
+  identityOid BigInt
+  identity    Identity @relation(fields: [identityOid], references: [oid], onDelete: Cascade)
+
+  subDelegatedFromOid BigInt?
+  subDelegatedFrom    IdentityActor? @relation(fields: [subDelegatedFromOid], references: [oid], onDelete: Cascade, name: "subDelegatedTo")
+
+  delegateeOid BigInt
+  delegatee    IdentityActor @relation(fields: [delegateeOid], references: [oid], onDelete: Cascade, name: "delegations")
 
   delegationConfigOid BigInt?
   delegationConfig    IdentityDelegationConfig? @relation(fields: [delegationConfigOid], references: [oid], onDelete: Cascade)
 
   // The version used to perform this delegation.
-  selectedDelegationConfigVersionOid BigInt?
-  selectedDelegationConfigVersion    IdentityDelegationConfigVersion? @relation(fields: [selectedDelegationConfigVersionOid], references: [oid], onDelete: Cascade)
+  selectedDelegationConfigVersionOid BigInt
+  selectedDelegationConfigVersion    IdentityDelegationConfigVersion @relation(fields: [selectedDelegationConfigVersionOid], references: [oid], onDelete: Cascade)
 
   attestationOid BigInt?
   attestation    IdentityDelegationAttestation? @relation(fields: [attestationOid], references: [oid], onDelete: Cascade)
@@ -47,20 +54,30 @@ model IdentityDelegation {
 
   createdAt DateTime  @default(now())
   expiresAt DateTime?
+  revokedAt DateTime?
 
-  requests                           IdentityDelegationRequest[]
-  credentials                        IdentityDelegationCredentialOverride[]
-  identityDelegationParties          IdentityDelegationParty[]
-  delegatedIdentityCredentialUpdates DelegatedIdentityCredentialUpdate[]
-  childDelegations                   IdentityDelegation[]                   @relation("parentDelegation")
-  rootChildDelegations               IdentityDelegation[]                   @relation("rootParentDelegation")
+  request               IdentityDelegationRequest?
+  credentials           IdentityDelegationCredentialOverride[]
+  parties               IdentityDelegationParty[]
+  identityDelegationOid BigInt?
+
+  @@index([status])
+  @@index([expiresAt])
+}
+
+enum IdentityDelegationCredentialOverrideStatus {
+  active
+  expired
+  // revoked -> future individual revocation of a credential without revoking the entire delegation
 }
 
 model IdentityDelegationCredentialOverride {
   oid BigInt @id
   id  String @unique
 
-  role IdentityDelegationRole
+  status IdentityDelegationCredentialOverrideStatus
+
+  permissions IdentityDelegationPermissions[]
 
   delegationOid BigInt
   delegation    IdentityDelegation @relation(fields: [delegationOid], references: [oid], onDelete: Cascade)
@@ -70,6 +87,8 @@ model IdentityDelegationCredentialOverride {
 
   createdAt DateTime  @default(now())
   expiresAt DateTime?
+
+  @@index([expiresAt])
 }
 
 enum IdentityDelegationPartyRole {
@@ -91,11 +110,16 @@ model IdentityDelegationParty {
   roles IdentityDelegationPartyRole[]
 
   createdAt DateTime @default(now())
+
+  @@index([roles])
 }
 
 enum IdentityDelegationAttestationType {
-  actor_api
-  system
+  api
+  request_approval
+  covered_by_previously_approved_delegation
+
+  // chat_approval
 }
 
 model IdentityDelegationAttestation {

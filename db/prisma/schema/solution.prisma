@@ -50,4 +50,5 @@ model Solution {
   identities                               Identity[]
   identityDelegationConfigs                IdentityDelegationConfig[]
   identityDelegations                      IdentityDelegation[]
+  identityDelegationRequests               IdentityDelegationRequest[]
 }
