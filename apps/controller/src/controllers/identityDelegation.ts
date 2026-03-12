@@ -7,11 +7,15 @@ import {
 } from '@metorial-subspace/module-identity';
 import { identityDelegationPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
+import {
+  identityPermissionValues,
+  mapIdentityPermissionsToService
+} from './_identityPermissions';
 import { tenantApp } from './tenant';
 
 let delegationCredentialOverrideValidator = v.object({
   credentialId: v.string(),
-  permissions: v.optional(v.array(v.enumOf(['provider_call', 'provider_read']))),
+  permissions: v.optional(v.array(v.enumOf(identityPermissionValues))),
   expiresAt: v.optional(v.date())
 });
 
@@ -40,9 +44,11 @@ export let identityDelegationController = app.controller({
           environmentId: v.string(),
 
           status: v.optional(
-            v.array(v.enumOf(['waiting_for_consent', 'denied', 'active', 'revoked', 'expired']))
+            v.array(
+              v.enumOf(['waiting_for_consent', 'denied', 'active', 'revoked', 'expired'])
+            )
           ),
-          permissions: v.optional(v.array(v.enumOf(['provider_call', 'provider_read']))),
+          permissions: v.optional(v.array(v.enumOf(identityPermissionValues))),
 
           ids: v.optional(v.array(v.string())),
           ownerActorIds: v.optional(v.array(v.string())),
@@ -59,7 +65,7 @@ export let identityDelegationController = app.controller({
         solution: ctx.solution,
 
         status: ctx.input.status,
-        permissions: ctx.input.permissions,
+        permissions: mapIdentityPermissionsToService(ctx.input.permissions),
 
         ids: ctx.input.ids,
         ownerActorIds: ctx.input.ownerActorIds,
@@ -96,7 +102,7 @@ export let identityDelegationController = app.controller({
         delegatorActorId: v.optional(v.string()),
         delegateeActorId: v.string(),
 
-        permissions: v.optional(v.array(v.enumOf(['provider_call', 'provider_read']))),
+        permissions: v.optional(v.array(v.enumOf(identityPermissionValues))),
         expiresAt: v.optional(v.date()),
 
         delegationConfigId: v.optional(v.string()),
@@ -136,10 +142,13 @@ export let identityDelegationController = app.controller({
           identity,
           delegator,
           delegatee,
-          permissions: ctx.input.permissions,
+          permissions: mapIdentityPermissionsToService(ctx.input.permissions),
           expiresAt: ctx.input.expiresAt,
           delegationConfigId: ctx.input.delegationConfigId,
-          credentialOverrides: ctx.input.credentialOverrides,
+          credentialOverrides: ctx.input.credentialOverrides?.map(override => ({
+            ...override,
+            permissions: mapIdentityPermissionsToService(override.permissions)
+          })),
           note: ctx.input.note,
           metadata: ctx.input.metadata
         }
@@ -169,4 +178,3 @@ export let identityDelegationController = app.controller({
       return identityDelegationPresenter(delegation);
     })
 });
-

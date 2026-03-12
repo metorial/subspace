@@ -25,4 +25,3 @@ export let identityDelegationConfigPresenter = (
   updatedAt: delegationConfig.updatedAt,
   archivedAt: delegationConfig.archivedAt
 });
-

@@ -44,4 +44,3 @@ export let identityPresenter = (
   updatedAt: identity.updatedAt,
   archivedAt: identity.archivedAt
 });
-

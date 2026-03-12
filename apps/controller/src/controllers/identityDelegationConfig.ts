@@ -160,4 +160,3 @@ export let identityDelegationConfigController = app.controller({
       return identityDelegationConfigPresenter(identityDelegationConfig);
     })
 });
-

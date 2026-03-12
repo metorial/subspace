@@ -173,4 +173,3 @@ export let identityController = app.controller({
       return identityPresenter(identity);
     })
 });
-

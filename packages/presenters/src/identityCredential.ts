@@ -31,4 +31,3 @@ export let identityCredentialPresenter = (
   updatedAt: credential.updatedAt,
   archivedAt: credential.archivedAt
 });
-

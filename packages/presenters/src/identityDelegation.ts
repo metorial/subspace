@@ -10,6 +10,17 @@ import type {
 } from '@metorial-subspace/db';
 import { identityActorPresenter } from './identityActor';
 
+let mapPermissionsFromStorage = (permissions: ('provider_call' | 'provider_read')[]) =>
+  permissions.map(
+    permission =>
+      (
+        ({
+          provider_call: 'provider:call',
+          provider_read: 'provider:read'
+        }) as const
+      )[permission]
+  );
+
 type DelegationPartyWithActor = IdentityDelegationParty & {
   actor: IdentityActor & {
     agent: Agent | null;
@@ -34,7 +45,7 @@ export let identityDelegationCredentialOverridePresenter = (
 
   id: credentialOverride.id,
   status: credentialOverride.status,
-  permissions: credentialOverride.permissions,
+  permissions: mapPermissionsFromStorage(credentialOverride.permissions),
 
   credentialId: credentialOverride.credential.id,
 
@@ -80,7 +91,7 @@ export let identityDelegationPresenter = (delegation: DelegationWithRelations) =
 
   id: delegation.id,
   status: delegation.status,
-  permissions: delegation.permissions,
+  permissions: mapPermissionsFromStorage(delegation.permissions),
 
   note: delegation.note,
   metadata: delegation.metadata,

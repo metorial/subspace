@@ -21,4 +21,3 @@ export let identityActorPresenter = (
   updatedAt: actor.updatedAt,
   archivedAt: actor.archivedAt
 });
-
