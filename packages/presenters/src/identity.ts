@@ -19,6 +19,7 @@ export let identityPresenter = (
     };
     delegationConfig: IdentityDelegationConfig | null;
     credentials: (IdentityCredential & {
+      identity: Identity;
       provider: Provider;
       deployment: ProviderDeployment | null;
       config: ProviderConfig | null;

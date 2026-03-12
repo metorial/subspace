@@ -17,6 +17,7 @@ import { identityController } from './identity';
 import { identityDelegationConfigController } from './identityDelegationConfig';
 import { identityDelegationController } from './identityDelegation';
 import { identityDelegationRequestController } from './identityDelegationRequest';
+import { identityCredentialController } from './identityCredential';
 import { networkingRulesetController } from './networkingRuleset';
 import { providerController } from './provider';
 import { providerAuthConfigController } from './providerAuthConfig';
@@ -69,6 +70,7 @@ export let rootController = app.controller({
   identityDelegation: identityDelegationController,
   identityDelegationConfig: identityDelegationConfigController,
   identityDelegationRequest: identityDelegationRequestController,
+  identityCredential: identityCredentialController,
   solution: solutionController,
   tenant: tenantController,
 

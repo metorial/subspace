@@ -6,10 +6,10 @@ import {
   db,
   type Environment,
   getId,
-  Identity,
+  type Identity,
   type IdentityCredential,
   type IdentityCredentialStatus,
-  IdentityDelegationConfig,
+  type IdentityDelegationConfig,
   type Solution,
   type Tenant,
   withTransaction
@@ -28,8 +28,8 @@ import {
   resolveProviders
 } from '@metorial-subspace/list-utils';
 import {
-  ProviderCombinationInput,
-  providerCombinationService
+  providerCombinationService,
+  type ProviderCombinationInput
 } from '@metorial-subspace/module-provider-internal';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import {
@@ -44,6 +44,10 @@ export type IdentityCredentialInput = ProviderCombinationInput & {
 
 let include = {
   identity: true,
+  provider: true,
+  deployment: true,
+  config: true,
+  authConfig: true,
   delegationConfig: true
 };
 
@@ -135,70 +139,6 @@ class identityCredentialServiceImpl {
       throw new ServiceError(notFoundError('identity.credential', d.identityCredentialId));
 
     return identityCredential;
-  }
-
-  async internalCreateIdentityCredentials(d: {
-    tenant: Tenant;
-    solution: Solution;
-    environment: Environment;
-
-    identity: Identity;
-    inputs: IdentityCredentialInput[];
-  }) {
-    return withTransaction(async db => {
-      let delegationConfigIds = d.inputs.map(i => i.delegationConfigId!).filter(Boolean);
-
-      let delegationConfigs = delegationConfigIds.length
-        ? await db.identityDelegationConfig.findMany({
-            where: {
-              tenantOid: d.tenant.oid,
-              solutionOid: d.solution.oid,
-              environmentOid: d.environment.oid,
-              id: { in: delegationConfigIds }
-            }
-          })
-        : [];
-
-      for (let delegationConfig of delegationConfigs) {
-        checkTenant(d, delegationConfig);
-        checkDeletedRelation(delegationConfig);
-      }
-
-      let delegationConfigMap = new Map(delegationConfigs.map(c => [c.id, c]));
-
-      let combination = await providerCombinationService.getCombinations({
-        tenant: d.tenant,
-        solution: d.solution,
-        environment: d.environment,
-        providers: d.inputs
-      });
-
-      return await db.identityCredential.createManyAndReturn({
-        data: combination.map((c, i) => {
-          let input = d.inputs[i];
-
-          let delegationConfig = input.delegationConfigId
-            ? delegationConfigMap.get(input.delegationConfigId)
-            : null;
-
-          return {
-            ...getId('identityCredential'),
-
-            status: 'active',
-
-            identityOid: d.identity.oid,
-
-            authConfigOid: c.authConfig?.oid,
-            configOid: c.config.oid,
-            deploymentOid: c.deployment.oid,
-            providerOid: c.provider.oid,
-
-            delegationConfigOid: delegationConfig?.oid
-          };
-        }),
-        include
-      });
-    });
   }
 
   async createIdentityCredential(d: {
@@ -319,6 +259,70 @@ class identityCredentialServiceImpl {
       );
 
       return identityCredential;
+    });
+  }
+
+  async internalCreateIdentityCredentials(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+
+    identity: Identity;
+    inputs: IdentityCredentialInput[];
+  }) {
+    return withTransaction(async db => {
+      let delegationConfigIds = d.inputs.map(i => i.delegationConfigId!).filter(Boolean);
+
+      let delegationConfigs = delegationConfigIds.length
+        ? await db.identityDelegationConfig.findMany({
+            where: {
+              tenantOid: d.tenant.oid,
+              solutionOid: d.solution.oid,
+              environmentOid: d.environment.oid,
+              id: { in: delegationConfigIds }
+            }
+          })
+        : [];
+
+      for (let delegationConfig of delegationConfigs) {
+        checkTenant(d, delegationConfig);
+        checkDeletedRelation(delegationConfig);
+      }
+
+      let delegationConfigMap = new Map(delegationConfigs.map(c => [c.id, c]));
+
+      let combination = await providerCombinationService.getCombinations({
+        tenant: d.tenant,
+        solution: d.solution,
+        environment: d.environment,
+        providers: d.inputs
+      });
+
+      return await db.identityCredential.createManyAndReturn({
+        data: combination.map((c, i) => {
+          let input = d.inputs[i];
+
+          let delegationConfig = input.delegationConfigId
+            ? delegationConfigMap.get(input.delegationConfigId)
+            : null;
+
+          return {
+            ...getId('identityCredential'),
+
+            status: 'active',
+
+            identityOid: d.identity.oid,
+
+            authConfigOid: c.authConfig?.oid,
+            configOid: c.config.oid,
+            deploymentOid: c.deployment.oid,
+            providerOid: c.provider.oid,
+
+            delegationConfigOid: delegationConfig?.oid
+          };
+        }),
+        include
+      });
     });
   }
 }

@@ -39,6 +39,7 @@ let include = {
   delegationConfig: true,
   credentials: {
     include: {
+      identity: true,
       provider: true,
       deployment: true,
       config: true,

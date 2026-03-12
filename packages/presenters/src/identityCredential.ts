@@ -1,4 +1,5 @@
 import type {
+  Identity,
   IdentityCredential,
   IdentityDelegationConfig,
   Provider,
@@ -9,6 +10,7 @@ import type {
 
 export let identityCredentialPresenter = (
   credential: IdentityCredential & {
+    identity: Identity;
     provider: Provider;
     deployment: ProviderDeployment | null;
     config: ProviderConfig | null;
@@ -21,6 +23,7 @@ export let identityCredentialPresenter = (
   id: credential.id,
   status: credential.status,
 
+  identityId: credential.identity.id,
   providerId: credential.provider.id,
   deploymentId: credential.deployment?.id ?? null,
   configId: credential.config?.id ?? null,
