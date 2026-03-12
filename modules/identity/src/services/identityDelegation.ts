@@ -4,22 +4,45 @@ import { Service } from '@lowerdeck/service';
 import {
   db,
   type Environment,
+  IdentityDelegation,
   IdentityDelegationPermissions,
   type IdentityDelegationStatus,
   type Solution,
   type Tenant
 } from '@metorial-subspace/db';
 import { resolveIdentities, resolveIdentityActors } from '@metorial-subspace/list-utils';
+import {
+  CreateDelegationInput,
+  identityDelegationInternalService
+} from './identityDelegationInternal';
 
 let include = {
   parentDelegation: true,
   rootParentDelegation: true,
   delegationConfig: true,
   attestation: true,
-  requests: {},
-  parties: {},
-  credentials: {}
+  request: {
+    include: {
+      requester: true,
+      identity: true
+    }
+  },
+  parties: {
+    include: {
+      actor: {
+        include: {
+          agent: true
+        }
+      }
+    }
+  },
+  credentials: {
+    include: {
+      credential: true
+    }
+  }
 };
+export let delegationInclude = include;
 
 class identityDelegationServiceImpl {
   async listIdentityDelegations(d: {
@@ -118,9 +141,38 @@ class identityDelegationServiceImpl {
       include
     });
     if (!identityDelegation)
-      throw new ServiceError(notFoundError('identity.credential', d.identityDelegationId));
+      throw new ServiceError(notFoundError('identity.delegation', d.identityDelegationId));
 
     return identityDelegation;
+  }
+
+  async CreateDelegation(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    input: CreateDelegationInput;
+  }) {
+    return identityDelegationInternalService.createDelegation({
+      tenant: d.tenant,
+      solution: d.solution,
+      environment: d.environment,
+      _internal: { type: 'create_and_approve' },
+      input: d.input
+    });
+  }
+
+  async revokeIdentityDelegation(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    delegation: IdentityDelegation;
+  }) {
+    return identityDelegationInternalService.revokeIdentityDelegation({
+      tenant: d.tenant,
+      solution: d.solution,
+      environment: d.environment,
+      delegation: d.delegation
+    });
   }
 }
 

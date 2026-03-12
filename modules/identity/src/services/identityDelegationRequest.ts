@@ -3,21 +3,25 @@ import { Paginator } from '@lowerdeck/pagination';
 import { Service } from '@lowerdeck/service';
 import {
   db,
+  IdentityActor,
+  IdentityDelegation,
+  IdentityDelegationRequest,
   type Environment,
   type IdentityDelegationRequestStatus,
   type Solution,
   type Tenant
 } from '@metorial-subspace/db';
 import { resolveIdentities, resolveIdentityActors } from '@metorial-subspace/list-utils';
+import { delegationInclude } from './identityDelegation';
+import {
+  CreateDelegationInput,
+  identityDelegationInternalService
+} from './identityDelegationInternal';
 
 let include = {
-  parentDelegation: true,
-  rootParentDelegation: true,
-  delegationConfig: true,
-  attestation: true,
-  requests: {},
-  parties: {},
-  credentials: {}
+  delegation: { include: delegationInclude },
+  requester: true,
+  identity: true
 };
 
 class identityDelegationRequestServiceImpl {
@@ -83,6 +87,76 @@ class identityDelegationRequestServiceImpl {
       );
 
     return identityDelegationRequest;
+  }
+
+  async createIdentityDelegationRequest(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    input: Omit<CreateDelegationInput, 'expiresAt' | 'delegator' | 'delegatee'> & {
+      expiresAt: Date;
+      requester: IdentityActor;
+    };
+  }) {
+    let delegation = await identityDelegationInternalService.createDelegation({
+      tenant: d.tenant,
+      solution: d.solution,
+      environment: d.environment,
+      input: {
+        ...d.input,
+        delegatee: d.input.requester
+      },
+      _internal: {
+        type: 'request',
+        requester: d.input.requester,
+        expiresAt: d.input.expiresAt
+      }
+    });
+
+    return {
+      ...delegation?.request!,
+      delegation: delegation
+    };
+  }
+
+  async approveIdentityDelegationRequest(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    delegationRequest: IdentityDelegationRequest & { delegation: IdentityDelegation };
+  }) {
+    let delegation = await identityDelegationInternalService.alterIdentityDelegationRequest({
+      tenant: d.tenant,
+      solution: d.solution,
+      environment: d.environment,
+      delegationRequest: d.delegationRequest,
+      desiredStatus: 'approved'
+    });
+
+    return {
+      ...delegation?.request!,
+      delegation: delegation
+    };
+  }
+
+  async denyIdentityDelegationRequest(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    delegationRequest: IdentityDelegationRequest & { delegation: IdentityDelegation };
+  }) {
+    let delegation = await identityDelegationInternalService.alterIdentityDelegationRequest({
+      tenant: d.tenant,
+      solution: d.solution,
+      environment: d.environment,
+      delegationRequest: d.delegationRequest,
+      desiredStatus: 'denied'
+    });
+
+    return {
+      ...delegation?.request!,
+      delegation: delegation
+    };
   }
 }
 

@@ -39,6 +39,7 @@ model Identity {
   credentials                IdentityCredential[]
   identityDelegations        IdentityDelegation[]
   identityDelegationRequests IdentityDelegationRequest[]
+  delegatedIdentities        DelegatedIdentity[]
 
   @@index([status])
 }
