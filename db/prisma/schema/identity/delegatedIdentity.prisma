@@ -3,6 +3,7 @@ model DelegatedIdentity {
   id  String @unique
 
   permissions IdentityDelegationPermissions[]
+  delegationLevel Int
   isActive    Boolean
 
   identityOid BigInt
@@ -54,6 +55,9 @@ model DelegatedIdentityUpdate {
 
   isActiveBefore Boolean
   isActiveAfter  Boolean
+
+  delegationLevelBefore Int
+  delegationLevelAfter  Int
 
   permissionsBefore IdentityDelegationPermissions[]
   permissionsAfter  IdentityDelegationPermissions[]
