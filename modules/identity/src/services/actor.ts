@@ -155,36 +155,40 @@ class identityActorServiceImpl {
         }
       });
 
-      let agent = await db.agent.create({
-        data: {
-          ...getId('agent'),
+      if (identityActor.type === 'agent') {
+        let agent = await db.agent.create({
+          data: {
+            ...getId('agent'),
 
-          status: 'active',
-          actorOid: identityActor.oid,
+            status: 'active',
+            actorOid: identityActor.oid,
 
-          name: d.input.name.trim(),
-          description: d.input.description?.trim() || undefined,
-          metadata: d.input.metadata,
+            name: d.input.name.trim(),
+            description: d.input.description?.trim() || undefined,
+            metadata: d.input.metadata,
 
-          slug: await getAgentSlug(
-            {
-              input: d.input._agentSlug
-                ? d.input._agentSlug.trim()
-                : `${d.input.name.trim()}-${generateCode(5)}`
-            },
-            d
-          ),
+            slug: await getAgentSlug(
+              {
+                input: d.input._agentSlug
+                  ? d.input._agentSlug.trim()
+                  : `${d.input.name.trim()}-${generateCode(5)}`
+              },
+              d
+            ),
 
-          tenantOid: d.tenant.oid,
-          solutionOid: d.solution.oid,
-          environmentOid: d.environment.oid
-        }
-      });
+            tenantOid: d.tenant.oid,
+            solutionOid: d.solution.oid,
+            environmentOid: d.environment.oid
+          }
+        });
+        await addAfterTransactionHook(async () =>
+          agentCreatedQueue.add({ agentId: agent.id })
+        );
+      }
 
       await addAfterTransactionHook(async () =>
         identityActorCreatedQueue.add({ identityActorId: identityActor.id })
       );
-      await addAfterTransactionHook(async () => agentCreatedQueue.add({ agentId: agent.id }));
 
       return db.identityActor.findUniqueOrThrow({
         where: { id: identityActor.id },
