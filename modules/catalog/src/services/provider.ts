@@ -34,7 +34,7 @@ export let getProviderTenantFilter = (d: {
       ? {
           access: 'tenant' as const,
           ownerTenantOid: d.tenant.oid,
-          ownerSolutionOid: d.solution.oid
+          OR: [{ ownerSolutionOid: d.solution.oid }, { ownerSolutionOid: null }]
         }
       : undefined!
   ].filter(Boolean)

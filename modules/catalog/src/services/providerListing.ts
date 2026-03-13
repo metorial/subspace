@@ -9,7 +9,7 @@ import {
   resolvePublishers
 } from '@metorial-subspace/list-utils';
 import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
-import { getProviderTenantFilter, providerInclude } from './provider';
+import { providerInclude } from './provider';
 
 export type ProviderListingOrderByUse =
   | 'deployments'
@@ -71,7 +71,10 @@ class ProviderListingService {
             OR: [
               { isPublic: true },
               d.tenant && d.environment
-                ? { ownerTenantOid: d.tenant.oid, ownerSolutionOid: d.solution.oid }
+                ? {
+                    ownerTenantOid: d.tenant.oid,
+                    OR: [{ ownerSolutionOid: d.solution.oid }, { ownerSolutionOid: null }]
+                  }
                 : undefined!
             ].filter(Boolean)
           }
@@ -161,9 +164,19 @@ class ProviderListingService {
           where: {
             status: 'active',
 
-            provider: getProviderTenantFilter(d),
-
             AND: [
+              {
+                OR: [
+                  { isPublic: true },
+                  d.tenant && d.environment
+                    ? {
+                        ownerTenantOid: d.tenant.oid,
+                        OR: [{ ownerSolutionOid: d.solution.oid }, { ownerSolutionOid: null }]
+                      }
+                    : undefined!
+                ].filter(Boolean)
+              },
+
               d.ids ? { id: { in: d.ids } } : undefined!,
 
               search ? { id: { in: search.map(r => r.documentId) } } : undefined!,

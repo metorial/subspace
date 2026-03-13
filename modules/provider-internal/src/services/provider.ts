@@ -8,6 +8,7 @@ import {
   type Publisher,
   type ShuttleServer,
   type Slate,
+  Solution,
   type Tenant,
   withTransaction
 } from '@metorial-subspace/db';
@@ -40,10 +41,9 @@ class providerInternalServiceImpl {
           let enriched = await backend.enrichment.enrichProviderVariants({
             providerVariantIds: providers.map(p => p.defaultVariant!.id)
           });
-          let enrichedMap = new Map<
-            string,
-            (typeof enriched.providers)[number]
-          >(enriched.providers.map(p => [p.providerVariantId, p]));
+          let enrichedMap = new Map<string, (typeof enriched.providers)[number]>(
+            enriched.providers.map(p => [p.providerVariantId, p])
+          );
 
           return providers.map(provider => {
             let enrichment = enrichedMap.get(provider.defaultVariant!.id);
@@ -61,7 +61,10 @@ class providerInternalServiceImpl {
   async upsertProvider(d: {
     publisher: Publisher;
 
-    tenant: Tenant | null;
+    owner: {
+      tenant: Tenant;
+      solution?: Solution | null;
+    } | null;
 
     source:
       | {
@@ -131,10 +134,11 @@ class providerInternalServiceImpl {
       let providerData = {
         identifier: `${identifier}::provider`,
 
-        ...(d.tenant
+        ...(d.owner
           ? {
               access: 'tenant' as const,
-              ownerTenantOid: d.tenant.oid
+              ownerTenantOid: d.owner.tenant.oid,
+              ownerSolutionOid: d.owner.solution?.oid
             }
           : {
               access: 'public' as const
@@ -228,6 +232,8 @@ class providerInternalServiceImpl {
       let allData = {
         isPublic: provider.access === 'public',
         ownerTenantOid: provider.access === 'tenant' ? provider.ownerTenantOid : null,
+        ownerSolutionOid: provider.access === 'tenant' ? provider.ownerSolutionOid : null,
+
         publisherOid: provider.publisherOid,
         providerOid: provider.oid
       };
