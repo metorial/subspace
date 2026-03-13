@@ -87,7 +87,7 @@ export let identityController = app.controller({
         tenantId: v.string(),
         environmentId: v.string(),
 
-        actorId: v.string(),
+        identityActorId: v.string(),
 
         name: v.optional(v.string()),
         description: v.optional(v.string()),
@@ -98,7 +98,7 @@ export let identityController = app.controller({
     )
     .do(async ctx => {
       let actor = await identityActorService.getIdentityActorById({
-        identityActorId: ctx.input.actorId,
+        identityActorId: ctx.input.identityActorId,
         tenant: ctx.tenant,
         environment: ctx.environment,
         solution: ctx.solution

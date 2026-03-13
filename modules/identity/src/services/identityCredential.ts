@@ -182,10 +182,10 @@ class identityCredentialServiceImpl {
       });
 
       await addAfterTransactionHook(async () =>
-        identityCredentialCreatedQueue.add({ identityCredentialId: identityCredential.id })
+        identityCredentialCreatedQueue.add({ identityCredentialId: identityCredential!.id })
       );
 
-      return identityCredential;
+      return identityCredential!;
     });
   }
 
