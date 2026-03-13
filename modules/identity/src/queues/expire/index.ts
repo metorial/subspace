@@ -3,8 +3,14 @@ import {
   expireIdentityDelegationsCron,
   expireIdentityDelegationsManyQueueProcessor
 } from './delegation';
+import {
+  expireIdentityDelegationCredentialsCron,
+  expireIdentityDelegationCredentialsManyQueueProcessor
+} from './delegationCredential';
 
 export let expireQueues = combineQueueProcessors([
   expireIdentityDelegationsCron,
-  expireIdentityDelegationsManyQueueProcessor
+  expireIdentityDelegationsManyQueueProcessor,
+  expireIdentityDelegationCredentialsCron,
+  expireIdentityDelegationCredentialsManyQueueProcessor
 ]);

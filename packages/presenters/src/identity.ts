@@ -37,7 +37,11 @@ export let identityPresenter = (
   description: identity.description,
   metadata: identity.metadata,
 
-  actor: identityActorPresenter(identity.actor),
+  owner: {
+    type: 'actor',
+    actor: identityActorPresenter(identity.actor)
+  },
+
   credentials: identity.credentials.map(identityCredentialPresenter),
   delegationConfigId: identity.delegationConfig?.id ?? null,
 

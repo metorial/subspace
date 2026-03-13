@@ -8,7 +8,6 @@ import {
   type Identity,
   type IdentityActor,
   type IdentityDelegation,
-  type IdentityDelegationConfig,
   type IdentityDelegationConfigVersion,
   IdentityDelegationDeniedReason,
   IdentityDelegationPartyRole,
@@ -209,6 +208,18 @@ class identityDelegationInternalServiceImpl {
         }))
       });
 
+      await db.identityDelegationCredentialOverride.createMany({
+        data:
+          d.input.credentialOverrides?.map(o => ({
+            ...getId('identityDelegationCredentialOverride'),
+            status: 'active',
+            delegationOid: delegation.oid,
+            credentialOid: credentialMap.get(o.credentialId)!.oid,
+            permissions: o.permissions,
+            expiresAt: o.expiresAt
+          })) || []
+      });
+
       // Check if we can auto-approve this request based on an existing
       // delegation that has the same or a superset of permissions and credential overrides
       if (delegation.status === 'waiting_for_consent') {
@@ -275,6 +286,18 @@ class identityDelegationInternalServiceImpl {
                   ? 'denied'
                   : 'pending'
           }
+        });
+      } else {
+        let attestation = await db.identityDelegationAttestation.create({
+          data: {
+            ...getId('identityDelegationAttestation'),
+            type: 'api'
+          }
+        });
+
+        delegation = await db.identityDelegation.update({
+          where: { oid: delegation.oid },
+          data: { attestationOid: attestation.oid }
         });
       }
 
@@ -369,9 +392,20 @@ class identityDelegationInternalServiceImpl {
     }
 
     return await withTransaction(async db => {
+      let attestation =
+        d.desiredStatus === 'approved'
+          ? await db.identityDelegationAttestation.create({
+              data: {
+                ...getId('identityDelegationAttestation'),
+                type: 'request_approval'
+              }
+            })
+          : null;
+
       await db.identityDelegation.updateMany({
         where: { oid: d.delegationRequest.delegationOid },
         data: {
+          attestationOid: attestation?.oid,
           status: d.desiredStatus === 'approved' ? 'active' : 'denied',
           deniedReason: d.desiredStatus === 'approved' ? null : 'request_denied'
         }
@@ -379,7 +413,7 @@ class identityDelegationInternalServiceImpl {
 
       await db.identityDelegationRequest.updateMany({
         where: { oid: d.delegationRequest.oid },
-        data: { status: d.desiredStatus }
+        data: { status: d.desiredStatus, attestationOid: attestation?.oid }
       });
 
       await db.identity.updateMany({

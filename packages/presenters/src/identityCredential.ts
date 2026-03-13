@@ -24,10 +24,12 @@ export let identityCredentialPresenter = (
   status: credential.status,
 
   identityId: credential.identity.id,
+
   providerId: credential.provider.id,
   deploymentId: credential.deployment?.id ?? null,
   configId: credential.config?.id ?? null,
   authConfigId: credential.authConfig?.id ?? null,
+
   delegationConfigId: credential.delegationConfig?.id ?? null,
 
   createdAt: credential.createdAt,

@@ -59,11 +59,11 @@ model IdentityCredential {
   identityOid BigInt
   identity    Identity @relation(fields: [identityOid], references: [oid], onDelete: Cascade)
 
-  deploymentOid BigInt?
-  deployment    ProviderDeployment? @relation(fields: [deploymentOid], references: [oid], onDelete: Cascade)
+  deploymentOid BigInt
+  deployment    ProviderDeployment @relation(fields: [deploymentOid], references: [oid], onDelete: Cascade)
 
-  configOid BigInt?
-  config    ProviderConfig? @relation(fields: [configOid], references: [oid], onDelete: Cascade)
+  configOid BigInt
+  config    ProviderConfig @relation(fields: [configOid], references: [oid], onDelete: Cascade)
 
   authConfigOid BigInt?
   authConfig    ProviderAuthConfig? @relation(fields: [authConfigOid], references: [oid], onDelete: Cascade)

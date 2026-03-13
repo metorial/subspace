@@ -28,8 +28,8 @@ import {
   resolveProviders
 } from '@metorial-subspace/list-utils';
 import {
-  providerCombinationService,
-  type ProviderCombinationInput
+  type ProviderCombinationInput,
+  providerCombinationService
 } from '@metorial-subspace/module-provider-internal';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 import {
