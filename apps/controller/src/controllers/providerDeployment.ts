@@ -2,9 +2,11 @@ import { Paginator } from '@lowerdeck/pagination';
 import { v } from '@lowerdeck/validation';
 import { providerService, providerVersionService } from '@metorial-subspace/module-catalog';
 import { providerDeploymentService } from '@metorial-subspace/module-deployment';
+import { normalizeToolFilters } from '@metorial-subspace/module-provider-internal';
 import { providerDeploymentPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
 import { configSourceValidator, resolveConfigSource } from './providerResourceValidators';
+import { toolFiltersValidator } from './sessionProvider';
 import { tenantApp } from './tenant';
 
 export let providerDeploymentApp = tenantApp.use(async ctx => {
@@ -93,7 +95,8 @@ export let providerDeploymentController = app.controller({
 
         networkingRulesetIds: v.optional(v.array(v.string())),
 
-        config: v.optional(configSourceValidator)
+        config: v.optional(configSourceValidator),
+        toolFilters: toolFiltersValidator
       })
     )
     .do(async ctx => {
@@ -125,6 +128,7 @@ export let providerDeploymentController = app.controller({
           name: ctx.input.name,
           description: ctx.input.description,
           metadata: ctx.input.metadata,
+          toolFilters: normalizeToolFilters(ctx.input.toolFilters as any),
 
           isEphemeral: ctx.input.isEphemeral,
 
@@ -149,7 +153,8 @@ export let providerDeploymentController = app.controller({
 
         name: v.optional(v.string()),
         description: v.optional(v.string()),
-        metadata: v.optional(v.record(v.any()))
+        metadata: v.optional(v.record(v.any())),
+        toolFilters: toolFiltersValidator
       })
     )
     .do(async ctx => {
@@ -162,7 +167,8 @@ export let providerDeploymentController = app.controller({
         input: {
           name: ctx.input.name,
           description: ctx.input.description,
-          metadata: ctx.input.metadata
+          metadata: ctx.input.metadata,
+          toolFilters: normalizeToolFilters(ctx.input.toolFilters as any)
         }
       });
 

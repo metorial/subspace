@@ -18,7 +18,12 @@ export type McpE2eContext = {
 
 export let createMcpE2eContext = async (
   db: PrismaClient,
-  opts: { remoteServerBaseUrl: string; transportCase: TransportCase }
+  opts: {
+    remoteServerBaseUrl: string;
+    transportCase: TransportCase;
+    providerDeploymentToolFilter?: PrismaJson.ToolFilter;
+    sessionProviderToolFilter?: PrismaJson.ToolFilter;
+  }
 ): Promise<McpE2eContext> => {
   let f = fixtures(db);
 
@@ -59,6 +64,20 @@ export let createMcpE2eContext = async (
     deployment: providerSetup.providerDeployment,
     name: 'MCP Session'
   });
+
+  if (opts.providerDeploymentToolFilter) {
+    await db.providerDeployment.update({
+      where: { oid: providerSetup.providerDeployment.oid },
+      data: { toolFilter: opts.providerDeploymentToolFilter as any } as any
+    });
+  }
+
+  if (opts.sessionProviderToolFilter) {
+    await db.sessionProvider.updateMany({
+      where: { sessionOid: session.oid },
+      data: { toolFilter: opts.sessionProviderToolFilter as any }
+    });
+  }
 
   let proxyPath = `/${providerSetup.solution.id}/${providerSetup.tenant.id}/sessions/${session.id}/mcp`;
   let proxyUrl = `http://subspace-controller.test${proxyPath}`;

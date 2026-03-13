@@ -6,6 +6,7 @@ import {
 } from '@metorial-subspace/module-session';
 import { sessionTemplateProviderPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
+import { normalizeToolFilters, toolFiltersValidator } from './sessionProvider';
 import { tenantApp } from './tenant';
 
 export let sessionTemplateProviderApp = tenantApp.use(async ctx => {
@@ -23,14 +24,6 @@ export let sessionTemplateProviderApp = tenantApp.use(async ctx => {
 
   return { sessionTemplateProvider };
 });
-
-export let toolFiltersValidator = v.nullable(
-  v.optional(
-    v.object({
-      toolKeys: v.optional(v.array(v.string()))
-    })
-  )
-);
 
 export let sessionTemplateProviderController = app.controller({
   list: tenantApp
@@ -78,13 +71,15 @@ export let sessionTemplateProviderController = app.controller({
     )
     .do(async ctx => {
       let sessionTemplateProviders =
-        await sessionTemplateProviderService.getManySessionTemplateProvidersBySessionTemplateIds({
-          tenant: ctx.tenant,
-          environment: ctx.environment,
-          solution: ctx.solution,
-          sessionTemplateIds: ctx.input.sessionTemplateIds,
-          allowDeleted: ctx.input.allowDeleted
-        });
+        await sessionTemplateProviderService.getManySessionTemplateProvidersBySessionTemplateIds(
+          {
+            tenant: ctx.tenant,
+            environment: ctx.environment,
+            solution: ctx.solution,
+            sessionTemplateIds: ctx.input.sessionTemplateIds,
+            allowDeleted: ctx.input.allowDeleted
+          }
+        );
 
       return sessionTemplateProviders.map(sessionTemplateProviderPresenter);
     }),
@@ -137,7 +132,7 @@ export let sessionTemplateProviderController = app.controller({
             configId: ctx.input.providerConfigId,
             authConfigId: ctx.input.providerAuthConfigId,
 
-            toolFilters: ctx.input.toolFilters as any
+            toolFilters: normalizeToolFilters(ctx.input.toolFilters)
           }
         });
 
@@ -165,7 +160,7 @@ export let sessionTemplateProviderController = app.controller({
           solution: ctx.solution,
 
           input: {
-            toolFilters: ctx.input.toolFilters as any
+            toolFilters: normalizeToolFilters(ctx.input.toolFilters)
           }
         });
 

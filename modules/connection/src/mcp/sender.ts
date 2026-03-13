@@ -207,7 +207,8 @@ export class McpSender {
     let method = 'method' in msg ? msg.method : null;
     let id = 'id' in msg ? msg.id : null;
 
-    if (method === 'ping' && id !== undefined && id !== null) return this.handlePingRequest(id);
+    if (method === 'ping' && id !== undefined && id !== null)
+      return this.handlePingRequest(id);
     if (typeof id === 'string' && id.startsWith(PING_MESSAGE_ID_PREFIX))
       return this.handlePingResponse(id);
 
@@ -554,12 +555,7 @@ export class McpSender {
       if (i++ > 100) break; // Safety break to avoid infinite loops
 
       let tool = resourceListTools[0]!;
-      let resourceFilters =
-        tool.sessionProvider.toolFilter.type === 'v1.filter'
-          ? tool.sessionProvider.toolFilter.filters.filter(
-              f => f.type === 'resource_regex' || f.type === 'resource_uris'
-            )
-          : [];
+      let checkResourceAccess = checkResourceAccessManager(tool.sessionProvider);
 
       let toolResources = await this.manager.callTool({
         toolId: tool.key,
@@ -609,17 +605,12 @@ export class McpSender {
       let res = toolResources.output.data as JSONRPCResponse & { result: ListResourcesResult };
 
       try {
-        let newResources = (res?.result?.resources ?? []).map(r => ({
-          ...r,
-          uri: `${r.uri}_${tool.sessionProvider.tag}`
-        }));
-
-        if (resourceFilters.length) {
-          let checkResourceAccess = checkResourceAccessManager(tool.sessionProvider);
-          newResources = newResources.filter(
-            resource => checkResourceAccess(resource.uri).allowed
-          );
-        }
+        let newResources = (res?.result?.resources ?? [])
+          .filter(resource => checkResourceAccess(resource.uri).allowed)
+          .map(resource => ({
+            ...resource,
+            uri: `${resource.uri}_${tool.sessionProvider.tag}`
+          }));
 
         resources.push(...newResources);
       } catch (e) {}
@@ -672,6 +663,21 @@ export class McpSender {
           error: {
             code: -32000,
             message: `No resource read tool found for provider with tag "${tag}"`
+          }
+        } satisfies JSONRPCErrorResponse
+      };
+    }
+
+    let checkResourceAccess = checkResourceAccessManager(resourceReadTool.sessionProvider);
+    if (!checkResourceAccess(remainingUri).allowed) {
+      return {
+        store: true,
+        mcp: {
+          jsonrpc: '2.0',
+          id,
+          error: {
+            code: -32000,
+            message: 'Resource access not allowed'
           }
         } satisfies JSONRPCErrorResponse
       };

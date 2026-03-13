@@ -9,6 +9,7 @@ import { versionQueues } from './queues/version';
 export * from './services';
 
 export * from './lib/checkProviderMatch';
+export * from './lib/toolFilter';
 
 export let providerInternalQueueProcessor = combineQueueProcessors([
   listingQueues,

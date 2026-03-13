@@ -1,5 +1,6 @@
 import { Paginator } from '@lowerdeck/pagination';
 import { v, type ValidationTypeValue } from '@lowerdeck/validation';
+import { normalizeToolFilters as normalizeProviderToolFilters } from '@metorial-subspace/module-provider-internal';
 import { sessionProviderService, sessionService } from '@metorial-subspace/module-session';
 import { sessionProviderPresenter } from '@metorial-subspace/presenters';
 import { app } from './_app';
@@ -54,21 +55,23 @@ export let toolFilterValidator = v.union([
 ]);
 
 export let toolFiltersValidator = v.nullable(
-  v.optional(v.union([toolFilterValidator, v.array(toolFilterValidator)]))
+  v.optional(
+    v.union([
+      toolFilterValidator,
+      v.array(toolFilterValidator),
+      v.object({
+        ignoreParentFilters: v.optional(v.boolean()),
+        filters: v.optional(
+          v.nullable(v.union([toolFilterValidator, v.array(toolFilterValidator)]))
+        )
+      })
+    ])
+  )
 );
 
 export let normalizeToolFilters = (
   t: ValidationTypeValue<typeof toolFiltersValidator>
-): PrismaJson.ToolFilter => {
-  if (!t) return { type: 'v1.allow_all' };
-
-  let filtersArray = Array.isArray(t) ? t : [t];
-
-  return {
-    type: 'v1.filter',
-    filters: filtersArray as any
-  };
-};
+): PrismaJson.ToolFilter => normalizeProviderToolFilters(t as any);
 
 export let sessionProviderController = app.controller({
   list: tenantApp
