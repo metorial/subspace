@@ -37,7 +37,7 @@ export let retryUntilTimeout = async <T>(opts: RetryUntilTimeoutOptions<T>): Pro
 
   let start = now();
   let attempt = 0;
-  let lastError: unknown ;
+  let lastError: unknown;
   let lastResult: T | null = null;
 
   let context = (): RetryUntilTimeoutContext<T> => ({

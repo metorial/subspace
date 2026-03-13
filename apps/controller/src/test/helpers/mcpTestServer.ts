@@ -1,4 +1,4 @@
-import { retryUntilTimeout } from '@metorial-subspace/connection-utils';
+import { retryUntilTimeout } from '@metorial-subspace/retry-utils';
 // @ts-ignore
 import express from 'express';
 import type { Server } from 'http';

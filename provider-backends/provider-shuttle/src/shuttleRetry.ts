@@ -3,7 +3,7 @@ import {
   formatUnknownError,
   retryUntilTimeout,
   type RetryUntilTimeoutContext
-} from '@metorial-subspace/connection-utils';
+} from '@metorial-subspace/retry-utils';
 
 let nonRetryableErrorCodes = new Set([
   'ENOTFOUND',

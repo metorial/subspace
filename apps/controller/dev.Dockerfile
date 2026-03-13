@@ -21,6 +21,7 @@ COPY packages/connection-utils/package.json ./packages/connection-utils/package.
 COPY packages/list-utils/package.json ./packages/list-utils/package.json
 COPY packages/presenters/package.json ./packages/presenters/package.json
 COPY packages/redis-url/package.json ./packages/redis-url/package.json
+COPY packages/retry-utils/package.json ./packages/retry-utils/package.json
 COPY packages/store/package.json ./packages/store/package.json
 COPY packages/generator/package.json ./packages/generator/package.json
 
