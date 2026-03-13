@@ -4,6 +4,7 @@ import type {
   IdentityActor,
   IdentityCredential,
   IdentityDelegation,
+  IdentityDelegationAttestation,
   IdentityDelegationCredentialOverride,
   IdentityDelegationParty,
   IdentityDelegationRequest
@@ -86,7 +87,19 @@ type DelegationWithRelations = IdentityDelegation & {
   request: DelegationRequestPreview | null;
   parties: DelegationPartyWithActor[];
   credentials: DelegationCredentialOverrideWithCredential[];
+  attestation: IdentityDelegationAttestation | null;
 };
+
+export let identityDelegationAttestationPresenter = (
+  attestation: IdentityDelegationAttestation
+) => ({
+  object: 'identity.delegation_attestation',
+
+  id: attestation.id,
+  type: attestation.type,
+
+  createdAt: attestation.createdAt
+});
 
 export let identityDelegationPresenter = (delegation: DelegationWithRelations) => ({
   object: 'identity.delegation',
@@ -118,6 +131,9 @@ export let identityDelegationPresenter = (delegation: DelegationWithRelations) =
   credentialOverrides: delegation.credentials.map(
     identityDelegationCredentialOverridePresenter
   ),
+  attestation: delegation.attestation
+    ? identityDelegationAttestationPresenter(delegation.attestation)
+    : null,
 
   createdAt: delegation.createdAt,
   expiresAt: delegation.expiresAt,
