@@ -1,7 +1,6 @@
 import { generateCode } from '@lowerdeck/id';
 import { slugify } from '@lowerdeck/slugify';
 import { createShuttleClient } from '@metorial-services/shuttle-client';
-import { retryUntilTimeout } from '@metorial-subspace/retry-utils';
 import { withTimeout } from '@metorial-subspace/connection-utils/src/withTimeout';
 import {
   getId,
@@ -30,6 +29,7 @@ import {
 } from '@metorial-subspace/module-provider-internal';
 import { getBackend } from '@metorial-subspace/provider';
 import { withShuttleRetry } from '@metorial-subspace/provider-shuttle/src/shuttleRetry';
+import { retryUntilTimeout } from '@metorial-subspace/retry-utils';
 import { createHash } from 'node:crypto';
 import { EnvironmentFixtures } from './environmentFixtures';
 import { SolutionFixtures } from './solutionFixtures';
@@ -487,7 +487,7 @@ export const RemoteMcpProviderFixtures = (db: PrismaClient) => {
 
     let provider = await providerInternalService.upsertProvider({
       publisher,
-      tenant,
+      owner: { tenant, solution },
       source: {
         type: 'shuttle',
         shuttleServer,

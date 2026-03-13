@@ -48,10 +48,10 @@ export let upsertShuttleServerVersion = ({
 }) =>
   withTransaction(async db => {
     let publisher: Publisher | null = null;
-    let tenant: Tenant | null = null;
+    let owner: { tenant: Tenant } | null = null;
 
     if (server.tenantId) {
-      tenant = await db.tenant.findFirst({
+      let tenant = await db.tenant.findFirst({
         where: { shuttleTenantId: server.tenantId }
       });
 
@@ -59,6 +59,7 @@ export let upsertShuttleServerVersion = ({
         publisher = await publisherInternalService.upsertPublisherForTenant({
           tenant
         });
+        owner = { tenant };
       }
     }
 
@@ -148,7 +149,7 @@ export let upsertShuttleServerVersion = ({
     };
 
     let provider = await providerInternalService.upsertProvider({
-      tenant,
+      owner,
       publisher,
       source: {
         type: 'shuttle',
@@ -159,7 +160,7 @@ export let upsertShuttleServerVersion = ({
         name: server.name,
         description: server.description ?? undefined,
         slug: slugify(`${server.name}-${generateCode(5)}`),
-        globalIdentifier: tenant ? null : (globalIdentifier ?? null),
+        globalIdentifier: owner ? null : (globalIdentifier ?? null),
 
         categories: info?.categories,
         readme: info?.readme

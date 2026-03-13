@@ -27,7 +27,7 @@ export let syncNativeIntegrations = async () => {
 
   for (let integration of listNativeIntegrations()) {
     let provider = await providerInternalService.upsertProvider({
-      tenant: null,
+      owner: null,
       publisher,
       source: {
         type: 'native',
