@@ -100,8 +100,16 @@ export let identityDelegationPresenter = (delegation: DelegationWithRelations) =
   note: delegation.note,
   metadata: delegation.metadata,
 
-  identityId: delegation.identity.id,
   delegationConfigId: delegation.delegationConfig?.id ?? null,
+
+  identity: {
+    object: 'identity#preview',
+
+    id: delegation.identity.id,
+    name: delegation.identity.name,
+    description: delegation.identity.description,
+    metadata: delegation.identity.metadata
+  },
 
   parties: delegation.parties.map(identityDelegationPartyPresenter),
   request: delegation.request
