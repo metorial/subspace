@@ -2,7 +2,7 @@ import { createLock } from '@lowerdeck/lock';
 import { createQueue, QueueRetryError } from '@lowerdeck/queue';
 import {
   db,
-  DelegatedIdentity,
+  type DelegatedIdentity,
   getId,
   IdentityDelegationPermissions,
   withTransaction
@@ -53,7 +53,12 @@ export let reconcileQueueProcessor = reconcileQueue.process(data =>
       if (identity.status !== 'active') {
         await db.delegatedIdentity.updateMany({
           where: { identityOid: identity.oid },
-          data: { isActive: false, permissions: [], atLeastHoldsUntil: null }
+          data: {
+            isActive: false,
+            permissions: [],
+            delegationLevel: 0,
+            atLeastHoldsUntil: null
+          }
         });
 
         await db.delegatedIdentityCredential.updateMany({
@@ -113,6 +118,7 @@ export let reconcileQueueProcessor = reconcileQueue.process(data =>
         );
 
         let permissions = Array.from(currentGlobalPermissions);
+        let delegationLevel = Math.max(...delegations.map(d => d.delegationLevel), 0);
         let hasGlobalPermissions = permissions.length > 0;
         let hasSubPermissions = delegations
           .flatMap(d => d.credentials)
@@ -121,6 +127,7 @@ export let reconcileQueueProcessor = reconcileQueue.process(data =>
 
         let upsertDelegatedIdentityInner = {
           permissions,
+          delegationLevel,
           atLeastHoldsUntil:
             permissions.length && atLeastHoldsUntil ? new Date(atLeastHoldsUntil) : null,
           isActive: hasAnyPermissions
@@ -141,6 +148,8 @@ export let reconcileQueueProcessor = reconcileQueue.process(data =>
               delegatedIdentityOid: existingDelegation.oid,
               isActiveBefore: existingDelegation.isActive,
               isActiveAfter: upsertDelegatedIdentityInner.isActive,
+              delegationLevelBefore: existingDelegation.delegationLevel,
+              delegationLevelAfter: upsertDelegatedIdentityInner.delegationLevel,
               permissionsBefore: existingDelegation.permissions,
               permissionsAfter: upsertDelegatedIdentityInner.permissions
             },

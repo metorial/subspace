@@ -11,12 +11,20 @@ enum IdentityDelegationStatus {
   expired
 }
 
+enum IdentityDelegationDeniedReason {
+  request_denied
+  sub_delegation_depth_exceeded
+  sub_delegation_denied
+}
+
 model IdentityDelegation {
   oid BigInt @id
   id  String @unique
 
-  status      IdentityDelegationStatus
-  permissions IdentityDelegationPermissions[]
+  status          IdentityDelegationStatus
+  delegationLevel Int
+  permissions     IdentityDelegationPermissions[]
+  deniedReason    IdentityDelegationDeniedReason?
 
   // Should not be considered when reconciling active delegations, but still needs to exist for audit purposes
   wasCoveredByPreviousDelegationAndAutoApproved Boolean

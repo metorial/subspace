@@ -2,15 +2,15 @@ import { delay } from '@lowerdeck/delay';
 import { badRequestError, ServiceError } from '@lowerdeck/error';
 import {
   db,
-  DelegatedIdentity,
-  DelegatedIdentityCredential,
-  Environment,
-  Identity,
-  IdentityActor,
-  IdentityCredential,
+  type DelegatedIdentity,
+  type DelegatedIdentityCredential,
+  type Environment,
+  type Identity,
+  type IdentityActor,
+  type IdentityCredential,
   IdentityDelegationPermissions,
-  Solution,
-  Tenant
+  type Solution,
+  type Tenant
 } from '@metorial-subspace/db';
 import { checkTenant } from '@metorial-subspace/module-tenant';
 
@@ -84,6 +84,10 @@ export class DelegationChecker {
     if (!this.checkPermissions(requirements, this.delegated)) return false;
 
     return true;
+  }
+
+  get delegationLevel() {
+    return this.delegated?.delegationLevel ?? 0;
   }
 
   checkCredential(

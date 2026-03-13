@@ -2,14 +2,18 @@ import { badRequestError, notFoundError, ServiceError } from '@lowerdeck/error';
 import { Service } from '@lowerdeck/service';
 import {
   addAfterTransactionHook,
+  db,
   type Environment,
   getId,
-  Identity,
-  IdentityActor,
-  IdentityDelegation,
+  type Identity,
+  type IdentityActor,
+  type IdentityDelegation,
+  type IdentityDelegationConfig,
+  type IdentityDelegationConfigVersion,
+  IdentityDelegationDeniedReason,
   IdentityDelegationPartyRole,
   IdentityDelegationPermissions,
-  IdentityDelegationRequest,
+  type IdentityDelegationRequest,
   type Solution,
   type Tenant,
   withTransaction
@@ -134,12 +138,6 @@ class identityDelegationInternalServiceImpl {
       d.input.expiresAt = d._internal.expiresAt;
     }
 
-    let configMap = d.input.delegationConfigId
-      ? await this.resolveDelegationConfigs({
-          ...d,
-          configIds: [d.input.delegationConfigId]
-        })
-      : new Map<never, never>();
     let credentialMap = await this.resolveCredentials({
       ...d,
       identity: d.input.identity,
@@ -150,13 +148,23 @@ class identityDelegationInternalServiceImpl {
       !d.input.delegator || d.input.delegator.oid === d.input.identity.actorOid
         ? undefined
         : d.input.delegator;
-
-    let overriddenDelegationConfig = d.input.delegationConfigId
-      ? configMap.get(d.input.delegationConfigId)
-      : undefined;
-    let actualDelegationConfig =
-      overriddenDelegationConfig ??
-      (await identityDelegationConfigService.ensureDefaultIdentityDelegationConfig(d));
+    let actualDelegationConfig = await this.resolveActualDelegationConfig({
+      ...d,
+      identity: d.input.identity,
+      delegationConfigId: d.input.delegationConfigId
+    });
+    let delegationLevel = await this.resolveDelegationLevel({
+      ...d,
+      identity: d.input.identity,
+      subDelegator
+    });
+    let autoDeniedReason =
+      d._internal.type === 'request'
+        ? this.getSubDelegationDeniedReason({
+            delegationLevel,
+            configVersion: actualDelegationConfig.currentVersion
+          })
+        : null;
 
     let parties = await this.computeParties(d.input);
 
@@ -164,7 +172,13 @@ class identityDelegationInternalServiceImpl {
       let delegation = await db.identityDelegation.create({
         data: {
           ...getId('identityDelegation'),
-          status: d._internal.type == 'request' ? 'waiting_for_consent' : 'active',
+          status:
+            d._internal.type == 'request'
+              ? autoDeniedReason
+                ? 'denied'
+                : 'waiting_for_consent'
+              : 'active',
+          delegationLevel,
           wasCoveredByPreviousDelegationAndAutoApproved: false,
 
           tenantOid: d.tenant.oid,
@@ -172,6 +186,7 @@ class identityDelegationInternalServiceImpl {
           environmentOid: d.environment.oid,
 
           permissions: d.input.permissions,
+          deniedReason: autoDeniedReason,
           expiresAt: d.input.expiresAt,
 
           note: d.input.note,
@@ -181,10 +196,7 @@ class identityDelegationInternalServiceImpl {
           subDelegatedFromOid: subDelegator?.oid,
 
           selectedDelegationConfigVersionOid: actualDelegationConfig.currentVersionOid!,
-
-          delegationConfigOid: d.input.delegationConfigId
-            ? configMap.get(d.input.delegationConfigId)!.oid
-            : null
+          delegationConfigOid: actualDelegationConfig.oid
         }
       });
 
@@ -199,7 +211,7 @@ class identityDelegationInternalServiceImpl {
 
       // Check if we can auto-approve this request based on an existing
       // delegation that has the same or a superset of permissions and credential overrides
-      if (delegation.status !== 'active') {
+      if (delegation.status === 'waiting_for_consent') {
         let checker = await DelegationChecker.create({
           ...d,
           identity: d.input.identity,
@@ -233,6 +245,7 @@ class identityDelegationInternalServiceImpl {
             where: { oid: delegation.oid },
             data: {
               status: 'active',
+              deniedReason: null,
               attestationOid: attestation.oid,
               wasCoveredByPreviousDelegationAndAutoApproved: true
             }
@@ -255,7 +268,12 @@ class identityDelegationInternalServiceImpl {
             identityOid: d.input.identity.oid,
 
             expiresAt: d._internal.expiresAt,
-            status: delegation.status === 'active' ? 'approved' : 'pending'
+            status:
+              delegation.status === 'active'
+                ? 'approved'
+                : delegation.status === 'denied'
+                  ? 'denied'
+                  : 'pending'
           }
         });
       }
@@ -353,7 +371,10 @@ class identityDelegationInternalServiceImpl {
     return await withTransaction(async db => {
       await db.identityDelegation.updateMany({
         where: { oid: d.delegationRequest.delegationOid },
-        data: { status: d.desiredStatus === 'approved' ? 'active' : 'denied' }
+        data: {
+          status: d.desiredStatus === 'approved' ? 'active' : 'denied',
+          deniedReason: d.desiredStatus === 'approved' ? null : 'request_denied'
+        }
       });
 
       await db.identityDelegationRequest.updateMany({
@@ -396,35 +417,89 @@ class identityDelegationInternalServiceImpl {
     return partiesMap.map((actorOid, roles) => ({ actorOid, roles }));
   }
 
-  private async resolveDelegationConfigs(d: {
+  private async resolveActualDelegationConfig(d: {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
-    configIds: string[];
+    identity: Identity & { delegationConfigOid?: bigint | null };
+    delegationConfigId?: string;
   }) {
-    return withTransaction(
-      async db => {
-        let configs = d.configIds.length
-          ? await db.identityDelegationConfig.findMany({
-              where: { id: { in: d.configIds } }
-            })
-          : [];
-        for (let config of configs) {
-          checkTenant(d, config);
-          checkDeletedRelation(config);
-        }
+    if (d.delegationConfigId) {
+      let overriddenDelegationConfig = await db.identityDelegationConfig.findFirst({
+        where: {
+          id: d.delegationConfigId,
+          tenantOid: d.tenant.oid,
+          solutionOid: d.solution.oid,
+          environmentOid: d.environment.oid
+        },
+        include: { currentVersion: true }
+      });
 
-        let configMap = new Map(configs.map(c => [c.id, c]));
-        for (let configId of d.configIds) {
-          if (!configMap.has(configId)) {
-            throw new ServiceError(notFoundError('identity.delegation_config', configId));
-          }
-        }
+      if (!overriddenDelegationConfig) {
+        throw new ServiceError(
+          notFoundError('identity.delegation_config', d.delegationConfigId)
+        );
+      }
 
-        return configMap;
-      },
-      { ifExists: true }
-    );
+      checkTenant(d, overriddenDelegationConfig);
+      checkDeletedRelation(overriddenDelegationConfig);
+
+      return overriddenDelegationConfig;
+    }
+
+    if (d.identity.delegationConfigOid) {
+      let identityDelegationConfig = await db.identityDelegationConfig.findUnique({
+        where: { oid: d.identity.delegationConfigOid },
+        include: { currentVersion: true }
+      });
+
+      if (identityDelegationConfig) {
+        checkTenant(d, identityDelegationConfig);
+        checkDeletedRelation(identityDelegationConfig);
+
+        return identityDelegationConfig;
+      }
+    }
+
+    return await identityDelegationConfigService.ensureDefaultIdentityDelegationConfig(d);
+  }
+
+  private async resolveDelegationLevel(d: {
+    tenant: Tenant;
+    solution: Solution;
+    environment: Environment;
+    identity: Identity;
+    subDelegator?: IdentityActor;
+  }) {
+    if (!d.subDelegator) return 0;
+
+    let checker = await DelegationChecker.create({
+      tenant: d.tenant,
+      solution: d.solution,
+      environment: d.environment,
+      identity: d.identity,
+      actor: d.subDelegator
+    });
+
+    return checker.delegationLevel + 1;
+  }
+
+  private getSubDelegationDeniedReason(d: {
+    delegationLevel: number;
+    configVersion: IdentityDelegationConfigVersion | null;
+  }) {
+    let configVersion = d.configVersion;
+    if (!configVersion) return null;
+
+    if (configVersion.subDelegationBehavior === 'deny' && d.delegationLevel > 0) {
+      return IdentityDelegationDeniedReason.sub_delegation_denied;
+    }
+
+    if (d.delegationLevel > configVersion.subDelegationDepth) {
+      return IdentityDelegationDeniedReason.sub_delegation_depth_exceeded;
+    }
+
+    return null;
   }
 
   private async resolveCredentials(d: {

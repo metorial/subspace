@@ -64,12 +64,14 @@ export let identityDelegationPartyPresenter = (party: DelegationPartyWithActor) 
 });
 
 export let identityDelegationRequestPreviewPresenter = (
-  request: DelegationRequestPreview
+  request: DelegationRequestPreview,
+  delegation: DelegationWithRelations
 ) => ({
   object: 'identity.delegation_request',
 
   id: request.id,
   status: request.status,
+  deniedReason: delegation.deniedReason,
 
   requester: identityActorPresenter(request.requester),
   identityId: request.identity.id,
@@ -91,6 +93,8 @@ export let identityDelegationPresenter = (delegation: DelegationWithRelations) =
 
   id: delegation.id,
   status: delegation.status,
+  deniedReason: delegation.deniedReason,
+  delegationLevel: delegation.delegationLevel,
   permissions: mapPermissionsFromStorage(delegation.permissions),
 
   note: delegation.note,
@@ -101,7 +105,7 @@ export let identityDelegationPresenter = (delegation: DelegationWithRelations) =
 
   parties: delegation.parties.map(identityDelegationPartyPresenter),
   request: delegation.request
-    ? identityDelegationRequestPreviewPresenter(delegation.request)
+    ? identityDelegationRequestPreviewPresenter(delegation.request, delegation)
     : null,
   credentialOverrides: delegation.credentials.map(
     identityDelegationCredentialOverridePresenter
@@ -127,6 +131,7 @@ export let identityDelegationRequestPresenter = (
 
   id: request.id,
   status: request.status,
+  deniedReason: request.delegation.deniedReason,
 
   requester: identityActorPresenter(request.requester),
   identityId: request.identity.id,
