@@ -12,12 +12,12 @@ import {
   db,
   getId,
   withTransaction,
-  type Actor,
   type CustomProvider,
   type CustomProviderVersionStatus,
   type Environment,
   type Solution,
-  type Tenant
+  type Tenant,
+  type TenantActor
 } from '@metorial-subspace/db';
 import {
   checkDeletedRelation,
@@ -92,7 +92,7 @@ class customProviderVersionServiceImpl {
   }
 
   async createCustomProviderVersion(d: {
-    actor: Actor;
+    actor: TenantActor;
     tenant: Tenant;
     solution: Solution;
     environment: Environment;

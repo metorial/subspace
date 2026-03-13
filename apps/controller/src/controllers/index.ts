@@ -12,6 +12,12 @@ import { customProviderDeploymentController } from './customProviderDeployment';
 import { customProviderEnvironmentController } from './customProviderEnvironment';
 import { customProviderVersionController } from './customProviderVersion';
 import { environmentController } from './environment';
+import { identityActorController } from './identityActor';
+import { identityController } from './identity';
+import { identityDelegationConfigController } from './identityDelegationConfig';
+import { identityDelegationController } from './identityDelegation';
+import { identityDelegationRequestController } from './identityDelegationRequest';
+import { identityCredentialController } from './identityCredential';
 import { networkingRulesetController } from './networkingRuleset';
 import { providerController } from './provider';
 import { providerAuthConfigController } from './providerAuthConfig';
@@ -59,6 +65,12 @@ import { toolCallController } from './toolCall';
 export let rootController = app.controller({
   environment: environmentController,
   actor: actorController,
+  identity: identityController,
+  identityActor: identityActorController,
+  identityDelegation: identityDelegationController,
+  identityDelegationConfig: identityDelegationConfigController,
+  identityDelegationRequest: identityDelegationRequestController,
+  identityCredential: identityCredentialController,
   solution: solutionController,
   tenant: tenantController,
 

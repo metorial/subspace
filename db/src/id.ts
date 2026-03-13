@@ -7,7 +7,7 @@ export let ID = createIdGenerator({
   environment: idType.sorted('ken'),
   backend: idType.sorted('kbe'),
   brand: idType.sorted('kbr'),
-  actor: idType.sorted('pact'),
+  tenantActor: idType.sorted('pact'),
 
   publisher: idType.sorted('pub'),
 
@@ -95,7 +95,24 @@ export let ID = createIdGenerator({
 
   providerRun: idType.sorted('prun'),
 
-  toolCall: idType.sorted('tcl')
+  toolCall: idType.sorted('tcl'),
+
+  identityActor: idType.sorted('iac'),
+  identity: idType.sorted('idn'),
+  identityCredential: idType.sorted('icr'),
+  identityCredentialVersion: idType.sorted('icrv'),
+  identityDelegation: idType.sorted('ide'),
+  identityDelegationRequest: idType.sorted('idr'),
+  identityDelegationConfig: idType.sorted('idc'),
+  identityDelegationConfigVersion: idType.sorted('idcv'),
+  identityDelegationParty: idType.sorted('idp'),
+  identityDelegationAttestation: idType.sorted('ida'),
+  delegatedIdentity: idType.sorted('did'),
+  delegatedIdentityCredential: idType.sorted('dcr'),
+  delegatedIdentityUpdate: idType.sorted('diu'),
+  delegatedIdentityUpdateCredential: idType.sorted('diuc'),
+  identityDelegationCredentialOverride: idType.sorted('idco'),
+  agent: idType.sorted('agt')
 });
 
 let workerIdBits = 12;

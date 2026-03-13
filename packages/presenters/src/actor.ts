@@ -1,6 +1,6 @@
-import type { Actor } from '@metorial-subspace/db';
+import type { TenantActor } from '@metorial-subspace/db';
 
-export let actorPresenter = (actor: Actor) => ({
+export let actorPresenter = (actor: TenantActor) => ({
   object: 'actor',
 
   id: actor.id,

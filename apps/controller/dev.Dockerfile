@@ -7,8 +7,11 @@ COPY package.json bun.lock* ./
 
 # Copy package.json files preserving directory structure
 COPY apps/controller/package.json ./apps/controller/package.json
+COPY apps/dev/package.json ./apps/dev/package.json
 COPY apps/public/package.json ./apps/public/package.json
 COPY apps/worker/package.json ./apps/worker/package.json
+
+COPY clients/typescript/package.json ./clients/typescript/package.json
 
 COPY db/package.json ./db/package.json
 
@@ -18,6 +21,7 @@ COPY packages/connection-utils/package.json ./packages/connection-utils/package.
 COPY packages/list-utils/package.json ./packages/list-utils/package.json
 COPY packages/presenters/package.json ./packages/presenters/package.json
 COPY packages/redis-url/package.json ./packages/redis-url/package.json
+COPY packages/retry-utils/package.json ./packages/retry-utils/package.json
 COPY packages/store/package.json ./packages/store/package.json
 COPY packages/generator/package.json ./packages/generator/package.json
 
@@ -27,10 +31,12 @@ COPY provider-backends/provider-native/package.json ./provider-backends/provider
 COPY provider-backends/provider-utils/package.json ./provider-backends/provider-utils/package.json
 COPY provider-backends/provider-manager/package.json ./provider-backends/provider-manager/package.json
 
+COPY modules/agent/package.json ./modules/agent/package.json
 COPY modules/auth/package.json ./modules/auth/package.json
 COPY modules/catalog/package.json ./modules/catalog/package.json
 COPY modules/connection/package.json ./modules/connection/package.json
 COPY modules/deployment/package.json ./modules/deployment/package.json
+COPY modules/identity/package.json ./modules/identity/package.json
 COPY modules/provider-internal/package.json ./modules/provider-internal/package.json
 COPY modules/custom-provider/package.json ./modules/custom-provider/package.json
 COPY modules/search/package.json ./modules/search/package.json

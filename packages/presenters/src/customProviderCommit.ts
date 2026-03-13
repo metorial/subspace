@@ -1,5 +1,4 @@
 import type {
-  Actor,
   CodeBucket,
   CustomProvider,
   CustomProviderCommit,
@@ -12,7 +11,8 @@ import type {
   ProviderEnvironment,
   ProviderVersion,
   ScmRepo,
-  ScmRepoPush
+  ScmRepoPush,
+  TenantActor
 } from '@metorial-subspace/db';
 import { actorPresenter } from './actor';
 import { customProviderEnvironmentPresenter } from './customProviderEnvironment';
@@ -68,7 +68,7 @@ export let customProviderCommitPresenter = (
             | null;
         };
       })[];
-      creatorActor: Actor;
+      creatorActor: TenantActor;
     };
 
     toEnvironmentVersionBefore:
@@ -93,11 +93,11 @@ export let customProviderCommitPresenter = (
                 | null;
             };
           })[];
-          creatorActor: Actor;
+          creatorActor: TenantActor;
         })
       | null;
 
-    creatorActor: Actor;
+    creatorActor: TenantActor;
 
     scmRepoPush: (ScmRepoPush & { repo: ScmRepo }) | null;
   }

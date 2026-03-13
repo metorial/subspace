@@ -81,5 +81,29 @@ export let voyagerIndex = {
     sourceId: (await voyagerSource).id,
     identifier: getIndexName('custom_provider'),
     name: 'Custom Providers'
+  }),
+
+  identityActor: await voyager.index.upsert({
+    sourceId: (await voyagerSource).id,
+    identifier: getIndexName('identity_actor'),
+    name: 'Identity Actors'
+  }),
+
+  agent: await voyager.index.upsert({
+    sourceId: (await voyagerSource).id,
+    identifier: getIndexName('agent'),
+    name: 'Agents'
+  }),
+
+  identity: await voyager.index.upsert({
+    sourceId: (await voyagerSource).id,
+    identifier: getIndexName('identity'),
+    name: 'Identities'
+  }),
+
+  identityDelegationConfig: await voyager.index.upsert({
+    sourceId: (await voyagerSource).id,
+    identifier: getIndexName('identity_delegation_config'),
+    name: 'Identity Delegation Configs'
   })
 };

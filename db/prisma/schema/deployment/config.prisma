@@ -56,6 +56,7 @@ model ProviderConfig {
   sessionTemplateProviders SessionTemplateProvider[]
   providerConfigVersions   ProviderConfigVersion[]
   providerConfigUpdates    ProviderConfigUpdate[]
+  identityCredentials      IdentityCredential[]
 
   @@index([isEphemeral])
   @@index([isDefault])

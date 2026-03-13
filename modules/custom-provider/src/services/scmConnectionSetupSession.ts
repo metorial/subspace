@@ -1,5 +1,5 @@
 import { Service } from '@lowerdeck/service';
-import type { Actor, Tenant } from '@metorial-subspace/db';
+import type { Tenant, TenantActor } from '@metorial-subspace/db';
 import { getTenantForOrigin, origin } from '../origin';
 
 class scmConnectionSetupSessionServiceImpl {
@@ -16,7 +16,7 @@ class scmConnectionSetupSessionServiceImpl {
 
   async createScmConnectionSetupSession(d: {
     tenant: Tenant;
-    actor: Actor;
+    actor: TenantActor;
     redirectUrl?: string;
   }) {
     let tenant = await getTenantForOrigin(d.tenant);

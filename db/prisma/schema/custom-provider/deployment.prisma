@@ -19,7 +19,7 @@ model CustomProviderDeployment {
   trigger CustomProviderDeploymentTrigger
 
   creatorActorOid BigInt
-  creatorActor    Actor  @relation(fields: [creatorActorOid], references: [oid])
+  creatorActor    TenantActor @relation(fields: [creatorActorOid], references: [oid])
 
   tenantOid BigInt
   tenant    Tenant @relation(fields: [tenantOid], references: [oid])

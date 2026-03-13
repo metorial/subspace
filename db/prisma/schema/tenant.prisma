@@ -65,7 +65,7 @@ model Tenant {
   shuttleCustomServerDeployments           ShuttleCustomServerDeployment[]
   providerEnvironments                     ProviderEnvironment[]
   customProviderEnvironments               CustomProviderEnvironment[]
-  actors                                   Actor[]
+  actors                                   TenantActor[]
   customProviderCommits                    CustomProviderCommit[]
   upcomingCustomProviders                  UpcomingCustomProvider[]
   codeBuckets                              CodeBucket[]
@@ -75,6 +75,12 @@ model Tenant {
   sessionUsageRecords                      SessionUsageRecord[]
   providerRunUsageRecords                  ProviderRunUsageRecord[]
   providerUses                             ProviderUse[]
+  identityActors                           IdentityActor[]
+  agents                                   Agent[]
+  identities                               Identity[]
+  identityDelegationConfigs                IdentityDelegationConfig[]
+  identityDelegations                      IdentityDelegation[]
+  identityDelegationRequests               IdentityDelegationRequest[]
 }
 
 enum EnvironmentType {
@@ -128,18 +134,26 @@ model Environment {
   upcomingCustomProviders                  UpcomingCustomProvider[]
   sessionWarnings                          SessionWarning[]
   providerUses                             ProviderUse[]
+  identityActors                           IdentityActor[]
+  agents                                   Agent[]
+  identities                               Identity[]
+  identityDelegationConfigs                IdentityDelegationConfig[]
+  identityDelegations                      IdentityDelegation[]
+  identityDelegationRequests               IdentityDelegationRequest[]
 }
 
-enum ActorType {
+enum TenantActorType {
   external
   system
+
+  @@map("ActorType")
 }
 
-model Actor {
+model TenantActor {
   oid BigInt @id
   id  String @unique
 
-  type ActorType
+  type TenantActorType
 
   identifier          String  @unique
   name                String
@@ -154,4 +168,6 @@ model Actor {
   customProviderDeployments CustomProviderDeployment[]
   customProviderCommits     CustomProviderCommit[]
   upcomingCustomProviders   UpcomingCustomProvider[]
+
+  @@map("Actor")
 }
