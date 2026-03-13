@@ -34,6 +34,7 @@ export let providerDeploymentPresenter = (
   name: providerDeployment.name,
   description: providerDeployment.description,
   metadata: providerDeployment.metadata,
+  toolFilter: providerDeployment.toolFilter,
 
   providerId: providerDeployment.provider.id,
 
@@ -70,6 +71,7 @@ export let providerDeploymentPreviewPresenter = (
   name: providerDeployment.name,
   description: providerDeployment.description,
   metadata: providerDeployment.metadata,
+  toolFilter: (providerDeployment as any).toolFilter,
 
   providerId: providerDeployment.provider.id,
 

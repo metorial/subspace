@@ -30,6 +30,7 @@ import {
 } from '@metorial-subspace/list-utils';
 import {
   checkProviderMatch,
+  normalizeToolFilters,
   providerDeploymentInternalService
 } from '@metorial-subspace/module-provider-internal';
 import { voyager, voyagerIndex, voyagerSource } from '@metorial-subspace/module-search';
@@ -142,6 +143,7 @@ class providerDeploymentServiceImpl {
       name?: string;
       description?: string;
       metadata?: Record<string, any>;
+      toolFilters?: PrismaJson.ToolFilter | null;
       isEphemeral?: boolean;
       isDefault?: boolean;
       networkingRulesetIds?: string[];
@@ -238,6 +240,7 @@ class providerDeploymentServiceImpl {
           name: d.input.name?.trim() || undefined,
           description: d.input.description?.trim() || undefined,
           metadata: d.input.metadata,
+          toolFilter: normalizeToolFilters(d.input.toolFilters),
 
           networkingRulesetIds: d.input.networkingRulesetIds || [],
 
@@ -380,6 +383,7 @@ class providerDeploymentServiceImpl {
       name?: string;
       description?: string;
       metadata?: Record<string, any>;
+      toolFilters?: PrismaJson.ToolFilter | null;
       networkingRulesetIds?: string[];
     };
   }) {
@@ -407,6 +411,9 @@ class providerDeploymentServiceImpl {
           name: d.input.name ?? d.providerDeployment.name,
           description: d.input.description ?? d.providerDeployment.description,
           metadata: d.input.metadata ?? d.providerDeployment.metadata,
+          toolFilter: d.input.toolFilters
+            ? normalizeToolFilters(d.input.toolFilters)
+            : d.providerDeployment.toolFilter,
           networkingRulesetIds:
             d.input.networkingRulesetIds ?? d.providerDeployment.networkingRulesetIds
         },

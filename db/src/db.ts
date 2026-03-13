@@ -79,9 +79,11 @@ declare global {
     type ToolFilter =
       | {
           type: 'v1.allow_all';
+          ignoreParentFilters?: boolean;
         }
       | {
           type: 'v1.filter';
+          ignoreParentFilters?: boolean;
           filters: (
             | {
                 type: 'tool_keys';

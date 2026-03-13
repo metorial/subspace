@@ -10,11 +10,11 @@ import {
 import { createLock } from '@lowerdeck/lock';
 import { getSentry } from '@lowerdeck/sentry';
 import type { ConduitInput, ConduitResult } from '@metorial-subspace/connection-utils';
-import { checkToolAccess } from '@metorial-subspace/connection-utils';
 import {
   db,
   getId,
   ID,
+  type ProviderDeployment,
   type Session,
   type SessionConnection,
   type SessionConnectionMcpConnectionTransport,
@@ -27,6 +27,7 @@ import {
 } from '@metorial-subspace/db';
 import { isRecordDeleted } from '@metorial-subspace/list-utils';
 import {
+  checkToolAccess,
   providerDeploymentConfigPairInternalService,
   providerDeploymentInternalService
 } from '@metorial-subspace/module-provider-internal';
@@ -341,7 +342,9 @@ export class SenderManager {
     });
   }
 
-  private async listToolsForProvider(provider: SessionProvider) {
+  private async listToolsForProvider(
+    provider: SessionProvider & { deployment: ProviderDeployment }
+  ) {
     let res = await this.ensureProviderInstance(provider);
     if (!res) {
       return {
@@ -378,7 +381,7 @@ export class SenderManager {
   async listProviders() {
     return await db.sessionProvider.findMany({
       where: { sessionOid: this.session.oid, status: 'active', isParentDeleted: false },
-      include: { provider: true }
+      include: { provider: true, deployment: true }
     });
   }
 
@@ -440,7 +443,8 @@ export class SenderManager {
         sessionOid: this.session.oid,
         tag: d.tag,
         status: 'active'
-      }
+      },
+      include: { deployment: true }
     });
     if (!provider) throw new ServiceError(notFoundError('provider', d.tag));
     return provider;
