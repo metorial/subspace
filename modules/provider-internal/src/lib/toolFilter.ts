@@ -139,14 +139,25 @@ let matchesToolRule = (tool: ProviderTool, filter: ToolFilterRule) => {
 let getRelevantToolRules = (tool: ProviderTool, filter: ToolFilter) => {
   if (filter.type !== 'v1.filter') return [];
 
+  let mcpType = tool.value.mcpToolType.type;
+
   return filter.filters.filter(rule => {
-    if (rule.type === 'tool_keys' || rule.type === 'tool_regex') return true;
+    if (mcpType === 'mcp.resources_list' || mcpType === 'mcp.resources_read') {
+      return false;
+    }
+
+    if (rule.type === 'tool_keys' || rule.type === 'tool_regex') {
+      return mcpType === 'tool.callable' || mcpType === 'mcp.tool';
+    }
+
     if (rule.type === 'prompt_keys' || rule.type === 'prompt_regex') {
-      return tool.value.mcpToolType.type === 'mcp.prompt';
+      return mcpType === 'mcp.prompt';
     }
+
     if (rule.type === 'resource_regex') {
-      return tool.value.mcpToolType.type === 'mcp.resource_template';
+      return mcpType === 'mcp.resource_template';
     }
+
     return false;
   });
 };
