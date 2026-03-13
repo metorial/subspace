@@ -44,6 +44,8 @@ export let customProviderDeploymentPresenter = (
         object: 'custom_provider.deployment.commit',
         id: customProviderDeployment.commit.id,
         type: customProviderDeployment.commit.type,
+        status: customProviderDeployment.commit.status,
+        trigger: customProviderDeployment.commit.trigger,
         message: customProviderDeployment.commit.message,
         createdAt: customProviderDeployment.commit.createdAt
       }
