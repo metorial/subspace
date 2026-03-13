@@ -128,7 +128,7 @@ export let providerDeploymentController = app.controller({
           name: ctx.input.name,
           description: ctx.input.description,
           metadata: ctx.input.metadata,
-          toolFilters: normalizeToolFilters(ctx.input.toolFilters),
+          toolFilters: normalizeToolFilters(ctx.input.toolFilters as any),
 
           isEphemeral: ctx.input.isEphemeral,
 
@@ -168,7 +168,7 @@ export let providerDeploymentController = app.controller({
           name: ctx.input.name,
           description: ctx.input.description,
           metadata: ctx.input.metadata,
-          toolFilters: normalizeToolFilters(ctx.input.toolFilters)
+          toolFilters: normalizeToolFilters(ctx.input.toolFilters as any)
         }
       });
 
