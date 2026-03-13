@@ -140,8 +140,9 @@ export let identityDelegationRequestController = app.controller({
             expiresAt: ctx.input.expiresAt,
             delegationConfigId: ctx.input.delegationConfigId,
             credentialOverrides: ctx.input.credentialOverrides?.map(override => ({
-              ...override,
-              permissions: mapIdentityPermissionsToService(override.permissions)
+              credentialId: override.credentialId,
+              permissions: mapIdentityPermissionsToService(override.permissions),
+              expiresAt: override.expiresAt
             })),
             note: ctx.input.note,
             metadata: ctx.input.metadata
