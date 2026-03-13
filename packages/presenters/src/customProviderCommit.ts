@@ -105,6 +105,8 @@ export let customProviderCommitPresenter = (
   object: 'custom_provider.commit',
 
   id: customProviderCommit.id,
+
+  type: customProviderCommit.type,
   status: customProviderCommit.status,
   trigger: customProviderCommit.trigger,
 
