@@ -12,12 +12,6 @@ export let providerListingApp = tenantOptionalApp.use(async ctx => {
   let providerListingId = ctx.body.providerListingId;
   if (!providerListingId) throw new Error('ProviderListing ID is required');
 
-  console.log('providerListingId', providerListingId, {
-    tenant: ctx.tenant,
-    environment: ctx.environment,
-    solution: ctx.solution
-  });
-
   let providerListing = await providerListingService.getProviderListingById({
     providerListingId,
     tenant: ctx.tenant,
