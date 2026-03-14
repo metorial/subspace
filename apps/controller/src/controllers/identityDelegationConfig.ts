@@ -117,7 +117,10 @@ export let identityDelegationConfigController = app.controller({
 
         name: v.optional(v.string()),
         description: v.optional(v.string()),
-        metadata: v.optional(v.record(v.any()))
+        metadata: v.optional(v.record(v.any())),
+
+        subDelegationBehavior: v.optional(v.enumOf(['allow', 'deny', 'require_consent'])),
+        subDelegationDepth: v.optional(v.number())
       })
     )
     .do(async ctx => {
@@ -131,7 +134,10 @@ export let identityDelegationConfigController = app.controller({
           input: {
             name: ctx.input.name,
             description: ctx.input.description,
-            metadata: ctx.input.metadata
+            metadata: ctx.input.metadata,
+
+            subDelegationBehavior: ctx.input.subDelegationBehavior,
+            subDelegationDepth: ctx.input.subDelegationDepth
           }
         });
 

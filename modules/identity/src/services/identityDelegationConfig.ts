@@ -10,6 +10,7 @@ import {
   type IdentityDelegationConfig,
   type IdentityDelegationConfigStatus,
   IdentityDelegationConfigSubDelegationBehavior,
+  IdentityDelegationConfigVersion,
   type Solution,
   type Tenant,
   withTransaction
@@ -184,18 +185,39 @@ class identityDelegationConfigServiceImpl {
     tenant: Tenant;
     solution: Solution;
     environment: Environment;
-    identityDelegationConfig: IdentityDelegationConfig;
+    identityDelegationConfig: IdentityDelegationConfig & {
+      currentVersion: IdentityDelegationConfigVersion | null;
+    };
 
     input: {
       name?: string;
       description?: string;
       metadata?: Record<string, any>;
+
+      subDelegationDepth?: number;
+      subDelegationBehavior?: IdentityDelegationConfigSubDelegationBehavior;
     };
   }) {
     checkTenant(d, d.identityDelegationConfig);
     checkDeletedEdit(d.identityDelegationConfig, 'update');
 
     return withTransaction(async db => {
+      let version = await db.identityDelegationConfigVersion.create({
+        data: {
+          ...getId('identityDelegationConfigVersion'),
+
+          delegationConfigOid: d.identityDelegationConfig.oid,
+
+          ...this.normalizeSubDelegation({
+            current: d.identityDelegationConfig.currentVersion ?? undefined,
+            input: {
+              subDelegationBehavior: d.input.subDelegationBehavior,
+              subDelegationDepth: d.input.subDelegationDepth
+            }
+          })
+        }
+      });
+
       let identityDelegationConfig = await db.identityDelegationConfig.update({
         where: {
           oid: d.identityDelegationConfig.oid,
@@ -206,7 +228,8 @@ class identityDelegationConfigServiceImpl {
         data: {
           name: d.input.name ?? d.identityDelegationConfig.name,
           description: d.input.description ?? d.identityDelegationConfig.description,
-          metadata: d.input.metadata ?? d.identityDelegationConfig.metadata
+          metadata: d.input.metadata ?? d.identityDelegationConfig.metadata,
+          currentVersionOid: version.oid
         },
         include
       });
@@ -297,11 +320,12 @@ class identityDelegationConfigServiceImpl {
 
         delegationConfigOid: identityDelegationConfig.oid,
 
-        subDelegationBehavior: d.input.subDelegationBehavior,
-        subDelegationDepth:
-          d.input.subDelegationBehavior == 'deny'
-            ? 0
-            : Math.max(1, d.input.subDelegationDepth ?? 1)
+        ...this.normalizeSubDelegation({
+          input: {
+            subDelegationBehavior: d.input.subDelegationBehavior,
+            subDelegationDepth: d.input.subDelegationDepth
+          }
+        })
       }
     });
 
@@ -320,6 +344,24 @@ class identityDelegationConfigServiceImpl {
       where: { oid: identityDelegationConfig.oid },
       include
     });
+  }
+
+  private normalizeSubDelegation(d: {
+    current?: IdentityDelegationConfigVersion;
+    input: {
+      subDelegationBehavior?: IdentityDelegationConfigSubDelegationBehavior;
+      subDelegationDepth?: number;
+    };
+  }) {
+    let subDelegationBehavior =
+      d.input.subDelegationBehavior ?? d.current?.subDelegationBehavior ?? 'deny';
+
+    let subDelegationDepth =
+      subDelegationBehavior === 'deny'
+        ? 0
+        : Math.max(1, d.input.subDelegationDepth ?? d.current?.subDelegationDepth ?? 1);
+
+    return { subDelegationBehavior, subDelegationDepth };
   }
 }
 
