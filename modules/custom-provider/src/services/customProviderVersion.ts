@@ -140,12 +140,11 @@ class customProviderVersionServiceImpl {
     }
 
     let customProvider = await withTransaction(async db => {
-      await db.customProvider.updateMany({
+      let updatedProvider = await db.customProvider.update({
         where: { oid: d.customProvider.oid },
         data: {
           payload: {
-            // @ts-ignore - strip files
-            from: { ...from, files: undefined },
+            from: from.type === 'function' ? { ...from, files: undefined } : from,
             config
           }
         }
@@ -157,7 +156,8 @@ class customProviderVersionServiceImpl {
         solution: d.solution,
         environment: d.environment,
         customProvider: d.customProvider,
-        trigger: 'manual'
+        trigger: 'manual',
+        payload: updatedProvider.payload
       });
 
       let upcoming = await db.upcomingCustomProvider.create({

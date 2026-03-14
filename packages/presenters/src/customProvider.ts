@@ -78,7 +78,23 @@ export let customProviderPresenter = (
     containerTag: customProvider.containerTag,
 
     remoteUrl: customProvider.remoteUrl,
-    remoteProtocol: customProvider.remoteProtocol
+    remoteProtocol: customProvider.remoteProtocol,
+
+    config: customProvider.payload?.config
+      ? {
+          object: 'custom_provider.config',
+          schema: customProvider.payload.config.schema,
+          transformer: customProvider.payload.config.transformer
+        }
+      : null,
+
+    from: customProvider.payload?.from
+      ? {
+          object: 'custom_provider.from',
+          ...customProvider.payload.from,
+          env: {}
+        }
+      : null
   },
 
   access: customProvider.provider?.access ?? 'tenant',
