@@ -227,7 +227,6 @@ class customProviderServiceImpl {
               d.input.from.type === 'function'
                 ? { ...d.input.from, files: undefined }
                 : d.input.from,
-
             config: d.input.config!
           },
 
@@ -243,7 +242,8 @@ class customProviderServiceImpl {
         solution: d.solution,
         environment: d.environment,
         customProvider,
-        trigger: 'manual'
+        trigger: 'manual',
+        payload: customProvider.payload
       });
 
       let upcoming = await db.upcomingCustomProvider.create({

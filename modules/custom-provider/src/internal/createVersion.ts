@@ -35,6 +35,8 @@ export let prepareVersion = (d: {
 
   customProvider: CustomProvider;
   repoPush?: ScmRepoPush;
+
+  payload: PrismaJson.CustomProviderPayload;
 }) =>
   withTransaction(async db => {
     let deployment = await db.customProviderDeployment.create({
@@ -76,7 +78,9 @@ export let prepareVersion = (d: {
 
         tenantOid: d.tenant.oid,
         solutionOid: d.solution.oid,
-        creatorActorOid: d.actor.oid
+        creatorActorOid: d.actor.oid,
+
+        payload: d.payload
       }
     });
 
@@ -258,7 +262,8 @@ export let syncVersionToCustomProvider = async (d: {
       solution: customProvider.solution,
       environment: environment.environment,
       customProvider,
-      trigger: 'system'
+      trigger: 'system',
+      payload: customProvider.payload
     });
 
     await createVersion({

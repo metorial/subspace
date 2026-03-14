@@ -14,6 +14,9 @@ model CustomProviderVersion {
   versionIndex      Int
   versionIdentifier String
 
+  /// [CustomProviderPayload]
+  payload Json?
+
   creatorActorOid BigInt
   creatorActor    TenantActor @relation(fields: [creatorActorOid], references: [oid])
 

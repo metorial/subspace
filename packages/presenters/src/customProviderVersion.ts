@@ -119,6 +119,22 @@ export let customProviderVersionPresenter = (
     remoteUrl: customProviderVersion.remoteUrl,
     remoteProtocol: customProviderVersion.remoteProtocol,
 
+    config: customProviderVersion.payload?.config
+      ? {
+          object: 'custom_provider.config',
+          schema: customProviderVersion.payload.config.schema,
+          transformer: customProviderVersion.payload.config.transformer
+        }
+      : null,
+
+    from: customProviderVersion.payload?.from
+      ? {
+          object: 'custom_provider.from',
+          ...customProviderVersion.payload.from,
+          env: {}
+        }
+      : null,
+
     createdAt: customProviderVersion.createdAt,
     updatedAt: customProviderVersion.updatedAt
   };
