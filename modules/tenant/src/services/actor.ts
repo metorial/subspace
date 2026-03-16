@@ -15,7 +15,12 @@ class actorServiceImpl {
     };
   }) {
     return await db.tenantActor.upsert({
-      where: { identifier: d.input.identifier },
+      where: {
+        tenantOid_identifier: {
+          identifier: d.input.identifier,
+          tenantOid: d.tenant.oid
+        }
+      },
       update: { name: d.input.name },
       create: {
         ...getId('tenantActor'),

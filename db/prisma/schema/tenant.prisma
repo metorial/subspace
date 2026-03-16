@@ -155,7 +155,7 @@ model TenantActor {
 
   type TenantActorType
 
-  identifier          String  @unique
+  identifier          String
   name                String
   organizationActorId String?
 
@@ -169,5 +169,6 @@ model TenantActor {
   customProviderCommits     CustomProviderCommit[]
   upcomingCustomProviders   UpcomingCustomProvider[]
 
+  @@unique([tenantOid, identifier])
   @@map("Actor")
 }
