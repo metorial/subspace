@@ -87,6 +87,7 @@ export let providerPresenter = (
     name: provider.name,
     description: provider.description,
     slug: provider.slug,
+    globalIdentifier: provider.globalIdentifier,
     metadata: provider.metadata,
 
     createdAt: provider.createdAt,
